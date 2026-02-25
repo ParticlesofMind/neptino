@@ -59,6 +59,9 @@ export interface TemplateBlueprintData {
         objective: string
         tasks: Array<{
           task: string
+          topicIndex?: number
+          objectiveIndex?: number
+          taskIndex?: number
           instructionArea: string
           studentArea: string
           teacherArea: string
@@ -74,6 +77,9 @@ export interface TemplateBlueprintData {
         objective: string
         tasks: Array<{
           task: string
+          topicIndex?: number
+          objectiveIndex?: number
+          taskIndex?: number
           instructionArea: string
           studentArea: string
           teacherArea: string
@@ -276,7 +282,7 @@ function TaskAreaDropZone({
     if (media.category === "images" && media.url) {
       return (
         <div
-          className="h-56 w-full rounded border border-border/60 bg-muted/10 bg-contain bg-center bg-no-repeat"
+          className="aspect-video w-full rounded border border-border/60 bg-muted/10 bg-contain bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${media.url})` }}
           role="img"
           aria-label={media.title}
@@ -291,7 +297,7 @@ function TaskAreaDropZone({
           <iframe
             src={embedUrl}
             title={media.title}
-            className="h-56 w-full rounded border border-border/60 bg-background"
+            className="aspect-video w-full rounded border border-border/60 bg-background"
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
           />
@@ -318,7 +324,7 @@ function TaskAreaDropZone({
           src={media.url}
           controls
           preload="metadata"
-          className="h-56 w-full rounded border border-border/60 bg-black/80 object-contain"
+          className="aspect-video w-full rounded border border-border/60 bg-black/80 object-contain"
         />
       )
     }
@@ -352,7 +358,7 @@ function TaskAreaDropZone({
             <iframe
               src={media.url}
               title={media.title}
-              className="h-56 w-full rounded border border-border/60 bg-background"
+              className="aspect-video w-full rounded border border-border/60 bg-background"
               loading="lazy"
             />
             <a
@@ -733,11 +739,20 @@ function LessonTemplatePreview({
                                   <div key={`content-task-${topicIdx}-${objectiveIdx}-${taskIdx}`} className="rounded border border-border/60 bg-background p-1.5">
                                     <p className="font-semibold">Task {taskIdx + 1}: {task.task}</p>
                                     <div className="mt-1 space-y-1">
+                                      {(() => {
+                                        const resolvedTopicIdx = typeof task.topicIndex === "number" ? task.topicIndex : topicIdx
+                                        const resolvedObjectiveIdx = typeof task.objectiveIndex === "number" ? task.objectiveIndex : objectiveIdx
+                                        const resolvedTaskIdx = typeof task.taskIndex === "number" ? task.taskIndex : taskIdx
+                                        const instructionKey = buildTaskAreaKey("content", resolvedTopicIdx, resolvedObjectiveIdx, resolvedTaskIdx, "instruction")
+                                        const studentKey = buildTaskAreaKey("content", resolvedTopicIdx, resolvedObjectiveIdx, resolvedTaskIdx, "student")
+                                        const teacherKey = buildTaskAreaKey("content", resolvedTopicIdx, resolvedObjectiveIdx, resolvedTaskIdx, "teacher")
+                                        return (
+                                          <>
                                       <TaskAreaDropZone
                                         title="Instruction Area"
                                         seedText={task.instructionArea}
-                                        areaKey={buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "instruction")}
-                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "instruction")] ?? []}
+                                        areaKey={instructionKey}
+                                        droppedMedia={droppedMediaByArea?.[instructionKey] ?? []}
                                         mediaDragActive={mediaDragActive}
                                         onDropAreaMedia={onDropAreaMedia}
                                         areaHeightClass={densityConfig.areaHeightClass}
@@ -746,8 +761,8 @@ function LessonTemplatePreview({
                                       <TaskAreaDropZone
                                         title="Student Area"
                                         seedText={task.studentArea}
-                                        areaKey={buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "student")}
-                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "student")] ?? []}
+                                        areaKey={studentKey}
+                                        droppedMedia={droppedMediaByArea?.[studentKey] ?? []}
                                         mediaDragActive={mediaDragActive}
                                         onDropAreaMedia={onDropAreaMedia}
                                         areaHeightClass={densityConfig.areaHeightClass}
@@ -756,13 +771,16 @@ function LessonTemplatePreview({
                                       <TaskAreaDropZone
                                         title="Teacher Area"
                                         seedText={task.teacherArea}
-                                        areaKey={buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "teacher")}
-                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "teacher")] ?? []}
+                                        areaKey={teacherKey}
+                                        droppedMedia={droppedMediaByArea?.[teacherKey] ?? []}
                                         mediaDragActive={mediaDragActive}
                                         onDropAreaMedia={onDropAreaMedia}
                                         areaHeightClass={densityConfig.areaHeightClass}
                                         onRemoveMedia={onRemoveAreaMedia}
                                       />
+                                          </>
+                                        )
+                                      })()}
                                     </div>
                                   </div>
                                 ))}
@@ -809,11 +827,20 @@ function LessonTemplatePreview({
                                   <div key={`assignment-task-${topicIdx}-${objectiveIdx}-${taskIdx}`} className="rounded border border-border/60 bg-background p-1.5">
                                     <p className="font-semibold">Task {taskIdx + 1}: {task.task}</p>
                                     <div className="mt-1 space-y-1">
+                                      {(() => {
+                                        const resolvedTopicIdx = typeof task.topicIndex === "number" ? task.topicIndex : topicIdx
+                                        const resolvedObjectiveIdx = typeof task.objectiveIndex === "number" ? task.objectiveIndex : objectiveIdx
+                                        const resolvedTaskIdx = typeof task.taskIndex === "number" ? task.taskIndex : taskIdx
+                                        const instructionKey = buildTaskAreaKey("assignment", resolvedTopicIdx, resolvedObjectiveIdx, resolvedTaskIdx, "instruction")
+                                        const studentKey = buildTaskAreaKey("assignment", resolvedTopicIdx, resolvedObjectiveIdx, resolvedTaskIdx, "student")
+                                        const teacherKey = buildTaskAreaKey("assignment", resolvedTopicIdx, resolvedObjectiveIdx, resolvedTaskIdx, "teacher")
+                                        return (
+                                          <>
                                       <TaskAreaDropZone
                                         title="Instruction Area"
                                         seedText={task.instructionArea}
-                                        areaKey={buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "instruction")}
-                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "instruction")] ?? []}
+                                        areaKey={instructionKey}
+                                        droppedMedia={droppedMediaByArea?.[instructionKey] ?? []}
                                         mediaDragActive={mediaDragActive}
                                         onDropAreaMedia={onDropAreaMedia}
                                         areaHeightClass={densityConfig.areaHeightClass}
@@ -822,8 +849,8 @@ function LessonTemplatePreview({
                                       <TaskAreaDropZone
                                         title="Student Area"
                                         seedText={task.studentArea}
-                                        areaKey={buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "student")}
-                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "student")] ?? []}
+                                        areaKey={studentKey}
+                                        droppedMedia={droppedMediaByArea?.[studentKey] ?? []}
                                         mediaDragActive={mediaDragActive}
                                         onDropAreaMedia={onDropAreaMedia}
                                         areaHeightClass={densityConfig.areaHeightClass}
@@ -832,13 +859,16 @@ function LessonTemplatePreview({
                                       <TaskAreaDropZone
                                         title="Teacher Area"
                                         seedText={task.teacherArea}
-                                        areaKey={buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "teacher")}
-                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "teacher")] ?? []}
+                                        areaKey={teacherKey}
+                                        droppedMedia={droppedMediaByArea?.[teacherKey] ?? []}
                                         mediaDragActive={mediaDragActive}
                                         onDropAreaMedia={onDropAreaMedia}
                                         areaHeightClass={densityConfig.areaHeightClass}
                                         onRemoveMedia={onRemoveAreaMedia}
                                       />
+                                          </>
+                                        )
+                                      })()}
                                     </div>
                                   </div>
                                 ))}

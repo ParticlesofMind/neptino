@@ -141,3 +141,5 @@ document.addEventListener('DOMContentLoaded', () => {
   new PopupController().init();
 });
 
+export {};
+

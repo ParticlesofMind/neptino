@@ -1,9 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { SetupSection } from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { createClient } from "@/lib/supabase/client"
+import { useCallback, useRef, useState } from "react"
+import { SetupSection, updateCourseById, useCourseRowLoader, useDebouncedChangeSave } from "@/components/coursebuilder"
 import {
   RESOURCE_PRIORITY_OPTIONS,
   buildDefaultResourcePreferences,
@@ -16,36 +14,34 @@ export function ResourcesSection({ courseId }: { courseId: string | null }) {
   const [resources, setResources] = useState<ResourcePreference[]>(() => buildDefaultResourcePreferences())
   const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("generation_settings")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data?.generation_settings) return
-        const settings = data.generation_settings as Record<string, unknown>
-        generationSettingsRef.current = settings
-        const saved = settings.resources_preferences as ResourcePreference[] | undefined
-        setResources(mergeResourcePreferences(Array.isArray(saved) ? saved : null))
-      })
-  }, [courseId])
+  type ResourcesSettingsRow = {
+    generation_settings: Record<string, unknown> | null
+  }
+
+  useCourseRowLoader<ResourcesSettingsRow>({
+    courseId,
+    select: "generation_settings",
+    onLoaded: (row) => {
+      if (!row.generation_settings) return
+      const settings = row.generation_settings
+      generationSettingsRef.current = settings
+      const saved = settings.resources_preferences as ResourcePreference[] | undefined
+      setResources(mergeResourcePreferences(Array.isArray(saved) ? saved : null))
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    const supabase = createClient()
     const existingSettings = generationSettingsRef.current ?? {}
     const nextSettings = {
       ...existingSettings,
       resources_preferences: resources,
     }
 
-    const { error } = await supabase
-      .from("courses")
-      .update({ generation_settings: nextSettings, updated_at: new Date().toISOString() })
-      .eq("id", courseId)
+    const { error } = await updateCourseById(courseId, {
+      generation_settings: nextSettings,
+      updated_at: new Date().toISOString(),
+    })
 
     if (error) return
     generationSettingsRef.current = nextSettings

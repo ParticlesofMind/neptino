@@ -123,6 +123,7 @@ interface PixiCanvasProps {
   config?:           CanvasPageConfig
   zoom?:             number
   onZoomChange?:     (pct: number) => void
+  allowWheelScroll?: boolean
   activeTool?:       string
   toolConfig?:       ToolConfig
   activePage?:       number
@@ -166,6 +167,7 @@ export function PixiCanvas({
   config       = DEFAULT_PAGE_CONFIG,
   zoom         = 100,
   onZoomChange,
+  allowWheelScroll = true,
   activeTool   = 'selection',
   toolConfig,
   activePage   = 1,
@@ -199,6 +201,7 @@ export function PixiCanvas({
   const onTemplateLayoutMeasuredRef = useRef(onTemplateLayoutMeasured)
   const templateDropZonesRef = useRef<Map<string, Container>>(new Map())
   const baseScaleRef   = useRef(1)
+  const allowWheelScrollRef = useRef(allowWheelScroll)
 
   useEffect(() => { onZoomCb.current      = onZoomChange     }, [onZoomChange])
   useEffect(() => { onViewportCb.current  = onViewportChange }, [onViewportChange])
@@ -213,6 +216,7 @@ export function PixiCanvas({
   useEffect(() => { onTemplateMediaActivateRef.current = onTemplateMediaActivate }, [onTemplateMediaActivate])
   useEffect(() => { onTemplateAreaDropRef.current = onTemplateAreaDrop }, [onTemplateAreaDrop])
   useEffect(() => { onTemplateLayoutMeasuredRef.current = onTemplateLayoutMeasured }, [onTemplateLayoutMeasured])
+  useEffect(() => { allowWheelScrollRef.current = allowWheelScroll }, [allowWheelScroll])
 
   const emitViewport = (world: Container, cfg: CanvasPageConfig, page = activePageRef.current) => {
     const safePage = Math.min(Math.max(1, page), Math.max(1, cfg.pageCount))
@@ -678,7 +682,7 @@ export function PixiCanvas({
       const onWheel = (e: WheelEvent) => {
         e.preventDefault()
         if (e.ctrlKey || e.metaKey) {
-          const factor = e.deltaY < 0 ? 1.1 : 0.9
+          const factor = e.deltaY < 0 ? 1.08 : 0.92
           const oldPct = zoomPct.current
           const newPct = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, oldPct * factor)))
           if (newPct === oldPct) return
@@ -692,6 +696,10 @@ export function PixiCanvas({
           zoomPct.current = newPct
           onZoomCb.current?.(newPct)
         } else {
+          if (!allowWheelScrollRef.current) {
+            emitViewport(world, configSnap.current, activePageRef.current)
+            return
+          }
           // Scroll = pan through pages
           world.x -= e.deltaX
           world.y -= e.deltaY

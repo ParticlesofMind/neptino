@@ -124,9 +124,17 @@ export function MediaLibraryPanel({
                         aria-label={item.title}
                       />
                     ) : item.category === "videos" && item.url ? (
-                      <video src={item.url} className="mb-1 h-20 w-full rounded border border-border/60 object-cover" muted preload="metadata" />
-                    ) : item.category === "audio" ? (
-                      <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1 text-[10px] text-muted-foreground">Audio preview</div>
+                      <video
+                        src={item.url}
+                        className="mb-1 h-20 w-full rounded border border-border/60 object-cover"
+                        controls
+                        muted
+                        preload="metadata"
+                      />
+                    ) : item.category === "audio" && item.url ? (
+                      <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1">
+                        <audio src={item.url} controls className="w-full" preload="metadata" />
+                      </div>
                     ) : item.category === "text" ? (
                       <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1 text-[10px] text-muted-foreground">Text resource</div>
                     ) : null}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 
 type LoadState<T> = {
@@ -20,6 +20,11 @@ export function useCourseRowLoader<T>({
   onLoaded,
 }: UseCourseRowLoaderOptions<T>) {
   const [loading, setLoading] = useState(false)
+  const onLoadedRef = useRef(onLoaded)
+
+  useEffect(() => {
+    onLoadedRef.current = onLoaded
+  }, [onLoaded])
 
   useEffect(() => {
     if (!enabled || !courseId) return
@@ -29,24 +34,28 @@ export function useCourseRowLoader<T>({
     const load = async () => {
       setLoading(true)
       const supabase = createClient()
-      const { data, error } = await supabase
-        .from("courses")
-        .select(select)
-        .eq("id", courseId)
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from("courses")
+          .select(select)
+          .eq("id", courseId)
+          .single()
 
-      if (isCancelled) return
+        if (isCancelled) return
 
-      const result: LoadState<T> = {
-        data: (data as T | null) ?? null,
-        error,
+        const result: LoadState<T> = {
+          data: (data as T | null) ?? null,
+          error,
+        }
+
+        if (!result.error && result.data && onLoadedRef.current) {
+          onLoadedRef.current(result.data)
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false)
+        }
       }
-
-      if (!result.error && result.data && onLoaded) {
-        onLoaded(result.data)
-      }
-
-      setLoading(false)
     }
 
     void load()
@@ -54,7 +63,7 @@ export function useCourseRowLoader<T>({
     return () => {
       isCancelled = true
     }
-  }, [enabled, courseId, select, onLoaded])
+  }, [enabled, courseId, select])
 
   return { loading }
 }

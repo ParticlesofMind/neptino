@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useMemo } from "react"
+import { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { Text as PixiText, TextStyle } from "pixi.js"
 import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type PixiTemplateLayoutMeasurement, type PixiTemplateLayoutModel, type ToolConfig } from "@/components/canvas/PixiCanvas"
 import { PixiWidgetSurface } from "@/components/canvas/PixiWidgetSurface"
@@ -31,6 +31,10 @@ import {
   // modes / animate
   Clapperboard,
 } from "lucide-react"
+
+const DEFAULT_CANVAS_ZOOM = 100
+const ZOOM_STEP = 5
+const PAGE_SCROLL_THRESHOLD = 70
 
 // ─── Resize handle hook ─────────────────────────────────────────────────────────────────
 
@@ -122,9 +126,12 @@ export function CreateView({
     supabase,
   })
   const totalPages = lessonPages.length > 0 ? lessonPages.length : (canvasConfig?.pageCount ?? 1)
-  const [zoom, setZoom] = useState(100)
+  const [zoom, setZoom] = useState(DEFAULT_CANVAS_ZOOM)
   const [viewportInfo, setViewportInfo] = useState<CanvasViewportInfo | null>(null)
   const [mediaDragActive, setMediaDragActive] = useState(false)
+  const [dropFeedback, setDropFeedback] = useState<string | null>(null)
+  const [scrollDisabled, setScrollDisabled] = useState(false)
+  const overlayWheelAccumulator = useRef(0)
   const [pixiLayoutPageByScope, setPixiLayoutPageByScope] = useState<Record<string, number>>({})
   const [pixiMeasuredSectionHeightsByScope, setPixiMeasuredSectionHeightsByScope] = useState<Record<string, Record<string, number>>>({})
 
@@ -230,11 +237,29 @@ export function CreateView({
   } = useCanvasDocumentState({
     supabase,
     courseId,
+    lessonPages,
     currentLessonPageGlobal: currentLessonPage?.globalPage ?? null,
     currentDocumentKey,
     currentCanvasScopeKey,
     setMediaDragActive,
+    onDropPlacementResult: (result) => {
+      if (result.status === "placed-next" && typeof result.targetPageGlobal === "number") {
+        setDropFeedback(`Placed on Page ${result.targetPageGlobal} to keep this canvas clean.`)
+      } else if (result.status === "rejected-no-fit") {
+        setDropFeedback("No fitting page found for this media in the current lesson flow.")
+      } else if (result.status === "rejected-invalid") {
+        setDropFeedback("This drop area is not valid. Use Instruction, Student, or Teacher areas.")
+      } else {
+        setDropFeedback(null)
+      }
+    },
   })
+
+  useEffect(() => {
+    if (!dropFeedback) return
+    const timeoutHandle = window.setTimeout(() => setDropFeedback(null), 2800)
+    return () => window.clearTimeout(timeoutHandle)
+  }, [dropFeedback])
 
   const {
     hasHeaderBlock,
@@ -334,8 +359,7 @@ export function CreateView({
     }
   }, [])
 
-  const surfaceArchitecture = "dom-first" as const
-  const usePixiTemplateLayout = surfaceArchitecture === "pixi-template"
+  const usePixiTemplateLayout = false
   const measuredSectionHeights = useMemo(
     () => pixiMeasuredSectionHeightsByScope[currentCanvasScopeKey] ?? {},
     [currentCanvasScopeKey, pixiMeasuredSectionHeightsByScope],
@@ -667,6 +691,41 @@ export function CreateView({
     },
     [totalPages],
   )
+
+  const handleZoomStep = useCallback((direction: 1 | -1) => {
+    setZoom((currentZoom) => Math.min(400, Math.max(10, currentZoom + (direction * ZOOM_STEP))))
+  }, [])
+
+  const handleCanvasAreaWheelCapture = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    const targetElement = event.target as HTMLElement | null
+    if (targetElement?.closest("canvas")) {
+      return
+    }
+
+    event.preventDefault()
+
+    if (event.ctrlKey || event.metaKey) {
+      handleZoomStep(event.deltaY < 0 ? 1 : -1)
+      return
+    }
+
+    if (scrollDisabled) {
+      return
+    }
+
+    overlayWheelAccumulator.current += event.deltaY
+    if (Math.abs(overlayWheelAccumulator.current) < PAGE_SCROLL_THRESHOLD) {
+      return
+    }
+
+    const pageSteps = Math.trunc(overlayWheelAccumulator.current / PAGE_SCROLL_THRESHOLD)
+    overlayWheelAccumulator.current -= pageSteps * PAGE_SCROLL_THRESHOLD
+    setCurrentPage((prevPage) => Math.min(Math.max(1, prevPage + pageSteps), totalPages))
+  }, [handleZoomStep, scrollDisabled, totalPages])
+
+  useEffect(() => {
+    overlayWheelAccumulator.current = 0
+  }, [scrollDisabled])
 
   const currentTools = mode === "build" ? BUILD_TOOLS : ANIMATE_TOOLS
   const selectedTool = activeTool as string
@@ -1035,12 +1094,19 @@ export function CreateView({
       />
 
       {/* ── Center: Canvas area ──────────────────────────────────────────────── */}
-      <div className="relative flex flex-1 overflow-hidden bg-muted/30">
+      <div className="relative flex flex-1 overflow-hidden bg-muted/30" onWheelCapture={handleCanvasAreaWheelCapture}>
+
+        {dropFeedback && (
+          <div className="absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-md border border-border bg-background/95 px-3 py-1.5 text-xs text-foreground shadow-sm backdrop-blur-sm">
+            {dropFeedback}
+          </div>
+        )}
 
         <PixiWidgetSurface
           config={effectiveCanvasConfig}
           zoom={zoom}
           onZoomChange={setZoom}
+          allowWheelScroll={!scrollDisabled}
           activeTool={canvasTool}
           toolConfig={toolConfig}
           activePage={clampedCurrentPage}
@@ -1094,11 +1160,13 @@ export function CreateView({
         <CanvasOverlayControls
           overlayUi={overlayUi}
           zoom={zoom}
-          onZoomIn={() => setZoom((z) => Math.min(z + 10, 400))}
-          onZoomOut={() => setZoom((z) => Math.max(z - 10, 10))}
-          onZoomReset={() => setZoom(100)}
+          onZoomIn={() => handleZoomStep(1)}
+          onZoomOut={() => handleZoomStep(-1)}
+          onZoomReset={() => setZoom(DEFAULT_CANVAS_ZOOM)}
           panMode={panMode}
           onTogglePanMode={() => setPanMode((p) => !p)}
+          scrollDisabled={scrollDisabled}
+          onToggleScrollDisabled={() => setScrollDisabled((disabled) => !disabled)}
           snapMenuOpen={snapMenuOpen}
           onToggleSnapMenu={() => setSnapMenuOpen((open) => !open)}
           onCloseSnapMenu={() => setSnapMenuOpen(false)}

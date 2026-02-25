@@ -1,34 +1,20 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import {
   DANGER_ACTION_BUTTON_SM_CLASS,
+  FieldLabel,
   PRIMARY_ACTION_BUTTON_CLASS,
   SECONDARY_ACTION_BUTTON_CLASS,
   SetupColumn,
   SetupPanelLayout,
   SetupSection,
-} from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { createClient } from "@/lib/supabase/client"
-
-function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
-  return (
-    <div className="mb-1.5">
-      <span className="text-sm font-medium text-foreground">{children}</span>
-      {hint && <span className="ml-2 text-xs text-muted-foreground">{hint}</span>}
-    </div>
-  )
-}
-
-function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
-    />
-  )
-}
+  TextInput,
+  updateCourseById,
+  useCourseRowLoader,
+  useCourseSectionSave,
+  useDebouncedChangeSave,
+} from "@/components/coursebuilder"
 
 export function StudentsSection({ courseId }: { courseId: string | null }) {
   type StudentRow = {
@@ -39,6 +25,10 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
     learningStyle?: string
     learningDifferences?: string
     accommodations?: string
+  }
+
+  type StudentsOverviewRow = {
+    students_overview: Record<string, unknown> | null
   }
 
   const [method, setMethod] = useState<"upload" | "manual">("upload")
@@ -52,68 +42,56 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
   const [emailError, setEmailError] = useState<string | null>(null)
   const [bulkError, setBulkError] = useState<string | null>(null)
   const [bulkEntry, setBulkEntry] = useState("")
-  const [, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [, setLastSavedAt] = useState<string | null>(null)
+  const { runWithSaveState } = useCourseSectionSave()
   const fileRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("students_overview")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data?.students_overview) return
-        const overview = data.students_overview as Record<string, unknown>
-        const loadedMethod = overview.method
-        const loadedStudents = overview.students
-        if (loadedMethod === "upload" || loadedMethod === "manual") {
-          setMethod(loadedMethod)
-        }
-        if (Array.isArray(loadedStudents)) {
-          setStudents(
-            loadedStudents
-              .map((s) => s as Record<string, unknown>)
-              .map((s) => ({
-                first: String(s.first ?? ""),
-                last: String(s.last ?? ""),
-                email: String(s.email ?? ""),
-                id: String(s.id ?? ""),
-              }))
-              .filter((s) => s.first || s.last || s.email || s.id),
-          )
-        }
-      })
-  }, [courseId])
+  useCourseRowLoader<StudentsOverviewRow>({
+    courseId,
+    select: "students_overview",
+    onLoaded: (row) => {
+      if (!row.students_overview) return
+      const overview = row.students_overview
+      const loadedMethod = overview.method
+      const loadedStudents = overview.students
+      if (loadedMethod === "upload" || loadedMethod === "manual") {
+        setMethod(loadedMethod)
+      }
+      if (Array.isArray(loadedStudents)) {
+        setStudents(
+          loadedStudents
+            .map((student) => student as Record<string, unknown>)
+            .map((student) => ({
+              first: String(student.first ?? ""),
+              last: String(student.last ?? ""),
+              email: String(student.email ?? ""),
+              id: String(student.id ?? ""),
+            }))
+            .filter((student) => student.first || student.last || student.email || student.id),
+        )
+      }
+    },
+  })
 
   const persistStudents = useCallback(async () => {
     if (!courseId) return
-    setSaveStatus("saving")
-    const supabase = createClient()
-    const payload = {
-      method,
-      total: students.length,
-      synced: students.length,
-      students,
-      updated_at: new Date().toISOString(),
-    }
-    const { error } = await supabase
-      .from("courses")
-      .update({
-        students_overview: payload,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
+    await runWithSaveState(async () => {
+      const updatedAt = new Date().toISOString()
+      const payload = {
+        method,
+        total: students.length,
+        synced: students.length,
+        students,
+        updated_at: updatedAt,
+      }
 
-    if (error) {
-      setSaveStatus("error")
-    } else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
-  }, [courseId, method, students])
+      const { error } = await updateCourseById(courseId, {
+        students_overview: payload,
+        updated_at: updatedAt,
+      })
+
+      return !error
+    })
+  }, [runWithSaveState, courseId, method, students])
 
   useDebouncedChangeSave(persistStudents, 800, Boolean(courseId))
 

@@ -16,6 +16,7 @@ interface PixiCanvasProps {
   config?: CanvasPageConfig
   zoom?: number
   onZoomChange?: (pct: number) => void
+  allowWheelScroll?: boolean
   activeTool?: string
   toolConfig?: ToolConfig
   activePage?: number
@@ -54,6 +55,7 @@ interface PixiWidgetSurfaceProps {
   config: CanvasPageConfig
   zoom: number
   onZoomChange: (pct: number) => void
+  allowWheelScroll: boolean
   activeTool: string
   toolConfig: ToolConfig
   activePage: number
@@ -70,6 +72,7 @@ export function PixiWidgetSurface({
   config,
   zoom,
   onZoomChange,
+  allowWheelScroll,
   activeTool,
   toolConfig,
   activePage,
@@ -101,6 +104,7 @@ export function PixiWidgetSurface({
           config={config}
           zoom={zoom}
           onZoomChange={onZoomChange}
+          allowWheelScroll={allowWheelScroll}
           activeTool={activeTool}
           toolConfig={toolConfig}
           activePage={activePage}

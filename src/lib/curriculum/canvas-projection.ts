@@ -63,16 +63,16 @@ const LESSON_BODY_BLOCK_ORDER: LessonBodyBlockId[] = ["program", "resources", "c
 const LESSON_BLOCK_CAPACITY: Record<LessonBodyBlockId, number> = {
   program: 4,
   resources: 12,
-  content: 1,
-  assignment: 1,
+  content: 2,
+  assignment: 2,
   scoring: 8,
 }
 
 const LESSON_BLOCK_LOAD: Record<LessonBodyBlockId, { base: number; variable: number }> = {
   program: { base: 0.18, variable: 0.42 },
   resources: { base: 0.16, variable: 0.36 },
-  content: { base: 0.65, variable: 0.3 },
-  assignment: { base: 0.65, variable: 0.3 },
+  content: { base: 0.42, variable: 0.46 },
+  assignment: { base: 0.42, variable: 0.46 },
   scoring: { base: 0.2, variable: 0.25 },
 }
 
@@ -98,21 +98,24 @@ function estimateLessonChunkLoad(blockId: LessonBodyBlockId, itemCount: number):
 }
 
 export function planLessonBodyLayout(args: {
-  topicsPerLesson: number
-  objectivesPerTopic: number
-  tasksPerObjective: number
+  topicCount: number
+  objectiveCount: number
+  taskCount: number
   enabledBlocks: TemplateBlockType[]
 }): LessonBodyLayoutPlan {
-  const { topicsPerLesson, objectivesPerTopic, tasksPerObjective, enabledBlocks } = args
+  const { topicCount, objectiveCount, taskCount, enabledBlocks } = args
   const enabledSet = new Set(enabledBlocks)
 
-  const totalTaskInstances = Math.max(1, topicsPerLesson) * Math.max(1, objectivesPerTopic) * Math.max(1, tasksPerObjective)
+  const resolvedTopicCount = Math.max(1, topicCount)
+  const resolvedObjectiveCount = Math.max(1, objectiveCount)
+  const resolvedTaskCount = Math.max(1, taskCount)
+
   const itemCounts: Record<LessonBodyBlockId, number> = {
-    program: Math.max(1, topicsPerLesson),
-    resources: Math.max(1, totalTaskInstances),
-    content: Math.max(1, topicsPerLesson),
-    assignment: Math.max(1, topicsPerLesson),
-    scoring: Math.max(1, objectivesPerTopic),
+    program: resolvedTopicCount,
+    resources: resolvedTaskCount,
+    content: resolvedTaskCount,
+    assignment: resolvedTaskCount,
+    scoring: resolvedObjectiveCount,
   }
 
   const chunks: LessonBodyPageChunk[] = []
@@ -246,9 +249,9 @@ function estimateSessionPages(session: {
     const effectiveTaskCount = Math.max(1, session.tasks.length, session.taskCount)
 
     return planLessonBodyLayout({
-      topicsPerLesson: effectiveTopicCount,
-      objectivesPerTopic: effectiveObjectiveCount,
-      tasksPerObjective: effectiveTaskCount,
+      topicCount: effectiveTopicCount,
+      objectiveCount: effectiveObjectiveCount,
+      taskCount: effectiveTaskCount,
       enabledBlocks: session.enabledBlocks,
     }).totalPages
   }

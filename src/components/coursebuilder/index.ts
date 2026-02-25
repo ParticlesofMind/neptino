@@ -1,6 +1,7 @@
 export * from "./course-auth"
 export * from "./course-image-preview"
 export * from "./course-mutations"
+export * from "./course-queries"
 export * from "./course-preview-primitives"
 export * from "./course-storage"
 export * from "./form-primitives"

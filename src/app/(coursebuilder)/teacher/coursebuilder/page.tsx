@@ -60,6 +60,9 @@ const VIEW_LABELS: Record<View, string> = {
   preview: "Preview",
   launch:  "Launch",
 }
+function isView(value: string | null): value is View {
+  return typeof value === "string" && VIEW_SEQUENCE.includes(value as View)
+}
 function getPrevView(v: View): View | null {
   const idx = VIEW_SEQUENCE.indexOf(v)
   return idx > 0 ? VIEW_SEQUENCE[idx - 1] : null
@@ -1315,30 +1318,34 @@ function CourseBuilderPageInner() {
   const searchParams = useSearchParams()
   const urlCourseId = searchParams.get("id")
   const urlView     = searchParams.get("view") as View | null
-  const initialSectionKey = `coursebuilder:last-section:${urlCourseId ?? "new"}`
-  const initialSectionValue =
-    typeof window !== "undefined" ? window.localStorage.getItem(initialSectionKey) : null
-  const [view, setView] = useState<View>(
-    urlView && (["setup", "create", "preview", "launch"] as string[]).includes(urlView)
-      ? urlView
-      : "setup"
-  )
-  const [activeSection, setActiveSection] = useState<SectionId>(
-    isSectionId(initialSectionValue) ? initialSectionValue : "essentials"
-  )
+  const resolvedUrlCourseId =
+    urlCourseId ??
+    (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : null)
+  const [view, setView] = useState<View>(() => {
+    if (isView(urlView)) return urlView
+    if (typeof window === "undefined") return "setup"
+    const storedView = window.localStorage.getItem(`coursebuilder:last-view:${resolvedUrlCourseId ?? "new"}`)
+    return isView(storedView) ? storedView : "setup"
+  })
+  const [activeSection, setActiveSection] = useState<SectionId>(() => {
+    if (typeof window === "undefined") return "essentials"
+    const storedSection = window.localStorage.getItem(`coursebuilder:last-section:${resolvedUrlCourseId ?? "new"}`)
+    return isSectionId(storedSection) ? storedSection : "essentials"
+  })
   const [courseTitle, setCourseTitle] = useState("Untitled Course")
-  const [courseId, setCourseId] = useState<string | null>(urlCourseId)
+  const [courseId, setCourseId] = useState<string | null>(resolvedUrlCourseId)
   const [courseCreatedData, setCourseCreatedData] = useState<CourseCreatedData | null>(null)
   const [initialEssentials, setInitialEssentials] = useState<CourseCreatedData | null>(null)
   const [pageConfig, setPageConfig] = useState<CanvasPageConfig | null>(null)
-  const [loadingCourse, setLoadingCourse] = useState(!!urlCourseId)
+  const [loadingCourse, setLoadingCourse] = useState(!!resolvedUrlCourseId)
   const [editingTitle, setEditingTitle] = useState(false)
   const [flashSectionId, setFlashSectionId] = useState<SectionId | null>(null)
   const [completedSetupSections, setCompletedSetupSections] = useState<Record<string, boolean>>({})
   const titleRef = useRef<HTMLInputElement>(null)
   const completionFetchRef = useRef<{ courseId: string | null; at: number }>({ courseId: null, at: 0 })
-  const lastSectionKeyRef = useRef<string | null>(null)
-  const initializedSectionRef = useRef(false)
+  const loggedSectionTraceRef = useRef(false)
+  const viewStorageKey = `coursebuilder:last-view:${courseId ?? resolvedUrlCourseId ?? "new"}`
+  const sectionStorageKey = `coursebuilder:last-section:${courseId ?? resolvedUrlCourseId ?? "new"}`
 
   const hydrateSectionCompletion = useCallback((raw: Record<string, unknown>) => {
     const classification = (raw.classification_data as Record<string, unknown> | null) ?? {}
@@ -1451,20 +1458,36 @@ function CourseBuilderPageInner() {
   }, [courseId, activeSection, hydrateSectionCompletion])
 
   useEffect(() => {
-    if (!courseId) {
-      lastSectionKeyRef.current = "coursebuilder:last-section:new"
-      return
-    }
-    const key = `coursebuilder:last-section:${courseId}`
-    lastSectionKeyRef.current = key
-    if (initializedSectionRef.current) return
-    initializedSectionRef.current = true
-  }, [courseId])
+    window.localStorage.setItem(viewStorageKey, view)
+  }, [viewStorageKey, view])
 
   useEffect(() => {
-    const key = lastSectionKeyRef.current ?? "coursebuilder:last-section:new"
-    window.localStorage.setItem(key, activeSection)
-  }, [activeSection])
+    if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("view") === view) return
+    params.set("view", view)
+    const nextQuery = params.toString()
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash}`
+    window.history.replaceState(window.history.state, "", nextUrl)
+  }, [view])
+
+  useEffect(() => {
+    window.localStorage.setItem(sectionStorageKey, activeSection)
+  }, [sectionStorageKey, activeSection])
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return
+    if (loggedSectionTraceRef.current) return
+    loggedSectionTraceRef.current = true
+    const key = sectionStorageKey
+    const stored = window.localStorage.getItem(key)
+    console.debug("[coursebuilder:section-sync]", {
+      key,
+      activeSection,
+      storedSection: stored,
+      matches: stored === activeSection,
+    })
+  }, [activeSection, sectionStorageKey])
 
   const handleCourseCreated = useCallback((id: string, essentials: CourseCreatedData) => {
     setCourseId(id)

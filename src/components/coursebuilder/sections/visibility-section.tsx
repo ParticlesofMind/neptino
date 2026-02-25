@@ -1,9 +1,14 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { SetupPanels, SetupSection } from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { createClient } from "@/lib/supabase/client"
+import { useCallback, useState } from "react"
+import {
+  SetupPanels,
+  SetupSection,
+  updateCourseById,
+  useCourseRowLoader,
+  useCourseSectionSave,
+  useDebouncedChangeSave,
+} from "@/components/coursebuilder"
 
 export function VisibilitySection({ courseId }: { courseId: string | null }) {
   const [state, setState] = useState({
@@ -13,38 +18,32 @@ export function VisibilitySection({ courseId }: { courseId: string | null }) {
     notifications: false,
     publicDiscovery: false,
   })
-  const [, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [, setLastSavedAt] = useState<string | null>(null)
+  const { runWithSaveState } = useCourseSectionSave()
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("visibility_settings")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data?.visibility_settings) {
-          const v = data.visibility_settings as Record<string, boolean>
-          setState({
-            visible: v.visible ?? false,
-            enrollment: v.enrollment ?? false,
-            approval: v.approval ?? false,
-            notifications: v.notifications ?? false,
-            publicDiscovery: v.public_discovery ?? false,
-          })
-        }
+  type VisibilityRow = {
+    visibility_settings: Record<string, boolean> | null
+  }
+
+  useCourseRowLoader<VisibilityRow>({
+    courseId,
+    select: "visibility_settings",
+    onLoaded: (row) => {
+      if (!row.visibility_settings) return
+      const visibility = row.visibility_settings
+      setState({
+        visible: visibility.visible ?? false,
+        enrollment: visibility.enrollment ?? false,
+        approval: visibility.approval ?? false,
+        notifications: visibility.notifications ?? false,
+        publicDiscovery: visibility.public_discovery ?? false,
       })
-  }, [courseId])
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    setSaveStatus("saving")
-    const supabase = createClient()
-    const { error } = await supabase
-      .from("courses")
-      .update({
+    await runWithSaveState(async () => {
+      const { error } = await updateCourseById(courseId, {
         visibility_settings: {
           visible: state.visible,
           enrollment: state.enrollment,
@@ -54,13 +53,9 @@ export function VisibilitySection({ courseId }: { courseId: string | null }) {
         },
         updated_at: new Date().toISOString(),
       })
-      .eq("id", courseId)
-    if (error) setSaveStatus("error")
-    else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
-  }, [courseId, state])
+      return !error
+    })
+  }, [runWithSaveState, courseId, state])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
 

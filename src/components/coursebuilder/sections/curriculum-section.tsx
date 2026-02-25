@@ -1,9 +1,17 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { DANGER_ACTION_BUTTON_CLASS, PRIMARY_ACTION_BUTTON_CLASS, SECONDARY_ACTION_BUTTON_CLASS, SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { createClient } from "@/lib/supabase/client"
+import {
+  DANGER_ACTION_BUTTON_CLASS,
+  PRIMARY_ACTION_BUTTON_CLASS,
+  SECONDARY_ACTION_BUTTON_CLASS,
+  selectCourseById,
+  SetupColumn,
+  SetupPanelLayout,
+  SetupSection,
+  updateCourseById,
+  useDebouncedChangeSave,
+} from "@/components/coursebuilder"
 import { buildGenerationContext, callGenerationAPI } from "@/lib/curriculum/ai-generation-service"
 import type { GenerationExtras, ClassificationContext, PedagogyContext, NamingRules, StudentsContext } from "@/lib/curriculum/ai-generation-service"
 import { getPedagogyApproach } from "@/components/coursebuilder/sections/pedagogy-section"
@@ -404,14 +412,12 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
   useEffect(() => {
     if (!courseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("course_name, course_description, course_language, curriculum_data, schedule_settings, generation_settings, template_settings, classification_data, course_layout, students_overview")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data) {
+    void (async () => {
+      const { data, error } = await selectCourseById<Record<string, unknown>>(
+        courseId,
+        "course_name, course_description, course_language, curriculum_data, schedule_settings, generation_settings, template_settings, classification_data, course_layout, students_overview",
+      )
+      if (!error && data) {
           const c = (data.curriculum_data as Record<string, unknown>) ?? {}
           const s = (data.schedule_settings as Record<string, unknown>) ?? {}
           const gs = (data.generation_settings as Record<string, unknown> | null) ?? {}
@@ -544,8 +550,8 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
             schedule: loadedScheduleEntries.length === 0,
             curriculum: syncedRows.length === 0,
           })
-        }
-      })
+      }
+    })()
   }, [courseId])
 
   // Hook up contentVolume to auto-update topics/objectives/tasks
@@ -693,7 +699,6 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    const supabase = createClient()
 
     const serializedSessionRows = sessionRows.map((row, index) => ({
       id: row.id,
@@ -732,35 +737,31 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
       }
     })
 
-    const { error } = await supabase
-      .from("courses")
-      .update({
-        curriculum_data: {
-          module_org: moduleOrg,
-          content_volume: contentVolume,
-          course_type: courseType,
-          template_default_type: templateDefaultType,
-          certificate_mode: certificateMode,
-          lesson_count: effectiveLessonCount,
-          module_count: moduleCount,
-          module_names: moduleNames,
-          topics,
-          objectives,
-          tasks,
-          sequencing_mode: sequencingMode,
-          naming_rules: namingRules,
-          session_rows: serializedSessionRows,
-          lessons,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
+    const { error } = await updateCourseById(courseId, {
+      curriculum_data: {
+        module_org: moduleOrg,
+        content_volume: contentVolume,
+        course_type: courseType,
+        template_default_type: templateDefaultType,
+        certificate_mode: certificateMode,
+        lesson_count: effectiveLessonCount,
+        module_count: moduleCount,
+        module_names: moduleNames,
+        topics,
+        objectives,
+        tasks,
+        sequencing_mode: sequencingMode,
+        naming_rules: namingRules,
+        session_rows: serializedSessionRows,
+        lessons,
+      },
+      updated_at: new Date().toISOString(),
+    })
     if (error) return
   }, [courseId, moduleOrg, contentVolume, courseType, templateDefaultType, certificateMode, effectiveLessonCount, moduleCount, moduleNames, topics, objectives, tasks, sequencingMode, namingRules, sessionRows, scheduleEntries, resolveTemplateTypeForLesson])
 
   const persistGenerationSettings = useCallback(async () => {
     if (!courseId) return
-    const supabase = createClient()
     const existingSettings = generationSettingsRef.current ?? {}
     const nextSettings = {
       ...existingSettings,
@@ -792,10 +793,10 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
       },
     }
 
-    const { error } = await supabase
-      .from("courses")
-      .update({ generation_settings: nextSettings, updated_at: new Date().toISOString() })
-      .eq("id", courseId)
+    const { error } = await updateCourseById(courseId, {
+      generation_settings: nextSettings,
+      updated_at: new Date().toISOString(),
+    })
     if (error) return
     generationSettingsRef.current = nextSettings
   }, [courseId, optCtx, previewMode, lastAction, moduleOrg, moduleCount, moduleNames, effectiveLessonCount, topics, objectives, tasks, sessionRows])
@@ -843,27 +844,19 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     setRunProgress(40)
 
     // Flush to backend
-    const supabase = createClient()
-    const { data: snap } = await supabase
-      .from("courses")
-      .select("curriculum_data")
-      .eq("id", courseId)
-      .single()
+    const { data: snap } = await selectCourseById<Record<string, unknown>>(courseId, "curriculum_data")
 
     const snapData = (snap?.curriculum_data as Record<string, unknown> | null) ?? {}
-    const { error } = await supabase
-      .from("courses")
-      .update({
-        curriculum_data: {
-          ...snapData,
-          module_names: blankModuleNames,
-          session_rows: blankRows,
-          generated_at: null,
-          last_generation_action: null,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
+    const { error } = await updateCourseById(courseId, {
+      curriculum_data: {
+        ...snapData,
+        module_names: blankModuleNames,
+        session_rows: blankRows,
+        generated_at: null,
+        last_generation_action: null,
+      },
+      updated_at: new Date().toISOString(),
+    })
 
     setRunProgress(80)
 
@@ -1050,26 +1043,18 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
         // Flush the wipe to the database so a re-fetch never resurrects stale content
         {
-          const supabase = createClient()
-          const { data: snap } = await supabase
-            .from("courses")
-            .select("curriculum_data")
-            .eq("id", courseId)
-            .single()
+          const { data: snap } = await selectCourseById<Record<string, unknown>>(courseId, "curriculum_data")
 
           const snapData = (snap?.curriculum_data as Record<string, unknown> | null) ?? {}
-          await supabase
-            .from("courses")
-            .update({
-              curriculum_data: {
-                ...snapData,
-                module_names: wipedModuleNames,
-                session_rows: wipedRows,
-                wiped_at: new Date().toISOString(),
-              },
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", courseId)
+          await updateCourseById(courseId, {
+            curriculum_data: {
+              ...snapData,
+              module_names: wipedModuleNames,
+              session_rows: wipedRows,
+              wiped_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
         }
 
         setModuleNames(wipedModuleNames)
@@ -1094,12 +1079,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           return
         }
 
-        const supabase = createClient()
-        const { data: existing } = await supabase
-          .from("courses")
-          .select("curriculum_data")
-          .eq("id", courseId)
-          .single()
+        const { data: existing } = await selectCourseById<Record<string, unknown>>(courseId, "curriculum_data")
 
         const curriculumData = (existing?.curriculum_data as Record<string, unknown> | null) ?? {}
         const baseRows = wipedRows.length > 0
@@ -1173,10 +1153,10 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           last_generation_action: action,
         }
 
-        const { error } = await supabase
-          .from("courses")
-          .update({ curriculum_data: nextCurriculumData, updated_at: new Date().toISOString() })
-          .eq("id", courseId)
+        const { error } = await updateCourseById(courseId, {
+          curriculum_data: nextCurriculumData,
+          updated_at: new Date().toISOString(),
+        })
 
         if (error) {
           setRunStatus(`Failed to save generated curriculum: ${error.message}`)

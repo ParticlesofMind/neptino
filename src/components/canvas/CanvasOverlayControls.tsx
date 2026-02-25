@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import {
+  Ban,
   ChevronUp,
   ChevronDown,
   ChevronsUp,
@@ -187,6 +188,8 @@ interface CanvasOverlayControlsProps {
   onZoomReset: () => void
   panMode: boolean
   onTogglePanMode: () => void
+  scrollDisabled: boolean
+  onToggleScrollDisabled: () => void
   snapMenuOpen: boolean
   onToggleSnapMenu: () => void
   onCloseSnapMenu: () => void
@@ -212,6 +215,8 @@ export function CanvasOverlayControls({
   onZoomReset,
   panMode,
   onTogglePanMode,
+  scrollDisabled,
+  onToggleScrollDisabled,
   snapMenuOpen,
   onToggleSnapMenu,
   onCloseSnapMenu,
@@ -268,6 +273,13 @@ export function CanvasOverlayControls({
           iconNode={<Grid3x3 className={overlayUi.zoomButtonIcon} />}
           active={snapMenuOpen}
           onClick={onToggleSnapMenu}
+          overlayUi={overlayUi}
+        />
+        <EngineBtn
+          label="No Scroll"
+          iconNode={<Ban className={overlayUi.zoomButtonIcon} />}
+          active={scrollDisabled}
+          onClick={onToggleScrollDisabled}
           overlayUi={overlayUi}
         />
       </div>

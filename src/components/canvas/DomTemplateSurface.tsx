@@ -136,7 +136,7 @@ export function DomTemplateSurface({
                 fieldEnabled={templateFieldEnabled}
                 name={currentLessonPage.lessonTitle}
                 scale="md"
-                scrollable
+                scrollable={false}
                 density={templateVisualDensity}
                 data={templateData}
                 droppedMediaByArea={currentDroppedMediaByArea}

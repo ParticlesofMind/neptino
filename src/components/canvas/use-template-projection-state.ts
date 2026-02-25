@@ -29,6 +29,18 @@ export function useTemplateProjectionState({
   teacherName: string
   institutionName: string
 }) {
+  type TaskRow = {
+    topic: string
+    objective: string
+    task: string
+    topicIndex: number
+    objectiveIndex: number
+    taskIndex: number
+    instructionArea: string
+    studentArea: string
+    teacherArea: string
+  }
+
   const currentEnabledBlocks = useMemo(
     () => currentLessonPage?.enabledBlocks ?? [],
     [currentLessonPage?.enabledBlocks],
@@ -82,9 +94,9 @@ export function useTemplateProjectionState({
     ].filter((block): block is "program" | "resources" | "content" | "assignment" | "scoring" => Boolean(block))
 
     const layoutPlan = planLessonBodyLayout({
-      topicsPerLesson,
-      objectivesPerTopic,
-      tasksPerObjective,
+      topicCount: topicsPerLesson,
+      objectiveCount: objectivesPerTopic,
+      taskCount: tasksPerObjective,
       enabledBlocks,
     })
 
@@ -285,6 +297,43 @@ export function useTemplateProjectionState({
       return Array.from({ length: topicCount }, (_, idx) => baseMinutes + (idx < remainder ? 1 : 0))
     }
 
+    const groupTaskRowsByHierarchy = (rows: TaskRow[]) => {
+      const topicOrder: string[] = []
+      const groupedByTopic = new Map<string, Map<string, TaskRow[]>>()
+
+      rows.forEach((row) => {
+        if (!groupedByTopic.has(row.topic)) {
+          groupedByTopic.set(row.topic, new Map<string, TaskRow[]>())
+          topicOrder.push(row.topic)
+        }
+        const objectivesMap = groupedByTopic.get(row.topic)!
+        if (!objectivesMap.has(row.objective)) {
+          objectivesMap.set(row.objective, [])
+        }
+        objectivesMap.get(row.objective)!.push(row)
+      })
+
+      return topicOrder.map((topic) => {
+        const objectivesMap = groupedByTopic.get(topic)!
+        const objectiveEntries = Array.from(objectivesMap.entries())
+        return {
+          topic,
+          objectives: objectiveEntries.map(([objective, taskRows]) => ({
+            objective,
+            tasks: taskRows.map((taskRow) => ({
+              task: taskRow.task,
+              topicIndex: taskRow.topicIndex,
+              objectiveIndex: taskRow.objectiveIndex,
+              taskIndex: taskRow.taskIndex,
+              instructionArea: taskRow.instructionArea,
+              studentArea: taskRow.studentArea,
+              teacherArea: taskRow.teacherArea,
+            })),
+          })),
+        }
+      })
+    }
+
     const resolvedTopics = Array.from({ length: topicsPerLesson }, (_, topicIdx) => (
       currentLessonPage.topics[topicIdx] || `Topic ${topicIdx + 1}`
     ))
@@ -327,40 +376,42 @@ export function useTemplateProjectionState({
         }))
       ))
     ))
-    const fullContentTopicGroups = resolvedTopics.map((topic, topicIdx) => ({
-      topic,
-      objectives: resolvedObjectives.map((objective, objectiveIdx) => ({
-        objective,
-        tasks: resolvedTasks.map((task, taskIdx) => ({
+    const fullContentTaskRows: TaskRow[] = resolvedTopics.flatMap((topic, topicIdx) => (
+      resolvedObjectives.flatMap((objective, objectiveIdx) => (
+        resolvedTasks.map((task, taskIdx) => ({
+          topic,
+          objective,
           task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
+          topicIndex: topicIdx,
+          objectiveIndex: objectiveIdx,
+          taskIndex: taskIdx,
           instructionArea: scalarFieldValues.instruction_area,
           studentArea: scalarFieldValues.student_area,
           teacherArea: scalarFieldValues.teacher_area,
-        })),
-      })),
-    }))
-    const contentTopicGroups = sliceForBlockPage("content", fullContentTopicGroups)
-
-    const fullAssignmentTasks = resolvedTopics.flatMap((topic, topicIdx) => (
-      resolvedObjectives.flatMap((objective, objectiveIdx) => (
-        resolvedTasks.map((task, taskIdx) => `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${topic}: ${objective} — ${task}`)
+        }))
       ))
     ))
-    const assignmentTasks = sliceForBlockPage("assignment", fullAssignmentTasks)
+    const contentTaskRowsPaged = sliceForBlockPage("content", fullContentTaskRows)
+    const contentTopicGroups = groupTaskRowsByHierarchy(contentTaskRowsPaged)
 
-    const fullAssignmentGroups = resolvedTopics.map((topic, topicIdx) => ({
-      topic,
-      objectives: resolvedObjectives.map((objective, objectiveIdx) => ({
-        objective,
-        tasks: resolvedTasks.map((task, taskIdx) => ({
+    const fullAssignmentTaskRows: TaskRow[] = resolvedTopics.flatMap((topic, topicIdx) => (
+      resolvedObjectives.flatMap((objective, objectiveIdx) => (
+        resolvedTasks.map((task, taskIdx) => ({
+          topic,
+          objective,
           task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
+          topicIndex: topicIdx,
+          objectiveIndex: objectiveIdx,
+          taskIndex: taskIdx,
           instructionArea: scalarFieldValues.instruction_area,
           studentArea: scalarFieldValues.student_area,
           teacherArea: scalarFieldValues.teacher_area,
-        })),
-      })),
-    }))
-    const assignmentGroups = sliceForBlockPage("assignment", fullAssignmentGroups)
+        }))
+      ))
+    ))
+    const assignmentTaskRowsPaged = sliceForBlockPage("assignment", fullAssignmentTaskRows)
+    const assignmentTasks = assignmentTaskRowsPaged.map((row) => `${row.topic}: ${row.objective} — ${row.task}`)
+    const assignmentGroups = groupTaskRowsByHierarchy(assignmentTaskRowsPaged)
 
     const programRows = sliceForBlockPage("program", fullProgramRows)
     const resourceRowsPaged = sliceForBlockPage("resources", fullResourceRows)
@@ -372,6 +423,9 @@ export function useTemplateProjectionState({
         objective: objective.objective,
         tasks: objective.tasks.map((task, taskIndex) => ({
           task: `${topicIndex + 1}.${taskIndex + 1} ${task.task}`,
+          topicIndex: task.topicIndex,
+          objectiveIndex: task.objectiveIndex,
+          taskIndex: task.taskIndex,
           instructionArea: task.instructionArea,
           studentArea: task.studentArea,
           teacherArea: task.teacherArea,

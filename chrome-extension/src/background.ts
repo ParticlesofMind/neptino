@@ -43,3 +43,5 @@ chrome.runtime.onInstalled.addListener(async () => {
   });
 });
 
+export {};
+
