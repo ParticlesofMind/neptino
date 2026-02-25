@@ -1,279 +1,36 @@
 "use client"
 
 import { useState, useCallback, useEffect, useMemo } from "react"
-import type { RealtimeChannel } from "@supabase/supabase-js"
-import dynamic from "next/dynamic"
 import { Text as PixiText, TextStyle } from "pixi.js"
-import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type PixiTemplateLayoutMeasurement, type PixiTemplateLayoutModel, type PixiTemplateMediaItem, type ToolConfig } from "@/components/canvas/PixiCanvas"
+import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type PixiTemplateLayoutMeasurement, type PixiTemplateLayoutModel, type ToolConfig } from "@/components/canvas/PixiCanvas"
+import { PixiWidgetSurface } from "@/components/canvas/PixiWidgetSurface"
+import { DomTemplateSurface } from "@/components/canvas/DomTemplateSurface"
+import { CanvasOverlayControls } from "@/components/canvas/CanvasOverlayControls"
+import { MediaLibraryPanel } from "@/components/canvas/MediaLibraryPanel"
+import { InspectorPanel } from "@/components/canvas/InspectorPanel"
+import { PixiLayoutPager } from "@/components/canvas/PixiLayoutPager"
+import { useMediaLibraryAssets } from "@/components/canvas/use-media-library-assets"
+import { useCourseCanvasContext } from "@/components/canvas/use-course-canvas-context"
+import { useCanvasDocumentState } from "@/components/canvas/use-canvas-document-state"
+import { useTemplateProjectionState } from "@/components/canvas/use-template-projection-state"
+import type {
+  AnimateTool,
+  BuildTool,
+  InspectorPanelView,
+  MediaAsset,
+  Mode,
+  OverlayUi,
+  SnapReference,
+  ToolItem,
+} from "@/components/canvas/create-view-types"
 import { createClient } from "@/lib/supabase/client"
 import {
-  createTemplateLookups,
-  formatTemplateFieldValue,
-  normalizeTemplateUiSettings,
-  normalizeTemplateSettings,
-  DEFAULT_TEMPLATE_VISUAL_DENSITY,
-  type TemplateVisualDensity,
-} from "@/lib/curriculum/template-source-of-truth"
-import {
-  buildTemplateFieldState,
-  planLessonBodyLayout,
-  projectLessonPages,
-  type LessonCanvasPageProjection,
-  type RawCurriculumSessionRow,
-  type RawScheduleGeneratedEntry,
-} from "@/lib/curriculum/canvas-projection"
-import { TemplateBlueprint, type TemplateAreaMediaItem, type TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
-import { BLOCK_FIELDS, type BlockId } from "@/components/coursebuilder/sections/templates-section"
-import {
-  Gamepad2, AreaChart, Bot,
-  ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Layers, Map as MapIcon,
-  // media
-  File, Image as ImageIcon, Film, AudioLines, BookOpenText, Blocks, Link,
+  Bot,
   // tools
   MousePointer2, PenTool, Paintbrush, Type, Shapes, Table, Eraser,
   // modes / animate
-  Hammer, Clapperboard,
-  // perspective
-  ZoomIn, ZoomOut, RotateCcw, Hand, Grid3x3,
-  // snap
-  Crosshair, Target,
-  // layers
-  Eye, EyeOff, Lock, Unlock,
+  Clapperboard,
 } from "lucide-react"
-
-// PixiJS touches browser APIs at import time — must be loaded client-only
-type PixiCanvasProps = {
-  config?: CanvasPageConfig
-  zoom?: number
-  onZoomChange?: (pct: number) => void
-  activeTool?: string
-  toolConfig?: ToolConfig
-  activePage?: number
-  focusPage?: number
-  onViewportChange?: (info: CanvasViewportInfo) => void
-  onActivePageChange?: (page: number) => void
-  templateLayoutModel?: PixiTemplateLayoutModel | null
-  enableTemplateLayout?: boolean
-  onTemplateMediaActivate?: (media: PixiTemplateMediaItem) => void
-  onTemplateAreaDrop?: (areaKey: string, rawPayload: string) => void
-  onTemplateLayoutMeasured?: (measurement: PixiTemplateLayoutMeasurement) => void
-}
-const PixiCanvas = dynamic<PixiCanvasProps>(
-  () => import("@/components/canvas/PixiCanvas").then((m) => m.PixiCanvas),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-        <span className="text-xs text-muted-foreground">Loading canvas…</span>
-      </div>
-    ),
-  },
-)
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type Mode = "build" | "animate"
-type BuildTool = "selection" | "pen" | "brush" | "text" | "shapes" | "tables" | "generate" | "eraser"
-type AnimateTool = "selection" | "scene" | "path" | "modify"
-type PanelView = "layers" | "navigation"
-type SnapReference = "canvas" | "object" | "grid"
-
-type OverlayUi = {
-  headerPadding: string
-  headerTitle: string
-  headerMeta: string
-  headerChip: string
-  blockPadding: string
-  blockLabel: string
-  blockCount: string
-  cellLabel: string
-  cellValue: string
-  nestedLabel: string
-  nestedValue: string
-  footerText: string
-  footerChip: string
-  nestedLines: string
-  low: boolean
-  // Panels (left/right)
-  panelHeaderPadding: string
-  panelHeaderText: string
-  panelHeaderIcon: string
-  panelSearchPadding: string
-  panelSearchInput: string
-  panelContentPadding: string
-  panelItemPadding: string
-  panelItemText: string
-  panelItemIcon: string
-  // Media category buttons
-  mediaCategoryPadding: string
-  mediaCategoryIcon: string
-  mediaCategoryLabel: string
-  // Toolbar & controls
-  toolbarPadding: string
-  toolbarGap: string
-  toolButtonPadding: string
-  toolButtonIcon: string
-  toolButtonLabel: string
-  controlLabel: string
-  controlInput: string
-  controlButton: string
-  // Zoom & scroll controls
-  zoomButtonPadding: string
-  zoomButtonIcon: string
-  zoomValueText: string
-  scrollButtonPadding: string
-  scrollButtonIcon: string
-  scrollInputText: string
-  scrollPageText: string
-}
-
-// ─── Media panel items ────────────────────────────────────────────────────────
-
-interface MediaItem {
-  id: string
-  label: string
-  iconNode: React.ReactNode
-}
-
-type CurriculumSessionRow = RawCurriculumSessionRow
-type ScheduleGeneratedEntry = RawScheduleGeneratedEntry
-type LessonCanvasPage = LessonCanvasPageProjection
-
-interface MediaAsset {
-  id: string
-  category: string
-  mediaType: string
-  title: string
-  description: string
-  url: string
-}
-
-interface CanvasDocumentPayload {
-  schemaVersion: number
-  droppedMediaByArea: Record<string, TemplateAreaMediaItem[]>
-}
-
-type WikimediaSearchResponse = {
-  query?: {
-    pages?: Record<string, {
-      pageid?: number
-      title?: string
-      imageinfo?: Array<{ url?: string; mime?: string }>
-    }>
-  }
-}
-
-type WikipediaSearchResponse = {
-  query?: {
-    search?: Array<{
-      pageid?: number
-      title?: string
-      snippet?: string
-    }>
-  }
-}
-
-function normalizeMediaCategory(mediaType: string): string {
-  const normalized = mediaType.toLowerCase()
-  if (normalized.includes("video")) return "videos"
-  if (normalized.includes("audio") || normalized.includes("podcast")) return "audio"
-  if (normalized.includes("image") || normalized.includes("map") || normalized.includes("diagram")) return "images"
-  if (normalized.includes("text") || normalized.includes("article") || normalized.includes("compendium") || normalized.includes("book")) return "text"
-  if (normalized.includes("link")) return "links"
-  if (normalized.includes("plugin")) return "plugins"
-  return "files"
-}
-
-function stripHtmlTags(value: string): string {
-  return value.replace(/<[^>]*>/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").trim()
-}
-
-function dedupeMediaAssets(assets: MediaAsset[]): MediaAsset[] {
-  const seen = new Set<string>()
-  const unique: MediaAsset[] = []
-  assets.forEach((asset) => {
-    const key = `${asset.category}::${asset.url || asset.title}`.toLowerCase()
-    if (seen.has(key)) return
-    seen.add(key)
-    unique.push(asset)
-  })
-  return unique
-}
-
-async function fetchWikimediaAssets(query: string, signal?: AbortSignal): Promise<MediaAsset[]> {
-  const normalizedQuery = query.trim()
-  if (!normalizedQuery) return []
-
-  const commonsUrl = new URL("https://commons.wikimedia.org/w/api.php")
-  commonsUrl.searchParams.set("action", "query")
-  commonsUrl.searchParams.set("format", "json")
-  commonsUrl.searchParams.set("origin", "*")
-  commonsUrl.searchParams.set("generator", "search")
-  commonsUrl.searchParams.set("gsrnamespace", "6")
-  commonsUrl.searchParams.set("gsrlimit", "40")
-  commonsUrl.searchParams.set("gsrsearch", normalizedQuery)
-  commonsUrl.searchParams.set("prop", "imageinfo")
-  commonsUrl.searchParams.set("iiprop", "url|mime")
-
-  const wikipediaUrl = new URL("https://en.wikipedia.org/w/api.php")
-  wikipediaUrl.searchParams.set("action", "query")
-  wikipediaUrl.searchParams.set("format", "json")
-  wikipediaUrl.searchParams.set("origin", "*")
-  wikipediaUrl.searchParams.set("list", "search")
-  wikipediaUrl.searchParams.set("srlimit", "24")
-  wikipediaUrl.searchParams.set("srsearch", normalizedQuery)
-
-  const [commonsResponse, wikipediaResponse] = await Promise.all([
-    fetch(commonsUrl.toString(), { signal }),
-    fetch(wikipediaUrl.toString(), { signal }),
-  ])
-
-  const assets: MediaAsset[] = []
-
-  if (commonsResponse.ok) {
-    const commonsPayload = (await commonsResponse.json()) as WikimediaSearchResponse
-    const pages = Object.values(commonsPayload.query?.pages ?? {})
-    pages.forEach((page) => {
-      const mediaUrl = page.imageinfo?.[0]?.url
-      const mimeType = String(page.imageinfo?.[0]?.mime ?? "")
-      if (!mediaUrl || !mimeType) return
-
-      const category = normalizeMediaCategory(mimeType)
-      if (!["images", "videos", "audio"].includes(category)) return
-
-      const title = String(page.title ?? "Wikimedia media").replace(/^File:/i, "")
-      assets.push({
-        id: `wikimedia-${String(page.pageid ?? crypto.randomUUID())}`,
-        category,
-        mediaType: mimeType,
-        title,
-        description: "Wikimedia Commons",
-        url: mediaUrl,
-      })
-    })
-  }
-
-  if (wikipediaResponse.ok) {
-    const wikipediaPayload = (await wikipediaResponse.json()) as WikipediaSearchResponse
-    const results = wikipediaPayload.query?.search ?? []
-    results.forEach((entry) => {
-      const title = String(entry.title ?? "").trim()
-      if (!title) return
-      const articleUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/\s+/g, "_"))}`
-      assets.push({
-        id: `wikipedia-${String(entry.pageid ?? crypto.randomUUID())}`,
-        category: "text",
-        mediaType: "Wikipedia article",
-        title,
-        description: stripHtmlTags(String(entry.snippet ?? "Wikipedia article")),
-        url: articleUrl,
-      })
-    })
-  }
-
-  return dedupeMediaAssets(assets)
-}
 
 // ─── Resize handle hook ─────────────────────────────────────────────────────────────────
 
@@ -312,73 +69,7 @@ function useResizeHandle(
   return { width, setWidth, startResize }
 }
 
-function normalizeDroppedMediaByArea(
-  value: unknown,
-): Record<string, TemplateAreaMediaItem[]> {
-  if (!value || typeof value !== "object") {
-    return {}
-  }
-
-  const entries = Object.entries(value as Record<string, unknown>).map(([areaKey, areaValue]) => {
-    const normalizedItems = Array.isArray(areaValue)
-      ? areaValue
-          .filter((item): item is Partial<TemplateAreaMediaItem> => Boolean(item) && typeof item === "object")
-          .map((item) => ({
-            id: String(item.id ?? crypto.randomUUID()),
-            title: String(item.title ?? "Media"),
-            description: String(item.description ?? ""),
-            mediaType: String(item.mediaType ?? "media"),
-            category: String(item.category ?? normalizeMediaCategory(String(item.mediaType ?? "media"))),
-            url: String(item.url ?? ""),
-          }))
-      : []
-    return [areaKey, normalizedItems] as const
-  })
-
-  return Object.fromEntries(entries)
-}
-
-function SnapToggle({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean
-  onChange: () => void
-  label: string
-}) {
-  return (
-    <label className="flex cursor-pointer items-center gap-2 py-0.5 text-xs">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="accent-primary"
-      />
-      {label}
-    </label>
-  )
-}
-
-const MEDIA_ITEMS: MediaItem[] = [
-  { id: "files",   label: "Files",   iconNode: <File         className="h-5 w-5" /> },
-  { id: "images",  label: "Images",  iconNode: <ImageIcon    className="h-5 w-5" /> },
-  { id: "videos",  label: "Videos",  iconNode: <Film         className="h-5 w-5" /> },
-  { id: "audio",   label: "Audio",   iconNode: <AudioLines   className="h-5 w-5" /> },
-  { id: "text",    label: "Text",    iconNode: <BookOpenText className="h-5 w-5" /> },
-  { id: "plugins", label: "Plugins", iconNode: <Blocks       className="h-5 w-5" /> },
-  { id: "links",   label: "Links",   iconNode: <Link         className="h-5 w-5" /> },
-  { id: "games",   label: "Games",   iconNode: <Gamepad2     className="h-5 w-5" /> },
-  { id: "graphs",  label: "Graphs",  iconNode: <AreaChart    className="h-5 w-5" /> },
-]
-
 // ─── Tool definitions ─────────────────────────────────────────────────────────
-
-interface ToolItem<T extends string> {
-  id: T
-  label: string
-  iconNode: React.ReactNode
-}
 
 const BUILD_TOOLS: ToolItem<BuildTool>[] = [
   { id: "selection", label: "Select",   iconNode: <MousePointer2 className="h-5 w-5" /> },
@@ -398,150 +89,6 @@ const ANIMATE_TOOLS: ToolItem<AnimateTool>[] = [
   { id: "modify",    label: "Modify", iconNode: <Shapes        className="h-5 w-5" /> },
 ]
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function EngineBtn({
-  active,
-  onClick,
-  label,
-  iconNode,
-  title,
-  compact,
-  overlayUi,
-}: {
-  active?: boolean
-  onClick?: () => void
-  label?: string
-  iconNode?: React.ReactNode
-  title?: string
-  compact?: boolean
-  overlayUi?: OverlayUi
-}) {
-  return (
-    <button
-      type="button"
-      title={title ?? label}
-      onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-0.5 ${compact ? "h-10 w-10" : "h-12 w-12"} rounded border transition select-none
-        ${active
-          ? "border-primary bg-blue-100 text-primary"
-          : "border-border bg-background text-foreground/70 hover:border-primary/40 hover:bg-muted/30"
-        }
-        ${overlayUi?.controlInput ?? "text-xs"}
-      `}
-    >
-      {iconNode}
-      {label && (
-        <span className={`${overlayUi?.toolButtonLabel ?? "text-[10px]"} leading-none font-medium truncate max-w-full`}>
-          {label}
-        </span>
-      )}
-    </button>
-  )
-}
-
-// ─── Snap Menu ────────────────────────────────────────────────────────────────
-
-function SnapMenu({
-  open,
-  onClose,
-  snapReference,
-  onChangeReference,
-}: {
-  open: boolean
-  onClose: () => void
-  snapReference: SnapReference
-  onChangeReference: (r: SnapReference) => void
-}) {
-  const [smartGuides, setSmartGuides] = useState(true)
-  const [distLabels, setDistLabels] = useState(true)
-  const [resizeGuides, setResizeGuides] = useState(true)
-  const [smartSel, setSmartSel] = useState(true)
-  const [colorCoding, setColorCoding] = useState(true)
-  const [showGrid, setShowGrid] = useState(true)
-  const [gridSpacing, setGridSpacing] = useState(20)
-
-  if (!open) return null
-
-  const refModes: { id: SnapReference; label: string; icon: React.ReactNode }[] = [
-    { id: "canvas", label: "Canvas", icon: <Crosshair className="h-4 w-4" /> },
-    { id: "object", label: "Object", icon: <Target    className="h-4 w-4" /> },
-    { id: "grid",   label: "Grid",   icon: <Grid3x3   className="h-4 w-4" /> },
-  ]
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-20" onClick={onClose} />
-      <div className="absolute left-12 top-24 z-30 w-56 rounded-lg border border-border bg-popover p-3 shadow-lg space-y-2 text-sm text-foreground">
-        <SnapToggle checked={smartGuides} onChange={() => setSmartGuides(!smartGuides)} label="Smart Guides" />
-        <div className="pl-3 space-y-1 border-l border-border">
-          <SnapToggle checked={distLabels}   onChange={() => setDistLabels(!distLabels)}     label="Distance Labels" />
-          <SnapToggle checked={resizeGuides} onChange={() => setResizeGuides(!resizeGuides)} label="Resize Guides" />
-          <SnapToggle checked={smartSel}     onChange={() => setSmartSel(!smartSel)}         label="Smart Selection" />
-          <SnapToggle checked={colorCoding}  onChange={() => setColorCoding(!colorCoding)}   label="Color Coding" />
-        </div>
-
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground pt-1">
-          Smart Guide Reference
-        </div>
-        <div className="flex gap-1">
-          {refModes.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => onChangeReference(r.id)}
-              className={`flex flex-1 flex-col items-center gap-0.5 rounded p-1 text-[10px] transition ${
-                snapReference === r.id
-                  ? "bg-accent text-primary"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-              }`}
-            >
-              {r.icon}
-              {r.label}
-            </button>
-          ))}
-        </div>
-
-        {snapReference === "grid" && (
-          <div className="space-y-2 border-t border-border pt-2">
-            <SnapToggle checked={showGrid} onChange={() => setShowGrid(!showGrid)} label="Show grid" />
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Spacing:</span>
-              <input
-                type="number"
-                min={1}
-                max={100}
-                value={gridSpacing}
-                onChange={(e) => setGridSpacing(Number(e.target.value))}
-                className="w-16 rounded border border-border bg-background px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-              <span className="text-xs text-muted-foreground">px</span>
-            </div>
-          </div>
-        )}
-
-        <div className="border-t border-border pt-2 space-y-1">
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Distribute
-          </div>
-          <div className="flex gap-1">
-            {["Horizontally", "Vertically"].map((dir) => (
-              <button
-                key={dir}
-                type="button"
-                className="flex-1 rounded border border-border px-1 py-0.5 text-[10px] text-muted-foreground hover:bg-muted/60 hover:text-foreground transition"
-              >
-                {dir}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
-
 // ─── CreateView ───────────────────────────────────────────────────────────────
 
 export function CreateView({
@@ -560,32 +107,40 @@ export function CreateView({
   // When active the canvas uses "grab" cursor/panning regardless of activeTool.
   const [panMode, setPanMode] = useState(false)
 
-  const [panelView, setPanelView] = useState<PanelView>("layers")
+  const [panelView, setPanelView] = useState<InspectorPanelView>("layers")
   const [currentPage, setCurrentPage] = useState(1)
-  const [courseTitle, setCourseTitle] = useState("Untitled Course")
-  const [courseType, setCourseType] = useState("")
-  const [courseLanguage, setCourseLanguage] = useState("")
-  const [teacherName, setTeacherName] = useState("Teacher")
-  const [institutionName, setInstitutionName] = useState("Independent")
-  const [lessonPages, setLessonPages] = useState<LessonCanvasPage[]>([])
+  const {
+    courseTitle,
+    courseType,
+    courseLanguage,
+    teacherName,
+    institutionName,
+    lessonPages,
+    templateVisualDensity,
+  } = useCourseCanvasContext({
+    courseId,
+    supabase,
+  })
   const totalPages = lessonPages.length > 0 ? lessonPages.length : (canvasConfig?.pageCount ?? 1)
   const [zoom, setZoom] = useState(100)
   const [viewportInfo, setViewportInfo] = useState<CanvasViewportInfo | null>(null)
-  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([])
-  const [wikipediaAssets, setWikipediaAssets] = useState<MediaAsset[]>([])
-  const [droppedMediaByScope, setDroppedMediaByScope] = useState<Record<string, Record<string, TemplateAreaMediaItem[]>>>({})
-  const [canvasDocumentId, setCanvasDocumentId] = useState<string | null>(null)
-  const [documentReadyKey, setDocumentReadyKey] = useState<string | null>(null)
-  const [mediaLoading, setMediaLoading] = useState(false)
-  const [wikipediaLoading, setWikipediaLoading] = useState(false)
   const [mediaDragActive, setMediaDragActive] = useState(false)
-  const [activeCanvasMedia, setActiveCanvasMedia] = useState<TemplateAreaMediaItem | null>(null)
   const [pixiLayoutPageByScope, setPixiLayoutPageByScope] = useState<Record<string, number>>({})
   const [pixiMeasuredSectionHeightsByScope, setPixiMeasuredSectionHeightsByScope] = useState<Record<string, Record<string, number>>>({})
 
-  // Always-selected media category
-  const [activeMedia, setActiveMedia] = useState<string>("files")
-  const [mediaSearch, setMediaSearch] = useState("")
+  const {
+    activeMedia,
+    setActiveMedia,
+    mediaSearch,
+    setMediaSearch,
+    mediaLoading,
+    wikipediaLoading,
+    mediaItems,
+  } = useMediaLibraryAssets({
+    supabase,
+    courseTitle,
+  })
+
   const [snapMenuOpen, setSnapMenuOpen] = useState(false)
   const [snapReference, setSnapReference] = useState<SnapReference>("canvas")
 
@@ -635,7 +190,6 @@ export function CreateView({
   const [tableType, setTableType] = useState("basic")
   const [generateType, setGenerateType] = useState("text")
   const [generatePrompt, setGeneratePrompt] = useState("")
-  const [templateVisualDensity, setTemplateVisualDensity] = useState<TemplateVisualDensity>(DEFAULT_TEMPLATE_VISUAL_DENSITY)
   // Tool options state — animate
   const [selectionMode, setSelectionMode] = useState<"contain" | "intersect">("contain")
   const [aspectRatio, setAspectRatio] = useState("16:9")
@@ -650,157 +204,6 @@ export function CreateView({
       pageCount: totalPages,
     }
   }, [canvasConfig, totalPages])
-
-  const loadCourseContext = useCallback(async () => {
-    if (!courseId) {
-      setLessonPages([])
-      return
-    }
-
-    const { data, error } = await supabase
-      .from("courses")
-      .select("course_name,course_type,course_language,institution,generation_settings,curriculum_data,schedule_settings,template_settings")
-      .eq("id", courseId)
-      .maybeSingle()
-
-    if (error || !data) {
-      return
-    }
-
-    setCourseTitle(String(data.course_name ?? "Untitled Course"))
-    setCourseType(String(data.course_type ?? ""))
-    setCourseLanguage(String(data.course_language ?? ""))
-    setInstitutionName(String(data.institution ?? "Independent"))
-    const generationSettings = (data.generation_settings as Record<string, unknown> | null) ?? {}
-    const resolvedTeacherName =
-      (typeof generationSettings.teacher_name === "string" && generationSettings.teacher_name.trim())
-        ? String(generationSettings.teacher_name)
-        : "Teacher"
-    setTeacherName(resolvedTeacherName)
-    const templates = normalizeTemplateSettings(data.template_settings)
-    const templateUiSettings = normalizeTemplateUiSettings(data.template_settings)
-    const { templateById, templateByType } = createTemplateLookups(templates)
-    setTemplateVisualDensity(templateUiSettings.visualDensity)
-    const curriculum = (data.curriculum_data as Record<string, unknown> | null) ?? {}
-    const scheduleSettings = (data.schedule_settings as Record<string, unknown> | null) ?? {}
-    const scheduleRows = Array.isArray(scheduleSettings.generated_entries)
-      ? (scheduleSettings.generated_entries as ScheduleGeneratedEntry[])
-      : []
-    const sessionRows = Array.isArray(curriculum.session_rows)
-      ? (curriculum.session_rows as CurriculumSessionRow[])
-      : []
-    const pages = projectLessonPages({
-      curriculum,
-      scheduleRows,
-      sessionRows,
-      templateById,
-      templateByType,
-    })
-
-    setLessonPages(pages)
-  }, [courseId, supabase])
-
-  useEffect(() => {
-    let active = true
-    const initialLoadHandle = window.setTimeout(() => {
-      if (!active) return
-      void loadCourseContext()
-    }, 0)
-
-    let channel: RealtimeChannel | null = null
-    if (courseId) {
-      channel = supabase
-        .channel(`create-view-course-${courseId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "courses",
-            filter: `id=eq.${courseId}`,
-          },
-          () => {
-            if (!active) return
-            void loadCourseContext()
-          },
-        )
-        .subscribe()
-    }
-
-    return () => {
-      active = false
-      window.clearTimeout(initialLoadHandle)
-      if (channel) {
-        void supabase.removeChannel(channel)
-      }
-    }
-  }, [courseId, loadCourseContext, supabase])
-
-  useEffect(() => {
-    let active = true
-
-    async function loadMedia() {
-      setMediaLoading(true)
-      const { data } = await supabase
-        .from("encyclopedia_media")
-        .select("id,media_type,title,description,url")
-        .limit(200)
-
-      if (!active) return
-
-      const fetched = (Array.isArray(data) ? data : []).map((row) => {
-        const mediaType = String((row as Record<string, unknown>).media_type ?? "file")
-        return {
-          id: String((row as Record<string, unknown>).id ?? crypto.randomUUID()),
-          category: normalizeMediaCategory(mediaType),
-          mediaType,
-          title: String((row as Record<string, unknown>).title ?? `${mediaType} resource`),
-          description: String((row as Record<string, unknown>).description ?? ""),
-          url: String((row as Record<string, unknown>).url ?? ""),
-        } satisfies MediaAsset
-      })
-
-      setMediaAssets(fetched)
-      setMediaLoading(false)
-    }
-
-    void loadMedia()
-    return () => {
-      active = false
-    }
-  }, [supabase])
-
-  useEffect(() => {
-    const seedQuery = mediaSearch.trim().length >= 2
-      ? mediaSearch.trim()
-      : (courseTitle.trim() && courseTitle.trim().toLowerCase() !== "untitled course"
-        ? courseTitle.trim()
-        : "world history")
-
-    let active = true
-    const controller = new AbortController()
-    const handle = window.setTimeout(async () => {
-      try {
-        setWikipediaLoading(true)
-        const assets = await fetchWikimediaAssets(seedQuery, controller.signal)
-        if (!active) return
-        setWikipediaAssets(assets)
-      } catch {
-        if (!active) return
-        setWikipediaAssets([])
-      } finally {
-        if (active) {
-          setWikipediaLoading(false)
-        }
-      }
-    }, 300)
-
-    return () => {
-      active = false
-      window.clearTimeout(handle)
-      controller.abort()
-    }
-  }, [courseTitle, mediaSearch])
 
   const clampedCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages))
 
@@ -819,404 +222,40 @@ export function CreateView({
     [clampedCurrentPage, currentDocumentKey],
   )
 
-  const currentDroppedMediaByArea = useMemo(
-    () => normalizeDroppedMediaByArea(droppedMediaByScope[currentCanvasScopeKey]),
-    [currentCanvasScopeKey, droppedMediaByScope],
-  )
+  const {
+    currentDroppedMediaByArea,
+    onDropAreaMedia,
+    onPixiAreaDrop,
+    onRemoveAreaMedia,
+  } = useCanvasDocumentState({
+    supabase,
+    courseId,
+    currentLessonPageGlobal: currentLessonPage?.globalPage ?? null,
+    currentDocumentKey,
+    currentCanvasScopeKey,
+    setMediaDragActive,
+  })
 
-  const currentEnabledBlocks = useMemo(
-    () => currentLessonPage?.enabledBlocks ?? [],
-    [currentLessonPage?.enabledBlocks],
-  )
-  const hasHeaderBlock = currentEnabledBlocks.includes("header")
-  const hasFooterBlock = currentEnabledBlocks.includes("footer")
-
-  const templateEnabledMap = useMemo<Record<BlockId, boolean>>(() => {
-    const enabledSet = new Set(currentEnabledBlocks)
-    return {
-      header: enabledSet.has("header"),
-      program: enabledSet.has("program"),
-      resources: enabledSet.has("resources"),
-      content: enabledSet.has("content"),
-      assignment: enabledSet.has("assignment"),
-      scoring: enabledSet.has("scoring"),
-      footer: enabledSet.has("footer"),
-    }
-  }, [currentEnabledBlocks])
-
-  const templateFieldEnabled = useMemo(
-    () => currentLessonPage?.enabledFields ?? buildTemplateFieldState(currentLessonPage?.templateType ?? "lesson"),
-    [currentLessonPage?.enabledFields, currentLessonPage?.templateType],
-  )
-
-  const bodyTemplateEnabledMap = useMemo<Record<BlockId, boolean>>(
-    () => ({ ...templateEnabledMap, header: false, footer: false }),
-    [templateEnabledMap],
-  )
-
-  const lessonBlockPagination = useMemo(() => {
-    const emptySlices: Partial<Record<BlockId, { start: number; end: number }>> = {}
-    const emptyContinuation: Partial<Record<BlockId, boolean>> = {}
-    if (!currentLessonPage) {
-      return {
-        slices: emptySlices,
-        activeBlocks: [] as BlockId[],
-        continuation: emptyContinuation,
-      }
-    }
-
-    const topicsPerLesson = Math.max(1, currentLessonPage.topicCount || currentLessonPage.topics.length || 1)
-    const objectivesPerTopic = Math.max(1, currentLessonPage.objectiveCount || currentLessonPage.objectives.length || 1)
-    const tasksPerObjective = Math.max(1, currentLessonPage.taskCount || currentLessonPage.tasks.length || 1)
-    const enabledBlocks = [
-      bodyTemplateEnabledMap.program ? "program" : null,
-      bodyTemplateEnabledMap.resources ? "resources" : null,
-      bodyTemplateEnabledMap.content ? "content" : null,
-      bodyTemplateEnabledMap.assignment ? "assignment" : null,
-      bodyTemplateEnabledMap.scoring ? "scoring" : null,
-    ].filter((block): block is "program" | "resources" | "content" | "assignment" | "scoring" => Boolean(block))
-
-    const layoutPlan = planLessonBodyLayout({
-      topicsPerLesson,
-      objectivesPerTopic,
-      tasksPerObjective,
-      enabledBlocks,
-    })
-
-    const localPage = currentLessonPage.localPage ?? 1
-    const chunksOnPage = layoutPlan.chunks.filter((chunk) => chunk.page === localPage)
-    const slices: Partial<Record<BlockId, { start: number; end: number }>> = {}
-    const continuation: Partial<Record<BlockId, boolean>> = {}
-
-    chunksOnPage.forEach((chunk) => {
-      slices[chunk.blockId] = { start: chunk.itemStart, end: chunk.itemEnd }
-      continuation[chunk.blockId] = chunk.continuation
-    })
-
-    return {
-      slices,
-      activeBlocks: chunksOnPage.map((chunk) => chunk.blockId),
-      continuation,
-    }
-  }, [currentLessonPage, bodyTemplateEnabledMap])
-
-  const perPageTemplateEnabledMap = useMemo<Record<BlockId, boolean>>(() => {
-    const map: Record<BlockId, boolean> = {
-      header: false,
-      program: false,
-      resources: false,
-      content: false,
-      assignment: false,
-      scoring: false,
-      footer: false,
-    }
-
-    lessonBlockPagination.activeBlocks.forEach((blockId) => {
-      map[blockId] = true
-    })
-
-    return map
-  }, [lessonBlockPagination.activeBlocks])
-
-  const headerFieldValues = useMemo(() => {
-    if (!currentLessonPage || !hasHeaderBlock) return [] as Array<{ key: string; value: string }>
-    const context = {
-      lessonNumber: currentLessonPage.lessonNumber,
-      lessonTitle: currentLessonPage.lessonTitle,
-      lessonNotes: currentLessonPage.lessonNotes,
-      moduleName: currentLessonPage.moduleName,
-      courseTitle,
-      courseType,
-      courseLanguage,
-      teacherName,
-      institutionName,
-      templateType: currentLessonPage.templateType,
-      scheduleDay: currentLessonPage.scheduleDay,
-      scheduleDate: currentLessonPage.scheduleDate,
-      scheduleStart: currentLessonPage.scheduleStart,
-      scheduleEnd: currentLessonPage.scheduleEnd,
-      durationMinutes: currentLessonPage.durationMinutes,
-      topics: currentLessonPage.topics,
-      objectives: currentLessonPage.objectives,
-      tasks: currentLessonPage.tasks,
-      currentPage: clampedCurrentPage,
-      totalPages,
-    }
-
-    return BLOCK_FIELDS.header
-      .filter((field) => field.forTypes.includes(currentLessonPage.templateType as never))
-      .filter((field) => field.required || Boolean(templateFieldEnabled.header?.[field.key]))
-      .map((field) => ({
-        key: field.key,
-        value: formatTemplateFieldValue(field.key, context),
-      }))
-  }, [currentLessonPage, hasHeaderBlock, courseTitle, courseType, courseLanguage, teacherName, institutionName, clampedCurrentPage, totalPages, templateFieldEnabled])
-
-  const footerFieldValues = useMemo(() => {
-    if (!currentLessonPage || !hasFooterBlock) return [] as Array<{ key: string; value: string }>
-    const context = {
-      lessonNumber: currentLessonPage.lessonNumber,
-      lessonTitle: currentLessonPage.lessonTitle,
-      lessonNotes: currentLessonPage.lessonNotes,
-      moduleName: currentLessonPage.moduleName,
-      courseTitle,
-      courseType,
-      courseLanguage,
-      teacherName,
-      institutionName,
-      templateType: currentLessonPage.templateType,
-      scheduleDay: currentLessonPage.scheduleDay,
-      scheduleDate: currentLessonPage.scheduleDate,
-      scheduleStart: currentLessonPage.scheduleStart,
-      scheduleEnd: currentLessonPage.scheduleEnd,
-      durationMinutes: currentLessonPage.durationMinutes,
-      topics: currentLessonPage.topics,
-      objectives: currentLessonPage.objectives,
-      tasks: currentLessonPage.tasks,
-      currentPage: clampedCurrentPage,
-      totalPages,
-    }
-
-    return BLOCK_FIELDS.footer
-      .filter((field) => field.forTypes.includes(currentLessonPage.templateType as never))
-      .filter((field) => field.required || Boolean(templateFieldEnabled.footer?.[field.key]))
-      .map((field) => ({
-        key: field.key,
-        value: formatTemplateFieldValue(field.key, context),
-      }))
-  }, [currentLessonPage, hasFooterBlock, courseTitle, courseType, courseLanguage, teacherName, institutionName, clampedCurrentPage, totalPages, templateFieldEnabled])
-
-  const headerFieldMap = useMemo(() => {
-    return Object.fromEntries(headerFieldValues.map((entry) => [entry.key, entry.value]))
-  }, [headerFieldValues])
-
-  const templateData = useMemo<TemplateBlueprintData | undefined>(() => {
-    if (!currentLessonPage) return undefined
-
-    const headerValues = Object.fromEntries(headerFieldValues.map((entry) => [entry.key, entry.value]))
-    const footerValues = Object.fromEntries(footerFieldValues.map((entry) => [entry.key, entry.value]))
-
-    const joinedObjectives = currentLessonPage.objectives.join(" · ")
-    const joinedTasks = currentLessonPage.tasks.join(" · ")
-    const context = {
-      lessonNumber: currentLessonPage.lessonNumber,
-      lessonTitle: currentLessonPage.lessonTitle,
-      lessonNotes: currentLessonPage.lessonNotes,
-      moduleName: currentLessonPage.moduleName,
-      courseTitle,
-      courseType,
-      courseLanguage,
-      teacherName,
-      institutionName,
-      templateType: currentLessonPage.templateType,
-      scheduleDay: currentLessonPage.scheduleDay,
-      scheduleDate: currentLessonPage.scheduleDate,
-      scheduleStart: currentLessonPage.scheduleStart,
-      scheduleEnd: currentLessonPage.scheduleEnd,
-      durationMinutes: currentLessonPage.durationMinutes,
-      topics: currentLessonPage.topics,
-      objectives: currentLessonPage.objectives,
-      tasks: currentLessonPage.tasks,
-      currentPage: clampedCurrentPage,
-      totalPages,
-    }
-
-    const scalarFieldValues: Record<string, string> = {
-      lesson_number: formatTemplateFieldValue("lesson_number", context) || "—",
-      lesson_title: formatTemplateFieldValue("lesson_title", context) || "—",
-      module_title: formatTemplateFieldValue("module_title", context) || "—",
-      course_title: formatTemplateFieldValue("course_title", context) || "—",
-      institution_name: formatTemplateFieldValue("institution_name", context) || "—",
-      teacher_name: formatTemplateFieldValue("teacher_name", context) || "—",
-      date: formatTemplateFieldValue("date", context) || "—",
-      competence: formatTemplateFieldValue("competence", context) || "—",
-      topic: formatTemplateFieldValue("topic", context) || "—",
-      objective: formatTemplateFieldValue("objective", context) || "—",
-      task: formatTemplateFieldValue("task", context) || "—",
-      program_method: currentLessonPage.lessonNotes || "Guided instruction",
-      program_social_form: "Class / Group",
-      program_time: formatTemplateFieldValue("program_time", context) || "—",
-      type: formatTemplateFieldValue("type", context) || "—",
-      origin: formatTemplateFieldValue("origin", context) || "—",
-      state: formatTemplateFieldValue("state", context) || "—",
-      quality: formatTemplateFieldValue("quality", context) || "—",
-      instruction_area: currentLessonPage.lessonNotes || "Instruction guidance",
-      student_area: joinedTasks || "Student practice",
-      teacher_area: joinedObjectives || "Facilitation notes",
-      due_date: formatTemplateFieldValue("due_date", context) || "—",
-      submission_format: formatTemplateFieldValue("submission_format", context) || "—",
-      criterion: formatTemplateFieldValue("criterion", context) || "—",
-      weight: formatTemplateFieldValue("weight", context) || "—",
-      max_points: formatTemplateFieldValue("max_points", context) || "—",
-      feedback: formatTemplateFieldValue("feedback", context) || "—",
-    }
-
-    const buildBlockFieldValues = (blockId: BlockId): Record<string, string> => {
-      const fields = BLOCK_FIELDS[blockId]
-        .filter((field) => field.forTypes.includes(currentLessonPage.templateType as never))
-        .filter((field) => field.required || Boolean(templateFieldEnabled[blockId]?.[field.key]))
-
-      return Object.fromEntries(fields.map((field) => [field.key, scalarFieldValues[field.key] ?? "—"]))
-    }
-
-    const topicsPerLesson = Math.max(1, currentLessonPage.topicCount || currentLessonPage.topics.length || 1)
-    const objectivesPerTopic = Math.max(1, currentLessonPage.objectiveCount || currentLessonPage.objectives.length || 1)
-    const tasksPerObjective = Math.max(1, currentLessonPage.taskCount || currentLessonPage.tasks.length || 1)
-    const lessonDurationMinutes = Math.max(0, Number(currentLessonPage.durationMinutes ?? 0) || 0)
-
-    const sliceForBlockPage = <T,>(blockId: BlockId, values: T[]): T[] => {
-      if (values.length === 0) return []
-      const slice = lessonBlockPagination.slices[blockId]
-      if (!slice) return []
-      const start = Math.max(0, Math.min(values.length, slice.start))
-      const end = Math.max(start, Math.min(values.length, slice.end))
-      return values.slice(start, Math.max(start + 1, end))
-    }
-
-    const splitMinutesAcrossTopics = (totalMinutes: number, topicCount: number): number[] => {
-      if (topicCount <= 0 || totalMinutes <= 0) return Array.from({ length: Math.max(1, topicCount) }, () => 0)
-      const baseMinutes = Math.floor(totalMinutes / topicCount)
-      const remainder = totalMinutes % topicCount
-      return Array.from({ length: topicCount }, (_, idx) => baseMinutes + (idx < remainder ? 1 : 0))
-    }
-
-    const resolvedTopics = Array.from({ length: topicsPerLesson }, (_, topicIdx) => (
-      currentLessonPage.topics[topicIdx] || `Topic ${topicIdx + 1}`
-    ))
-    const resolvedObjectives = Array.from({ length: objectivesPerTopic }, (_, objectiveIdx) => (
-      currentLessonPage.objectives[objectiveIdx] || `Objective ${objectiveIdx + 1}`
-    ))
-    const resolvedTasks = Array.from({ length: tasksPerObjective }, (_, taskIdx) => (
-      currentLessonPage.tasks[taskIdx] || `Task ${taskIdx + 1}`
-    ))
-    const topicMinuteAllocations = splitMinutesAcrossTopics(lessonDurationMinutes, resolvedTopics.length)
-
-    const fullProgramRows = resolvedTopics.map((topic, topicIdx) => {
-      const objectiveCell = resolvedObjectives
-        .map((objective, objectiveIdx) => `${topicIdx + 1}.${objectiveIdx + 1} ${objective}`)
-        .join("\n")
-      const taskCell = resolvedObjectives
-        .flatMap((objective, objectiveIdx) => (
-          resolvedTasks.map((task, taskIdx) => `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${objective}: ${task}`)
-        ))
-        .join("\n")
-
-      return {
-        topic,
-        objective: objectiveCell,
-        task: taskCell,
-        program_time: topicMinuteAllocations[topicIdx] > 0 ? `${topicMinuteAllocations[topicIdx]} min` : scalarFieldValues.program_time,
-        program_method: scalarFieldValues.program_method,
-        program_social_form: scalarFieldValues.program_social_form,
-      }
-    })
-
-    const fullResourceRows = resolvedTopics.flatMap((topic, topicIdx) => (
-      resolvedObjectives.flatMap((objective, objectiveIdx) => (
-        resolvedTasks.map((task, taskIdx) => ({
-          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${topic}: ${objective} — ${task}`,
-          type: scalarFieldValues.type,
-          origin: scalarFieldValues.origin,
-          state: scalarFieldValues.state,
-          quality: scalarFieldValues.quality,
-        }))
-      ))
-    ))
-    const fullContentTopicGroups = resolvedTopics.map((topic, topicIdx) => ({
-      topic,
-      objectives: resolvedObjectives.map((objective, objectiveIdx) => ({
-        objective,
-        tasks: resolvedTasks.map((task, taskIdx) => ({
-          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
-          instructionArea: scalarFieldValues.instruction_area,
-          studentArea: scalarFieldValues.student_area,
-          teacherArea: scalarFieldValues.teacher_area,
-        })),
-      })),
-    }))
-    const contentTopicGroups = sliceForBlockPage("content", fullContentTopicGroups)
-
-    const fullAssignmentTasks = resolvedTopics.flatMap((topic, topicIdx) => (
-      resolvedObjectives.flatMap((objective, objectiveIdx) => (
-        resolvedTasks.map((task, taskIdx) => `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${topic}: ${objective} — ${task}`)
-      ))
-    ))
-    const assignmentTasks = sliceForBlockPage("assignment", fullAssignmentTasks)
-
-    const fullAssignmentGroups = resolvedTopics.map((topic, topicIdx) => ({
-      topic,
-      objectives: resolvedObjectives.map((objective, objectiveIdx) => ({
-        objective,
-        tasks: resolvedTasks.map((task, taskIdx) => ({
-          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
-          instructionArea: scalarFieldValues.instruction_area,
-          studentArea: scalarFieldValues.student_area,
-          teacherArea: scalarFieldValues.teacher_area,
-        })),
-      })),
-    }))
-    const assignmentGroups = sliceForBlockPage("assignment", fullAssignmentGroups)
-
-    const programRows = sliceForBlockPage("program", fullProgramRows)
-    const resourceRowsPaged = sliceForBlockPage("resources", fullResourceRows)
-    const scoringItemsPaged = sliceForBlockPage("scoring", currentLessonPage.objectives.map((objective, idx) => `Criterion ${idx + 1}: ${objective}`))
-
-    const assignmentGroupsFromContent = contentTopicGroups.map((topicGroup, topicIndex) => ({
-      topic: topicGroup.topic,
-      objectives: topicGroup.objectives.map((objective) => ({
-        objective: objective.objective,
-        tasks: objective.tasks.map((task, taskIndex) => ({
-          task: `${topicIndex + 1}.${taskIndex + 1} ${task.task}`,
-          instructionArea: task.instructionArea,
-          studentArea: task.studentArea,
-          teacherArea: task.teacherArea,
-        })),
-      })),
-    }))
-
-    return {
-      fieldValues: {
-        header: headerValues,
-        program: buildBlockFieldValues("program"),
-        resources: buildBlockFieldValues("resources"),
-        content: buildBlockFieldValues("content"),
-        assignment: buildBlockFieldValues("assignment"),
-        scoring: buildBlockFieldValues("scoring"),
-        footer: footerValues,
-      },
-      programRows,
-      resourceRows: resourceRowsPaged,
-      contentItems: {
-        topics: resolvedTopics,
-        objectives: resolvedObjectives,
-        tasks: resolvedTasks,
-        topicGroups: contentTopicGroups,
-      },
-      assignmentItems: {
-        tasks: assignmentTasks,
-        topicGroups: assignmentGroups.length > 0 ? assignmentGroups : assignmentGroupsFromContent,
-      },
-      resourceItems: resourceRowsPaged.map((row, idx) => `Resource ${idx + 1}: ${row.task}`),
-      scoringItems: scoringItemsPaged,
-      continuation: lessonBlockPagination.continuation,
-    }
-  }, [currentLessonPage, lessonBlockPagination, headerFieldValues, footerFieldValues, courseTitle, courseType, courseLanguage, teacherName, institutionName, clampedCurrentPage, totalPages, templateFieldEnabled])
-
-  const combinedMediaAssets = useMemo(
-    () => dedupeMediaAssets([...mediaAssets, ...wikipediaAssets]),
-    [mediaAssets, wikipediaAssets],
-  )
-
-  const mediaItems = useMemo(() => {
-    const term = mediaSearch.trim().toLowerCase()
-    return combinedMediaAssets
-      .filter((item) => item.category === activeMedia)
-      .filter((item) => {
-        if (!term) return true
-        return `${item.title} ${item.description}`.toLowerCase().includes(term)
-      })
-      .slice(0, 80)
-  }, [activeMedia, combinedMediaAssets, mediaSearch])
+  const {
+    hasHeaderBlock,
+    hasFooterBlock,
+    templateFieldEnabled,
+    perPageTemplateEnabledMap,
+    headerFieldValues,
+    footerFieldValues,
+    templateData,
+    lessonHeaderTooltip,
+    lessonMetaText,
+  } = useTemplateProjectionState({
+    currentLessonPage,
+    clampedCurrentPage,
+    totalPages,
+    courseTitle,
+    courseType,
+    courseLanguage,
+    teacherName,
+    institutionName,
+  })
 
   const lessonNavigation = useMemo(() => {
     const bySession = new Map<string, { label: string; start: number; end: number }>()
@@ -1242,203 +281,6 @@ export function CreateView({
     event.dataTransfer.setData("application/json", payload)
     event.dataTransfer.setData("text/plain", payload)
   }, [])
-
-  const parseDraggedMediaPayload = useCallback((raw: string): TemplateAreaMediaItem | null => {
-    try {
-      const parsed = JSON.parse(raw) as Partial<MediaAsset>
-      return {
-        id: String(parsed.id ?? crypto.randomUUID()),
-        title: String(parsed.title ?? "Media"),
-        description: String(parsed.description ?? ""),
-        mediaType: String(parsed.mediaType ?? "media"),
-        category: String(parsed.category ?? normalizeMediaCategory(String(parsed.mediaType ?? "media"))),
-        url: String(parsed.url ?? ""),
-      }
-    } catch {
-      return null
-    }
-  }, [])
-
-  const appendMediaToArea = useCallback((areaKey: string, mediaItem: TemplateAreaMediaItem) => {
-    setDroppedMediaByScope((prev) => {
-      const scopeValue = prev[currentCanvasScopeKey] ?? {}
-      const existing = Array.isArray(scopeValue[areaKey]) ? scopeValue[areaKey] : []
-      const next = existing.some((entry) => entry.id === mediaItem.id || (entry.url && entry.url === mediaItem.url))
-        ? existing
-        : [...existing, mediaItem]
-      return {
-        ...prev,
-        [currentCanvasScopeKey]: {
-          ...scopeValue,
-          [areaKey]: next,
-        },
-      }
-    })
-  }, [currentCanvasScopeKey])
-
-  const recordMediaDropOp = useCallback((areaKey: string, mediaItem: TemplateAreaMediaItem) => {
-    if (!(courseId && currentLessonPage && canvasDocumentId)) return
-    void supabase.from("canvas_document_ops").insert({
-      document_id: canvasDocumentId,
-      course_id: courseId,
-      page_global: currentLessonPage.globalPage,
-      operation_type: "media_drop",
-      operation_payload: {
-        areaKey,
-        media: mediaItem,
-        at: Date.now(),
-      },
-    })
-  }, [canvasDocumentId, courseId, currentLessonPage, supabase])
-
-  const onDropAreaMedia = useCallback((areaKey: string, event: React.DragEvent<HTMLDivElement>) => {
-    let operationMedia: TemplateAreaMediaItem | null = null
-    try {
-      const raw = event.dataTransfer.getData("application/json") || event.dataTransfer.getData("text/plain")
-      if (!raw) return
-      const mediaItem = parseDraggedMediaPayload(raw)
-      if (!mediaItem) return
-      operationMedia = mediaItem
-
-      appendMediaToArea(areaKey, mediaItem)
-    } catch {
-      // ignore malformed payload
-    } finally {
-      setMediaDragActive(false)
-    }
-
-    if (operationMedia) {
-      recordMediaDropOp(areaKey, operationMedia)
-    }
-  }, [appendMediaToArea, parseDraggedMediaPayload, recordMediaDropOp])
-
-  const onPixiAreaDrop = useCallback((areaKey: string, rawPayload: string) => {
-    const mediaItem = parseDraggedMediaPayload(rawPayload)
-    if (!mediaItem) return
-    appendMediaToArea(areaKey, mediaItem)
-    recordMediaDropOp(areaKey, mediaItem)
-    setMediaDragActive(false)
-  }, [appendMediaToArea, parseDraggedMediaPayload, recordMediaDropOp])
-
-  const onRemoveAreaMedia = useCallback((areaKey: string, mediaId: string) => {
-    setDroppedMediaByScope((prev) => {
-      const scopeValue = prev[currentCanvasScopeKey] ?? {}
-      const existing = Array.isArray(scopeValue[areaKey]) ? scopeValue[areaKey] : []
-      const next = existing.filter((entry) => entry.id !== mediaId)
-      if (next.length === 0) {
-        const remainingAreas = Object.fromEntries(
-          Object.entries(scopeValue).filter(([key]) => key !== areaKey),
-        )
-        return {
-          ...prev,
-          [currentCanvasScopeKey]: remainingAreas,
-        }
-      }
-      return {
-        ...prev,
-        [currentCanvasScopeKey]: {
-          ...scopeValue,
-          [areaKey]: next,
-        },
-      }
-    })
-  }, [currentCanvasScopeKey])
-
-  useEffect(() => {
-    if (!courseId || !currentLessonPage || !currentDocumentKey) {
-      setCanvasDocumentId(null)
-      setDocumentReadyKey(null)
-      return
-    }
-
-    let active = true
-    setDocumentReadyKey(null)
-
-    async function loadCanvasDocument() {
-      const { data, error } = await supabase
-        .from("canvas_documents")
-        .select("id,schema_version,document")
-        .eq("course_id", courseId)
-        .eq("page_global", currentLessonPage!.globalPage)
-        .maybeSingle()
-
-      if (!active) return
-
-      if (error) {
-        setCanvasDocumentId(null)
-        setDroppedMediaByScope((prev) => {
-          if (prev[currentCanvasScopeKey]) return prev
-          return {
-            ...prev,
-            [currentCanvasScopeKey]: {},
-          }
-        })
-        setDocumentReadyKey(currentDocumentKey)
-        return
-      }
-
-      if (!data) {
-        setCanvasDocumentId(null)
-        setDroppedMediaByScope((prev) => {
-          if (prev[currentCanvasScopeKey]) return prev
-          return {
-            ...prev,
-            [currentCanvasScopeKey]: {},
-          }
-        })
-        setDocumentReadyKey(currentDocumentKey)
-        return
-      }
-
-      const record = data as { id: string; schema_version?: number; document?: unknown }
-      const payload = (record.document ?? {}) as Partial<CanvasDocumentPayload>
-      setCanvasDocumentId(record.id)
-      setDroppedMediaByScope((prev) => ({
-        ...prev,
-        [currentCanvasScopeKey]: normalizeDroppedMediaByArea(payload.droppedMediaByArea),
-      }))
-      setDocumentReadyKey(currentDocumentKey)
-    }
-
-    void loadCanvasDocument()
-    return () => {
-      active = false
-    }
-  }, [courseId, currentCanvasScopeKey, currentDocumentKey, currentLessonPage, supabase])
-
-  useEffect(() => {
-    if (!courseId || !currentLessonPage || !currentDocumentKey) return
-    if (documentReadyKey !== currentDocumentKey) return
-
-    const documentPayload: CanvasDocumentPayload = {
-      schemaVersion: 1,
-      droppedMediaByArea: currentDroppedMediaByArea,
-    }
-
-    const timeoutHandle = window.setTimeout(async () => {
-      const { data } = await supabase
-        .from("canvas_documents")
-        .upsert(
-          {
-            course_id: courseId,
-            page_global: currentLessonPage.globalPage,
-            schema_version: 1,
-            document: documentPayload,
-          },
-          { onConflict: "course_id,page_global" },
-        )
-        .select("id")
-        .single()
-
-      if (data && typeof (data as { id?: unknown }).id === "string") {
-        setCanvasDocumentId((data as { id: string }).id)
-      }
-    }, 300)
-
-    return () => {
-      window.clearTimeout(timeoutHandle)
-    }
-  }, [courseId, currentDocumentKey, currentDroppedMediaByArea, currentLessonPage, documentReadyKey, supabase])
 
   const overlayUi = useMemo<OverlayUi>(() => {
     return {
@@ -1492,36 +334,15 @@ export function CreateView({
     }
   }, [])
 
-  const lessonHeaderTooltip = useMemo(() => {
-    if (!currentLessonPage) return ""
-
-    const skipKeys = new Set(["lesson_number", "lesson_title", "module_title", "course_title"])
-    const extraLines = headerFieldValues
-      .filter((entry) => !skipKeys.has(entry.key))
-      .map((entry) => `${entry.key.replace(/_/g, " ")}: ${entry.value}`)
-
-    return [
-      `Lesson ${currentLessonPage.lessonNumber}: ${currentLessonPage.lessonTitle}`,
-      `Module: ${currentLessonPage.moduleName}`,
-      `Course: ${courseTitle}`,
-      ...extraLines,
-    ].join("\n")
-  }, [currentLessonPage, headerFieldValues, courseTitle])
-
-  const lessonMetaText = useMemo(() => {
-    const dateValue = headerFieldMap.date
-    const teacherValue = headerFieldMap.teacher_name
-    const institutionValue = headerFieldMap.institution_name
-    return [dateValue, teacherValue, institutionValue].filter(Boolean).join(" · ")
-  }, [headerFieldMap])
-
-  const usePixiTemplateLayout = false
+  const surfaceArchitecture = "dom-first" as const
+  const usePixiTemplateLayout = surfaceArchitecture === "pixi-template"
   const measuredSectionHeights = useMemo(
     () => pixiMeasuredSectionHeightsByScope[currentCanvasScopeKey] ?? {},
     [currentCanvasScopeKey, pixiMeasuredSectionHeightsByScope],
   )
 
   const basePixiTemplateLayoutModel = useMemo<PixiTemplateLayoutModel | null>(() => {
+    if (!usePixiTemplateLayout) return null
     if (!currentLessonPage) return null
 
     const sections: PixiTemplateLayoutModel["sections"] = []
@@ -1647,9 +468,10 @@ export function CreateView({
         .slice(0, 5),
       pageLabel: footerFieldValues.find((entry) => entry.key === "page_number")?.value ?? `Page ${clampedCurrentPage} / ${totalPages}`,
     }
-  }, [clampedCurrentPage, currentDroppedMediaByArea, currentLessonPage, footerFieldValues, headerFieldValues, perPageTemplateEnabledMap, templateData, totalPages])
+  }, [clampedCurrentPage, currentDroppedMediaByArea, currentLessonPage, footerFieldValues, headerFieldValues, perPageTemplateEnabledMap, templateData, totalPages, usePixiTemplateLayout])
 
   const pixiTemplateLayoutPages = useMemo<PixiTemplateLayoutModel[]>(() => {
+    if (!usePixiTemplateLayout) return []
     if (!basePixiTemplateLayoutModel) return []
 
     const contentWidthPx = Math.max(
@@ -1804,7 +626,7 @@ export function CreateView({
       ...pageModel,
       pageLabel: `${basePixiTemplateLayoutModel.pageLabel} · Canvas ${index + 1}/${pages.length}`,
     }))
-  }, [basePixiTemplateLayoutModel, effectiveCanvasConfig.heightPx, effectiveCanvasConfig.margins.bottom, effectiveCanvasConfig.margins.left, effectiveCanvasConfig.margins.right, effectiveCanvasConfig.margins.top, effectiveCanvasConfig.widthPx, measuredSectionHeights])
+  }, [basePixiTemplateLayoutModel, effectiveCanvasConfig.heightPx, effectiveCanvasConfig.margins.bottom, effectiveCanvasConfig.margins.left, effectiveCanvasConfig.margins.right, effectiveCanvasConfig.margins.top, effectiveCanvasConfig.widthPx, measuredSectionHeights, usePixiTemplateLayout])
 
   const activePixiLayoutPage = useMemo(() => {
     return Math.min(
@@ -1813,33 +635,10 @@ export function CreateView({
     )
   }, [currentCanvasScopeKey, pixiLayoutPageByScope, pixiTemplateLayoutPages.length])
 
-  useEffect(() => {
-    setPixiLayoutPageByScope((prev) => {
-      const current = prev[currentCanvasScopeKey] ?? 1
-      const max = Math.max(1, pixiTemplateLayoutPages.length)
-      if (current <= max) return prev
-      return {
-        ...prev,
-        [currentCanvasScopeKey]: max,
-      }
-    })
-  }, [currentCanvasScopeKey, pixiTemplateLayoutPages.length])
-
   const activePixiTemplateLayoutModel = useMemo(() => {
     if (pixiTemplateLayoutPages.length === 0) return null
     return pixiTemplateLayoutPages[activePixiLayoutPage - 1] ?? pixiTemplateLayoutPages[0]
   }, [activePixiLayoutPage, pixiTemplateLayoutPages])
-
-  const onPixiMediaActivate = useCallback((media: PixiTemplateMediaItem) => {
-    setActiveCanvasMedia({
-      id: media.id,
-      title: media.title,
-      description: media.description ?? "",
-      mediaType: media.mediaType ?? "media",
-      category: media.category ?? normalizeMediaCategory(media.mediaType ?? "media"),
-      url: media.url ?? "",
-    })
-  }, [])
 
   const onPixiLayoutMeasured = useCallback((measurement: PixiTemplateLayoutMeasurement) => {
     setPixiMeasuredSectionHeightsByScope((prev) => {
@@ -1895,6 +694,8 @@ export function CreateView({
     setActiveTool(id as BuildTool & AnimateTool)
     setPanMode(false)
   }
+
+  const toolOptions = ToolOptions({ overlayUi })
 
   // ── Tool options bar content ────────────────────────────────────────────────
 
@@ -2212,87 +1013,19 @@ export function CreateView({
     <div className="flex h-full w-full overflow-hidden bg-background" onDragEndCapture={() => setMediaDragActive(false)} onDropCapture={() => setMediaDragActive(false)}>
 
       {/* ── Left: Media panel (resizable) ───────────────────────────────────── */}
-      {leftPanel.width > 0 && (
-      <div className="flex shrink-0 border-r border-border bg-background overflow-hidden" style={{ width: leftPanel.width }}>
-        {/* Left: category icon strip */}
-        <div className="flex w-14 shrink-0 flex-col border-r border-border overflow-y-auto">
-          <div className={`flex flex-col items-center gap-0.5 ${overlayUi.panelContentPadding} pt-2`}>
-            {MEDIA_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                title={item.label}
-                onClick={() => setActiveMedia(item.id)}
-                className={`flex flex-col items-center justify-center gap-0.5 h-12 w-12 rounded border transition ${
-                  activeMedia === item.id
-                    ? "border-primary bg-blue-100 text-primary"
-                    : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-muted/30"
-                }`}
-              >
-                <span className={overlayUi.mediaCategoryIcon}>{item.iconNode}</span>
-                <span className={`${overlayUi.mediaCategoryLabel} leading-tight`}>{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Right: search + media content */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className={`border-b border-border ${overlayUi.panelSearchPadding}`}>
-            <input
-              type="search"
-              value={mediaSearch}
-              onChange={(e) => setMediaSearch(e.target.value)}
-              placeholder="Search…"
-              className={`w-full rounded-md border border-border bg-muted/40 ${overlayUi.panelSearchInput} text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring`}
-            />
-          </div>
-          <div className={`flex-1 overflow-y-auto ${overlayUi.panelContentPadding}`}>
-            {mediaLoading || wikipediaLoading ? (
-              <p className={`${overlayUi.panelItemText} italic text-muted-foreground/50 px-1 py-2`}>
-                Loading encyclopedia and Wikipedia media…
-              </p>
-            ) : mediaItems.length === 0 ? (
-              <p className={`${overlayUi.panelItemText} italic text-muted-foreground/50 px-1 py-2`}>
-                No media found in this category.
-              </p>
-            ) : (
-              <ul className="space-y-1">
-                {mediaItems.map((item) => (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      draggable
-                      onDragStart={(event) => onDragStartMedia(item, event)}
-                      onDragEnd={() => setMediaDragActive(false)}
-                      className={`w-full rounded border border-border bg-background/70 text-left ${overlayUi.panelItemPadding} transition hover:border-primary/40 hover:bg-accent/40 active:scale-[0.99]`}
-                      title={item.url || item.description || item.title}
-                    >
-                      {item.category === "images" && item.url ? (
-                        <div
-                          className="mb-1 h-20 w-full rounded border border-border/60 bg-cover bg-center"
-                          style={{ backgroundImage: `url(${item.url})` }}
-                          role="img"
-                          aria-label={item.title}
-                        />
-                      ) : item.category === "videos" && item.url ? (
-                        <video src={item.url} className="mb-1 h-20 w-full rounded border border-border/60 object-cover" muted preload="metadata" />
-                      ) : item.category === "audio" ? (
-                        <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1 text-[10px] text-muted-foreground">Audio preview</div>
-                      ) : item.category === "text" ? (
-                        <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1 text-[10px] text-muted-foreground">Text resource</div>
-                      ) : null}
-                      <p className={`${overlayUi.panelItemText} font-medium text-foreground truncate`}>{item.title}</p>
-                      <p className={`${overlayUi.controlLabel} text-muted-foreground truncate`}>{item.mediaType}</p>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </div>
-      )}
+      <MediaLibraryPanel
+        width={leftPanel.width}
+        overlayUi={overlayUi}
+        activeMedia={activeMedia}
+        onChangeActiveMedia={setActiveMedia}
+        mediaSearch={mediaSearch}
+        onChangeMediaSearch={setMediaSearch}
+        mediaLoading={mediaLoading}
+        wikipediaLoading={wikipediaLoading}
+        mediaItems={mediaItems}
+        onDragStartMedia={onDragStartMedia}
+        onDragEndMedia={() => setMediaDragActive(false)}
+      />
 
       {/* Left resize handle */}
       <div
@@ -2304,348 +1037,84 @@ export function CreateView({
       {/* ── Center: Canvas area ──────────────────────────────────────────────── */}
       <div className="relative flex flex-1 overflow-hidden bg-muted/30">
 
-        {/* PixiJS canvas fills the center */}
-        <div className="absolute inset-0">
-          <PixiCanvas
-            config={effectiveCanvasConfig}
-            zoom={zoom}
-            onZoomChange={setZoom}
-            activeTool={canvasTool}
-            toolConfig={toolConfig}
-            activePage={clampedCurrentPage}
-            focusPage={clampedCurrentPage}
-            onViewportChange={setViewportInfo}
-            onActivePageChange={setCurrentPage}
-            templateLayoutModel={activePixiTemplateLayoutModel}
-            enableTemplateLayout={false}
-            onTemplateMediaActivate={onPixiMediaActivate}
-            onTemplateAreaDrop={onPixiAreaDrop}
-            onTemplateLayoutMeasured={onPixiLayoutMeasured}
-          />
-        </div>
-
-        {pixiTemplateLayoutPages.length > 1 && (
-          <div className="absolute right-3 top-3 z-30 flex items-center gap-2 rounded border border-border bg-background/90 px-2 py-1 text-xs shadow-sm">
-            <button
-              type="button"
-              onClick={() => setPixiLayoutPageByScope((prev) => ({
-                ...prev,
-                [currentCanvasScopeKey]: Math.max(1, activePixiLayoutPage - 1),
-              }))}
-              className="rounded border border-border px-2 py-0.5 hover:bg-muted/50"
-              disabled={activePixiLayoutPage <= 1}
-            >
-              Prev
-            </button>
-            <span className="tabular-nums text-muted-foreground">{activePixiLayoutPage}/{pixiTemplateLayoutPages.length}</span>
-            <button
-              type="button"
-              onClick={() => setPixiLayoutPageByScope((prev) => ({
-                ...prev,
-                [currentCanvasScopeKey]: Math.min(pixiTemplateLayoutPages.length, activePixiLayoutPage + 1),
-              }))}
-              className="rounded border border-border px-2 py-0.5 hover:bg-muted/50"
-              disabled={activePixiLayoutPage >= pixiTemplateLayoutPages.length}
-            >
-              Next
-            </button>
-          </div>
-        )}
-
-        {activeCanvasMedia && (
-          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-2xl rounded-lg border border-border bg-background p-3 shadow-xl">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="truncate text-sm font-semibold text-foreground">{activeCanvasMedia.title}</p>
-                <button
-                  type="button"
-                  onClick={() => setActiveCanvasMedia(null)}
-                  className="rounded border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/50"
-                >
-                  Close
-                </button>
-              </div>
-
-              {activeCanvasMedia.category === "videos" && activeCanvasMedia.url ? (
-                <video src={activeCanvasMedia.url} controls className="max-h-[60vh] w-full rounded border border-border/60 bg-black object-contain" preload="metadata" />
-              ) : activeCanvasMedia.category === "audio" && activeCanvasMedia.url ? (
-                <audio src={activeCanvasMedia.url} controls className="w-full" preload="metadata" />
-              ) : activeCanvasMedia.category === "images" && activeCanvasMedia.url ? (
-                <div
-                  className="h-[50vh] w-full rounded border border-border/60 bg-contain bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url(${activeCanvasMedia.url})` }}
-                  role="img"
-                  aria-label={activeCanvasMedia.title}
-                />
-              ) : activeCanvasMedia.url ? (
-                <iframe src={activeCanvasMedia.url} title={activeCanvasMedia.title} className="h-[60vh] w-full rounded border border-border/60" />
-              ) : (
-                <p className="text-xs text-muted-foreground">No preview URL available.</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {!usePixiTemplateLayout && viewportInfo && currentLessonPage && (
-          <div
-            key={`${currentLessonPage.sessionId}:${currentLessonPage.localPage}`}
-            className="absolute pointer-events-auto overflow-hidden"
-            style={{
-              left: viewportInfo.pageRect.x,
-              top: viewportInfo.pageRect.y,
-              width: viewportInfo.pageRect.width,
-              height: viewportInfo.pageRect.height,
-            }}
-          >
-            <div
-              className="relative origin-top-left"
-              style={{
-                width: effectiveCanvasConfig.widthPx,
-                height: effectiveCanvasConfig.heightPx,
-                transform: `scale(${viewportInfo.scale})`,
-                transformOrigin: "top left",
-              }}
-            >
-            <div className="relative h-full w-full bg-transparent">
-              {hasHeaderBlock && (
-                <div
-                  className={`absolute top-0 overflow-hidden border-b border-border/60 ${overlayUi.headerPadding}`}
-                  style={{
-                    left: 0,
-                    right: 0,
-                    height: effectiveCanvasConfig.margins.top,
-                  }}
-                >
-                  <div className="flex h-full items-center gap-1.5 overflow-hidden">
-                    {currentLessonPage.templateType === "lesson" ? (
-                      <>
-                        <span className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground">
-                          L{currentLessonPage.lessonNumber}
-                        </span>
-                        <span
-                          className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
-                          title={lessonHeaderTooltip}
-                        >
-                          {currentLessonPage.lessonTitle}
-                        </span>
-                        {lessonMetaText && (
-                          <span
-                            className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
-                            title={lessonMetaText}
-                          >
-                            {lessonMetaText}
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      headerFieldValues.map((value, idx) => (
-                        <span
-                          key={`header-value-${value.key}-${idx}`}
-                          className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
-                        >
-                          {value.value}
-                        </span>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div
-                className="absolute overflow-hidden"
-                style={{
-                  left: effectiveCanvasConfig.margins.left,
-                  right: effectiveCanvasConfig.margins.right,
-                  top: hasHeaderBlock ? effectiveCanvasConfig.margins.top : 0,
-                  bottom: hasFooterBlock ? effectiveCanvasConfig.margins.bottom : 0,
-                }}
-              >
-                <div className="h-full w-full overflow-hidden bg-background/85">
-                  <TemplateBlueprint
-                    type={currentLessonPage.templateType as never}
-                    enabled={perPageTemplateEnabledMap}
-                    fieldEnabled={templateFieldEnabled}
-                    name={currentLessonPage.lessonTitle}
-                    scale="md"
-                    scrollable
-                    density={templateVisualDensity}
-                    data={templateData}
-                    droppedMediaByArea={currentDroppedMediaByArea}
-                    mediaDragActive={mediaDragActive}
-                    onDropAreaMedia={onDropAreaMedia}
-                    onRemoveAreaMedia={onRemoveAreaMedia}
-                  />
-                </div>
-              </div>
-
-              {hasFooterBlock && (
-                <div
-                  className="absolute bottom-0 overflow-hidden border-t border-border/60 px-3 py-1"
-                  style={{
-                    left: 0,
-                    right: 0,
-                    height: effectiveCanvasConfig.margins.bottom,
-                  }}
-                >
-                  <div className="flex h-full items-center justify-between gap-2 overflow-hidden">
-                    <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-                      {footerFieldValues
-                        .filter((entry) => entry.key !== "page_number")
-                        .map((value, idx) => (
-                          <span
-                            key={`footer-value-${value.key}-${idx}`}
-                            className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-muted-foreground"
-                          >
-                            {value.value}
-                          </span>
-                        ))}
-                    </div>
-                    <span className="shrink-0 rounded border border-border/60 bg-background px-2 py-0.5 text-xs font-semibold text-foreground">
-                      {footerFieldValues.find((entry) => entry.key === "page_number")?.value ?? `Page ${clampedCurrentPage} / ${totalPages}`}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Perspective controls (left side of canvas) ── */}
-        <div className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-0.5 rounded-lg border border-border bg-background/90 ${overlayUi.toolButtonPadding} shadow-sm backdrop-blur-sm`}>
-          {/* Zoom indicator */}
-          <div
-            title="Current zoom level — Ctrl/Cmd+scroll to zoom"
-            className={`py-1 ${overlayUi.zoomValueText} font-semibold tabular-nums text-muted-foreground`}
-          >
-            {zoom}%
-          </div>
-
-          <EngineBtn
-            label="Focus"
-            iconNode={<ZoomIn    className={overlayUi.zoomButtonIcon} />}
-            onClick={() => setZoom((z) => Math.min(z + 10, 400))}
-            overlayUi={overlayUi}
-          />
-          <EngineBtn
-            label="Expand"
-            iconNode={<ZoomOut   className={overlayUi.zoomButtonIcon} />}
-            onClick={() => setZoom((z) => Math.max(z - 10, 10))}
-            overlayUi={overlayUi}
-          />
-          <EngineBtn
-            label="Reset"
-            iconNode={<RotateCcw className={overlayUi.zoomButtonIcon} />}
-            onClick={() => setZoom(100)}
-            overlayUi={overlayUi}
-          />
-          <EngineBtn
-            label="Grab"
-            iconNode={<Hand className={overlayUi.zoomButtonIcon} />}
-            active={panMode}
-            onClick={() => setPanMode((p) => !p)}
-            overlayUi={overlayUi}
-          />
-          <EngineBtn
-            label="Grid"
-            iconNode={<Grid3x3   className={overlayUi.zoomButtonIcon} />}
-            active={snapMenuOpen}
-            onClick={() => setSnapMenuOpen((o) => !o)}
-            overlayUi={overlayUi}
-          />
-        </div>
-
-        {/* Snap menu */}
-        <SnapMenu
-          open={snapMenuOpen}
-          onClose={() => setSnapMenuOpen(false)}
-          snapReference={snapReference}
-          onChangeReference={setSnapReference}
+        <PixiWidgetSurface
+          config={effectiveCanvasConfig}
+          zoom={zoom}
+          onZoomChange={setZoom}
+          activeTool={canvasTool}
+          toolConfig={toolConfig}
+          activePage={clampedCurrentPage}
+          focusPage={clampedCurrentPage}
+          onViewportChange={setViewportInfo}
+          onActivePageChange={setCurrentPage}
+          templateLayoutModel={usePixiTemplateLayout ? activePixiTemplateLayoutModel : null}
+          enableTemplateLayout={usePixiTemplateLayout}
+          onTemplateAreaDrop={onPixiAreaDrop}
+          onTemplateLayoutMeasured={onPixiLayoutMeasured}
         />
 
-        {/* ── Scroll navigation (right side of canvas) ── */}
-        <div className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-0.5 rounded-lg border border-border bg-background/90 ${overlayUi.toolButtonPadding} shadow-sm backdrop-blur-sm`}>
-          <EngineBtn
-            label="First"
-            onClick={() => changePage(1)}
-            iconNode={<ChevronsUp className={overlayUi.scrollButtonIcon} />}
-            overlayUi={overlayUi}
-          />
-          <EngineBtn
-            label="Prev"
-            onClick={() => changePage(clampedCurrentPage - 1)}
-            iconNode={<ChevronUp className={overlayUi.scrollButtonIcon} />}
-            overlayUi={overlayUi}
-          />
-          {/* Page input */}
-          <div className={`flex flex-col items-center py-1 ${overlayUi.scrollPageText} text-muted-foreground`}>
-            <input
-              type="number"
-              min={1}
-              max={totalPages}
-              value={clampedCurrentPage}
-              onChange={(e) => changePage(Number(e.target.value))}
-              className={`${overlayUi.scrollInputText} rounded border border-border bg-background px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-ring`}
-            />
-            <span className="mt-0.5 opacity-60">/ {totalPages}</span>
-          </div>
-          <EngineBtn
-            label="Next"
-            onClick={() => changePage(clampedCurrentPage + 1)}
-            iconNode={<ChevronDown className={overlayUi.scrollButtonIcon} />}
-            overlayUi={overlayUi}
-          />
-          <EngineBtn
-            label="Last"
-            onClick={() => changePage(totalPages)}
-            iconNode={<ChevronsDown className={overlayUi.scrollButtonIcon} />}
-            overlayUi={overlayUi}
-          />
-        </div>
+        <PixiLayoutPager
+          visible={pixiTemplateLayoutPages.length > 1}
+          currentPage={activePixiLayoutPage}
+          totalPages={pixiTemplateLayoutPages.length}
+          onPrev={() => setPixiLayoutPageByScope((prev) => ({
+            ...prev,
+            [currentCanvasScopeKey]: Math.max(1, activePixiLayoutPage - 1),
+          }))}
+          onNext={() => setPixiLayoutPageByScope((prev) => ({
+            ...prev,
+            [currentCanvasScopeKey]: Math.min(pixiTemplateLayoutPages.length, activePixiLayoutPage + 1),
+          }))}
+        />
 
-        {/* ── Tool options bar (above toolbar) ── */}
-        {(() => {
-          const toolOpts = ToolOptions({ overlayUi })
-          return toolOpts ? (
-            <div className={`absolute bottom-[5rem] left-1/2 z-10 -translate-x-1/2 flex items-center flex-wrap justify-center ${overlayUi.toolbarGap} rounded-xl border border-border bg-background/95 ${overlayUi.toolbarPadding} shadow-md backdrop-blur-sm`}>
-              {toolOpts}
-            </div>
-          ) : null
-        })()}
+        <DomTemplateSurface
+          enabled={!usePixiTemplateLayout}
+          viewportInfo={viewportInfo}
+          currentLessonPage={currentLessonPage}
+          canvasConfig={effectiveCanvasConfig}
+          hasHeaderBlock={hasHeaderBlock}
+          hasFooterBlock={hasFooterBlock}
+          headerPaddingClass={overlayUi.headerPadding}
+          lessonHeaderTooltip={lessonHeaderTooltip}
+          lessonMetaText={lessonMetaText}
+          headerFieldValues={headerFieldValues}
+          footerFieldValues={footerFieldValues}
+          clampedCurrentPage={clampedCurrentPage}
+          totalPages={totalPages}
+          perPageTemplateEnabledMap={perPageTemplateEnabledMap}
+          templateFieldEnabled={templateFieldEnabled}
+          templateVisualDensity={templateVisualDensity}
+          templateData={templateData}
+          currentDroppedMediaByArea={currentDroppedMediaByArea}
+          mediaDragActive={mediaDragActive}
+          onDropAreaMedia={onDropAreaMedia}
+          onRemoveAreaMedia={onRemoveAreaMedia}
+        />
 
-        {/* ── Bottom controls bar ── */}
-        <div className={`absolute bottom-2 left-1/2 z-10 -translate-x-1/2 flex items-center ${overlayUi.toolbarGap} rounded-xl border border-border bg-background/95 ${overlayUi.toolbarPadding} shadow-md backdrop-blur-sm`}>
-
-          {/* Mode selector */}
-          <div className={`flex items-center gap-0.5 border-r border-border pr-3 mr-1`}>
-            {(["build", "animate"] as Mode[]).map((m) => (
-              <EngineBtn
-                key={m}
-                label={m.charAt(0).toUpperCase() + m.slice(1)}
-                iconNode={m === "build" ? <Hammer className={overlayUi.toolButtonIcon} /> : <Clapperboard className={overlayUi.toolButtonIcon} />}
-                active={mode === m}
-                onClick={() => handleModeChange(m)}
-                compact
-                overlayUi={overlayUi}
-              />
-            ))}
-          </div>
-
-          {/* Tool buttons */}
-          <div className="flex items-center gap-0.5">
-            {(currentTools as ToolItem<string>[]).map((tool) => (
-              <EngineBtn
-                key={tool.id}
-                label={tool.label}
-                iconNode={tool.iconNode}
-                active={!panMode && selectedTool === tool.id}
-                onClick={() => handleToolSelect(tool.id)}
-                compact
-                overlayUi={overlayUi}
-              />
-            ))}
-          </div>
-        </div>
+        <CanvasOverlayControls
+          overlayUi={overlayUi}
+          zoom={zoom}
+          onZoomIn={() => setZoom((z) => Math.min(z + 10, 400))}
+          onZoomOut={() => setZoom((z) => Math.max(z - 10, 10))}
+          onZoomReset={() => setZoom(100)}
+          panMode={panMode}
+          onTogglePanMode={() => setPanMode((p) => !p)}
+          snapMenuOpen={snapMenuOpen}
+          onToggleSnapMenu={() => setSnapMenuOpen((open) => !open)}
+          onCloseSnapMenu={() => setSnapMenuOpen(false)}
+          snapReference={snapReference}
+          setSnapReference={setSnapReference}
+          changePage={changePage}
+          clampedCurrentPage={clampedCurrentPage}
+          totalPages={totalPages}
+          toolOptions={toolOptions}
+          mode={mode}
+          onModeChange={handleModeChange}
+          currentTools={currentTools}
+          selectedTool={selectedTool}
+          panActive={panMode}
+          onToolSelect={handleToolSelect}
+        />
       </div>
 
       {/* Right resize handle */}
@@ -2655,198 +1124,23 @@ export function CreateView({
         title="Drag to resize layers panel"
       />
 
-      {/* ── Right: Layers / Navigation panel (resizable) ─────────────────────── */}
-      {rightPanel.width > 0 && (
-      <div className="flex shrink-0 flex-col border-l border-border bg-background overflow-hidden" style={{ width: rightPanel.width }}>
-        {/* Panel header */}
-        <div className={`flex items-center border-b border-border ${overlayUi.panelHeaderPadding} shrink-0`}>
-          {(["layers", "navigation"] as PanelView[]).map((p, i) => (
-            <div key={p} className="flex items-center">
-              {i > 0 && (
-                <span className="mx-1.5 text-muted-foreground/30 select-none">
-                  |
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => setPanelView(p)}
-                className={`flex items-center gap-1 rounded px-1 py-0.5 ${overlayUi.panelHeaderText} font-medium capitalize transition ${
-                  panelView === p
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {p === "layers" ? (
-                  <Layers className={overlayUi.panelHeaderIcon} />
-                ) : (
-                  <MapIcon className={overlayUi.panelHeaderIcon} />
-                )}
-                {p.charAt(0).toUpperCase() + p.slice(1)}
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Panel content */}
-        <div className={`flex-1 overflow-y-auto ${overlayUi.panelContentPadding}`}>
-          {panelView === "layers" ? (
-            <LayersPanel
-              overlayUi={overlayUi}
-              currentLessonPage={currentLessonPage}
-              droppedCount={0}
-            />
-          ) : (
-            <NavigationPanel currentPage={clampedCurrentPage} totalPages={totalPages} sections={lessonNavigation} onJump={changePage} overlayUi={overlayUi} />
-          )}
-        </div>
-      </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Layers Panel ─────────────────────────────────────────────────────────────
-
-interface Layer {
-  id: string
-  name: string
-  visible: boolean
-  locked: boolean
-  indent: number
-}
-
-function LayersPanel({
-  overlayUi,
-  currentLessonPage,
-  droppedCount,
-}: {
-  overlayUi: OverlayUi
-  currentLessonPage: LessonCanvasPage | null
-  droppedCount: number
-}) {
-  const [layers, setLayers] = useState<Layer[]>([
-    { id: "meta", name: "Session Meta", visible: true, locked: true, indent: 0 },
-    { id: "program", name: "Program", visible: true, locked: false, indent: 0 },
-    { id: "resources", name: "Resources", visible: true, locked: false, indent: 0 },
-    { id: "instruction", name: "Instruction Area", visible: true, locked: false, indent: 1 },
-    { id: "student", name: "Student Area", visible: true, locked: false, indent: 1 },
-    { id: "teacher", name: "Teacher Area", visible: true, locked: false, indent: 1 },
-    { id: "footer", name: "Footer Meta", visible: true, locked: true, indent: 0 },
-  ])
-
-  function toggleVisible(id: string) {
-    setLayers((ls) =>
-      ls.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
-    )
-  }
-  function toggleLocked(id: string) {
-    setLayers((ls) =>
-      ls.map((l) => (l.id === id ? { ...l, locked: !l.locked } : l)),
-    )
-  }
-
-  if (layers.length === 0) {
-    return (
-      <p className={`px-2 py-4 ${overlayUi.panelItemText} text-muted-foreground italic`}>No layers yet.</p>
-    )
-  }
-
-  return (
-    <div className="space-y-2">
-      {currentLessonPage && (
-        <div className="rounded border border-border/70 bg-muted/20 px-2 py-1.5">
-          <p className={`${overlayUi.panelItemText} font-semibold text-foreground`}>
-            {currentLessonPage.moduleName} · Lesson {currentLessonPage.lessonNumber}
-          </p>
-          <p className={`${overlayUi.controlLabel} text-muted-foreground`}>
-            {currentLessonPage.lessonTitle} · {currentLessonPage.templateType}
-          </p>
-          <p className={`${overlayUi.controlLabel} text-muted-foreground`}>
-            Dropped assets: {droppedCount}
-          </p>
-        </div>
-      )}
-      <ol className="space-y-0.5">
-      {layers.map((layer) => (
-        <li
-          key={layer.id}
-          className={`flex items-center gap-1.5 rounded ${overlayUi.panelItemPadding} ${overlayUi.panelItemText} text-foreground hover:bg-muted/50`}
-          style={{ paddingLeft: `${4 + layer.indent * 10}px` }}
-        >
-          {/* Visibility */}
-          <button
-            type="button"
-            onClick={() => toggleVisible(layer.id)}
-            className="shrink-0 text-muted-foreground hover:text-foreground transition"
-            title={layer.visible ? "Hide layer" : "Show layer"}
-          >
-            {layer.visible
-              ? <Eye    className={overlayUi.panelItemIcon} />
-              : <EyeOff className={`${overlayUi.panelItemIcon} opacity-30`} />}
-          </button>
-
-          {/* Lock */}
-          <button
-            type="button"
-            onClick={() => toggleLocked(layer.id)}
-            className="shrink-0 text-muted-foreground hover:text-foreground transition"
-            title={layer.locked ? "Unlock layer" : "Lock layer"}
-          >
-            {layer.locked
-              ? <Lock   className={overlayUi.panelItemIcon} />
-              : <Unlock className={`${overlayUi.panelItemIcon} opacity-30`} />}
-          </button>
-
-          {/* Name */}
-          <span className={`flex-1 truncate ${!layer.visible ? "opacity-40" : ""}`}>
-            {layer.name}
-          </span>
-        </li>
-      ))}
-      </ol>
-    </div>
-  )
-}
-
-// ─── Navigation Panel ─────────────────────────────────────────────────────────
-
-function NavigationPanel({
-  currentPage,
-  totalPages,
-  sections,
-  onJump,
-  overlayUi,
-}: {
-  currentPage: number
-  totalPages: number
-  sections: Array<{ label: string; start: number; end: number }>
-  onJump: (page: number) => void
-  overlayUi: OverlayUi
-}) {
-  return (
-    <div className="space-y-1">
-      <p className={`px-1 ${overlayUi.controlLabel} font-semibold uppercase tracking-widest text-muted-foreground mb-2`}>
-        Course Structure
-      </p>
-      {sections.length === 0 && (
-        <p className={`${overlayUi.panelItemText} px-1 text-muted-foreground italic`}>No lesson canvases yet.</p>
-      )}
-      {sections.map((s) => (
-        <button
-          key={s.label}
-          type="button"
-          onClick={() => onJump(s.start)}
-          className={`flex w-full items-center justify-between rounded ${overlayUi.panelItemPadding} ${overlayUi.panelItemText} text-foreground hover:bg-muted/60 transition`}
-        >
-          <span className="truncate">{s.label}</span>
-          <span className={`ml-2 shrink-0 ${overlayUi.controlLabel} text-muted-foreground`}>
-            {s.start === s.end ? String(s.start) : `${s.start}–${s.end}`}
-          </span>
-        </button>
-      ))}
-      <p className={`px-2 pt-2 ${overlayUi.controlLabel} text-muted-foreground`}>
-        Page {currentPage} of {totalPages}
-      </p>
+      <InspectorPanel
+        width={rightPanel.width}
+        panelView={panelView}
+        onPanelViewChange={setPanelView}
+        overlayUi={overlayUi}
+        currentLessonPage={currentLessonPage ? {
+          moduleName: currentLessonPage.moduleName,
+          lessonNumber: currentLessonPage.lessonNumber,
+          lessonTitle: currentLessonPage.lessonTitle,
+          templateType: currentLessonPage.templateType,
+        } : null}
+        droppedCount={0}
+        currentPage={clampedCurrentPage}
+        totalPages={totalPages}
+        sections={lessonNavigation}
+        onJump={changePage}
+      />
     </div>
   )
 }
