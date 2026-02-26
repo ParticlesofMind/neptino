@@ -2,28 +2,28 @@
 
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core"
 import { useState, useCallback, useEffect, useMemo, useRef } from "react"
-import { Text as PixiText, TextStyle } from "pixi.js"
-import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type PixiTemplateLayoutMeasurement, type PixiTemplateLayoutModel, type ToolConfig } from "@/components/canvas/PixiCanvas"
-import { PixiWidgetSurface } from "@/components/canvas/PixiWidgetSurface"
-import { DomTemplateSurface } from "@/components/canvas/DomTemplateSurface"
+import { DomCanvas, DEFAULT_PAGE_CONFIG } from "@/components/canvas/DomCanvas"
+import { TemplateSurface } from "@/components/canvas/TemplateSurface"
 import { CanvasOverlayControls } from "@/components/canvas/CanvasOverlayControls"
 import { MediaLibraryPanel } from "@/components/canvas/MediaLibraryPanel"
 import { InspectorPanel } from "@/components/canvas/InspectorPanel"
-import { PixiLayoutPager } from "@/components/canvas/PixiLayoutPager"
 import { useMediaLibraryAssets } from "@/components/canvas/use-media-library-assets"
 import { useCourseCanvasContext } from "@/components/canvas/use-course-canvas-context"
 import { useCanvasDocumentState } from "@/components/canvas/use-canvas-document-state"
 import { useTemplateProjectionState } from "@/components/canvas/use-template-projection-state"
-import type {
-  AnimateTool,
-  BuildTool,
-  CanvasLayer,
-  InspectorPanelView,
-  MediaAsset,
-  Mode,
-  OverlayUi,
-  SnapReference,
-  ToolItem,
+import {
+  type CanvasPageConfig,
+  type CanvasViewportInfo,
+  type ToolConfig,
+  type AnimateTool,
+  type BuildTool,
+  type CanvasLayer,
+  type InspectorPanelView,
+  type MediaAsset,
+  type Mode,
+  type OverlayUi,
+  type SnapReference,
+  type ToolItem,
 } from "@/components/canvas/create-view-types"
 import { createClient } from "@/lib/supabase/client"
 import type { TaskAreaKind } from "@/components/coursebuilder/template-blueprint"
@@ -104,7 +104,6 @@ export function CreateView({
   canvasConfig?: CanvasPageConfig | null
   courseId?: string | null
 } = {}) {
-  const canvasAreaRef = useRef<HTMLDivElement | null>(null)
   const mediaPanelWidthStorageKey = "create-view:media-panel-width"
   const supabase = useMemo(() => createClient(), [])
   const [mode, setMode] = useState<Mode>("build")
@@ -125,7 +124,6 @@ export function CreateView({
     { id: "footer", name: "Footer Meta", visible: true, locked: true, indent: 0 },
   ])
   const [currentPage, setCurrentPage] = useState(1)
-  const [focusPageRequest, setFocusPageRequest] = useState<number | null>(null)
   const {
     courseTitle,
     courseType,
@@ -140,12 +138,9 @@ export function CreateView({
   })
   const totalPages = lessonPages.length > 0 ? lessonPages.length : (canvasConfig?.pageCount ?? 1)
   const [zoom, setZoom] = useState(DEFAULT_CANVAS_ZOOM)
-  const [viewportInfo, setViewportInfo] = useState<CanvasViewportInfo | null>(null)
   const [mediaDragActive, setMediaDragActive] = useState(false)
   const [dropFeedback, setDropFeedback] = useState<string | null>(null)
   const [scrollDisabled, setScrollDisabled] = useState(false)
-  const [pixiLayoutPageByScope, setPixiLayoutPageByScope] = useState<Record<string, number>>({})
-  const [pixiMeasuredSectionHeightsByScope, setPixiMeasuredSectionHeightsByScope] = useState<Record<string, Record<string, number>>>({})
 
   const {
     activeMedia,
@@ -252,7 +247,6 @@ export function CreateView({
   const {
     currentDroppedMediaByArea,
     onDropAreaMedia,
-    onPixiAreaDrop,
     onRemoveAreaMedia,
   } = useCanvasDocumentState({
     supabase,
@@ -406,338 +400,11 @@ export function CreateView({
     }
   }, [])
 
-  // Enable Pixi-rendered template so the content structure is canvas-aware and supports drops.
-  const usePixiTemplateLayout = true
-  const measuredSectionHeights = useMemo(
-    () => pixiMeasuredSectionHeightsByScope[currentCanvasScopeKey] ?? {},
-    [currentCanvasScopeKey, pixiMeasuredSectionHeightsByScope],
-  )
-
-  const basePixiTemplateLayoutModel = useMemo<PixiTemplateLayoutModel | null>(() => {
-    if (!usePixiTemplateLayout) return null
-    if (!currentLessonPage) return null
-
-    const sections: PixiTemplateLayoutModel["sections"] = []
-    const formatList = (values: string[], fallback: string) => (values.length > 0 ? values : [fallback])
-
-    const describeAreaKey = (prefix: "content" | "assignment", areaKey: string): string => {
-      const parts = areaKey.split(":")
-      const topicIdx = Number.parseInt(parts[1] ?? "0", 10)
-      const objectiveIdx = Number.parseInt(parts[2] ?? "0", 10)
-      const taskIdx = Number.parseInt(parts[3] ?? "0", 10)
-      const areaRaw = String(parts[4] ?? "area")
-      const areaLabel = areaRaw.charAt(0).toUpperCase() + areaRaw.slice(1)
-
-      const groups = prefix === "content"
-        ? (templateData?.contentItems?.topicGroups ?? [])
-        : (templateData?.assignmentItems?.topicGroups ?? [])
-      const topicGroup = groups[topicIdx]
-      const objectiveGroup = topicGroup?.objectives?.[objectiveIdx]
-      const taskLabel = objectiveGroup?.tasks?.[taskIdx]?.task
-
-      const topicLabel = topicGroup?.topic ? `Topic ${topicIdx + 1}: ${topicGroup.topic}` : `Topic ${topicIdx + 1}`
-      const objectiveLabel = objectiveGroup?.objective
-        ? `Objective ${objectiveIdx + 1}: ${objectiveGroup.objective}`
-        : `Objective ${objectiveIdx + 1}`
-      const taskLine = taskLabel ? `Task ${taskIdx + 1}: ${taskLabel}` : `Task ${taskIdx + 1}`
-
-      return `${topicLabel} · ${objectiveLabel} · ${taskLine} · ${areaLabel} Area`
-    }
-
-    const mediaZonesForPrefix = (prefix: "content" | "assignment") => {
-      return Object.entries(currentDroppedMediaByArea)
-        .filter(([areaKey]) => areaKey.startsWith(`${prefix}:`))
-        .map(([areaKey, items]) => ({
-          areaKey,
-          title: describeAreaKey(prefix, areaKey),
-          items: items.map((item) => ({
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            url: item.url,
-            mediaType: item.mediaType,
-            category: item.category,
-          })),
-        }))
-    }
-
-    if (perPageTemplateEnabledMap.program) {
-      const rows = templateData?.programRows ?? []
-      sections.push({
-        key: "program",
-        id: "program",
-        title: "Program",
-        lines: rows.length > 0
-          ? rows.slice(0, 5).map((row, idx) => `${idx + 1}. ${row.topic || "Topic"} · ${row.program_time || "—"}`)
-          : ["No program rows on this page"],
-      })
-    }
-
-    if (perPageTemplateEnabledMap.resources) {
-      const rows = templateData?.resourceRows ?? []
-      sections.push({
-        key: "resources",
-        id: "resources",
-        title: "Resources",
-        lines: rows.length > 0
-          ? rows.slice(0, 6).map((row, idx) => `${idx + 1}. ${row.task || "Resource"}`)
-          : ["No resources on this page"],
-      })
-    }
-
-    if (perPageTemplateEnabledMap.content) {
-      const contentGroups = templateData?.contentItems?.topicGroups ?? []
-      const droppedCount = Object.entries(currentDroppedMediaByArea)
-        .filter(([areaKey]) => areaKey.startsWith("content:"))
-        .reduce((acc, [, items]) => acc + items.length, 0)
-      sections.push({
-        key: "content",
-        id: "content",
-        title: "Content",
-        lines: [
-          ...formatList(contentGroups.slice(0, 3).map((group, idx) => `${idx + 1}. ${group.topic}`), "No content groups on this page"),
-          `Dropped media: ${droppedCount}`,
-        ],
-        mediaZones: mediaZonesForPrefix("content"),
-      })
-    }
-
-    if (perPageTemplateEnabledMap.assignment) {
-      const assignmentGroups = templateData?.assignmentItems?.topicGroups ?? []
-      const droppedCount = Object.entries(currentDroppedMediaByArea)
-        .filter(([areaKey]) => areaKey.startsWith("assignment:"))
-        .reduce((acc, [, items]) => acc + items.length, 0)
-      sections.push({
-        key: "assignment",
-        id: "assignment",
-        title: "Assignment",
-        lines: [
-          ...formatList(assignmentGroups.slice(0, 3).map((group, idx) => `${idx + 1}. ${group.topic}`), "No assignment groups on this page"),
-          `Dropped media: ${droppedCount}`,
-        ],
-        mediaZones: mediaZonesForPrefix("assignment"),
-      })
-    }
-
-    if (perPageTemplateEnabledMap.scoring) {
-      const scoring = templateData?.scoringItems ?? []
-      sections.push({
-        key: "scoring",
-        id: "scoring",
-        title: "Scoring",
-        lines: scoring.length > 0 ? scoring.slice(0, 6) : ["No scoring criteria on this page"],
-      })
-    }
-
-    return {
-      title: `Lesson ${currentLessonPage.lessonNumber}: ${currentLessonPage.lessonTitle}`,
-      headerChips: headerFieldValues.map((entry) => entry.value).filter(Boolean).slice(0, 6),
-      sections,
-      footerChips: footerFieldValues
-        .filter((entry) => entry.key !== "page_number")
-        .map((entry) => entry.value)
-        .filter(Boolean)
-        .slice(0, 5),
-      pageLabel: footerFieldValues.find((entry) => entry.key === "page_number")?.value ?? `Page ${clampedCurrentPage} / ${totalPages}`,
-    }
-  }, [clampedCurrentPage, currentDroppedMediaByArea, currentLessonPage, footerFieldValues, headerFieldValues, perPageTemplateEnabledMap, templateData, totalPages, usePixiTemplateLayout])
-
-  const pixiTemplateLayoutPages = useMemo<PixiTemplateLayoutModel[]>(() => {
-    if (!usePixiTemplateLayout) return []
-    if (!basePixiTemplateLayoutModel) return []
-
-    const contentWidthPx = Math.max(
-      320,
-      effectiveCanvasConfig.widthPx - effectiveCanvasConfig.margins.left - effectiveCanvasConfig.margins.right - 24,
-    )
-    const contentHeightPx = Math.max(
-      260,
-      effectiveCanvasConfig.heightPx - effectiveCanvasConfig.margins.top - effectiveCanvasConfig.margins.bottom - 24,
-    )
-    const headerHeightPx = 96
-    const footerHeightPx = 72
-    const pageBudgetPx = Math.max(160, contentHeightPx - headerHeightPx - footerHeightPx)
-
-    const lineTextStyle = new TextStyle({
-      fontSize: 10,
-      wordWrap: true,
-      wordWrapWidth: Math.max(220, contentWidthPx - 32),
-      breakWords: true,
-    })
-    const sectionTitleStyle = new TextStyle({
-      fontSize: 11,
-      fontWeight: "600",
-      wordWrap: true,
-      wordWrapWidth: Math.max(220, contentWidthPx - 32),
-      breakWords: true,
-    })
-    const zoneTitleStyle = new TextStyle({
-      fontSize: 10,
-      fontWeight: "600",
-      wordWrap: true,
-      wordWrapWidth: Math.max(180, contentWidthPx - 48),
-      breakWords: true,
-    })
-    const mediaItemStyle = new TextStyle({
-      fontSize: 9,
-      wordWrap: true,
-      wordWrapWidth: Math.max(160, contentWidthPx - 64),
-      breakWords: true,
-    })
-
-    const measureTextHeight = (text: string, style: TextStyle) => {
-      const value = String(text || " ")
-      const node = new PixiText({ text: value, style })
-      const height = Math.max(14, Math.ceil(node.height || 0))
-      node.destroy()
-      return height
-    }
-
-    const estimateZoneHeight = (zone: NonNullable<PixiTemplateLayoutModel["sections"][number]["mediaZones"]>[number]) => {
-      const zoneTitleHeight = measureTextHeight(zone.title, zoneTitleStyle)
-      const mediaRowsHeight = zone.items.length > 0
-        ? zone.items.reduce((acc, item) => acc + Math.max(18, measureTextHeight(item.title, mediaItemStyle) + 6), 0)
-        : 18
-      return 14 + zoneTitleHeight + mediaRowsHeight
-    }
-
-    const estimateSectionHeight = (
-      section: PixiTemplateLayoutModel["sections"][number],
-      includeLines: boolean,
-      zones: NonNullable<PixiTemplateLayoutModel["sections"][number]["mediaZones"]>,
-    ) => {
-      const measuredHeight = measuredSectionHeights[section.key]
-      if (typeof measuredHeight === "number" && Number.isFinite(measuredHeight) && measuredHeight > 0) {
-        return measuredHeight
-      }
-      const sectionHeaderHeight = measureTextHeight(section.title, sectionTitleStyle)
-      const linesHeight = includeLines
-        ? section.lines.reduce((acc, line) => acc + measureTextHeight(line, lineTextStyle), 0)
-        : 14
-      const zonesHeight = zones.reduce((acc, zone) => acc + estimateZoneHeight(zone), 0)
-      return 14 + sectionHeaderHeight + linesHeight + zonesHeight
-    }
-
-    const splitSectionIfNeeded = (section: PixiTemplateLayoutModel["sections"][number]) => {
-      const zones = section.mediaZones ?? []
-      if (zones.length === 0) return [section]
-
-      const chunks: PixiTemplateLayoutModel["sections"][number][] = []
-      let currentZones: typeof zones = []
-      let includeLines = true
-
-      for (const zone of zones) {
-        const candidateZones = [...currentZones, zone]
-        const candidateHeight = estimateSectionHeight(section, includeLines, candidateZones)
-        if (candidateHeight > pageBudgetPx * 0.9 && currentZones.length > 0) {
-          const chunkIndex = chunks.length
-          chunks.push({
-            ...section,
-            key: `${section.key}:chunk:${chunkIndex}`,
-            title: chunks.length === 0 ? section.title : `${section.title} (cont.)`,
-            lines: includeLines ? section.lines : ["Continued"],
-            mediaZones: currentZones,
-          })
-          currentZones = [zone]
-          includeLines = false
-          continue
-        }
-        currentZones = candidateZones
-      }
-
-      if (currentZones.length > 0) {
-        const chunkIndex = chunks.length
-        chunks.push({
-          ...section,
-          key: `${section.key}:chunk:${chunkIndex}`,
-          title: chunks.length === 0 ? section.title : `${section.title} (cont.)`,
-          lines: includeLines ? section.lines : ["Continued"],
-          mediaZones: currentZones,
-        })
-      }
-
-      return chunks.length > 0 ? chunks : [section]
-    }
-
-    const sectionChunks = basePixiTemplateLayoutModel.sections.flatMap(splitSectionIfNeeded)
-
-    const pages: PixiTemplateLayoutModel[] = []
-    let currentSections: PixiTemplateLayoutModel["sections"] = []
-    let usedHeight = 0
-
-    for (const section of sectionChunks) {
-      const sectionHeight = estimateSectionHeight(section, true, section.mediaZones ?? [])
-      const wouldOverflow = currentSections.length > 0 && usedHeight + sectionHeight > pageBudgetPx
-      if (wouldOverflow) {
-        pages.push({
-          ...basePixiTemplateLayoutModel,
-          sections: currentSections,
-          pageLabel: "",
-        })
-        currentSections = []
-        usedHeight = 0
-      }
-
-      currentSections.push(section)
-      usedHeight += sectionHeight
-    }
-
-    if (currentSections.length > 0) {
-      pages.push({
-        ...basePixiTemplateLayoutModel,
-        sections: currentSections,
-        pageLabel: "",
-      })
-    }
-
-    if (pages.length === 0) {
-      return [basePixiTemplateLayoutModel]
-    }
-
-    return pages.map((pageModel, index) => ({
-      ...pageModel,
-      pageLabel: `${basePixiTemplateLayoutModel.pageLabel} · Canvas ${index + 1}/${pages.length}`,
-    }))
-  }, [basePixiTemplateLayoutModel, effectiveCanvasConfig.heightPx, effectiveCanvasConfig.margins.bottom, effectiveCanvasConfig.margins.left, effectiveCanvasConfig.margins.right, effectiveCanvasConfig.margins.top, effectiveCanvasConfig.widthPx, measuredSectionHeights, usePixiTemplateLayout])
-
-  const activePixiLayoutPage = useMemo(() => {
-    return Math.min(
-      Math.max(1, pixiLayoutPageByScope[currentCanvasScopeKey] ?? 1),
-      Math.max(1, pixiTemplateLayoutPages.length),
-    )
-  }, [currentCanvasScopeKey, pixiLayoutPageByScope, pixiTemplateLayoutPages.length])
-
-  const activePixiTemplateLayoutModel = useMemo(() => {
-    if (pixiTemplateLayoutPages.length === 0) return null
-    return pixiTemplateLayoutPages[activePixiLayoutPage - 1] ?? pixiTemplateLayoutPages[0]
-  }, [activePixiLayoutPage, pixiTemplateLayoutPages])
-
-  const onPixiLayoutMeasured = useCallback((measurement: PixiTemplateLayoutMeasurement) => {
-    setPixiMeasuredSectionHeightsByScope((prev) => {
-      const current = prev[currentCanvasScopeKey] ?? {}
-      let changed = false
-      const merged = { ...current }
-      Object.entries(measurement.sectionHeights).forEach(([key, height]) => {
-        const normalized = Math.max(0, Math.round(height))
-        if (merged[key] !== normalized) {
-          merged[key] = normalized
-          changed = true
-        }
-      })
-      if (!changed) return prev
-      return {
-        ...prev,
-        [currentCanvasScopeKey]: merged,
-      }
-    })
-  }, [currentCanvasScopeKey])
-
   const changePage = useCallback(
     (next: number) => {
       const normalized = Number.isFinite(next) ? Math.round(next) : 1
       const targetPage = Math.min(Math.max(1, normalized), totalPages)
       setCurrentPage(targetPage)
-      setFocusPageRequest(targetPage)
     },
     [totalPages],
   )
@@ -745,40 +412,6 @@ export function CreateView({
   const handleZoomStep = useCallback((direction: 1 | -1) => {
     setZoom((currentZoom) => Math.min(400, Math.max(10, currentZoom + (direction * ZOOM_STEP))))
   }, [])
-
-  const handleCanvasAreaWheel = useCallback((event: WheelEvent) => {
-    const targetElement = event.target as HTMLElement | null
-    if (targetElement?.closest("canvas")) {
-      return
-    }
-
-    event.preventDefault()
-
-    if (event.ctrlKey || event.metaKey) {
-      handleZoomStep(event.deltaY < 0 ? 1 : -1)
-      return
-    }
-
-    if (scrollDisabled) {
-      return
-    }
-
-    window.dispatchEvent(new CustomEvent("neptino-canvas-wheel", {
-      detail: {
-        deltaY: event.deltaY,
-      },
-    }))
-  }, [handleZoomStep, scrollDisabled])
-
-  useEffect(() => {
-    const canvasAreaElement = canvasAreaRef.current
-    if (!canvasAreaElement) return
-
-    canvasAreaElement.addEventListener("wheel", handleCanvasAreaWheel, { passive: false })
-    return () => {
-      canvasAreaElement.removeEventListener("wheel", handleCanvasAreaWheel)
-    }
-  }, [handleCanvasAreaWheel])
 
   const currentTools = mode === "build" ? BUILD_TOOLS : ANIMATE_TOOLS
   const selectedTool = activeTool as string
@@ -1172,7 +805,7 @@ export function CreateView({
       />
 
       {/* ── Center: Canvas area ──────────────────────────────────────────────── */}
-      <div ref={canvasAreaRef} className="relative flex flex-1 overflow-hidden bg-muted/30">
+      <div className="relative flex flex-1 overflow-hidden bg-muted/30">
 
         {dropFeedback && (
           <div className="absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-md border border-border bg-background/95 px-3 py-1.5 text-xs text-foreground shadow-sm backdrop-blur-sm">
@@ -1180,64 +813,42 @@ export function CreateView({
           </div>
         )}
 
-        <PixiWidgetSurface
+        <DomCanvas
           config={effectiveCanvasConfig}
           zoom={zoom}
           onZoomChange={setZoom}
-          allowWheelScroll={!scrollDisabled}
-          activeTool={canvasTool}
-          toolConfig={toolConfig}
           activePage={clampedCurrentPage}
-          focusPage={focusPageRequest ?? clampedCurrentPage}
-          onViewportChange={setViewportInfo}
+          focusPage={focusPageRequest ?? null}
           onActivePageChange={(page) => {
             setCurrentPage(page)
             setFocusPageRequest(null)
           }}
-          templateLayoutModel={usePixiTemplateLayout ? activePixiTemplateLayoutModel : null}
-          enableTemplateLayout={usePixiTemplateLayout}
-          onTemplateAreaDrop={onPixiAreaDrop}
-          onTemplateLayoutMeasured={onPixiLayoutMeasured}
-        />
-
-        <PixiLayoutPager
-          visible={pixiTemplateLayoutPages.length > 1}
-          currentPage={activePixiLayoutPage}
-          totalPages={pixiTemplateLayoutPages.length}
-          onPrev={() => setPixiLayoutPageByScope((prev) => ({
-            ...prev,
-            [currentCanvasScopeKey]: Math.max(1, activePixiLayoutPage - 1),
-          }))}
-          onNext={() => setPixiLayoutPageByScope((prev) => ({
-            ...prev,
-            [currentCanvasScopeKey]: Math.min(pixiTemplateLayoutPages.length, activePixiLayoutPage + 1),
-          }))}
-        />
-
-        <DomTemplateSurface
-          enabled={!usePixiTemplateLayout}
-          viewportInfo={viewportInfo}
-          currentLessonPage={currentLessonPage}
-          canvasConfig={effectiveCanvasConfig}
-          hasHeaderBlock={hasHeaderBlock}
-          hasFooterBlock={hasFooterBlock}
-          headerPaddingClass={overlayUi.headerPadding}
-          lessonHeaderTooltip={lessonHeaderTooltip}
-          lessonMetaText={lessonMetaText}
-          headerFieldValues={headerFieldValues}
-          footerFieldValues={footerFieldValues}
-          clampedCurrentPage={clampedCurrentPage}
-          totalPages={totalPages}
-          perPageTemplateEnabledMap={perPageTemplateEnabledMap}
-          blockOrder={layerDrivenBlockOrder}
-          taskAreaOrder={layerDrivenTaskAreaOrder}
-          templateFieldEnabled={templateFieldEnabled}
-          templateVisualDensity={templateVisualDensity}
-          templateData={templateData}
-          currentDroppedMediaByArea={currentDroppedMediaByArea}
-          mediaDragActive={mediaDragActive}
-          onRemoveAreaMedia={onRemoveAreaMedia}
-        />
+          activeTool={canvasTool}
+          toolConfig={toolConfig}
+        >
+          <TemplateSurface
+            currentLessonPage={currentLessonPage}
+            canvasConfig={effectiveCanvasConfig}
+            hasHeaderBlock={hasHeaderBlock}
+            hasFooterBlock={hasFooterBlock}
+            headerPaddingClass={overlayUi.headerPadding}
+            lessonHeaderTooltip={lessonHeaderTooltip}
+            lessonMetaText={lessonMetaText}
+            headerFieldValues={headerFieldValues}
+            footerFieldValues={footerFieldValues}
+            clampedCurrentPage={clampedCurrentPage}
+            totalPages={totalPages}
+            perPageTemplateEnabledMap={perPageTemplateEnabledMap}
+            blockOrder={layerDrivenBlockOrder}
+            taskAreaOrder={layerDrivenTaskAreaOrder}
+            templateFieldEnabled={templateFieldEnabled}
+            templateVisualDensity={templateVisualDensity}
+            templateData={templateData}
+            currentDroppedMediaByArea={currentDroppedMediaByArea}
+            mediaDragActive={mediaDragActive}
+            onRemoveAreaMedia={onRemoveAreaMedia}
+          />
+        </DomCanvas>
 
         <CanvasOverlayControls
           overlayUi={overlayUi}

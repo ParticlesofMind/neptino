@@ -372,7 +372,7 @@ export function useCanvasDocumentState({
     setMediaDragActive(false)
   }, [appendMediaToArea, buildScopeKeyForPage, currentLessonPageGlobal, onDropPlacementResult, onMediaConsumed, persistDroppedMediaForPage, recordMediaDropOp, resolveDropTargetPageGlobal, setMediaDragActive])
 
-  const onPixiAreaDrop = useCallback((areaKey: string, rawPayload: string) => {
+  const onHtmlAreaDrop = useCallback((areaKey: string, rawPayload: string) => {
     if (!parseTaskAreaKey(areaKey)) {
       onDropPlacementResult?.({ status: "rejected-invalid", areaKey })
       return
@@ -529,7 +529,7 @@ export function useCanvasDocumentState({
   return {
     currentDroppedMediaByArea,
     onDropAreaMedia,
-    onPixiAreaDrop,
+    onHtmlAreaDrop,
     onRemoveAreaMedia,
   }
 }
