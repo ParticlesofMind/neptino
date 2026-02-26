@@ -83,3 +83,39 @@ export interface MediaAsset {
   description: string
   url: string
 }
+
+// ── Added from PixiCanvas ─────────────────────────────────────────────────────
+
+export interface CanvasPageConfig {
+  widthPx:   number
+  heightPx:  number
+  pageCount: number
+  margins: { top: number; right: number; bottom: number; left: number }
+}
+
+export interface CanvasViewportInfo {
+  pageRect:    { x: number; y: number; width: number; height: number }
+  contentRect: { x: number; y: number; width: number; height: number }
+  scale:   number
+  zoomPct: number
+}
+
+export interface ToolConfig {
+  brushSize:        number
+  brushColor:       string
+  penSize:          number
+  penColor:         string
+  penFill:          string
+  fontSize:         string
+  fontFamily:       string
+  fontBold:         boolean
+  fontItalic:       boolean
+  textColor:        string
+  shapeType:        string
+  shapeStrokeWidth: number
+  shapeStrokeColor: string
+  shapeFillColor:   string
+  eraserSize:       number
+  tableRows:        number
+  tableCols:        number
+}
