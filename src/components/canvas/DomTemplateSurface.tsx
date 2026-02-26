@@ -1,6 +1,6 @@
 "use client"
 
-import { TemplateBlueprint, type TemplateAreaMediaItem, type TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
+import { TemplateBlueprint, type TaskAreaKind, type TemplateAreaMediaItem, type TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
 import type { BlockId, TemplateFieldState } from "@/components/coursebuilder/sections/templates-section"
 import type { CanvasPageConfig, CanvasViewportInfo } from "@/components/canvas/PixiCanvas"
 import type { LessonCanvasPageProjection } from "@/lib/curriculum/canvas-projection"
@@ -21,12 +21,13 @@ interface DomTemplateSurfaceProps {
   clampedCurrentPage: number
   totalPages: number
   perPageTemplateEnabledMap: Record<BlockId, boolean>
+  blockOrder?: BlockId[]
+  taskAreaOrder?: TaskAreaKind[]
   templateFieldEnabled: TemplateFieldState
   templateVisualDensity: TemplateVisualDensity
   templateData?: TemplateBlueprintData
   currentDroppedMediaByArea: Record<string, TemplateAreaMediaItem[]>
   mediaDragActive: boolean
-  onDropAreaMedia: (areaKey: string, event: React.DragEvent<HTMLDivElement>) => void
   onRemoveAreaMedia: (areaKey: string, mediaId: string) => void
 }
 
@@ -45,12 +46,13 @@ export function DomTemplateSurface({
   clampedCurrentPage,
   totalPages,
   perPageTemplateEnabledMap,
+  blockOrder,
+  taskAreaOrder,
   templateFieldEnabled,
   templateVisualDensity,
   templateData,
   currentDroppedMediaByArea,
   mediaDragActive,
-  onDropAreaMedia,
   onRemoveAreaMedia,
 }: DomTemplateSurfaceProps) {
   if (!enabled || !viewportInfo || !currentLessonPage) return null
@@ -134,6 +136,8 @@ export function DomTemplateSurface({
                 type={currentLessonPage.templateType as never}
                 enabled={perPageTemplateEnabledMap}
                 fieldEnabled={templateFieldEnabled}
+                blockOrder={blockOrder}
+                taskAreaOrder={taskAreaOrder}
                 name={currentLessonPage.lessonTitle}
                 scale="md"
                 scrollable={false}
@@ -141,7 +145,6 @@ export function DomTemplateSurface({
                 data={templateData}
                 droppedMediaByArea={currentDroppedMediaByArea}
                 mediaDragActive={mediaDragActive}
-                onDropAreaMedia={onDropAreaMedia}
                 onRemoveAreaMedia={onRemoveAreaMedia}
               />
             </div>

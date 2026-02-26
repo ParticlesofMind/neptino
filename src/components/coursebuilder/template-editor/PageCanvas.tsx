@@ -36,7 +36,7 @@ export function PageCanvas({
           padding: '15mm',
           boxSizing: 'border-box',
           transform: `scale(${zoom})`,
-          // transformOrigin: 'top center', // Tailwind doesn't have origin-top-center
+          transformOrigin: 'top center',
         }}
       >
         <div style={templateToGridStyle(template.grid)} className="h-full">

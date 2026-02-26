@@ -1,6 +1,9 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import {
   Trash2,
   BookOpen,
@@ -16,6 +19,7 @@ import {
   CheckSquare,
   BarChart3,
   Layers,
+  GripVertical,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -170,8 +174,24 @@ interface LocalTemplate {
   type: TemplateType
   enabled: Record<BlockId, boolean>
   fieldEnabled?: TemplateFieldState
+  blockOrder?: BlockId[]
   description: string
   createdAt?: string
+}
+
+function defaultBlockOrder(type: TemplateType): BlockId[] {
+  return ALL_BLOCKS.filter((block) => block.forTypes.includes(type)).map((block) => block.id)
+}
+
+function resolveBlockOrder(type: TemplateType, preferred?: BlockId[]): BlockId[] {
+  const base = defaultBlockOrder(type)
+  if (!preferred || preferred.length === 0) return base
+
+  const baseSet = new Set(base)
+  const preferredValid = preferred.filter((blockId) => baseSet.has(blockId))
+  const preferredSet = new Set(preferredValid)
+  const missing = base.filter((blockId) => !preferredSet.has(blockId))
+  return [...preferredValid, ...missing]
 }
 
 function defaultEnabled(): Record<BlockId, boolean> {
@@ -264,6 +284,7 @@ function defaultFieldEnabled(type: TemplateType, enabled: Record<BlockId, boolea
 function normalizeTemplate(template: LocalTemplate): LocalTemplate {
   const enabled = template.enabled ?? defaultEnabled()
   const defaultFields = defaultFieldEnabled(template.type, enabled)
+  const blockOrder = resolveBlockOrder(template.type, template.blockOrder)
   
   // Merge existing fieldEnabled with defaults to ensure new required fields are added
   const fieldEnabled = template.fieldEnabled 
@@ -279,8 +300,102 @@ function normalizeTemplate(template: LocalTemplate): LocalTemplate {
     ...template,
     enabled,
     fieldEnabled,
+    blockOrder,
     createdAt: template.createdAt ?? new Date().toISOString(),
   }
+}
+
+function SortableBlockCard({
+  block,
+  configType,
+  configEnabled,
+  configFieldEnabled,
+  onToggleBlock,
+  onToggleField,
+}: {
+  block: TemplateBlockConfig
+  configType: TemplateType
+  configEnabled: Record<BlockId, boolean>
+  configFieldEnabled: TemplateFieldState
+  onToggleBlock: (id: BlockId) => void
+  onToggleField: (blockId: BlockId, fieldKey: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`rounded-xl border border-border bg-background p-4 shadow-sm ${isDragging ? "opacity-70" : ""}`}
+    >
+      <div className="flex items-start gap-3">
+        <button
+          type="button"
+          aria-label={`Reorder ${block.label}`}
+          className="mt-0.5 flex-shrink-0 text-muted-foreground cursor-grab active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <span className="mt-0.5 flex-shrink-0 text-muted-foreground">{BLOCK_META[block.id].icon}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">{block.label}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">{block.description}</p>
+        </div>
+      </div>
+      {!block.mandatory && (
+        <div className="mt-2.5 flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={configEnabled[block.id]}
+            onChange={() => onToggleBlock(block.id)}
+            className="h-4 w-4 accent-primary"
+          />
+          <span className="text-xs font-medium text-muted-foreground">Include in template</span>
+        </div>
+      )}
+
+      {(configEnabled[block.id] || block.mandatory) && (
+        <div className="mt-3 rounded-lg border border-border/70 bg-muted/5 p-3">
+          <div className="space-y-3">
+            {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).length > 0 && (
+              <div>
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
+                  {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).map((field) => (
+                    <label key={field.key} className="flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-xs text-foreground/80 cursor-not-allowed">
+                      <input type="checkbox" checked disabled className="h-3 w-3 accent-primary" />
+                      <span>{field.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && !f.required).length > 0 && (
+              <div>
+                {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).length > 0 && <div className="border-t border-border/40 pt-2.5" />}
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
+                  {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && !f.required).map((field) => (
+                    <label key={field.key} className="flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-xs text-foreground/80 cursor-pointer">
+                      <input type="checkbox" checked={Boolean(configFieldEnabled[block.id]?.[field.key])} onChange={() => onToggleField(block.id, field.key)} className="h-3 w-3 accent-primary" />
+                      <span>{field.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function normalizeTemplateSettings(raw: unknown): TemplateSettingsPayload {
@@ -326,6 +441,7 @@ function TemplatePreview({
   type,
   enabled,
   fieldEnabled,
+  blockOrder,
   name,
   visualDensity,
   isEmpty,
@@ -333,6 +449,7 @@ function TemplatePreview({
   type: TemplateType
   enabled: Record<BlockId, boolean>
   fieldEnabled: TemplateFieldState
+  blockOrder: BlockId[]
   name: string
   description: string
   visualDensity: TemplateVisualDensity
@@ -353,6 +470,7 @@ function TemplatePreview({
       type={type}
       enabled={enabled}
       fieldEnabled={fieldEnabled}
+      blockOrder={blockOrder}
       name={name || "Untitled template"}
       scale="md"
       density={visualDensity}
@@ -434,6 +552,15 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   const [configDesc, setConfigDesc] = useState("")
   const [configEnabled, setConfigEnabled] = useState<Record<BlockId, boolean>>(defaultEnabled())
   const [configFieldEnabled, setConfigFieldEnabled] = useState<TemplateFieldState>(defaultFieldEnabled("lesson", defaultEnabled()))
+  const [configBlockOrder, setConfigBlockOrder] = useState<BlockId[]>(defaultBlockOrder("lesson"))
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 4,
+      },
+    }),
+  )
 
   const activeTemplate = templates.find((t) => t.id === activeId) ?? null
   const isCreating = configView === "create"
@@ -466,6 +593,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setConfigDesc("")
     setConfigEnabled(nextEnabled)
     setConfigFieldEnabled(defaultFieldEnabled(nextType, nextEnabled))
+    setConfigBlockOrder(defaultBlockOrder(nextType))
     setPendingTypeSelection(null)
     setShowTypeOverlay(true)
   }
@@ -487,6 +615,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       type: pendingTypeSelection,
       enabled: { ...nextEnabled },
       fieldEnabled: { ...nextFieldEnabled },
+      blockOrder: defaultBlockOrder(pendingTypeSelection),
       description: configDesc,
       createdAt: new Date().toISOString(),
     }
@@ -496,6 +625,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setConfigType(tpl.type)
     setConfigEnabled({ ...tpl.enabled })
     setConfigFieldEnabled(tpl.fieldEnabled ?? defaultFieldEnabled(tpl.type, tpl.enabled))
+    setConfigBlockOrder(resolveBlockOrder(tpl.type, tpl.blockOrder))
     setConfigView("edit")
     void persistTemplates(updated)
     setShowTypeOverlay(false)
@@ -519,6 +649,10 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setTemplates(updated)
     setConfigType(pendingTypeSelection)
     setConfigName(configName.trim())
+    const updatedActive = updated.find((tpl) => tpl.id === activeId)
+    if (updatedActive) {
+      setConfigBlockOrder(resolveBlockOrder(updatedActive.type, updatedActive.blockOrder))
+    }
     setShowTypeOverlay(false)
     setShowLoadOverlay(false)
     setConfirmDelete(false)
@@ -569,6 +703,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setConfigDesc(tpl.description)
     setConfigEnabled({ ...tpl.enabled })
     setConfigFieldEnabled(tpl.fieldEnabled ?? defaultFieldEnabled(tpl.type, tpl.enabled))
+    setConfigBlockOrder(resolveBlockOrder(tpl.type, tpl.blockOrder))
     setConfigView("edit")
     setPanelView("config")
     setShowTypeOverlay(false)
@@ -620,6 +755,20 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     await persistTemplates(updated)
   }
 
+  function handleBlockDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const current = resolveBlockOrder(configType, configBlockOrder)
+    const oldIndex = current.indexOf(active.id as BlockId)
+    const newIndex = current.indexOf(over.id as BlockId)
+    if (oldIndex < 0 || newIndex < 0) return
+
+    const nextOrder = arrayMove(current, oldIndex, newIndex)
+    setConfigBlockOrder(nextOrder)
+    if (activeId) setConfigView("edit")
+  }
+
   const persistTemplateDraft = useCallback(async () => {
     if (!courseId || !activeId || configView === "create") return
     const active = templates.find((item) => item.id === activeId)
@@ -632,6 +781,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       type: configType,
       enabled: { ...configEnabled },
       fieldEnabled: { ...configFieldEnabled },
+      blockOrder: resolveBlockOrder(configType, configBlockOrder),
       description: configDesc,
     })
 
@@ -640,7 +790,8 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       normalizedActive.type === nextDraft.type &&
       normalizedActive.description === nextDraft.description &&
       JSON.stringify(normalizedActive.enabled) === JSON.stringify(nextDraft.enabled) &&
-      JSON.stringify(normalizedActive.fieldEnabled) === JSON.stringify(nextDraft.fieldEnabled)
+      JSON.stringify(normalizedActive.fieldEnabled) === JSON.stringify(nextDraft.fieldEnabled) &&
+      JSON.stringify(normalizedActive.blockOrder) === JSON.stringify(nextDraft.blockOrder)
 
     if (unchanged) return
 
@@ -656,6 +807,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     configType,
     configEnabled,
     configFieldEnabled,
+    configBlockOrder,
     configDesc,
     persistTemplates,
   ])
@@ -671,6 +823,12 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   const previewName = useDraftPreview ? configName : (activeTemplate?.name ?? "")
   const previewDescription = useDraftPreview ? configDesc : (activeTemplate?.description ?? "")
   const previewIsEmpty = false
+  const previewBlockOrder = useDraftPreview
+    ? resolveBlockOrder(configType, configBlockOrder)
+    : resolveBlockOrder(activeTemplate?.type ?? "lesson", activeTemplate?.blockOrder)
+  const orderedBlocks = resolveBlockOrder(configType, configBlockOrder)
+    .map((blockId) => ALL_BLOCKS.find((block) => block.id === blockId))
+    .filter((block): block is TemplateBlockConfig => Boolean(block))
 
   return (
     <SetupSection
@@ -729,62 +887,21 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                 <div className="space-y-5">
                   <div>
                     <div className="space-y-2">
-                      {ALL_BLOCKS.filter((b) => b.forTypes.includes(configType)).map((block) => (
-                        <div key={block.id} className="rounded-xl border border-border bg-background p-4 shadow-sm">
-                          <div className="flex items-start gap-3">
-                            <span className="mt-0.5 flex-shrink-0 text-muted-foreground">{BLOCK_META[block.id].icon}</span>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-foreground">{block.label}</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground">{block.description}</p>
-                            </div>
-                          </div>
-                          {!block.mandatory && (
-                            <div className="mt-2.5 flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={configEnabled[block.id]}
-                                onChange={() => toggleBlock(block.id)}
-                                className="h-4 w-4 accent-primary"
-                              />
-                              <span className="text-xs font-medium text-muted-foreground">Include in template</span>
-                            </div>
-                          )}
-
-                          {(configEnabled[block.id] || block.mandatory) && (
-                            <div className="mt-3 rounded-lg border border-border/70 bg-muted/5 p-3">
-                              <div className="space-y-3">
-                                {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).length > 0 && (
-                                  <div>
-                                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
-                                      {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).map((field) => (
-                                        <label key={field.key} className="flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-xs text-foreground/80 cursor-not-allowed">
-                                          <input type="checkbox" checked disabled className="h-3 w-3 accent-primary" />
-                                          <span>{field.label}</span>
-                                        </label>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                                {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && !f.required).length > 0 && (
-                                  <div>
-                                    {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).length > 0 && <div className="border-t border-border/40 pt-2.5" />}
-                                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
-                                      {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && !f.required).map((field) => (
-                                        <label key={field.key} className="flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-xs text-foreground/80 cursor-pointer">
-                                          <input type="checkbox" checked={Boolean(configFieldEnabled[block.id]?.[field.key])} onChange={() => toggleField(block.id, field.key)} className="h-3 w-3 accent-primary" />
-                                          <span>{field.label}</span>
-                                        </label>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleBlockDragEnd}>
+                        <SortableContext items={orderedBlocks.map((block) => block.id)} strategy={verticalListSortingStrategy}>
+                          {orderedBlocks.map((block) => (
+                            <SortableBlockCard
+                              key={block.id}
+                              block={block}
+                              configType={configType}
+                              configEnabled={configEnabled}
+                              configFieldEnabled={configFieldEnabled}
+                              onToggleBlock={toggleBlock}
+                              onToggleField={toggleField}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
                     </div>
                   </div>
                 </div>
@@ -799,6 +916,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
               type={previewType}
               enabled={previewEnabled}
               fieldEnabled={previewFieldEnabled}
+              blockOrder={previewBlockOrder}
               name={previewName}
               description={previewDescription}
               visualDensity={visualDensity}

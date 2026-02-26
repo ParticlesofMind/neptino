@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { Eye, EyeOff, Layers, Lock, Map as MapIcon, Unlock } from "lucide-react"
-import type { InspectorPanelView, OverlayUi } from "@/components/canvas/create-view-types"
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { Eye, EyeOff, GripVertical, Layers, Lock, Map as MapIcon, Unlock } from "lucide-react"
+import type { CanvasLayer, InspectorPanelView, OverlayUi } from "@/components/canvas/create-view-types"
 
 interface LessonSummary {
   moduleName: string
@@ -11,43 +13,120 @@ interface LessonSummary {
   templateType: string
 }
 
-interface Layer {
-  id: string
-  name: string
-  visible: boolean
-  locked: boolean
-  indent: number
+function SortableLayerRow({
+  layer,
+  overlayUi,
+  onToggleVisible,
+  onToggleLocked,
+}: {
+  layer: CanvasLayer
+  overlayUi: OverlayUi
+  onToggleVisible: (id: string) => void
+  onToggleLocked: (id: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: layer.id })
+
+  return (
+    <li
+      ref={setNodeRef}
+      className={`flex items-center gap-1.5 rounded ${overlayUi.panelItemPadding} ${overlayUi.panelItemText} text-foreground hover:bg-muted/50 ${isDragging ? "opacity-70" : ""}`}
+      style={{
+        paddingLeft: `${4 + layer.indent * 10}px`,
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+    >
+      <button
+        type="button"
+        className="shrink-0 text-muted-foreground hover:text-foreground transition cursor-grab active:cursor-grabbing"
+        title="Drag to reorder"
+        aria-label={`Drag ${layer.name}`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className={overlayUi.panelItemIcon} />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onToggleVisible(layer.id)}
+        className="shrink-0 text-muted-foreground hover:text-foreground transition"
+        title={layer.visible ? "Hide layer" : "Show layer"}
+      >
+        {layer.visible
+          ? <Eye className={overlayUi.panelItemIcon} />
+          : <EyeOff className={`${overlayUi.panelItemIcon} opacity-30`} />}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onToggleLocked(layer.id)}
+        className="shrink-0 text-muted-foreground hover:text-foreground transition"
+        title={layer.locked ? "Unlock layer" : "Lock layer"}
+      >
+        {layer.locked
+          ? <Lock className={overlayUi.panelItemIcon} />
+          : <Unlock className={`${overlayUi.panelItemIcon} opacity-30`} />}
+      </button>
+
+      <span className={`flex-1 truncate ${!layer.visible ? "opacity-40" : ""}`}>
+        {layer.name}
+      </span>
+    </li>
+  )
 }
 
 function LayersPanel({
   overlayUi,
   currentLessonPage,
   droppedCount,
+  layers,
+  onLayersChange,
 }: {
   overlayUi: OverlayUi
   currentLessonPage: LessonSummary | null
   droppedCount: number
+  layers: CanvasLayer[]
+  onLayersChange: (next: CanvasLayer[]) => void
 }) {
-  const [layers, setLayers] = useState<Layer[]>([
-    { id: "meta", name: "Session Meta", visible: true, locked: true, indent: 0 },
-    { id: "program", name: "Program", visible: true, locked: false, indent: 0 },
-    { id: "resources", name: "Resources", visible: true, locked: false, indent: 0 },
-    { id: "instruction", name: "Instruction Area", visible: true, locked: false, indent: 1 },
-    { id: "student", name: "Student Area", visible: true, locked: false, indent: 1 },
-    { id: "teacher", name: "Teacher Area", visible: true, locked: false, indent: 1 },
-    { id: "footer", name: "Footer Meta", visible: true, locked: true, indent: 0 },
-  ])
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 4,
+      },
+    }),
+  )
 
   function toggleVisible(id: string) {
-    setLayers((ls) =>
-      ls.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
+    onLayersChange(
+      layers.map((layer) => (layer.id === id ? { ...layer, visible: !layer.visible } : layer)),
     )
   }
 
   function toggleLocked(id: string) {
-    setLayers((ls) =>
-      ls.map((l) => (l.id === id ? { ...l, locked: !l.locked } : l)),
+    onLayersChange(
+      layers.map((layer) => (layer.id === id ? { ...layer, locked: !layer.locked } : layer)),
     )
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const unlocked = layers.filter((layer) => !layer.locked)
+    const fromIndex = unlocked.findIndex((layer) => layer.id === active.id)
+    const toIndex = unlocked.findIndex((layer) => layer.id === over.id)
+    if (fromIndex < 0 || toIndex < 0) return
+
+    const reorderedUnlocked = arrayMove(unlocked, fromIndex, toIndex)
+    let unlockedCursor = 0
+    const next = layers.map((layer) => {
+      if (layer.locked) return layer
+      const replacement = reorderedUnlocked[unlockedCursor]
+      unlockedCursor += 1
+      return replacement
+    })
+    onLayersChange(next)
   }
 
   if (layers.length === 0) {
@@ -71,41 +150,58 @@ function LayersPanel({
           </p>
         </div>
       )}
-      <ol className="space-y-0.5">
-        {layers.map((layer) => (
-          <li
-            key={layer.id}
-            className={`flex items-center gap-1.5 rounded ${overlayUi.panelItemPadding} ${overlayUi.panelItemText} text-foreground hover:bg-muted/50`}
-            style={{ paddingLeft: `${4 + layer.indent * 10}px` }}
-          >
-            <button
-              type="button"
-              onClick={() => toggleVisible(layer.id)}
-              className="shrink-0 text-muted-foreground hover:text-foreground transition"
-              title={layer.visible ? "Hide layer" : "Show layer"}
-            >
-              {layer.visible
-                ? <Eye className={overlayUi.panelItemIcon} />
-                : <EyeOff className={`${overlayUi.panelItemIcon} opacity-30`} />}
-            </button>
+      <DndContext id="create-view-layers-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={layers.filter((layer) => !layer.locked).map((layer) => layer.id)} strategy={verticalListSortingStrategy}>
+          <ol className="space-y-0.5">
+            {layers.map((layer) => (
+              layer.locked ? (
+                <li
+                  key={layer.id}
+                  className={`flex items-center gap-1.5 rounded ${overlayUi.panelItemPadding} ${overlayUi.panelItemText} text-foreground hover:bg-muted/50`}
+                  style={{ paddingLeft: `${4 + layer.indent * 10}px` }}
+                >
+                  <span className="shrink-0 text-muted-foreground/50">
+                    <GripVertical className={overlayUi.panelItemIcon} />
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => toggleVisible(layer.id)}
+                    className="shrink-0 text-muted-foreground hover:text-foreground transition"
+                    title={layer.visible ? "Hide layer" : "Show layer"}
+                  >
+                    {layer.visible
+                      ? <Eye className={overlayUi.panelItemIcon} />
+                      : <EyeOff className={`${overlayUi.panelItemIcon} opacity-30`} />}
+                  </button>
 
-            <button
-              type="button"
-              onClick={() => toggleLocked(layer.id)}
-              className="shrink-0 text-muted-foreground hover:text-foreground transition"
-              title={layer.locked ? "Unlock layer" : "Lock layer"}
-            >
-              {layer.locked
-                ? <Lock className={overlayUi.panelItemIcon} />
-                : <Unlock className={`${overlayUi.panelItemIcon} opacity-30`} />}
-            </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleLocked(layer.id)}
+                    className="shrink-0 text-muted-foreground hover:text-foreground transition"
+                    title={layer.locked ? "Unlock layer" : "Lock layer"}
+                  >
+                    {layer.locked
+                      ? <Lock className={overlayUi.panelItemIcon} />
+                      : <Unlock className={`${overlayUi.panelItemIcon} opacity-30`} />}
+                  </button>
 
-            <span className={`flex-1 truncate ${!layer.visible ? "opacity-40" : ""}`}>
-              {layer.name}
-            </span>
-          </li>
-        ))}
-      </ol>
+                  <span className={`flex-1 truncate ${!layer.visible ? "opacity-40" : ""}`}>
+                    {layer.name}
+                  </span>
+                </li>
+              ) : (
+                <SortableLayerRow
+                  key={layer.id}
+                  layer={layer}
+                  overlayUi={overlayUi}
+                  onToggleVisible={toggleVisible}
+                  onToggleLocked={toggleLocked}
+                />
+              )
+            ))}
+          </ol>
+        </SortableContext>
+      </DndContext>
     </div>
   )
 }
@@ -156,6 +252,8 @@ interface InspectorPanelProps {
   panelView: InspectorPanelView
   onPanelViewChange: (view: InspectorPanelView) => void
   overlayUi: OverlayUi
+  layers: CanvasLayer[]
+  onLayersChange: (next: CanvasLayer[]) => void
   currentLessonPage: LessonSummary | null
   droppedCount: number
   currentPage: number
@@ -169,6 +267,8 @@ export function InspectorPanel({
   panelView,
   onPanelViewChange,
   overlayUi,
+  layers,
+  onLayersChange,
   currentLessonPage,
   droppedCount,
   currentPage,
@@ -214,6 +314,8 @@ export function InspectorPanel({
             overlayUi={overlayUi}
             currentLessonPage={currentLessonPage}
             droppedCount={droppedCount}
+            layers={layers}
+            onLayersChange={onLayersChange}
           />
         ) : (
           <NavigationPanel

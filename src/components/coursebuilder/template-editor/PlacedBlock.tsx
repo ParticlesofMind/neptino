@@ -11,30 +11,24 @@ interface PlacedBlockProps {
 
 export function PlacedBlock({ block, onRemove }: PlacedBlockProps) {
   // Blocks within a zone are also draggable (for reordering or moving between zones)
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: block.id,
     data: {
       block,
-      type: block.type, // Useful for validation
       fromZone: block.zoneId,
     },
   });
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
-
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      {...listeners}
+      {...attributes}
       className={`
         relative group flex items-start gap-2 p-3 rounded-md border bg-white shadow-sm
         transition-all select-none
-        ${isDragging ? 'opacity-50 z-50 ring-2 ring-blue-400' : 'border-gray-200 hover:border-blue-300'}
+        ${isDragging ? 'opacity-40 scale-95 z-50 ring-2 ring-blue-400' : 'border-gray-200 hover:border-blue-300'}
       `}
-      {...attributes}
-      {...listeners}
     >
       <div className="mt-1 text-gray-400 cursor-grab active:cursor-grabbing">
         <GripVertical size={16} />

@@ -33,30 +33,21 @@ interface PaletteItemProps {
 }
 
 function PaletteItem({ type, label, icon: Icon }: PaletteItemProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette-${type}`,
-    data: {
-      mediaType: type,
-      fromPalette: true,
-      accepts: [type] // A hint for drop zones
-    },
+    data: { mediaType: type, fromPalette: true },
   });
-
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...listeners}
       {...attributes}
       className={`
         flex items-center gap-3 px-3 py-2.5 rounded-md border
         bg-white cursor-grab hover:border-blue-300 hover:shadow-sm hover:bg-gray-50
         transition-all select-none w-full
-        ${isDragging ? 'opacity-50 ring-2 ring-blue-400 z-50' : 'border-gray-200'}
+        ${isDragging ? 'opacity-40 scale-95' : 'border-gray-200'}
       `}
     >
       <div className="text-gray-500">

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useCallback, useEffect, useMemo } from "react"
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core"
+import { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { Text as PixiText, TextStyle } from "pixi.js"
 import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type PixiTemplateLayoutMeasurement, type PixiTemplateLayoutModel, type ToolConfig } from "@/components/canvas/PixiCanvas"
 import { PixiWidgetSurface } from "@/components/canvas/PixiWidgetSurface"
@@ -16,6 +17,7 @@ import { useTemplateProjectionState } from "@/components/canvas/use-template-pro
 import type {
   AnimateTool,
   BuildTool,
+  CanvasLayer,
   InspectorPanelView,
   MediaAsset,
   Mode,
@@ -24,6 +26,7 @@ import type {
   ToolItem,
 } from "@/components/canvas/create-view-types"
 import { createClient } from "@/lib/supabase/client"
+import type { TaskAreaKind } from "@/components/coursebuilder/template-blueprint"
 import {
   Bot,
   // tools
@@ -101,6 +104,7 @@ export function CreateView({
   canvasConfig?: CanvasPageConfig | null
   courseId?: string | null
 } = {}) {
+  const canvasAreaRef = useRef<HTMLDivElement | null>(null)
   const mediaPanelWidthStorageKey = "create-view:media-panel-width"
   const supabase = useMemo(() => createClient(), [])
   const [mode, setMode] = useState<Mode>("build")
@@ -111,6 +115,15 @@ export function CreateView({
   const [panMode, setPanMode] = useState(false)
 
   const [panelView, setPanelView] = useState<InspectorPanelView>("layers")
+  const [layers, setLayers] = useState<CanvasLayer[]>([
+    { id: "meta", name: "Session Meta", visible: true, locked: true, indent: 0 },
+    { id: "program", name: "Program", visible: true, locked: false, indent: 0 },
+    { id: "resources", name: "Resources", visible: true, locked: false, indent: 0 },
+    { id: "instruction", name: "Instruction Area", visible: true, locked: false, indent: 1 },
+    { id: "student", name: "Student Area", visible: true, locked: false, indent: 1 },
+    { id: "teacher", name: "Teacher Area", visible: true, locked: false, indent: 1 },
+    { id: "footer", name: "Footer Meta", visible: true, locked: true, indent: 0 },
+  ])
   const [currentPage, setCurrentPage] = useState(1)
   const [focusPageRequest, setFocusPageRequest] = useState<number | null>(null)
   const {
@@ -142,6 +155,7 @@ export function CreateView({
     mediaLoading,
     wikipediaLoading,
     mediaItems,
+    consumeMediaAsset,
   } = useMediaLibraryAssets({
     supabase,
     courseTitle,
@@ -149,6 +163,13 @@ export function CreateView({
 
   const [snapMenuOpen, setSnapMenuOpen] = useState(false)
   const [snapReference, setSnapReference] = useState<SnapReference>("canvas")
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      // Small distance avoids accidental drags when clicking to select.
+      activationConstraint: { distance: 6 },
+    }),
+  )
 
   // Resizable panels — can be dragged to 0 (canvas overlays always remain)
   const leftPanel  = useResizeHandle(320, "right", 0, 520)
@@ -241,6 +262,7 @@ export function CreateView({
     currentDocumentKey,
     currentCanvasScopeKey,
     setMediaDragActive,
+    onMediaConsumed: consumeMediaAsset,
     onDropPlacementResult: (result) => {
       if (result.status === "placed-next" && typeof result.targetPageGlobal === "number") {
         setDropFeedback(`Placed on Page ${result.targetPageGlobal} to keep this canvas clean.`)
@@ -281,6 +303,40 @@ export function CreateView({
     institutionName,
   })
 
+  const layerDrivenBlockOrder = useMemo(() => {
+    const blockIds = layers
+      .map((layer) => {
+        if (layer.id === "meta") return "header"
+        if (layer.id === "program") return "program"
+        if (layer.id === "resources") return "resources"
+        if (layer.id === "instruction" || layer.id === "student" || layer.id === "teacher") return "content"
+        if (layer.id === "footer") return "footer"
+        return null
+      })
+      .filter((value): value is "header" | "program" | "resources" | "content" | "footer" => value !== null)
+
+    const deduped = Array.from(new Set(blockIds))
+    const defaultOrder = ["header", "program", "resources", "content", "assignment", "scoring", "footer"] as const
+    const missing = defaultOrder.filter((id) => !(deduped as string[]).includes(id))
+    return [...deduped, ...missing] as Array<(typeof defaultOrder)[number]>
+  }, [layers])
+
+  const layerDrivenTaskAreaOrder = useMemo<TaskAreaKind[]>(() => {
+    const mapped = layers
+      .map((layer) => {
+        if (layer.id === "instruction") return "instruction"
+        if (layer.id === "student") return "student"
+        if (layer.id === "teacher") return "teacher"
+        return null
+      })
+      .filter((value): value is TaskAreaKind => value !== null)
+
+    const deduped = Array.from(new Set(mapped))
+    const defaults: TaskAreaKind[] = ["instruction", "student", "teacher"]
+    const missing = defaults.filter((kind) => !deduped.includes(kind))
+    return [...deduped, ...missing]
+  }, [layers])
+
   const lessonNavigation = useMemo(() => {
     const bySession = new Map<string, { label: string; start: number; end: number }>()
     lessonPages.forEach((page) => {
@@ -297,14 +353,6 @@ export function CreateView({
     })
     return Array.from(bySession.values())
   }, [lessonPages])
-
-  const onDragStartMedia = useCallback((asset: MediaAsset, event: React.DragEvent) => {
-    setMediaDragActive(true)
-    event.dataTransfer.effectAllowed = "copy"
-    const payload = JSON.stringify(asset)
-    event.dataTransfer.setData("application/json", payload)
-    event.dataTransfer.setData("text/plain", payload)
-  }, [])
 
   const overlayUi = useMemo<OverlayUi>(() => {
     return {
@@ -358,7 +406,8 @@ export function CreateView({
     }
   }, [])
 
-  const usePixiTemplateLayout = false
+  // Enable Pixi-rendered template so the content structure is canvas-aware and supports drops.
+  const usePixiTemplateLayout = true
   const measuredSectionHeights = useMemo(
     () => pixiMeasuredSectionHeightsByScope[currentCanvasScopeKey] ?? {},
     [currentCanvasScopeKey, pixiMeasuredSectionHeightsByScope],
@@ -697,7 +746,7 @@ export function CreateView({
     setZoom((currentZoom) => Math.min(400, Math.max(10, currentZoom + (direction * ZOOM_STEP))))
   }, [])
 
-  const handleCanvasAreaWheelCapture = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+  const handleCanvasAreaWheel = useCallback((event: WheelEvent) => {
     const targetElement = event.target as HTMLElement | null
     if (targetElement?.closest("canvas")) {
       return
@@ -720,6 +769,16 @@ export function CreateView({
       },
     }))
   }, [handleZoomStep, scrollDisabled])
+
+  useEffect(() => {
+    const canvasAreaElement = canvasAreaRef.current
+    if (!canvasAreaElement) return
+
+    canvasAreaElement.addEventListener("wheel", handleCanvasAreaWheel, { passive: false })
+    return () => {
+      canvasAreaElement.removeEventListener("wheel", handleCanvasAreaWheel)
+    }
+  }, [handleCanvasAreaWheel])
 
   const currentTools = mode === "build" ? BUILD_TOOLS : ANIMATE_TOOLS
   const selectedTool = activeTool as string
@@ -1062,8 +1121,35 @@ export function CreateView({
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
+  const [activeDragItem, setActiveDragItem] = useState<MediaAsset | null>(null)
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const mediaItem = event.active.data.current?.item as MediaAsset | undefined
+    setMediaDragActive(true)
+    setActiveDragItem(mediaItem ?? null)
+  }, [])
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setMediaDragActive(false)
+    setActiveDragItem(null)
+
+    const mediaItem = event.active.data.current?.item as MediaAsset | undefined
+    const areaKey = event.over?.id as string | undefined
+
+    if (mediaItem && areaKey) {
+      const containerWidth = event.over?.rect?.width ?? 320
+      onDropAreaMedia(areaKey, mediaItem, containerWidth)
+    }
+  }, [onDropAreaMedia])
+
+  const handleDragCancel = useCallback(() => {
+    setMediaDragActive(false)
+    setActiveDragItem(null)
+  }, [])
+
   return (
-    <div className="flex h-full w-full overflow-hidden bg-background" onDragEndCapture={() => setMediaDragActive(false)} onDropCapture={() => setMediaDragActive(false)}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+      <div className="flex h-full w-full overflow-hidden bg-background" onDragEndCapture={() => setMediaDragActive(false)} onDropCapture={() => setMediaDragActive(false)}>
 
       {/* ── Left: Media panel (resizable) ───────────────────────────────────── */}
       <MediaLibraryPanel
@@ -1076,8 +1162,6 @@ export function CreateView({
         mediaLoading={mediaLoading}
         wikipediaLoading={wikipediaLoading}
         mediaItems={mediaItems}
-        onDragStartMedia={onDragStartMedia}
-        onDragEndMedia={() => setMediaDragActive(false)}
       />
 
       {/* Left resize handle */}
@@ -1088,7 +1172,7 @@ export function CreateView({
       />
 
       {/* ── Center: Canvas area ──────────────────────────────────────────────── */}
-      <div className="relative flex flex-1 overflow-hidden bg-muted/30" onWheelCapture={handleCanvasAreaWheelCapture}>
+      <div ref={canvasAreaRef} className="relative flex flex-1 overflow-hidden bg-muted/30">
 
         {dropFeedback && (
           <div className="absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-md border border-border bg-background/95 px-3 py-1.5 text-xs text-foreground shadow-sm backdrop-blur-sm">
@@ -1104,7 +1188,7 @@ export function CreateView({
           activeTool={canvasTool}
           toolConfig={toolConfig}
           activePage={clampedCurrentPage}
-          focusPage={focusPageRequest ?? undefined}
+          focusPage={focusPageRequest ?? clampedCurrentPage}
           onViewportChange={setViewportInfo}
           onActivePageChange={(page) => {
             setCurrentPage(page)
@@ -1145,12 +1229,13 @@ export function CreateView({
           clampedCurrentPage={clampedCurrentPage}
           totalPages={totalPages}
           perPageTemplateEnabledMap={perPageTemplateEnabledMap}
+          blockOrder={layerDrivenBlockOrder}
+          taskAreaOrder={layerDrivenTaskAreaOrder}
           templateFieldEnabled={templateFieldEnabled}
           templateVisualDensity={templateVisualDensity}
           templateData={templateData}
           currentDroppedMediaByArea={currentDroppedMediaByArea}
           mediaDragActive={mediaDragActive}
-          onDropAreaMedia={onDropAreaMedia}
           onRemoveAreaMedia={onRemoveAreaMedia}
         />
 
@@ -1194,6 +1279,8 @@ export function CreateView({
         panelView={panelView}
         onPanelViewChange={setPanelView}
         overlayUi={overlayUi}
+        layers={layers}
+        onLayersChange={setLayers}
         currentLessonPage={currentLessonPage ? {
           moduleName: currentLessonPage.moduleName,
           lessonNumber: currentLessonPage.lessonNumber,
@@ -1207,5 +1294,14 @@ export function CreateView({
         onJump={changePage}
       />
     </div>
+    <DragOverlay>
+      {activeDragItem ? (
+        <div className="w-64 rounded border border-primary bg-background/90 p-2 shadow-xl backdrop-blur-sm">
+          <p className="truncate font-medium text-foreground">{activeDragItem.title}</p>
+          <p className="truncate text-xs text-muted-foreground">{activeDragItem.mediaType}</p>
+        </div>
+      ) : null}
+    </DragOverlay>
+    </DndContext>
   )
 }

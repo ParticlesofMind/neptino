@@ -2,7 +2,9 @@
 
 import { CoursePageEditor } from '@/components/coursebuilder/template-editor/CoursePageEditor';
 import { LESSON_TEMPLATE } from '@/templates/lesson';
+import { LESSON_PLAN_TEMPLATE } from '@/templates/lesson-plan';
 import { QUIZ_TEMPLATE } from '@/templates/quiz';
+import { CERTIFICATE_TEMPLATE } from '@/templates/certificate';
 import { useState } from 'react';
 
 export default function TemplateEditorPage() {
@@ -19,11 +21,23 @@ export default function TemplateEditorPage() {
             >
                 Lesson Template
             </button>
+          <button
+            onClick={() => setTemplate(LESSON_PLAN_TEMPLATE)}
+            className={`px-3 py-1 text-sm rounded ${template.id === LESSON_PLAN_TEMPLATE.id ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+          >
+            Lesson Plan Template
+          </button>
             <button
                 onClick={() => setTemplate(QUIZ_TEMPLATE)}
                 className={`px-3 py-1 text-sm rounded ${template.id === QUIZ_TEMPLATE.id ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
             >
                 Quiz Template
+            </button>
+            <button
+                onClick={() => setTemplate(CERTIFICATE_TEMPLATE)}
+                className={`px-3 py-1 text-sm rounded ${template.id === CERTIFICATE_TEMPLATE.id ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+            >
+                Certificate Template
             </button>
         </div>
       </div>

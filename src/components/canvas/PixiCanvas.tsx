@@ -903,6 +903,7 @@ function createTemplateLayoutContainer(
       width: '100%',
       flexGrow: 1,
       flexShrink: 1,
+      flexDirection: 'column',
       gap: 6,
       overflow: 'hidden',
     } as never,

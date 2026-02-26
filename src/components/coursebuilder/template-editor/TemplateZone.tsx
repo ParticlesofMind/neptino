@@ -1,6 +1,6 @@
 'use client';
 
-import { useDroppable, useDndContext } from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
 import { ZoneDefinition, ContentBlock } from '@/types/template';
 import { Plus } from 'lucide-react';
 import { PlacedBlock } from './PlacedBlock';
@@ -18,18 +18,9 @@ export function TemplateZone({ zone, blocks, onRemoveBlock }: DropZoneProps) {
       zoneId: zone.id,
       maxBlocks: zone.maxBlocks,
       currentCount: blocks.length,
-      accepts: zone.acceptedMediaTypes, // Pass this for validation in onDragEnd
+      accept: zone.acceptedMediaTypes,
     },
   });
-
-  const { active } = useDndContext();
-
-  // Check if the currently dragged item is compatible with this zone
-  const activeType = active?.data.current?.mediaType || active?.data.current?.type;
-  const isCompatible = active ? zone.acceptedMediaTypes.includes(activeType) : false;
-
-  // Only show as drop target if dragging and compatible
-  const isDropTarget = isOver && isCompatible;
 
   const isFull = blocks.length >= zone.maxBlocks;
   const isEmpty = blocks.length === 0;
@@ -44,16 +35,12 @@ export function TemplateZone({ zone, blocks, onRemoveBlock }: DropZoneProps) {
           ? 'border-dashed border-gray-300 bg-gray-50/50'
           : 'border-solid border-transparent bg-white/50'
         }
-        ${isDropTarget && !isFull
+        ${isOver && !isFull
           ? 'border-blue-500 bg-blue-50 scale-[1.01] shadow-lg shadow-blue-100 ring-2 ring-blue-200'
           : ''
         }
-        ${isOver && !isCompatible && active
-          ? 'border-red-200 bg-red-50/30 opacity-50' // Feedback for invalid drop
-          : ''
-        }
-        ${isDropTarget && isFull
-          ? 'border-yellow-400 bg-yellow-50'
+        ${isOver && isFull
+          ? 'border-red-300 bg-red-50/30'
           : ''
         }
       `}
@@ -64,7 +51,7 @@ export function TemplateZone({ zone, blocks, onRemoveBlock }: DropZoneProps) {
           {zone.label}
         </span>
         {isFull && (
-           <span className="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-yellow-100 text-yellow-700 rounded border border-yellow-200">
+           <span className="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-700 rounded border border-red-200">
              FULL
            </span>
         )}
@@ -81,7 +68,7 @@ export function TemplateZone({ zone, blocks, onRemoveBlock }: DropZoneProps) {
       )}
 
       {/* Active drop indicator */}
-      {isDropTarget && !isFull && (
+      {isOver && !isFull && (
         <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-blue-500/10 pointer-events-none z-20 animate-pulse">
           <span className="text-blue-600 text-sm font-bold bg-white/80 px-3 py-1 rounded-full shadow-sm">
             Release to drop

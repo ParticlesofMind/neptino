@@ -11,6 +11,8 @@ import {
   Image as ImageIcon,
   Link,
 } from "lucide-react"
+import { useDraggable } from "@dnd-kit/core"
+import { CSS } from "@dnd-kit/utilities"
 import type { MediaAsset, OverlayUi } from "@/components/canvas/create-view-types"
 
 interface MediaItem {
@@ -43,8 +45,73 @@ interface MediaLibraryPanelProps {
   mediaLoading: boolean
   wikipediaLoading: boolean
   mediaItems: MediaLibraryAsset[]
-  onDragStartMedia: (asset: MediaLibraryAsset, event: React.DragEvent) => void
-  onDragEndMedia: () => void
+}
+
+function DraggableMediaItem({ item, overlayUi }: { item: MediaLibraryAsset; overlayUi: OverlayUi }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `media-${item.id}`,
+    data: {
+      type: "MediaItem",
+      item,
+    },
+  })
+
+  // Keep the source item anchored so the list width never flexes while dragging;
+  // the DragOverlay renders the moving preview.
+  const style = {
+    transform: isDragging ? "none" : transform ? CSS.Translate.toString(transform) : undefined,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <li ref={setNodeRef} style={style}>
+      <button
+        type="button"
+        draggable
+        className={`w-full rounded border border-border bg-background/70 text-left ${overlayUi.panelItemPadding} transition hover:border-primary/40 hover:bg-accent/40 active:scale-[0.99] cursor-grab`}
+        title={item.url || item.description || item.title}
+        onDragStart={(event) => {
+          try {
+            const payload = JSON.stringify(item)
+            event.dataTransfer?.setData("application/json", payload)
+            event.dataTransfer?.setData("text/plain", payload)
+            if (event.dataTransfer) {
+              event.dataTransfer.effectAllowed = "copy"
+            }
+          } catch {
+            // Best-effort; ignore serialization issues.
+          }
+        }}
+        {...listeners}
+        {...attributes}
+      >
+        {item.category === "images" && item.url ? (
+          <div
+            className="mb-1 h-20 w-full rounded border border-border/60 bg-cover bg-center"
+            style={{ backgroundImage: `url(${item.url})` }}
+            role="img"
+            aria-label={item.title}
+          />
+        ) : item.category === "videos" && item.url ? (
+          <video
+            src={item.url}
+            className="mb-1 h-20 w-full rounded border border-border/60 object-cover"
+            controls
+            muted
+            preload="metadata"
+          />
+        ) : item.category === "audio" && item.url ? (
+          <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1">
+            <audio src={item.url} controls className="w-full" preload="metadata" />
+          </div>
+        ) : item.category === "text" ? (
+          <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1 text-[10px] text-muted-foreground">Text resource</div>
+        ) : null}
+        <p className={`${overlayUi.panelItemText} font-medium text-foreground truncate`}>{item.title}</p>
+        <p className={`${overlayUi.controlLabel} text-muted-foreground truncate`}>{item.mediaType}</p>
+      </button>
+    </li>
+  )
 }
 
 export function MediaLibraryPanel({
@@ -57,8 +124,6 @@ export function MediaLibraryPanel({
   mediaLoading,
   wikipediaLoading,
   mediaItems,
-  onDragStartMedia,
-  onDragEndMedia,
 }: MediaLibraryPanelProps) {
   if (width <= 0) return null
 
@@ -95,7 +160,7 @@ export function MediaLibraryPanel({
             className={`w-full rounded-md border border-border bg-muted/40 ${overlayUi.panelSearchInput} text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring`}
           />
         </div>
-        <div className={`flex-1 overflow-y-auto ${overlayUi.panelContentPadding}`}>
+        <div className={`flex-1 overflow-y-auto overflow-x-hidden ${overlayUi.panelContentPadding}`}>
           {mediaLoading || wikipediaLoading ? (
             <p className={`${overlayUi.panelItemText} italic text-muted-foreground/50 px-1 py-2`}>
               Loading encyclopedia and Wikipedia media…
@@ -107,41 +172,7 @@ export function MediaLibraryPanel({
           ) : (
             <ul className="space-y-1">
               {mediaItems.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    draggable
-                    onDragStart={(event) => onDragStartMedia(item, event)}
-                    onDragEnd={onDragEndMedia}
-                    className={`w-full rounded border border-border bg-background/70 text-left ${overlayUi.panelItemPadding} transition hover:border-primary/40 hover:bg-accent/40 active:scale-[0.99]`}
-                    title={item.url || item.description || item.title}
-                  >
-                    {item.category === "images" && item.url ? (
-                      <div
-                        className="mb-1 h-20 w-full rounded border border-border/60 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${item.url})` }}
-                        role="img"
-                        aria-label={item.title}
-                      />
-                    ) : item.category === "videos" && item.url ? (
-                      <video
-                        src={item.url}
-                        className="mb-1 h-20 w-full rounded border border-border/60 object-cover"
-                        controls
-                        muted
-                        preload="metadata"
-                      />
-                    ) : item.category === "audio" && item.url ? (
-                      <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1">
-                        <audio src={item.url} controls className="w-full" preload="metadata" />
-                      </div>
-                    ) : item.category === "text" ? (
-                      <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1 text-[10px] text-muted-foreground">Text resource</div>
-                    ) : null}
-                    <p className={`${overlayUi.panelItemText} font-medium text-foreground truncate`}>{item.title}</p>
-                    <p className={`${overlayUi.controlLabel} text-muted-foreground truncate`}>{item.mediaType}</p>
-                  </button>
-                </li>
+                <DraggableMediaItem key={item.id} item={item} overlayUi={overlayUi} />
               ))}
             </ul>
           )}

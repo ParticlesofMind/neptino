@@ -16,6 +16,14 @@ export type SnapReference = "canvas" | "object" | "grid"
 
 export type InspectorPanelView = "layers" | "navigation"
 
+export interface CanvasLayer {
+  id: string
+  name: string
+  visible: boolean
+  locked: boolean
+  indent: number
+}
+
 export interface OverlayUi {
   headerPadding: string
   headerTitle: string

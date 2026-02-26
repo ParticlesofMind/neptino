@@ -1323,15 +1323,21 @@ function CourseBuilderPageInner() {
     (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : null)
   const [view, setView] = useState<View>(() => {
     if (isView(urlView)) return urlView
-    if (typeof window === "undefined") return "setup"
-    const storedView = window.localStorage.getItem(`coursebuilder:last-view:${resolvedUrlCourseId ?? "new"}`)
-    return isView(storedView) ? storedView : "setup"
+    return "setup"
   })
-  const [activeSection, setActiveSection] = useState<SectionId>(() => {
-    if (typeof window === "undefined") return "essentials"
+  const [activeSection, setActiveSection] = useState<SectionId>("essentials")
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+    if (!isView(urlView)) {
+      const storedView = window.localStorage.getItem(`coursebuilder:last-view:${resolvedUrlCourseId ?? "new"}`)
+      if (isView(storedView)) setView(storedView)
+    }
     const storedSection = window.localStorage.getItem(`coursebuilder:last-section:${resolvedUrlCourseId ?? "new"}`)
-    return isSectionId(storedSection) ? storedSection : "essentials"
-  })
+    if (isSectionId(storedSection)) setActiveSection(storedSection)
+  }, [urlView, resolvedUrlCourseId])
+
   const [courseTitle, setCourseTitle] = useState("Untitled Course")
   const [courseId, setCourseId] = useState<string | null>(resolvedUrlCourseId)
   const [courseCreatedData, setCourseCreatedData] = useState<CourseCreatedData | null>(null)

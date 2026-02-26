@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { MediaAsset } from "@/components/canvas/create-view-types"
 
@@ -140,6 +140,14 @@ export function useMediaLibraryAssets({
   const [activeMedia, setActiveMedia] = useState<string>("files")
   const [mediaSearch, setMediaSearch] = useState("")
 
+  const consumeMediaAsset = useCallback((media: { id?: string; url?: string }) => {
+    const matches = (entry: MediaAsset) =>
+      (media.id && entry.id === media.id) || (media.url && entry.url && entry.url === media.url)
+
+    setMediaAssets((prev) => prev.filter((entry) => !matches(entry)))
+    setWikipediaAssets((prev) => prev.filter((entry) => !matches(entry)))
+  }, [])
+
   useEffect(() => {
     let active = true
 
@@ -230,5 +238,6 @@ export function useMediaLibraryAssets({
     mediaLoading,
     wikipediaLoading,
     mediaItems,
+    consumeMediaAsset,
   }
 }

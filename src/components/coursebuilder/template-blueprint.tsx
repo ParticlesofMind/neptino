@@ -12,6 +12,8 @@ interface TemplateBlueprintProps {
   type: TemplateType
   enabled: Record<BlockId, boolean>
   fieldEnabled: TemplateFieldState
+  blockOrder?: BlockId[]
+  taskAreaOrder?: TaskAreaKind[]
   name?: string
   scale?: "sm" | "md" | "lg"
   scrollable?: boolean
@@ -20,9 +22,10 @@ interface TemplateBlueprintProps {
   data?: TemplateBlueprintData
   droppedMediaByArea?: Record<string, TemplateAreaMediaItem[]>
   mediaDragActive?: boolean
-  onDropAreaMedia?: (areaKey: string, event: React.DragEvent<HTMLDivElement>) => void
   onRemoveAreaMedia?: (areaKey: string, mediaId: string) => void
 }
+
+import { useDroppable } from "@dnd-kit/core"
 
 export interface TemplateAreaMediaItem {
   id: string
@@ -212,14 +215,16 @@ function DocumentSection({
   children,
   className,
   hideTitle = false,
+  style,
 }: {
   title: string
   children: React.ReactNode
   className?: string
   hideTitle?: boolean
+  style?: React.CSSProperties
 }) {
   return (
-    <section className={`rounded-xl border border-border bg-card ${className ?? ""}`}>
+    <section className={`rounded-xl border border-border bg-card ${className ?? ""}`} style={style}>
       {!hideTitle && (
         <div className="border-b border-border bg-muted/30 px-2 py-1">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
@@ -236,7 +241,6 @@ function TaskAreaDropZone({
   areaKey,
   droppedMedia,
   mediaDragActive,
-  onDropAreaMedia,
   areaHeightClass,
   onRemoveMedia,
 }: {
@@ -245,10 +249,19 @@ function TaskAreaDropZone({
   areaKey: string
   droppedMedia: TemplateAreaMediaItem[]
   mediaDragActive: boolean
-  onDropAreaMedia?: (areaKey: string, event: React.DragEvent<HTMLDivElement>) => void
   areaHeightClass: string
   onRemoveMedia?: (areaKey: string, mediaId: string) => void
 }) {
+  const { active, isOver, setNodeRef } = useDroppable({
+    id: areaKey,
+    data: {
+      accepts: ["MediaItem"],
+    },
+  })
+
+  const isMediaDrag = active?.data?.current?.type === "MediaItem"
+  const isActiveDropTarget = isOver && isMediaDrag
+
   const resolveEmbedUrl = (url: string): string | null => {
     const trimmed = url.trim()
     if (!trimmed) return null
@@ -406,29 +419,11 @@ function TaskAreaDropZone({
   return (
     <div className="space-y-1">
       <p className="font-medium">{title}</p>
-      <div 
-        className="space-y-1.5"
-        onDragEnter={(event) => {
-          event.preventDefault()
-          event.stopPropagation()
-        }}
-        onDragOver={(event) => {
-          event.preventDefault()
-          event.stopPropagation()
-        }}
-      >
+      <div className="space-y-1.5">
         {droppedMedia.map((media, idx) => (
           <div
             key={`${areaKey}-${media.id}-${idx}`}
             className="rounded border border-border/60 bg-muted/5 p-1.5 space-y-1"
-            onDragEnter={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-            }}
-            onDragOver={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-            }}
           >
             <div className="flex items-center justify-between gap-1">
               <p className="truncate text-[10px] font-medium text-foreground flex-1">{media.title}</p>
@@ -444,20 +439,8 @@ function TaskAreaDropZone({
           </div>
         ))}
         <div
-          className={`${droppedMedia.length > 0 ? "min-h-24" : areaHeightClass} rounded border border-dashed bg-muted/5 p-1.5 pointer-events-auto flex items-center justify-center ${mediaDragActive ? "border-primary/60 bg-primary/5" : "border-border/60"}`}
-          onDragEnter={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
-          onDragOver={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
-          onDrop={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            onDropAreaMedia?.(areaKey, event)
-          }}
+          ref={setNodeRef}
+          className={`${droppedMedia.length > 0 ? "min-h-24" : areaHeightClass} rounded border border-dashed bg-muted/5 p-1.5 pointer-events-auto flex items-center justify-center ${isActiveDropTarget ? "border-primary bg-primary/10" : mediaDragActive && isMediaDrag ? "border-primary/60 bg-primary/5" : "border-border/60"}`}
         >
           <p className="text-[9px] text-muted-foreground/70 text-center">
             {seedText && seedText.trim() ? seedText : "Drop media here"}
@@ -551,24 +534,26 @@ function NestedContent({
 function LessonTemplatePreview({
   enabled,
   fieldEnabled,
+  blockOrder,
+  taskAreaOrder,
   scrollable = true,
   density = DEFAULT_TEMPLATE_VISUAL_DENSITY,
   bodyBlockGap = DEFAULT_TEMPLATE_BODY_BLOCK_GAP,
   data,
   droppedMediaByArea,
   mediaDragActive = false,
-  onDropAreaMedia,
   onRemoveAreaMedia,
 }: {
   enabled: Record<BlockId, boolean>
   fieldEnabled: TemplateFieldState
+  blockOrder?: BlockId[]
+  taskAreaOrder?: TaskAreaKind[]
   scrollable?: boolean
   density?: TemplateVisualDensity
   bodyBlockGap?: number
   data?: TemplateBlueprintData
   droppedMediaByArea?: Record<string, TemplateAreaMediaItem[]>
   mediaDragActive?: boolean
-  onDropAreaMedia?: (areaKey: string, event: React.DragEvent<HTMLDivElement>) => void
   onRemoveAreaMedia?: (areaKey: string, mediaId: string) => void
 }) {
   const headerFields = BLOCK_FIELDS.header.filter((field) => field.required || Boolean(fieldEnabled.header?.[field.key]))
@@ -593,12 +578,29 @@ function LessonTemplatePreview({
       areaHeightClass: "h-12",
     },
   }[density]
+  const orderedBlocks = (() => {
+    const base: BlockId[] = ["header", "program", "resources", "content", "assignment", "scoring", "footer"]
+    if (!blockOrder || blockOrder.length === 0) return base
+    const baseSet = new Set(base)
+    const preferred = blockOrder.filter((id) => baseSet.has(id))
+    const preferredSet = new Set(preferred)
+    const missing = base.filter((id) => !preferredSet.has(id))
+    return [...preferred, ...missing]
+  })()
+  const sectionOrder = Object.fromEntries(orderedBlocks.map((blockId, index) => [blockId, index])) as Record<BlockId, number>
+  const orderedTaskAreas: TaskAreaKind[] = (() => {
+    const defaults: TaskAreaKind[] = ["instruction", "student", "teacher"]
+    if (!taskAreaOrder || taskAreaOrder.length === 0) return defaults
+    const deduped = Array.from(new Set(taskAreaOrder))
+    const missing = defaults.filter((kind) => !deduped.includes(kind))
+    return [...deduped, ...missing]
+  })()
 
   return (
     <div className={`h-full ${scrollable ? "overflow-auto" : "overflow-hidden"} bg-background ${densityConfig.containerPadding}`}>
       <div className="flex w-full flex-col" style={{ rowGap: `${Math.max(0, bodyBlockGap)}px` }}>
             {enabled.header && (
-              <DocumentSection title="Header" className="">
+              <DocumentSection title="Header" className="" style={{ order: sectionOrder.header }}>
                 <div className="flex flex-wrap items-start gap-1">
                   {headerFields.map((field) => (
                     <span key={field.key} className="rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
@@ -610,7 +612,7 @@ function LessonTemplatePreview({
             )}
 
             {enabled.program && (
-              <DocumentSection title="Program" className="" hideTitle={Boolean(data?.continuation?.program)}>
+              <DocumentSection title="Program" className="" hideTitle={Boolean(data?.continuation?.program)} style={{ order: sectionOrder.program }}>
                 {Array.isArray(data?.programRows) && data.programRows.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="min-w-full border-collapse text-[10px] text-muted-foreground">
@@ -677,7 +679,7 @@ function LessonTemplatePreview({
             )}
 
             {enabled.resources && (
-              <DocumentSection title="Resources" className="" hideTitle={Boolean(data?.continuation?.resources)}>
+              <DocumentSection title="Resources" className="" hideTitle={Boolean(data?.continuation?.resources)} style={{ order: sectionOrder.resources }}>
                 {Array.isArray(data?.resourceRows) && data.resourceRows.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="min-w-full border-collapse text-[10px] text-muted-foreground">
@@ -724,7 +726,7 @@ function LessonTemplatePreview({
             )}
 
             {enabled.content && (
-              <DocumentSection title="Content" className="" hideTitle={Boolean(data?.continuation?.content)}>
+              <DocumentSection title="Content" className="" hideTitle={Boolean(data?.continuation?.content)} style={{ order: sectionOrder.content }}>
                 {Array.isArray(data?.contentItems?.topicGroups) && data.contentItems.topicGroups.length > 0 ? (
                   <div className="space-y-1.5 text-[10px] text-muted-foreground">
                     {data.contentItems.topicGroups.map((group, topicIdx) => (
@@ -748,36 +750,39 @@ function LessonTemplatePreview({
                                         const teacherKey = buildTaskAreaKey("content", resolvedTopicIdx, resolvedObjectiveIdx, resolvedTaskIdx, "teacher")
                                         return (
                                           <>
-                                      <TaskAreaDropZone
-                                        title="Instruction Area"
-                                        seedText={task.instructionArea}
-                                        areaKey={instructionKey}
-                                        droppedMedia={droppedMediaByArea?.[instructionKey] ?? []}
-                                        mediaDragActive={mediaDragActive}
-                                        onDropAreaMedia={onDropAreaMedia}
-                                        areaHeightClass={densityConfig.areaHeightClass}
-                                        onRemoveMedia={onRemoveAreaMedia}
-                                      />
-                                      <TaskAreaDropZone
-                                        title="Student Area"
-                                        seedText={task.studentArea}
-                                        areaKey={studentKey}
-                                        droppedMedia={droppedMediaByArea?.[studentKey] ?? []}
-                                        mediaDragActive={mediaDragActive}
-                                        onDropAreaMedia={onDropAreaMedia}
-                                        areaHeightClass={densityConfig.areaHeightClass}
-                                        onRemoveMedia={onRemoveAreaMedia}
-                                      />
-                                      <TaskAreaDropZone
-                                        title="Teacher Area"
-                                        seedText={task.teacherArea}
-                                        areaKey={teacherKey}
-                                        droppedMedia={droppedMediaByArea?.[teacherKey] ?? []}
-                                        mediaDragActive={mediaDragActive}
-                                        onDropAreaMedia={onDropAreaMedia}
-                                        areaHeightClass={densityConfig.areaHeightClass}
-                                        onRemoveMedia={onRemoveAreaMedia}
-                                      />
+                                            {orderedTaskAreas.map((areaKind) => {
+                                              const areaConfig = areaKind === "instruction"
+                                                ? {
+                                                    key: instructionKey,
+                                                    title: "Instruction Area",
+                                                    seedText: task.instructionArea,
+                                                  }
+                                                : areaKind === "student"
+                                                  ? {
+                                                      key: studentKey,
+                                                      title: "Student Area",
+                                                      seedText: task.studentArea,
+                                                    }
+                                                  : {
+                                                      key: teacherKey,
+                                                      title: "Teacher Area",
+                                                      seedText: task.teacherArea,
+                                                    }
+
+                                              return (
+                                                <TaskAreaDropZone
+                                                  key={`${areaConfig.key}:zone`}
+                                                  title={areaConfig.title}
+                                                  seedText={areaConfig.seedText}
+                                                  areaKey={areaConfig.key}
+                                                  droppedMedia={droppedMediaByArea?.[areaConfig.key] ?? []}
+                                                  mediaDragActive={mediaDragActive}
+                                                  
+                                                  areaHeightClass={densityConfig.areaHeightClass}
+                                                  onRemoveMedia={onRemoveAreaMedia}
+                                                />
+                                              )
+                                            })}
                                           </>
                                         )
                                       })()}
@@ -812,7 +817,7 @@ function LessonTemplatePreview({
             )}
 
             {enabled.assignment && (
-              <DocumentSection title="Assignment" className="" hideTitle={Boolean(data?.continuation?.assignment)}>
+              <DocumentSection title="Assignment" className="" hideTitle={Boolean(data?.continuation?.assignment)} style={{ order: sectionOrder.assignment }}>
                 {Array.isArray(data?.assignmentItems?.topicGroups) && data.assignmentItems.topicGroups.length > 0 ? (
                   <div className="space-y-1.5 text-[10px] text-muted-foreground">
                     {data.assignmentItems.topicGroups.map((topicGroup, topicIdx) => (
@@ -836,36 +841,39 @@ function LessonTemplatePreview({
                                         const teacherKey = buildTaskAreaKey("assignment", resolvedTopicIdx, resolvedObjectiveIdx, resolvedTaskIdx, "teacher")
                                         return (
                                           <>
-                                      <TaskAreaDropZone
-                                        title="Instruction Area"
-                                        seedText={task.instructionArea}
-                                        areaKey={instructionKey}
-                                        droppedMedia={droppedMediaByArea?.[instructionKey] ?? []}
-                                        mediaDragActive={mediaDragActive}
-                                        onDropAreaMedia={onDropAreaMedia}
-                                        areaHeightClass={densityConfig.areaHeightClass}
-                                        onRemoveMedia={onRemoveAreaMedia}
-                                      />
-                                      <TaskAreaDropZone
-                                        title="Student Area"
-                                        seedText={task.studentArea}
-                                        areaKey={studentKey}
-                                        droppedMedia={droppedMediaByArea?.[studentKey] ?? []}
-                                        mediaDragActive={mediaDragActive}
-                                        onDropAreaMedia={onDropAreaMedia}
-                                        areaHeightClass={densityConfig.areaHeightClass}
-                                        onRemoveMedia={onRemoveAreaMedia}
-                                      />
-                                      <TaskAreaDropZone
-                                        title="Teacher Area"
-                                        seedText={task.teacherArea}
-                                        areaKey={teacherKey}
-                                        droppedMedia={droppedMediaByArea?.[teacherKey] ?? []}
-                                        mediaDragActive={mediaDragActive}
-                                        onDropAreaMedia={onDropAreaMedia}
-                                        areaHeightClass={densityConfig.areaHeightClass}
-                                        onRemoveMedia={onRemoveAreaMedia}
-                                      />
+                                            {orderedTaskAreas.map((areaKind) => {
+                                              const areaConfig = areaKind === "instruction"
+                                                ? {
+                                                    key: instructionKey,
+                                                    title: "Instruction Area",
+                                                    seedText: task.instructionArea,
+                                                  }
+                                                : areaKind === "student"
+                                                  ? {
+                                                      key: studentKey,
+                                                      title: "Student Area",
+                                                      seedText: task.studentArea,
+                                                    }
+                                                  : {
+                                                      key: teacherKey,
+                                                      title: "Teacher Area",
+                                                      seedText: task.teacherArea,
+                                                    }
+
+                                              return (
+                                                <TaskAreaDropZone
+                                                  key={`${areaConfig.key}:zone`}
+                                                  title={areaConfig.title}
+                                                  seedText={areaConfig.seedText}
+                                                  areaKey={areaConfig.key}
+                                                  droppedMedia={droppedMediaByArea?.[areaConfig.key] ?? []}
+                                                  mediaDragActive={mediaDragActive}
+                                                  
+                                                  areaHeightClass={densityConfig.areaHeightClass}
+                                                  onRemoveMedia={onRemoveAreaMedia}
+                                                />
+                                              )
+                                            })}
                                           </>
                                         )
                                       })()}
@@ -900,7 +908,7 @@ function LessonTemplatePreview({
             )}
 
             {enabled.scoring && (
-              <DocumentSection title="Scoring" className="" hideTitle={Boolean(data?.continuation?.scoring)}>
+              <DocumentSection title="Scoring" className="" hideTitle={Boolean(data?.continuation?.scoring)} style={{ order: sectionOrder.scoring }}>
                 {Array.isArray(data?.scoringItems) && data.scoringItems.length > 0 ? (
                   <div className="space-y-1 text-[10px] text-muted-foreground">
                     {data.scoringItems.map((criterion, idx) => (
@@ -914,7 +922,7 @@ function LessonTemplatePreview({
             )}
 
             {enabled.footer && (
-              <DocumentSection title="Footer" className="" >
+              <DocumentSection title="Footer" className="" style={{ order: sectionOrder.footer }}>
                 <div className="flex flex-wrap items-center justify-between gap-1">
                   <div className="flex min-w-[180px] flex-wrap items-center gap-1">
                     {fieldEnabled.footer?.copyright && <span className="rounded border border-border bg-muted/20 px-1.5 py-0.5 text-[10px] text-muted-foreground">Copyright</span>}
@@ -936,6 +944,8 @@ export function TemplateBlueprint({
   type,
   enabled,
   fieldEnabled,
+  blockOrder,
+  taskAreaOrder,
   name,
   scale = "md",
   scrollable = true,
@@ -944,7 +954,6 @@ export function TemplateBlueprint({
   data,
   droppedMediaByArea,
   mediaDragActive = false,
-  onDropAreaMedia,
   onRemoveAreaMedia,
 }: TemplateBlueprintProps) {
   const config = SCALE_CONFIG[scale]
@@ -957,13 +966,15 @@ export function TemplateBlueprint({
         <LessonTemplatePreview
           enabled={enabled}
           fieldEnabled={fieldEnabled}
+          blockOrder={blockOrder}
+          taskAreaOrder={taskAreaOrder}
           scrollable={scrollable}
           density={density}
           bodyBlockGap={bodyBlockGap}
           data={data}
           droppedMediaByArea={droppedMediaByArea}
           mediaDragActive={mediaDragActive}
-          onDropAreaMedia={onDropAreaMedia}
+          
           onRemoveAreaMedia={onRemoveAreaMedia}
         />
       </div>
@@ -971,9 +982,24 @@ export function TemplateBlueprint({
   }
 
   // Fallback blueprint for other template types
-  const visibleBlocks = ALL_BLOCKS.filter(
-    (b) => b.forTypes.includes(type) && (enabled[b.id] || b.mandatory),
-  )
+  const orderedForType = (() => {
+    const base = ALL_BLOCKS.filter((block) => block.forTypes.includes(type)).map((block) => block.id)
+    if (!blockOrder || blockOrder.length === 0) return base
+    const baseSet = new Set(base)
+    const preferred = blockOrder.filter((id) => baseSet.has(id))
+    const preferredSet = new Set(preferred)
+    const missing = base.filter((id) => !preferredSet.has(id))
+    return [...preferred, ...missing]
+  })()
+
+  const visibleBlocks = orderedForType
+    .map((blockId) => ALL_BLOCKS.find((block) => block.id === blockId))
+    .filter((block): block is (typeof ALL_BLOCKS)[number] => Boolean(block))
+    .filter(
+      (b) => (enabled[b.id] || b.mandatory),
+    )
+
+
 
   return (
     <div className={`w-full rounded-xl bg-background overflow-hidden flex flex-col`}>

@@ -26,10 +26,19 @@ interface PlacementConstraints {
   containerWidthPx: number
 }
 
+let canvasTablesMissingDetected = false
+
 type DropPlacementResult = {
   status: "placed-current" | "placed-next" | "rejected-no-fit" | "rejected-invalid"
   areaKey: string
   targetPageGlobal?: number
+}
+
+function isMissingCanvasTableError(error: unknown, tableName: string): boolean {
+  if (!error || typeof error !== "object") return false
+  const maybe = error as { code?: string; message?: string; details?: string; hint?: string }
+  const text = [maybe.message, maybe.details, maybe.hint].filter(Boolean).join(" ").toLowerCase()
+  return maybe.code === "PGRST205" || text.includes(tableName)
 }
 
 function normalizeDroppedMediaByArea(
@@ -58,17 +67,23 @@ function normalizeDroppedMediaByArea(
   return Object.fromEntries(entries)
 }
 
+function normalizeMediaItem(input: Partial<MediaAsset> | TemplateAreaMediaItem | null | undefined): TemplateAreaMediaItem | null {
+  if (!input) return null
+  const base = input as Partial<MediaAsset>
+  return {
+    id: String(base.id ?? crypto.randomUUID()),
+    title: String(base.title ?? "Media"),
+    description: String(base.description ?? ""),
+    mediaType: String(base.mediaType ?? "media"),
+    category: String(base.category ?? normalizeMediaCategory(String(base.mediaType ?? "media"))),
+    url: String(base.url ?? ""),
+  }
+}
+
 function parseDraggedMediaPayload(raw: string): TemplateAreaMediaItem | null {
   try {
     const parsed = JSON.parse(raw) as Partial<MediaAsset>
-    return {
-      id: String(parsed.id ?? crypto.randomUUID()),
-      title: String(parsed.title ?? "Media"),
-      description: String(parsed.description ?? ""),
-      mediaType: String(parsed.mediaType ?? "media"),
-      category: String(parsed.category ?? normalizeMediaCategory(String(parsed.mediaType ?? "media"))),
-      url: String(parsed.url ?? ""),
-    }
+    return normalizeMediaItem(parsed)
   } catch {
     return null
   }
@@ -103,6 +118,7 @@ export function useCanvasDocumentState({
   currentDocumentKey,
   currentCanvasScopeKey,
   setMediaDragActive,
+  onMediaConsumed,
   onDropPlacementResult,
 }: {
   supabase: SupabaseClient
@@ -112,11 +128,18 @@ export function useCanvasDocumentState({
   currentDocumentKey: string | null
   currentCanvasScopeKey: string
   setMediaDragActive: (active: boolean) => void
+  onMediaConsumed?: (media: TemplateAreaMediaItem) => void
   onDropPlacementResult?: (result: DropPlacementResult) => void
 }) {
   const [droppedMediaByScope, setDroppedMediaByScope] = useState<Record<string, Record<string, TemplateAreaMediaItem[]>>>({})
   const [canvasDocumentId, setCanvasDocumentId] = useState<string | null>(null)
   const [documentReadyKey, setDocumentReadyKey] = useState<string | null>(null)
+  const [canvasPersistenceDisabled, setCanvasPersistenceDisabled] = useState(canvasTablesMissingDetected)
+
+  const disableCanvasPersistence = useCallback(() => {
+    canvasTablesMissingDetected = true
+    setCanvasPersistenceDisabled(true)
+  }, [])
 
   const lessonPagesByGlobal = useMemo(() => {
     const map = new Map<number, LessonCanvasPageProjection>()
@@ -238,13 +261,13 @@ export function useCanvasDocumentState({
   }, [])
 
   const persistDroppedMediaForPage = useCallback(async (pageGlobal: number, droppedMediaByArea: Record<string, TemplateAreaMediaItem[]>) => {
-    if (!courseId) return
+    if (!courseId || canvasPersistenceDisabled) return
     const documentPayload: CanvasDocumentPayload = {
       schemaVersion: 1,
       droppedMediaByArea: normalizeDroppedMediaByArea(droppedMediaByArea),
     }
 
-    await supabase
+    const { error } = await supabase
       .from("canvas_documents")
       .upsert(
         {
@@ -255,7 +278,10 @@ export function useCanvasDocumentState({
         },
         { onConflict: "course_id,page_global" },
       )
-  }, [courseId, supabase])
+    if (isMissingCanvasTableError(error, "canvas_documents")) {
+      disableCanvasPersistence()
+    }
+  }, [canvasPersistenceDisabled, courseId, disableCanvasPersistence, supabase])
 
   const resolveDropTargetPageGlobal = useCallback((
     areaKey: string,
@@ -291,7 +317,7 @@ export function useCanvasDocumentState({
   }, [buildScopeKeyForPage, currentLessonPageGlobal, currentSessionPageGlobals, estimateAreaHeightPx, estimateMediaHeightPx, findAnchoredPageForTask, getScopeAreaItems, getTaskGroupHeightForScope, isAreaBlockActiveOnPage])
 
   const recordMediaDropOp = useCallback((areaKey: string, mediaItem: TemplateAreaMediaItem) => {
-    if (!(courseId && typeof currentLessonPageGlobal === "number" && canvasDocumentId)) return
+    if (!(courseId && typeof currentLessonPageGlobal === "number" && canvasDocumentId) || canvasPersistenceDisabled) return
     void supabase.from("canvas_document_ops").insert({
       document_id: canvasDocumentId,
       course_id: courseId,
@@ -302,50 +328,49 @@ export function useCanvasDocumentState({
         media: mediaItem,
         at: Date.now(),
       },
+    }).then(({ error }) => {
+      if (isMissingCanvasTableError(error, "canvas_document_ops")) {
+        disableCanvasPersistence()
+      }
     })
-  }, [canvasDocumentId, courseId, currentLessonPageGlobal, supabase])
+  }, [canvasDocumentId, canvasPersistenceDisabled, courseId, currentLessonPageGlobal, disableCanvasPersistence, supabase])
 
-  const onDropAreaMedia = useCallback((areaKey: string, event: React.DragEvent<HTMLDivElement>) => {
-    let operationMedia: TemplateAreaMediaItem | null = null
-    let targetPageGlobal: number | null = null
-    try {
-      if (!parseTaskAreaKey(areaKey)) {
-        onDropPlacementResult?.({ status: "rejected-invalid", areaKey })
-        return
-      }
-
-      const raw = event.dataTransfer.getData("application/json") || event.dataTransfer.getData("text/plain")
-      if (!raw) return
-      const mediaItem = parseDraggedMediaPayload(raw)
-      if (!mediaItem) return
-      operationMedia = mediaItem
-
-      const containerWidthPx = event.currentTarget?.clientWidth || 320
-
-      targetPageGlobal = resolveDropTargetPageGlobal(areaKey, mediaItem, { containerWidthPx })
-      const resolvedPageGlobal = targetPageGlobal ?? currentLessonPageGlobal
-      if (typeof targetPageGlobal === "number" && typeof resolvedPageGlobal === "number") {
-        const targetScopeKey = buildScopeKeyForPage(resolvedPageGlobal)
-        const nextScopeValue = appendMediaToArea(targetScopeKey, areaKey, mediaItem)
-        void persistDroppedMediaForPage(resolvedPageGlobal, nextScopeValue)
-        onDropPlacementResult?.({
-          status: resolvedPageGlobal === currentLessonPageGlobal ? "placed-current" : "placed-next",
-          areaKey,
-          targetPageGlobal: resolvedPageGlobal,
-        })
-      } else {
-        onDropPlacementResult?.({ status: "rejected-no-fit", areaKey })
-      }
-    } catch {
-      // ignore malformed payload
-    } finally {
+  const onDropAreaMedia = useCallback((areaKey: string, media: MediaAsset, containerWidthPx?: number) => {
+    if (!parseTaskAreaKey(areaKey)) {
+      onDropPlacementResult?.({ status: "rejected-invalid", areaKey })
       setMediaDragActive(false)
+      return
     }
 
-    if (operationMedia && targetPageGlobal === currentLessonPageGlobal) {
-      recordMediaDropOp(areaKey, operationMedia)
+    const mediaItem = normalizeMediaItem(media)
+    if (!mediaItem) {
+      setMediaDragActive(false)
+      return
     }
-  }, [appendMediaToArea, buildScopeKeyForPage, currentLessonPageGlobal, onDropPlacementResult, persistDroppedMediaForPage, recordMediaDropOp, resolveDropTargetPageGlobal, setMediaDragActive])
+
+    const widthPx = Math.max(220, Math.round(containerWidthPx ?? 320))
+    const targetPageGlobal = resolveDropTargetPageGlobal(areaKey, mediaItem, { containerWidthPx: widthPx })
+    const resolvedPageGlobal = targetPageGlobal ?? currentLessonPageGlobal
+
+    if (typeof targetPageGlobal === "number" && typeof resolvedPageGlobal === "number") {
+      const targetScopeKey = buildScopeKeyForPage(resolvedPageGlobal)
+      const nextScopeValue = appendMediaToArea(targetScopeKey, areaKey, mediaItem)
+      void persistDroppedMediaForPage(resolvedPageGlobal, nextScopeValue)
+      onMediaConsumed?.(mediaItem)
+      onDropPlacementResult?.({
+        status: resolvedPageGlobal === currentLessonPageGlobal ? "placed-current" : "placed-next",
+        areaKey,
+        targetPageGlobal: resolvedPageGlobal,
+      })
+    } else {
+      onDropPlacementResult?.({ status: "rejected-no-fit", areaKey })
+    }
+
+    if (targetPageGlobal === currentLessonPageGlobal) {
+      recordMediaDropOp(areaKey, mediaItem)
+    }
+    setMediaDragActive(false)
+  }, [appendMediaToArea, buildScopeKeyForPage, currentLessonPageGlobal, onDropPlacementResult, onMediaConsumed, persistDroppedMediaForPage, recordMediaDropOp, resolveDropTargetPageGlobal, setMediaDragActive])
 
   const onPixiAreaDrop = useCallback((areaKey: string, rawPayload: string) => {
     if (!parseTaskAreaKey(areaKey)) {
@@ -362,6 +387,7 @@ export function useCanvasDocumentState({
       const targetScopeKey = buildScopeKeyForPage(resolvedPageGlobal)
       const nextScopeValue = appendMediaToArea(targetScopeKey, areaKey, mediaItem)
       void persistDroppedMediaForPage(resolvedPageGlobal, nextScopeValue)
+      onMediaConsumed?.(mediaItem)
       onDropPlacementResult?.({
         status: resolvedPageGlobal === currentLessonPageGlobal ? "placed-current" : "placed-next",
         areaKey,
@@ -375,7 +401,7 @@ export function useCanvasDocumentState({
       recordMediaDropOp(areaKey, mediaItem)
     }
     setMediaDragActive(false)
-  }, [appendMediaToArea, buildScopeKeyForPage, currentLessonPageGlobal, onDropPlacementResult, persistDroppedMediaForPage, recordMediaDropOp, resolveDropTargetPageGlobal, setMediaDragActive])
+  }, [appendMediaToArea, buildScopeKeyForPage, currentLessonPageGlobal, onDropPlacementResult, onMediaConsumed, persistDroppedMediaForPage, recordMediaDropOp, resolveDropTargetPageGlobal, setMediaDragActive])
 
   const onRemoveAreaMedia = useCallback((areaKey: string, mediaId: string) => {
     setDroppedMediaByScope((prev) => {
@@ -402,7 +428,7 @@ export function useCanvasDocumentState({
   }, [currentCanvasScopeKey])
 
   useEffect(() => {
-    if (!courseId || typeof currentLessonPageGlobal !== "number" || !currentDocumentKey) {
+    if (!courseId || typeof currentLessonPageGlobal !== "number" || !currentDocumentKey || canvasPersistenceDisabled) {
       setCanvasDocumentId(null)
       setDocumentReadyKey(null)
       return
@@ -427,6 +453,9 @@ export function useCanvasDocumentState({
       if (!active) return
 
       if (error || !Array.isArray(data)) {
+        if (isMissingCanvasTableError(error, "canvas_documents")) {
+          disableCanvasPersistence()
+        }
         setCanvasDocumentId(null)
         setDroppedMediaByScope((prev) => ({
           ...prev,
@@ -456,10 +485,10 @@ export function useCanvasDocumentState({
     return () => {
       active = false
     }
-  }, [buildScopeKeyForPage, courseId, currentDocumentKey, currentLessonPageGlobal, currentSessionPageGlobals, supabase])
+  }, [buildScopeKeyForPage, canvasPersistenceDisabled, courseId, currentDocumentKey, currentLessonPageGlobal, currentSessionPageGlobals, disableCanvasPersistence, supabase])
 
   useEffect(() => {
-    if (!courseId || typeof currentLessonPageGlobal !== "number" || !currentDocumentKey) return
+    if (!courseId || typeof currentLessonPageGlobal !== "number" || !currentDocumentKey || canvasPersistenceDisabled) return
     if (documentReadyKey !== currentDocumentKey) return
 
     const documentPayload: CanvasDocumentPayload = {
@@ -468,7 +497,7 @@ export function useCanvasDocumentState({
     }
 
     const timeoutHandle = window.setTimeout(async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("canvas_documents")
         .upsert(
           {
@@ -482,6 +511,11 @@ export function useCanvasDocumentState({
         .select("id")
         .single()
 
+      if (isMissingCanvasTableError(error, "canvas_documents")) {
+        disableCanvasPersistence()
+        return
+      }
+
       if (data && typeof (data as { id?: unknown }).id === "string") {
         setCanvasDocumentId((data as { id: string }).id)
       }
@@ -490,7 +524,7 @@ export function useCanvasDocumentState({
     return () => {
       window.clearTimeout(timeoutHandle)
     }
-  }, [courseId, currentDocumentKey, currentDroppedMediaByArea, currentLessonPageGlobal, documentReadyKey, supabase])
+  }, [canvasPersistenceDisabled, courseId, currentDocumentKey, currentDroppedMediaByArea, currentLessonPageGlobal, disableCanvasPersistence, documentReadyKey, supabase])
 
   return {
     currentDroppedMediaByArea,
