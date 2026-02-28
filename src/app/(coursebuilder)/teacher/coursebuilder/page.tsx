@@ -27,6 +27,7 @@ import {
   useCourseRowLoader,
   useDebouncedChangeSave,
 } from "@/components/coursebuilder"
+import { OverlineLabel } from "@/components/ui/overline-label"
 import {
   ArrowLeft,
   ArrowRight,
@@ -258,7 +259,7 @@ function MarketplaceSection({ courseId }: { courseId: string | null }) {
         )}
         preview={(
           <div className="rounded-lg border border-border bg-background p-4 space-y-2.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Marketplace Preview</p>
+            <OverlineLabel>Marketplace Preview</OverlineLabel>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Status</span><span className="font-medium text-foreground">{listingStatus}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Audience</span><span className="font-medium text-foreground text-right max-w-[60%]">{targetAudience || "—"}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Revenue Share</span><span className="font-medium text-foreground">{revenueShare}%</span></div>
@@ -367,7 +368,7 @@ function PricingSection({ courseId }: { courseId: string | null }) {
         )}
         preview={(
           <div className="rounded-lg border border-border bg-background p-4 space-y-2.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Pricing Preview</p>
+            <OverlineLabel>Pricing Preview</OverlineLabel>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Model</span><span className="font-medium text-foreground">{pricingModel}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Price</span><span className="font-medium text-foreground">{basePrice || "0"} {currency}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Trial</span><span className="font-medium text-foreground">{trial ? "Enabled" : "Disabled"}</span></div>
@@ -461,7 +462,7 @@ function IntegrationsSection({ courseId }: { courseId: string | null }) {
         )}
         preview={(
           <div className="rounded-lg border border-border bg-background p-4 space-y-2.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Integration Preview</p>
+            <OverlineLabel>Integration Preview</OverlineLabel>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">LMS</span><span className="font-medium text-foreground">{lmsProvider || "None"}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">API Access</span><span className="font-medium text-foreground">{apiAccess ? "Enabled" : "Disabled"}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Webhook</span><span className="font-medium text-foreground text-right max-w-[60%]">{webhookUrl || "—"}</span></div>
@@ -553,7 +554,7 @@ function CommunicationSection({ courseId }: { courseId: string | null }) {
         )}
         preview={(
           <div className="rounded-lg border border-border bg-background p-4 space-y-2.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Communication Preview</p>
+            <OverlineLabel>Communication Preview</OverlineLabel>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Channel</span><span className="font-medium text-foreground">{announcementChannel}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Weekly Digest</span><span className="font-medium text-foreground">{digest ? "Enabled" : "Disabled"}</span></div>
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Office Hours</span><span className="font-medium text-foreground">{officeHours || "—"}</span></div>
@@ -755,7 +756,7 @@ function PageSetupSection({
 
           {/* ── Print Options ── */}
           <div className="border-t border-border pt-6">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Print Options</p>
+            <OverlineLabel className="mb-4">Print Options</OverlineLabel>
 
             {/* Color mode */}
             <div className="mb-5">

@@ -9,6 +9,7 @@ import {
   useCourseSectionSave,
   useDebouncedChangeSave,
 } from "@/components/coursebuilder"
+import { OverlineLabel } from "@/components/ui/overline-label"
 
 export function VisibilitySection({ courseId }: { courseId: string | null }) {
   const [state, setState] = useState({
@@ -90,7 +91,7 @@ export function VisibilitySection({ courseId }: { courseId: string | null }) {
         )}
         preview={(
           <div className="rounded-lg border border-border bg-background p-4 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Visibility Summary</p>
+            <OverlineLabel>Visibility Summary</OverlineLabel>
             {items.map(({ key, label }) => (
               <div key={key} className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{label}</span>

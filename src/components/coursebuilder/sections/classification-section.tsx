@@ -21,6 +21,7 @@ import {
   type IscedDomain,
 } from "@/components/coursebuilder"
 import iscedData from "@/data/isced2011.json"
+import { OverlineLabel } from "@/components/ui/overline-label"
 
 type CourseCreatedData = {
   title: string
@@ -39,7 +40,7 @@ type ClassificationRow = {
 function Divider({ label }: { label: string }) {
   return (
     <div className="mt-8 pt-6 border-t border-border">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">{label}</p>
+      <OverlineLabel className="mb-4">{label}</OverlineLabel>
     </div>
   )
 }

@@ -9,6 +9,12 @@ const OLLAMA_MODEL_DEFAULT = process.env.OLLAMA_MODEL || "gemma3"
 const OLLAMA_LOW_POWER_MODEL = process.env.OLLAMA_LOW_POWER_MODEL || "gemma3"
 const GENERATION_COOLDOWN_MS = 10_000
 
+// Cloud LLM fallback — used when Ollama is unreachable.
+// Any OpenAI-compatible endpoint works (OpenAI, Azure OpenAI, OpenRouter, etc.)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY ?? ""
+const OPENAI_BASE_URL = (process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1").replace(/\/$/, "")
+const OPENAI_MODEL = process.env.OPENAI_MODEL ?? "gpt-4o-mini"
+
 let activeGenerationLock: { startedAt: number } | null = null
 let lastGenerationFinishedAt = 0
 
@@ -452,39 +458,76 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!ollamaResponse) {
-      throw (lastConnectionError instanceof Error
-        ? lastConnectionError
-        : new Error("fetch failed"))
-    }
+    // ── Extract rawContent from Ollama, or fall back to a cloud LLM ──
+    let rawContent: string
 
-    if (!ollamaResponse.ok) {
+    if (ollamaResponse?.ok) {
+      const ollamaData = (await ollamaResponse.json()) as {
+        message?: { content?: string }
+        error?: string
+      }
+      if (ollamaData.error) {
+        console.error("[generate-curriculum] Ollama error in response:", ollamaData.error)
+        return NextResponse.json(
+          { error: `Ollama error: ${ollamaData.error}` },
+          { status: 502 },
+        )
+      }
+      rawContent = ollamaData.message?.content ?? ""
+    } else if (OPENAI_API_KEY) {
+      // Ollama is unreachable — try the configured cloud LLM endpoint
+      console.log(`[generate-curriculum] Ollama unreachable. Falling back to cloud model: ${OPENAI_MODEL} @ ${OPENAI_BASE_URL}`)
+      const cloudRequestBody = JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          { role: "system", content: buildSystemPrompt(generationAction) },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: tokenBudget,
+        stream: false,
+      })
+      const cloudResponse = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: cloudRequestBody,
+      })
+      if (!cloudResponse.ok) {
+        const errText = await cloudResponse.text()
+        console.error("[generate-curriculum] Cloud fallback error:", cloudResponse.status, errText)
+        return NextResponse.json(
+          { error: `Cloud LLM fallback returned ${cloudResponse.status}: ${errText}` },
+          { status: 502 },
+        )
+      }
+      const cloudData = (await cloudResponse.json()) as {
+        choices?: Array<{ message?: { content?: string } }>
+        error?: { message?: string }
+      }
+      if (cloudData.error) {
+        return NextResponse.json(
+          { error: `Cloud LLM error: ${cloudData.error.message}` },
+          { status: 502 },
+        )
+      }
+      rawContent = cloudData.choices?.[0]?.message?.content ?? ""
+    } else if (ollamaResponse && !ollamaResponse.ok) {
       const errorText = await ollamaResponse.text()
       console.error("[generate-curriculum] Ollama error:", ollamaResponse.status, errorText)
       return NextResponse.json(
         { error: `Ollama returned ${ollamaResponse.status}: ${errorText}` },
         { status: 502 },
       )
+    } else {
+      throw (lastConnectionError instanceof Error ? lastConnectionError : new Error("fetch failed"))
     }
-
-    const ollamaData = (await ollamaResponse.json()) as {
-      message?: { content?: string }
-      error?: string
-    }
-
-    if (ollamaData.error) {
-      console.error("[generate-curriculum] Ollama error in response:", ollamaData.error)
-      return NextResponse.json(
-        { error: `Ollama error: ${ollamaData.error}` },
-        { status: 502 },
-      )
-    }
-
-    const rawContent = ollamaData.message?.content ?? ""
 
     if (!rawContent) {
       return NextResponse.json(
-        { error: "Ollama returned empty response" },
+        { error: "LLM returned empty response" },
         { status: 502 },
       )
     }
@@ -572,8 +615,11 @@ export async function POST(request: NextRequest) {
 
     // Detect Ollama connection issues
     if (message.includes("ECONNREFUSED") || message.includes("fetch failed")) {
+      const fallbackHint = OPENAI_API_KEY
+        ? ""
+        : " Alternatively, set OPENAI_API_KEY (and optionally OPENAI_BASE_URL, OPENAI_MODEL) to enable cloud LLM fallback."
       return NextResponse.json(
-        { error: `Cannot connect to Ollama at ${OLLAMA_BASE_URL}. Make sure Ollama is running (ollama serve).` },
+        { error: `Cannot connect to Ollama at ${OLLAMA_BASE_URL}. Make sure Ollama is running (ollama serve).${fallbackHint}` },
         { status: 503 },
       )
     }

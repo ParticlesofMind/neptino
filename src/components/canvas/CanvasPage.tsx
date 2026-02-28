@@ -229,7 +229,6 @@ export function CanvasPage({
       >
         {elements.map(el => {
           const commonProps = {
-            key: el.id,
             onPointerDown: (e: React.PointerEvent) => handleElementPointerDown(e, el.id),
             className:
               (el.selected ? 'outline outline-1 outline-blue-500 cursor-move' : 'cursor-pointer') +
@@ -243,6 +242,7 @@ export function CanvasPage({
               .join(' ')
             return (
               <path
+                key={el.id}
                 {...commonProps}
                 d={d}
                 stroke={el.color}
@@ -258,6 +258,7 @@ export function CanvasPage({
             if (el.shapeType === 'ellipse') {
               return (
                 <ellipse
+                  key={el.id}
                   {...commonProps}
                   cx={el.x + el.width / 2}
                   cy={el.y + el.height / 2}
@@ -271,6 +272,7 @@ export function CanvasPage({
             }
             return (
               <rect
+                key={el.id}
                 {...commonProps}
                 x={el.x}
                 y={el.y}
@@ -286,6 +288,7 @@ export function CanvasPage({
           if (el.type === 'text') {
             return (
               <text
+                key={el.id}
                 {...commonProps}
                 x={el.x}
                 y={el.y}

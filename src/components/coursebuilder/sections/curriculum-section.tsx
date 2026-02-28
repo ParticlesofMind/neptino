@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   DANGER_ACTION_BUTTON_CLASS,
+  FieldLabel,
   PRIMARY_ACTION_BUTTON_CLASS,
   SECONDARY_ACTION_BUTTON_CLASS,
   selectCourseById,
@@ -12,6 +13,7 @@ import {
   updateCourseById,
   useDebouncedChangeSave,
 } from "@/components/coursebuilder"
+import { OverlineLabel } from "@/components/ui/overline-label"
 import { buildGenerationContext, callGenerationAPI } from "@/lib/curriculum/ai-generation-service"
 import type { GenerationExtras, ClassificationContext, PedagogyContext, NamingRules, StudentsContext } from "@/lib/curriculum/ai-generation-service"
 import { getPedagogyApproach } from "@/components/coursebuilder/sections/pedagogy-section"
@@ -219,18 +221,10 @@ function syncSessionRowsToSchedule(
   })
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mb-1.5">
-      <span className="text-sm font-medium text-foreground">{children}</span>
-    </div>
-  )
-}
-
 function Divider({ label }: { label: string }) {
   return (
     <div className="mt-8 pt-6 border-t border-border">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">{label}</p>
+      <OverlineLabel className="mb-4">{label}</OverlineLabel>
     </div>
   )
 }

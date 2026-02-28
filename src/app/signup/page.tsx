@@ -4,8 +4,44 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useState } from 'react'
 import { PublicShell } from '@/components/layout/public-shell'
+import { AuthErrorBanner, AuthInput, AuthSelect, AuthSubmitButton } from '@/components/ui/auth-primitives'
 
 type Role = 'student' | 'teacher' | 'administrator'
+
+const PersonIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2"
+    stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+)
+
+const EmailIcon = (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2"
+    stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="4" width="20" height="16" rx="2" />
+    <polyline points="22,6 12,13 2,6" />
+  </svg>
+)
+
+const GroupIcon = (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2"
+    stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+)
+
+const LockIcon = (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2"
+    stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <circle cx="12" cy="16" r="1" fill="currentColor" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+)
 
 export default function SignupPage() {
   const [firstName, setFirstName] = useState('')
@@ -102,115 +138,70 @@ export default function SignupPage() {
             </div>
 
             <form onSubmit={handleSignup} className="px-8 py-6 space-y-3.5">
-              {error && (
-                <div className="rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-4 py-3 text-sm text-[#b91c1c]">
-                  {error}
-                </div>
-              )}
+              {error && <AuthErrorBanner message={error} />}
 
               {/* Name row */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="relative">
-                  <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]" width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="First name"
-                    required
-                    disabled={loading}
-                    autoComplete="given-name"
-                    className="w-full rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 pl-9 pr-3 text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150"
-                  />
-                </div>
-                <div className="relative">
-                  <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]" width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Last name"
-                    disabled={loading}
-                    autoComplete="family-name"
-                    className="w-full rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 pl-9 pr-3 text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150"
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="relative">
-                <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]" width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email address"
+                <AuthInput
+                  type="text"
+                  icon={PersonIcon}
+                  paddingLeft="pl-9"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="First name"
                   required
                   disabled={loading}
-                  autoComplete="email"
-                  className="w-full rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 pl-10 pr-4 text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150"
+                  autoComplete="given-name"
+                />
+                <AuthInput
+                  type="text"
+                  icon={PersonIcon}
+                  paddingLeft="pl-9"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Last name"
+                  disabled={loading}
+                  autoComplete="family-name"
                 />
               </div>
 
-              {/* Role */}
-              <div className="relative">
-                <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]" width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as Role)}
-                  required
-                  disabled={loading}
-                  className="w-full appearance-none rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 pl-10 pr-8 text-sm text-[#171717] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150 cursor-pointer"
-                >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="administrator">Administrator</option>
-                </select>
-                <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#a3a3a3]" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M7 10l5 5 5-5z" />
-                </svg>
-              </div>
-
-              {/* Password */}
-              <div className="relative">
-                <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]" width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <circle cx="12" cy="16" r="1" fill="currentColor" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Create a password"
-                  required
-                  disabled={loading}
-                  autoComplete="new-password"
-                  className="w-full rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 pl-10 pr-4 text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150"
-                />
-              </div>
-
-              <button
-                type="submit"
+              <AuthInput
+                type="email"
+                icon={EmailIcon}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address"
+                required
                 disabled={loading}
-                className="mt-1 w-full rounded-xl bg-[#4a94ff] py-2.5 text-sm font-semibold text-white hover:bg-[#2f7de0] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a94ff]"
+                autoComplete="email"
+              />
+
+              <AuthSelect
+                icon={GroupIcon}
+                value={role}
+                onChange={(e) => setRole(e.target.value as Role)}
+                required
+                disabled={loading}
               >
-                {loading ? 'Creating account…' : 'Create Account'}
-              </button>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="administrator">Administrator</option>
+              </AuthSelect>
+
+              <AuthInput
+                type="password"
+                icon={LockIcon}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create a password"
+                required
+                disabled={loading}
+                autoComplete="new-password"
+              />
+
+              <AuthSubmitButton loading={loading} loadingLabel="Creating account…">
+                Create Account
+              </AuthSubmitButton>
             </form>
 
             <div className="px-8 pb-7 text-center">

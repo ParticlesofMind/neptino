@@ -18,6 +18,7 @@ import {
   ZoomOut,
 } from "lucide-react"
 import type { Mode, OverlayUi, SnapReference, ToolItem } from "@/components/canvas/create-view-types"
+import { CanvasIconBtn } from "@/components/canvas/canvas-icon-btn"
 
 function SnapToggle({
   checked,
@@ -59,25 +60,15 @@ function EngineBtn({
   overlayUi?: OverlayUi
 }) {
   return (
-    <button
-      type="button"
-      title={title ?? label}
+    <CanvasIconBtn
+      active={active}
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-0.5 ${compact ? "h-10 w-10" : "h-12 w-12"} rounded border transition select-none
-        ${active
-          ? "border-primary bg-blue-100 text-primary"
-          : "border-border bg-background text-foreground/70 hover:border-primary/40 hover:bg-muted/30"
-        }
-        ${overlayUi?.controlInput ?? "text-xs"}
-      `}
-    >
-      {iconNode}
-      {label && (
-        <span className={`${overlayUi?.toolButtonLabel ?? "text-[10px]"} leading-none font-medium truncate max-w-full`}>
-          {label}
-        </span>
-      )}
-    </button>
+      title={title}
+      label={label}
+      iconNode={iconNode}
+      compact={compact}
+      overlayUi={overlayUi}
+    />
   )
 }
 

@@ -10,6 +10,7 @@ import {
   SetupPanelLayout,
   SetupSection,
 } from "@/components/coursebuilder/layout-primitives"
+import { FieldLabel, TextInput } from "@/components/coursebuilder/form-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { createClient } from "@/lib/supabase/client"
 
@@ -59,23 +60,6 @@ function ensureScheduleEntryIds(entries: ScheduleEntry[]): ScheduleEntry[] {
     ...entry,
     id: entry.id || createScheduleEntryId(),
   }))
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mb-1.5">
-      <span className="text-sm font-medium text-foreground">{children}</span>
-    </div>
-  )
-}
-
-function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
-    />
-  )
 }
 
 export function ScheduleSection({ courseId }: { courseId: string | null }) {

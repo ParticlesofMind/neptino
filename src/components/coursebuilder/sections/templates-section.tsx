@@ -32,6 +32,7 @@ import {
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { TemplateBlueprint } from "@/components/coursebuilder/template-blueprint"
 import { DEFAULT_TEMPLATE_VISUAL_DENSITY, type TemplateVisualDensity } from "@/lib/curriculum/template-source-of-truth"
+import { OverlineLabel } from "@/components/ui/overline-label"
 
 export const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] as const
 export type TemplateType = (typeof TEMPLATE_TYPES)[number]
@@ -929,7 +930,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       {isConfiguring && showTypeOverlay && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/75 p-4 backdrop-blur-sm">
           <div className="flex h-[80vh] max-h-[860px] w-full max-w-xl flex-col rounded-xl border border-border bg-background p-5 shadow-lg">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Pick Template Type</p>
+            <OverlineLabel className="mb-3">Pick Template Type</OverlineLabel>
             <div className="no-scrollbar mb-4 flex-1 space-y-4 overflow-y-auto pr-1">
               <div className="grid gap-2 sm:grid-cols-2">
                 {TEMPLATE_TYPES.map((t) => {
@@ -1012,7 +1013,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       {showLoadOverlay && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/75 p-4 backdrop-blur-sm">
           <div className="flex h-[80vh] max-h-[860px] w-full max-w-xl flex-col rounded-xl border border-border bg-background p-5 shadow-lg">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Load Template</p>
+            <OverlineLabel className="mb-3">Load Template</OverlineLabel>
             <div className="no-scrollbar flex-1 space-y-2 overflow-y-auto pr-1">
               {templates.map((tplRaw) => {
                 const tpl = normalizeTemplate(tplRaw)
