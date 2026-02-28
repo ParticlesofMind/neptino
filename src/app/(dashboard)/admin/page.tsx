@@ -1,17 +1,18 @@
-import { InfoCard, MetricCard } from "@/components/ui/page-section"
+import { InfoCard, MetricCard, WelcomeBanner, SectionHeading, ActivityItem } from "@/components/ui/page-section"
 
 export default function AdminHomePage() {
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 p-6">
-        <h1 className="text-2xl font-bold text-foreground mb-2">Platform Administration</h1>
-        <p className="text-foreground/80">Monitor system health, manage users, and oversee platform operations.</p>
-      </div>
+      <WelcomeBanner
+        title="Platform Administration"
+        description="Monitor system health, manage users, and oversee platform operations."
+        variant="amber"
+      />
 
       {/* Key Metrics */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">System Overview</h2>
+        <SectionHeading>System Overview</SectionHeading>
         <div className="grid gap-4 md:grid-cols-3">
           <MetricCard label="Active Users" value="1,284" />
           <MetricCard label="Published Courses" value="96" />
@@ -21,7 +22,7 @@ export default function AdminHomePage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Administrative Actions</h2>
+        <SectionHeading>Administrative Actions</SectionHeading>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <InfoCard
             title="Manage Users"
@@ -52,7 +53,7 @@ export default function AdminHomePage() {
 
       {/* System Status */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">System Status</h2>
+        <SectionHeading>System Status</SectionHeading>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="p-6 rounded-lg border border-green-200 bg-green-50">
             <h3 className="font-semibold text-foreground mb-2">Database</h3>
@@ -75,17 +76,17 @@ export default function AdminHomePage() {
 
       {/* Recent Activity */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
+        <SectionHeading>Recent Activity</SectionHeading>
         <div className="space-y-2">
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
-            <p className="text-sm text-foreground"><span className="font-medium">New user registration</span> • sarah.kim@example.com • 1 hour ago</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
-            <p className="text-sm text-foreground"><span className="font-medium">Content flagged</span> for review in course #45 • 3 hours ago</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
-            <p className="text-sm text-foreground"><span className="font-medium">12 courses approved</span> awaiting publication • Yesterday</p>
-          </div>
+          <ActivityItem>
+            <span className="font-medium">New user registration</span> • sarah.kim@example.com • 1 hour ago
+          </ActivityItem>
+          <ActivityItem>
+            <span className="font-medium">Content flagged</span> for review in course #45 • 3 hours ago
+          </ActivityItem>
+          <ActivityItem>
+            <span className="font-medium">12 courses approved</span> awaiting publication • Yesterday
+          </ActivityItem>
         </div>
       </div>
     </div>

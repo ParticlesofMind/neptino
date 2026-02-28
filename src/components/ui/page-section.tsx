@@ -32,6 +32,37 @@ export function MetricCard({ label, value }: MetricCardProps) {
   )
 }
 
+type WelcomeBannerProps = {
+  title: string
+  description: string
+  variant?: "emerald" | "amber"
+}
+
+export function WelcomeBanner({ title, description, variant = "emerald" }: WelcomeBannerProps) {
+  const variants = {
+    emerald: "from-green-50 to-emerald-50 border-green-200",
+    amber: "from-amber-50 to-orange-50 border-amber-200"
+  }
+  return (
+    <div className={`rounded-xl bg-gradient-to-r ${variants[variant]} border p-6`}>
+      <h1 className="text-2xl font-bold text-foreground mb-2">{title}</h1>
+      <p className="text-foreground/80">{description}</p>
+    </div>
+  )
+}
+
+export function SectionHeading({ children }: { children: ReactNode }) {
+  return <h2 className="text-lg font-semibold text-foreground mb-4">{children}</h2>
+}
+
+export function ActivityItem({ children }: { children: ReactNode }) {
+  return (
+    <div className="p-4 rounded-lg bg-muted/30 border border-border">
+      <p className="text-sm text-foreground">{children}</p>
+    </div>
+  )
+}
+
 type InfoCardProps = {
   title: string
   description: string

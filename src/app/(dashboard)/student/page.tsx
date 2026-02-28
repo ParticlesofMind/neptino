@@ -1,18 +1,19 @@
-import { InfoCard, MetricCard } from "@/components/ui/page-section"
+import { InfoCard, MetricCard, WelcomeBanner, SectionHeading, ActivityItem } from "@/components/ui/page-section"
 import Link from "next/link"
 
 export default function StudentHomePage() {
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-6">
-        <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to Your Learning Journey</h1>
-        <p className="text-foreground/80">Continue where you left off or explore new courses to expand your skills.</p>
-      </div>
+      <WelcomeBanner
+        title="Welcome to Your Learning Journey"
+        description="Continue where you left off or explore new courses to expand your skills."
+        variant="emerald"
+      />
 
       {/* Key Metrics */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Your Progress</h2>
+        <SectionHeading>Your Progress</SectionHeading>
         <div className="grid gap-4 md:grid-cols-3">
           <MetricCard label="Enrolled Courses" value="6" />
           <MetricCard label="Pending Assignments" value="4" />
@@ -22,7 +23,7 @@ export default function StudentHomePage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
+        <SectionHeading>Quick Actions</SectionHeading>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <InfoCard
             title="Continue Learning"
@@ -53,7 +54,7 @@ export default function StudentHomePage() {
 
       {/* Active Courses Section */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Active Courses</h2>
+        <SectionHeading>Active Courses</SectionHeading>
         <div className="grid gap-4 md:grid-cols-2">
           <Link
             href="/student/courses"
@@ -80,17 +81,17 @@ export default function StudentHomePage() {
 
       {/* Recent Activity */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
+        <SectionHeading>Recent Activity</SectionHeading>
         <div className="space-y-2">
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
-            <p className="text-sm text-foreground"><span className="font-medium">Completed lesson</span> in Data Science 101 • 2 hours ago</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
-            <p className="text-sm text-foreground"><span className="font-medium">Assignment submitted</span> for Web Development • 5 hours ago</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
-            <p className="text-sm text-foreground"><span className="font-medium">New message</span> from John Smith • Yesterday</p>
-          </div>
+          <ActivityItem>
+            <span className="font-medium">Completed lesson</span> in Data Science 101 • 2 hours ago
+          </ActivityItem>
+          <ActivityItem>
+            <span className="font-medium">Assignment submitted</span> for Web Development • 5 hours ago
+          </ActivityItem>
+          <ActivityItem>
+            <span className="font-medium">New message</span> from John Smith • Yesterday
+          </ActivityItem>
         </div>
       </div>
     </div>
