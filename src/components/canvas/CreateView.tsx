@@ -11,6 +11,7 @@ import { useMediaLibraryAssets } from "@/components/canvas/use-media-library-ass
 import { useCourseCanvasContext } from "@/components/canvas/use-course-canvas-context"
 import { useCanvasDocumentState } from "@/components/canvas/use-canvas-document-state"
 import { useTemplateProjectionState } from "@/components/canvas/use-template-projection-state"
+import { planLessonBodyLayout } from "@/lib/curriculum/canvas-projection"
 import {
   type CanvasPageConfig,
   type CanvasViewportInfo,
@@ -131,12 +132,62 @@ export function CreateView({
     courseLanguage,
     teacherName,
     institutionName,
-    lessonPages,
+    lessonPages: baseLessonPages,
     templateVisualDensity,
   } = useCourseCanvasContext({
     courseId,
     supabase,
   })
+  const [overflowBySessionMaxLocalPage, setOverflowBySessionMaxLocalPage] = useState<Record<string, number>>({})
+
+  const lessonPages = useMemo(() => {
+    if (baseLessonPages.length === 0) return [] as typeof baseLessonPages
+
+    const sessionOrder: string[] = []
+    const sessionPagesMap = new Map<string, (typeof baseLessonPages)[number][]>()
+
+    baseLessonPages.forEach((page) => {
+      if (!sessionPagesMap.has(page.sessionId)) {
+        sessionOrder.push(page.sessionId)
+        sessionPagesMap.set(page.sessionId, [])
+      }
+      sessionPagesMap.get(page.sessionId)!.push(page)
+    })
+
+    const expandedPages: typeof baseLessonPages = []
+    let globalPage = 1
+
+    sessionOrder.forEach((sessionId) => {
+      const sourcePages = (sessionPagesMap.get(sessionId) ?? []).slice().sort((a, b) => a.localPage - b.localPage)
+      if (sourcePages.length === 0) return
+
+      const sourceByLocalPage = new Map<number, (typeof baseLessonPages)[number]>()
+      sourcePages.forEach((page) => sourceByLocalPage.set(page.localPage, page))
+
+      const sourceTotal = Math.max(
+        sourcePages[0]?.pagesInLesson ?? sourcePages.length,
+        sourcePages[sourcePages.length - 1]?.localPage ?? sourcePages.length,
+      )
+      const overflowMaxLocalPage = overflowBySessionMaxLocalPage[sessionId] ?? 0
+      const extraContinuationPages = Math.max(0, overflowMaxLocalPage - sourceTotal + 1)
+      const resolvedPagesInLesson = sourceTotal + extraContinuationPages
+      const templatePage = sourcePages[sourcePages.length - 1]
+
+      for (let localPage = 1; localPage <= resolvedPagesInLesson; localPage += 1) {
+        const sourcePage = sourceByLocalPage.get(localPage) ?? templatePage
+        expandedPages.push({
+          ...sourcePage,
+          globalPage,
+          localPage,
+          pagesInLesson: resolvedPagesInLesson,
+        })
+        globalPage += 1
+      }
+    })
+
+    return expandedPages
+  }, [baseLessonPages, overflowBySessionMaxLocalPage])
+
   const totalPages = lessonPages.length > 0 ? lessonPages.length : (canvasConfig?.pageCount ?? 1)
   const [zoom, setZoom] = useState(DEFAULT_CANVAS_ZOOM)
   const [mediaDragActive, setMediaDragActive] = useState(false)
@@ -247,8 +298,10 @@ export function CreateView({
 
   const {
     currentDroppedMediaByArea,
+    getDroppedMediaByPageGlobal,
     onDropAreaMedia,
     onRemoveAreaMedia,
+    rebalanceOverflowForPage,
   } = useCanvasDocumentState({
     supabase,
     courseId,
@@ -331,6 +384,76 @@ export function CreateView({
     const missing = defaults.filter((kind) => !deduped.includes(kind))
     return [...deduped, ...missing]
   }, [layers])
+
+  const lessonPagesByGlobal = useMemo(() => {
+    const map = new Map<number, (typeof lessonPages)[number]>()
+    lessonPages.forEach((page) => map.set(page.globalPage, page))
+    return map
+  }, [lessonPages])
+
+  const handleTemplateBodyOverflowChange = useCallback((args: { sessionId: string; localPage: number; overflowing: boolean }) => {
+    if (!args.overflowing) return
+    setOverflowBySessionMaxLocalPage((prev) => {
+      const currentMax = prev[args.sessionId] ?? 0
+      if (args.localPage <= currentMax) return prev
+      return {
+        ...prev,
+        [args.sessionId]: args.localPage,
+      }
+    })
+
+    const targetPage = lessonPages.find((page) => page.sessionId === args.sessionId && page.localPage === args.localPage)
+    if (targetPage) {
+      void Promise.resolve().then(() => {
+        rebalanceOverflowForPage(targetPage.globalPage)
+      })
+    }
+  }, [lessonPages, rebalanceOverflowForPage])
+
+  const buildPerPageTemplateEnabledMap = useCallback((pageProjection: (typeof lessonPages)[number]) => {
+    const map = {
+      header: false,
+      program: false,
+      resources: false,
+      content: false,
+      assignment: false,
+      scoring: false,
+      footer: false,
+    }
+
+    const topicsPerLesson = Math.max(1, pageProjection.topicCount || pageProjection.topics.length || 1)
+    const objectivesPerTopic = Math.max(1, pageProjection.objectiveCount || pageProjection.objectives.length || 1)
+    const tasksPerObjective = Math.max(1, pageProjection.taskCount || pageProjection.tasks.length || 1)
+    const enabledBlocks = pageProjection.enabledBlocks.filter((block) => (
+      block === "program" || block === "resources" || block === "content" || block === "assignment" || block === "scoring"
+    ))
+
+    const layoutPlan = planLessonBodyLayout({
+      topicCount: topicsPerLesson,
+      objectiveCount: objectivesPerTopic,
+      taskCount: tasksPerObjective,
+      enabledBlocks,
+    })
+
+    const chunksOnPage = layoutPlan.chunks.filter((chunk) => chunk.page === pageProjection.localPage)
+    chunksOnPage.forEach((chunk) => {
+      map[chunk.blockId] = true
+    })
+
+    if (chunksOnPage.length === 0 && pageProjection.localPage > layoutPlan.totalPages) {
+      const lastPageChunks = layoutPlan.chunks.filter((chunk) => chunk.page === layoutPlan.totalPages)
+      const fallbackPriority = ["content", "assignment", "resources", "scoring", "program"] as const
+      const fallbackBlocks = fallbackPriority.filter((blockId) => {
+        return lastPageChunks.some((chunk) => chunk.blockId === blockId)
+      })
+
+      fallbackBlocks.forEach((blockId) => {
+        map[blockId] = true
+      })
+    }
+
+    return map
+  }, [])
 
   const lessonNavigation = useMemo(() => {
     const bySession = new Map<string, { label: string; start: number; end: number }>()
@@ -827,28 +950,37 @@ export function CreateView({
           activeTool={canvasTool}
           toolConfig={toolConfig}
         >
-          <TemplateSurface
-            currentLessonPage={currentLessonPage}
-            canvasConfig={effectiveCanvasConfig}
-            hasHeaderBlock={hasHeaderBlock}
-            hasFooterBlock={hasFooterBlock}
-            headerPaddingClass={overlayUi.headerPadding}
-            lessonHeaderTooltip={lessonHeaderTooltip}
-            lessonMetaText={lessonMetaText}
-            headerFieldValues={headerFieldValues}
-            footerFieldValues={footerFieldValues}
-            clampedCurrentPage={clampedCurrentPage}
-            totalPages={totalPages}
-            perPageTemplateEnabledMap={perPageTemplateEnabledMap}
-            blockOrder={layerDrivenBlockOrder}
-            taskAreaOrder={layerDrivenTaskAreaOrder}
-            templateFieldEnabled={templateFieldEnabled}
-            templateVisualDensity={templateVisualDensity}
-            templateData={templateData}
-            currentDroppedMediaByArea={currentDroppedMediaByArea}
-            mediaDragActive={mediaDragActive}
-            onRemoveAreaMedia={onRemoveAreaMedia}
-          />
+          {(pageNumber) => {
+            const pageProjection = lessonPagesByGlobal.get(pageNumber) ?? null
+            if (!pageProjection) return null
+
+            const isCurrentPage = pageNumber === clampedCurrentPage
+            return (
+              <TemplateSurface
+                currentLessonPage={pageProjection}
+                canvasConfig={effectiveCanvasConfig}
+                hasHeaderBlock={isCurrentPage ? hasHeaderBlock : pageProjection.enabledBlocks.includes("header")}
+                hasFooterBlock={isCurrentPage ? hasFooterBlock : pageProjection.enabledBlocks.includes("footer")}
+                headerPaddingClass={overlayUi.headerPadding}
+                lessonHeaderTooltip={isCurrentPage ? lessonHeaderTooltip : ""}
+                lessonMetaText={isCurrentPage ? lessonMetaText : ""}
+                headerFieldValues={isCurrentPage ? headerFieldValues : []}
+                footerFieldValues={isCurrentPage ? footerFieldValues : []}
+                clampedCurrentPage={pageNumber}
+                totalPages={totalPages}
+                perPageTemplateEnabledMap={isCurrentPage ? perPageTemplateEnabledMap : buildPerPageTemplateEnabledMap(pageProjection)}
+                blockOrder={layerDrivenBlockOrder}
+                taskAreaOrder={layerDrivenTaskAreaOrder}
+                templateFieldEnabled={isCurrentPage ? templateFieldEnabled : pageProjection.enabledFields}
+                templateVisualDensity={templateVisualDensity}
+                templateData={isCurrentPage ? templateData : undefined}
+                currentDroppedMediaByArea={isCurrentPage ? currentDroppedMediaByArea : getDroppedMediaByPageGlobal(pageNumber)}
+                mediaDragActive={mediaDragActive}
+                onRemoveAreaMedia={onRemoveAreaMedia}
+                onBodyOverflowChange={handleTemplateBodyOverflowChange}
+              />
+            )
+          }}
         </DomCanvas>
 
         <CanvasOverlayControls

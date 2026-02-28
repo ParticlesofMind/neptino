@@ -185,7 +185,19 @@ export function useCanvasDocumentState({
       })
 
       const chunksOnPage = layoutPlan.chunks.filter((chunk) => chunk.page === page.localPage)
-      map.set(page.globalPage, new Set(chunksOnPage.map((chunk) => chunk.blockId)))
+      const activeBlocksOnPage = new Set(chunksOnPage.map((chunk) => chunk.blockId))
+
+      if (chunksOnPage.length === 0 && page.localPage > layoutPlan.totalPages) {
+        const lastPageChunks = layoutPlan.chunks.filter((chunk) => chunk.page === layoutPlan.totalPages)
+        const fallbackPriority = ["content", "assignment", "resources", "scoring", "program"] as const
+        fallbackPriority.forEach((blockId) => {
+          if (lastPageChunks.some((chunk) => chunk.blockId === blockId)) {
+            activeBlocksOnPage.add(blockId)
+          }
+        })
+      }
+
+      map.set(page.globalPage, activeBlocksOnPage)
     })
 
     return map
@@ -217,6 +229,11 @@ export function useCanvasDocumentState({
     if (courseId) return `${courseId}:${pageGlobal}`
     return `local:${pageGlobal}`
   }, [courseId])
+
+  const getDroppedMediaByPageGlobal = useCallback((pageGlobal: number): Record<string, TemplateAreaMediaItem[]> => {
+    const scopeKey = buildScopeKeyForPage(pageGlobal)
+    return normalizeDroppedMediaByArea(droppedMediaByScope[scopeKey])
+  }, [buildScopeKeyForPage, droppedMediaByScope])
 
   const getScopeAreaItems = useCallback((scopeKey: string, areaKey: string): TemplateAreaMediaItem[] => {
     const scopeValue = droppedMediaByScope[scopeKey] ?? {}
@@ -432,6 +449,109 @@ export function useCanvasDocumentState({
     })
   }, [currentCanvasScopeKey])
 
+  const rebalanceOverflowForPage = useCallback((pageGlobal: number, containerWidthPx = 320): boolean => {
+    const currentPage = lessonPagesByGlobal.get(pageGlobal)
+    if (!currentPage) return false
+
+    const sessionPages = lessonPages
+      .filter((page) => page.sessionId === currentPage.sessionId)
+      .sort((a, b) => a.localPage - b.localPage)
+
+    const nextPage = sessionPages.find((page) => page.localPage === currentPage.localPage + 1)
+    if (!nextPage) return false
+
+    const sourceScopeKey = buildScopeKeyForPage(pageGlobal)
+    const targetScopeKey = buildScopeKeyForPage(nextPage.globalPage)
+    const widthPx = Math.max(220, Math.round(containerWidthPx || 320))
+    const areaHeightBudgetPx = Math.max(220, Math.min(440, Math.round(widthPx * 1.1)))
+    const groupHeightBudgetPx = Math.round(areaHeightBudgetPx * 2.25)
+
+    let movedAny = false
+    let nextSourceScopeValue: Record<string, TemplateAreaMediaItem[]> = {}
+    let nextTargetScopeValue: Record<string, TemplateAreaMediaItem[]> = {}
+
+    setDroppedMediaByScope((prev) => {
+      const sourceScopeValue = { ...(prev[sourceScopeKey] ?? {}) }
+      const targetScopeValue = { ...(prev[targetScopeKey] ?? {}) }
+
+      const getItems = (scopeValue: Record<string, TemplateAreaMediaItem[]>, areaKey: string): TemplateAreaMediaItem[] => {
+        const items = scopeValue[areaKey]
+        return Array.isArray(items) ? items : []
+      }
+
+      const sourceAreaKeys = Object.keys(sourceScopeValue)
+      const groups = new Map<string, string[]>()
+
+      sourceAreaKeys.forEach((areaKey) => {
+        const parsedArea = parseTaskAreaKey(areaKey)
+        if (!parsedArea) return
+        if (!isAreaBlockActiveOnPage(areaKey, pageGlobal) || !isAreaBlockActiveOnPage(areaKey, nextPage.globalPage)) return
+        groups.set(parsedArea.baseKey, parsedArea.siblingAreaKeys)
+      })
+
+      groups.forEach((siblingAreaKeys) => {
+        let guard = 0
+        while (guard < 80) {
+          guard += 1
+          const areaHeights = siblingAreaKeys.map((areaKey) => ({
+            areaKey,
+            height: estimateAreaHeightPx(getItems(sourceScopeValue, areaKey), widthPx),
+            count: getItems(sourceScopeValue, areaKey).length,
+          }))
+          const groupHeight = areaHeights.reduce((sum, entry) => sum + entry.height, 0)
+          const areaOverflow = areaHeights.some((entry) => entry.height > areaHeightBudgetPx)
+          const groupOverflow = groupHeight > groupHeightBudgetPx
+
+          if (!areaOverflow && !groupOverflow) {
+            break
+          }
+
+          const candidate = areaHeights
+            .filter((entry) => entry.count > 0)
+            .sort((a, b) => b.height - a.height)[0]
+
+          if (!candidate) {
+            break
+          }
+
+          const sourceItems = getItems(sourceScopeValue, candidate.areaKey)
+          if (sourceItems.length === 0) break
+
+          const movedItem = sourceItems[sourceItems.length - 1]
+          sourceScopeValue[candidate.areaKey] = sourceItems.slice(0, -1)
+          const targetItems = getItems(targetScopeValue, candidate.areaKey)
+          targetScopeValue[candidate.areaKey] = [movedItem, ...targetItems]
+          movedAny = true
+        }
+      })
+
+      const cleanedSourceScopeValue = Object.fromEntries(
+        Object.entries(sourceScopeValue).filter(([, items]) => Array.isArray(items) && items.length > 0),
+      )
+      const cleanedTargetScopeValue = Object.fromEntries(
+        Object.entries(targetScopeValue).filter(([, items]) => Array.isArray(items) && items.length > 0),
+      )
+
+      nextSourceScopeValue = cleanedSourceScopeValue
+      nextTargetScopeValue = cleanedTargetScopeValue
+
+      if (!movedAny) return prev
+
+      return {
+        ...prev,
+        [sourceScopeKey]: cleanedSourceScopeValue,
+        [targetScopeKey]: cleanedTargetScopeValue,
+      }
+    })
+
+    if (movedAny) {
+      void persistDroppedMediaForPage(pageGlobal, nextSourceScopeValue)
+      void persistDroppedMediaForPage(nextPage.globalPage, nextTargetScopeValue)
+    }
+
+    return movedAny
+  }, [buildScopeKeyForPage, estimateAreaHeightPx, isAreaBlockActiveOnPage, lessonPages, lessonPagesByGlobal, persistDroppedMediaForPage])
+
   useEffect(() => {
     if (!courseId || typeof currentLessonPageGlobal !== "number" || !currentDocumentKey || canvasPersistenceDisabled) {
       setCanvasDocumentId(null)
@@ -533,8 +653,10 @@ export function useCanvasDocumentState({
 
   return {
     currentDroppedMediaByArea,
+    getDroppedMediaByPageGlobal,
     onDropAreaMedia,
     onHtmlAreaDrop,
     onRemoveAreaMedia,
+    rebalanceOverflowForPage,
   }
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { TemplateBlueprint, type TaskAreaKind, type TemplateAreaMediaItem, type TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
 import type { BlockId, TemplateFieldState } from "@/components/coursebuilder/sections/templates-section"
 import type { CanvasPageConfig } from "./create-view-types"
@@ -28,6 +29,7 @@ interface TemplateSurfaceProps {
   currentDroppedMediaByArea: Record<string, TemplateAreaMediaItem[]>
   mediaDragActive: boolean
   onRemoveAreaMedia: (areaKey: string, mediaId: string) => void
+  onBodyOverflowChange?: (args: { sessionId: string; localPage: number; overflowing: boolean }) => void
 }
 
 export function TemplateSurface({
@@ -51,14 +53,52 @@ export function TemplateSurface({
   currentDroppedMediaByArea,
   mediaDragActive,
   onRemoveAreaMedia,
+  onBodyOverflowChange,
 }: TemplateSurfaceProps) {
   if (!currentLessonPage) return null
+  const bodyContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Look up the blueprint for the current template type to drive header/footer field order.
   // Falls back to the lesson blueprint if the type is not registered.
   const blueprint = TEMPLATE_BLUEPRINTS[currentLessonPage.templateType] ?? TEMPLATE_BLUEPRINTS.lesson
   const headerValueMap = Object.fromEntries(headerFieldValues.map((v) => [v.key, v.value]))
   const footerValueMap = Object.fromEntries(footerFieldValues.map((v) => [v.key, v.value]))
+
+  useEffect(() => {
+    if (!onBodyOverflowChange) return
+    const element = bodyContainerRef.current
+    if (!element) return
+
+    let frameHandle: number | null = null
+
+    const emitOverflowState = () => {
+      const overflowing = (element.scrollHeight - element.clientHeight) > 1
+      onBodyOverflowChange({
+        sessionId: currentLessonPage.sessionId,
+        localPage: currentLessonPage.localPage,
+        overflowing,
+      })
+    }
+
+    const queueEmit = () => {
+      if (frameHandle !== null) return
+      frameHandle = window.requestAnimationFrame(() => {
+        frameHandle = null
+        emitOverflowState()
+      })
+    }
+
+    const observer = new ResizeObserver(() => queueEmit())
+    observer.observe(element)
+    queueEmit()
+
+    return () => {
+      observer.disconnect()
+      if (frameHandle !== null) {
+        window.cancelAnimationFrame(frameHandle)
+      }
+    }
+  }, [currentLessonPage.localPage, currentLessonPage.sessionId, onBodyOverflowChange])
 
   return (
     <div className="relative h-full w-full bg-transparent">
@@ -107,7 +147,9 @@ export function TemplateSurface({
       )}
 
       <div
-        className="absolute overflow-auto"
+        ref={bodyContainerRef}
+        data-testid="template-body-viewport"
+        className="absolute overflow-hidden"
         style={{
           left: canvasConfig.margins.left,
           right: canvasConfig.margins.right,
@@ -115,7 +157,7 @@ export function TemplateSurface({
           bottom: hasFooterBlock ? canvasConfig.margins.bottom : 0,
         }}
       >
-        <div className="w-full bg-background/85">
+        <div className="w-full bg-transparent">
           <TemplateBlueprint
             type={currentLessonPage.templateType as never}
             enabled={perPageTemplateEnabledMap}

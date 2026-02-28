@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import {
   buildTemplateFieldState,
+  expandTaskLabelsForFlow,
   planLessonBodyLayout,
   type LessonCanvasPageProjection,
 } from "@/lib/curriculum/canvas-projection"
@@ -82,7 +83,11 @@ export function useTemplateProjectionState({
 
     const topicsPerLesson = Math.max(1, currentLessonPage.topicCount || currentLessonPage.topics.length || 1)
     const objectivesPerTopic = Math.max(1, currentLessonPage.objectiveCount || currentLessonPage.objectives.length || 1)
-    const tasksPerObjective = Math.max(1, currentLessonPage.taskCount || currentLessonPage.tasks.length || 1)
+    const expandedTaskLabels = expandTaskLabelsForFlow(
+      currentLessonPage.tasks,
+      currentLessonPage.taskCount || currentLessonPage.tasks.length || 1,
+    )
+    const tasksPerObjective = Math.max(1, expandedTaskLabels.length)
     const enabledBlocks = [
       bodyTemplateEnabledMap.program ? "program" : null,
       bodyTemplateEnabledMap.resources ? "resources" : null,
@@ -90,6 +95,7 @@ export function useTemplateProjectionState({
       bodyTemplateEnabledMap.assignment ? "assignment" : null,
       bodyTemplateEnabledMap.scoring ? "scoring" : null,
     ].filter((block): block is "program" | "resources" | "content" | "assignment" | "scoring" => Boolean(block))
+    const enabledBlockSet = new Set(enabledBlocks)
 
     const layoutPlan = planLessonBodyLayout({
       topicCount: topicsPerLesson,
@@ -107,6 +113,29 @@ export function useTemplateProjectionState({
       slices[chunk.blockId] = { start: chunk.itemStart, end: chunk.itemEnd }
       continuation[chunk.blockId] = chunk.continuation
     })
+
+    if (chunksOnPage.length === 0 && localPage > layoutPlan.totalPages) {
+      const lastChunkByBlock = new Map<BlockId, (typeof layoutPlan.chunks)[number]>()
+      layoutPlan.chunks.forEach((chunk) => {
+        lastChunkByBlock.set(chunk.blockId, chunk)
+      })
+
+      const continuationPriority: BlockId[] = ["content", "assignment", "resources", "scoring", "program"]
+      const continuationBlocks = continuationPriority.filter((blockId) => enabledBlockSet.has(blockId as never))
+
+      continuationBlocks.forEach((blockId) => {
+        const lastChunk = lastChunkByBlock.get(blockId)
+        if (!lastChunk) return
+        slices[blockId] = { start: lastChunk.itemStart, end: lastChunk.itemEnd }
+        continuation[blockId] = true
+      })
+
+      return {
+        slices,
+        activeBlocks: continuationBlocks.filter((blockId) => Boolean(slices[blockId])) as BlockId[],
+        continuation,
+      }
+    }
 
     return {
       slices,
@@ -277,6 +306,7 @@ export function useTemplateProjectionState({
     const topicsPerLesson = Math.max(1, currentLessonPage.topicCount || currentLessonPage.topics.length || 1)
     const objectivesPerTopic = Math.max(1, currentLessonPage.objectiveCount || currentLessonPage.objectives.length || 1)
     const tasksPerObjective = Math.max(1, currentLessonPage.taskCount || currentLessonPage.tasks.length || 1)
+    const expandedTaskLabels = expandTaskLabelsForFlow(currentLessonPage.tasks, tasksPerObjective)
     const lessonDurationMinutes = Math.max(0, Number(currentLessonPage.durationMinutes ?? 0) || 0)
     const activeBlockSet = new Set(lessonBlockPagination.activeBlocks)
 
@@ -338,7 +368,7 @@ export function useTemplateProjectionState({
       currentLessonPage.objectives[objectiveIdx] || `Objective ${objectiveIdx + 1}`
     ))
     const resolvedTasks = Array.from({ length: tasksPerObjective }, (_, taskIdx) => (
-      currentLessonPage.tasks[taskIdx] || `Task ${taskIdx + 1}`
+      expandedTaskLabels[taskIdx] || `Task ${taskIdx + 1}`
     ))
     const topicMinuteAllocations = splitMinutesAcrossTopics(lessonDurationMinutes, resolvedTopics.length)
 

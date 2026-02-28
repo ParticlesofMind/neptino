@@ -574,6 +574,115 @@ test.describe("Course Creation Flow", () => {
       test.skip(true, "Templates section has no visible Add button — check selector.")
     }
   })
+
+  // ── 14. Create canvas overflow regression ─────────────────────────────────
+
+  test("14. create view template body does not stay overflowed after adaptive spill", async () => {
+    test.skip(!createdCourseId, "Requires a created course id from earlier flow tests.")
+    const page = sharedPage
+
+    const admin = createAdminClient()
+    const existing = await fetchCourse(createdCourseId!)
+    const existingRecord = (existing ?? {}) as Record<string, unknown>
+    const existingCurriculum = (existingRecord.curriculum_data as Record<string, unknown> | null) ?? {}
+    const existingSchedule = (existingRecord.schedule_settings as Record<string, unknown> | null) ?? {}
+
+    const seededCurriculum = {
+      ...existingCurriculum,
+      module_org: existingCurriculum.module_org ?? "linear",
+      module_count: existingCurriculum.module_count ?? 1,
+      module_names: Array.isArray(existingCurriculum.module_names) && existingCurriculum.module_names.length > 0
+        ? existingCurriculum.module_names
+        : ["Module 1"],
+      session_rows: [
+        {
+          id: "e2e-overflow-session-1",
+          session_number: 1,
+          title: "Overflow Validation Lesson",
+          notes: "E2E seeded lesson for overflow regression.",
+          duration_minutes: 60,
+          topics: 1,
+          objectives: 1,
+          tasks: 2,
+          template_type: "lesson",
+          topic_names: ["Topic 1"],
+          objective_names: ["Objective 1"],
+          task_names: [
+            "Task with enough detail to consume vertical space in the template body and trigger continuation handling.",
+            "Second long task line that should remain within adaptive page flow rather than clipping under footer.",
+          ],
+        },
+      ],
+    }
+
+    const seededSchedule = {
+      ...existingSchedule,
+      generated_entries: [
+        {
+          id: "e2e-overflow-entry-1",
+          session: 1,
+          day: "Mon",
+          date: "01.01.2026",
+          start_time: "09:00",
+          end_time: "10:00",
+        },
+      ],
+    }
+
+    const { error: seedError } = await admin
+      .from("courses")
+      .update({
+        curriculum_data: seededCurriculum,
+        schedule_settings: seededSchedule,
+      })
+      .eq("id", createdCourseId!)
+
+    expect(seedError).toBeNull()
+
+    await page.goto(`/teacher/coursebuilder?id=${createdCourseId}&view=create`)
+    await page.waitForTimeout(2_000)
+
+    const templateViewports = page.getByTestId("template-body-viewport")
+    const viewportCount = await templateViewports.count()
+    expect(viewportCount).toBeGreaterThan(0)
+
+    const initialTotalRaw = (await page.getByTestId("canvas-page-total").first().innerText()).trim()
+    const initialTotalMatch = initialTotalRaw.match(/\/\s*(\d+)/)
+    const initialTotalPages = initialTotalMatch ? Number.parseInt(initialTotalMatch[1], 10) : 0
+
+    await expect.poll(async () => {
+      return templateViewports.evaluateAll((elements) => {
+        return elements.some((element) => {
+          const el = element as HTMLElement
+          return (el.scrollHeight - el.clientHeight) > 2
+        })
+      })
+    }, {
+      timeout: 12_000,
+      intervals: [400, 800, 1200],
+      message: "Template body viewport remained overflowed instead of spilling to continuation pages.",
+    }).toBe(false)
+
+    await expect.poll(async () => {
+      const raw = (await page.getByTestId("canvas-page-total").first().innerText()).trim()
+      const match = raw.match(/\/\s*(\d+)/)
+      return match ? Number.parseInt(match[1], 10) : 0
+    }, {
+      timeout: 12_000,
+      intervals: [400, 800, 1200],
+      message: "Canvas page total did not grow despite overflow-driven continuation handling.",
+    }).toBeGreaterThan(1)
+
+    const finalTotalRaw = (await page.getByTestId("canvas-page-total").first().innerText()).trim()
+    const finalTotalMatch = finalTotalRaw.match(/\/\s*(\d+)/)
+    const finalTotalPages = finalTotalMatch ? Number.parseInt(finalTotalMatch[1], 10) : 0
+
+    if (initialTotalPages <= 1) {
+      expect(finalTotalPages).toBeGreaterThan(initialTotalPages)
+    } else {
+      expect(finalTotalPages).toBeGreaterThanOrEqual(initialTotalPages)
+    }
+  })
 })
 
 // ─── Standalone: column-level regression tests ───────────────────────────────

@@ -341,7 +341,6 @@ function MediaPreview({ media }: { media: TemplateAreaMediaItem }) {
 }
 
 function TaskAreaDropZone({
-  title,
   seedText,
   areaKey,
   droppedMedia,
@@ -349,7 +348,6 @@ function TaskAreaDropZone({
   areaHeightClass,
   onRemoveMedia,
 }: {
-  title: string
   seedText?: string
   areaKey: string
   droppedMedia: TemplateAreaMediaItem[]
@@ -369,7 +367,6 @@ function TaskAreaDropZone({
 
   return (
     <div className="space-y-1">
-      <p className="font-medium">{title}</p>
       <div className="space-y-1.5">
         {droppedMedia.map((media, idx) => (
           <div
@@ -725,14 +722,15 @@ function LiveNestedSlot({
     return <NestedSlotView label={label} areas={areaFilter} />
   }
   const resolvedAreas = orderedTaskAreas.filter((a) => areaFilter.includes(a))
+  const phaseLabels = ["Phase I", "Phase II", "Phase III"] as const
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
+    <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border/60">
       {!isContinuation && (
         <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
           <SlotSectionLabel>{label}</SlotSectionLabel>
         </div>
       )}
-      <div className="p-1.5 space-y-1.5 text-[10px] text-muted-foreground">
+      <div className="min-h-0 overflow-hidden p-1.5 space-y-1.5 text-[10px] text-muted-foreground">
         {topicGroups.map((group, topicIdx) => (
           <div key={topicIdx} className="rounded border border-border/70 bg-background p-1.5">
             <p className="font-semibold">Topic {topicIdx + 1}: {group.topic}</p>
@@ -752,15 +750,13 @@ function LiveNestedSlot({
                         <div key={taskIdx} className="rounded border border-border/60 bg-background p-1.5">
                           <p className="font-semibold">Task {taskIdx + 1}: {task.task}</p>
                           <div className="mt-1 space-y-1">
-                            {resolvedAreas.map((areaKind) => {
+                            {resolvedAreas.map((areaKind, areaIndex) => {
                               const areaKey = buildTaskAreaKey(block, stableTaskKey, areaKind)
-                              const areaTitle = areaKind === "instruction" ? "Instruction Area" : areaKind === "student" ? "Student Area" : "Teacher Area"
-                              const seedText = areaKind === "instruction" ? task.instructionArea : areaKind === "student" ? task.studentArea : task.teacherArea
+                              const phaseLabel = phaseLabels[Math.min(areaIndex, phaseLabels.length - 1)]
                               return (
                                 <TaskAreaDropZone
                                   key={`${areaKey}:zone`}
-                                  title={areaTitle}
-                                  seedText={seedText}
+                                  seedText={phaseLabel}
                                   areaKey={areaKey}
                                   droppedMedia={droppedMediaByArea?.[areaKey] ?? []}
                                   mediaDragActive={mediaDragActive}
@@ -1041,7 +1037,7 @@ export function JsonTemplatePreview({
   }, [blockOrder, blueprint.body])
 
   return (
-    <div className="flex w-full flex-col bg-background">
+    <div className={`flex h-full min-h-full w-full flex-col ${omitMargins ? "bg-transparent" : "bg-background"}`}>
       {/* ── Top margin ── Header ───────────────────────────────────── */}
       {!omitMargins && (
         <MarginBand
@@ -1054,15 +1050,19 @@ export function JsonTemplatePreview({
 
       {/* ── Body ── content blocks ─────────────────────────────────── */}
       <div
-        className="px-2 py-2"
+        className="flex-1 min-h-0 px-2 py-2"
         style={{ display: "flex", flexDirection: "column", gap: `${Math.max(0, bodyBlockGap)}px` }}
       >
         {orderedBodySlots.map((slot, idx) => (
-          <BlueprintBodySlot
+          <div
             key={idx}
-            slot={slot}
-            isContinuation={Boolean(continuation?.[slotToBlockId(slot.kind) as BlockId])}
-          />
+            className={slot.kind === "content_nested" || slot.kind === "assignment_nested" ? "min-h-0" : undefined}
+          >
+            <BlueprintBodySlot
+              slot={slot}
+              isContinuation={Boolean(continuation?.[slotToBlockId(slot.kind) as BlockId])}
+            />
+          </div>
         ))}
       </div>
 

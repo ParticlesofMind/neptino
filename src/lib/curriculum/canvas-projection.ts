@@ -76,6 +76,41 @@ const LESSON_BLOCK_LOAD: Record<LessonBodyBlockId, { base: number; variable: num
   scoring: { base: 0.2, variable: 0.25 },
 }
 
+function estimateTaskExpansionUnits(task: string): number {
+  const normalized = String(task || "").trim()
+  if (!normalized) return 1
+  const lineBreakCount = (normalized.match(/\n/g) ?? []).length
+  const extraCharUnits = Math.ceil(Math.max(0, normalized.length - 80) / 140)
+  const extraLineUnits = Math.ceil(lineBreakCount / 2)
+  return 1 + Math.max(extraCharUnits, extraLineUnits)
+}
+
+export function expandTaskLabelsForFlow(tasks: string[], fallbackCount: number): string[] {
+  const resolvedFallback = Math.max(1, Number(fallbackCount) || 0)
+  const resolvedTasks = tasks.length > 0
+    ? tasks
+    : Array.from({ length: resolvedFallback }, (_, idx) => `Task ${idx + 1}`)
+
+  const expanded: string[] = []
+  resolvedTasks.forEach((task, taskIdx) => {
+    const normalizedTask = String(task || `Task ${taskIdx + 1}`).trim() || `Task ${taskIdx + 1}`
+    const expansionUnits = estimateTaskExpansionUnits(normalizedTask)
+    if (expansionUnits <= 1) {
+      expanded.push(normalizedTask)
+      return
+    }
+    Array.from({ length: expansionUnits }).forEach((_, partIdx) => {
+      expanded.push(`${normalizedTask} — Part ${partIdx + 1}/${expansionUnits}`)
+    })
+  })
+
+  return expanded.length > 0 ? expanded : ["Task 1"]
+}
+
+export function estimateExpandedTaskCount(tasks: string[], fallbackCount: number): number {
+  return expandTaskLabelsForFlow(tasks, fallbackCount).length
+}
+
 export interface LessonBodyPageChunk {
   blockId: LessonBodyBlockId
   page: number
@@ -246,7 +281,7 @@ function estimateSessionPages(session: {
   if (session.templateType === "lesson") {
     const effectiveTopicCount = Math.max(1, session.topics.length, session.topicCount)
     const effectiveObjectiveCount = Math.max(1, session.objectives.length, session.objectiveCount)
-    const effectiveTaskCount = Math.max(1, session.tasks.length, session.taskCount)
+    const effectiveTaskCount = estimateExpandedTaskCount(session.tasks, session.taskCount)
 
     return planLessonBodyLayout({
       topicCount: effectiveTopicCount,

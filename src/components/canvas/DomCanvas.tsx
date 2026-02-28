@@ -24,7 +24,7 @@ interface DomCanvasProps {
   onActivePageChange?: (page: number) => void
   toolConfig?: ToolConfig
   activeTool?: string
-  children?: React.ReactNode
+  children?: React.ReactNode | ((pageNumber: number, isActive: boolean) => React.ReactNode)
 }
 
 export function DomCanvas({
@@ -188,11 +188,11 @@ export function DomCanvas({
     if (isPanning || !containerRef.current) return
 
     const vh = containerRef.current.clientHeight
-    const centerScreenY = vh / 2
-    const centerContentY = (centerScreenY - pan.y) / scale
+    const activationAnchorY = vh * 0.25
+    const anchorContentY = (activationAnchorY - pan.y) / scale
 
     const pageTotalHeight = config.heightPx + PAGE_GAP
-    const pageIndex = Math.floor(centerContentY / pageTotalHeight)
+    const pageIndex = Math.floor(anchorContentY / pageTotalHeight)
     const boundedIndex = Math.max(0, Math.min(config.pageCount - 1, pageIndex))
     const pageNum = boundedIndex + 1
 
@@ -222,6 +222,9 @@ export function DomCanvas({
         {Array.from({ length: config.pageCount }).map((_, i) => {
           const pageNum = i + 1
           const isActive = pageNum === activePage
+          const pageChildren = typeof children === 'function'
+            ? children(pageNum, isActive)
+            : (isActive ? children : null)
           return (
             <div
               key={i}
@@ -236,7 +239,7 @@ export function DomCanvas({
                 toolConfig={toolConfig}
                 isActive={isActive}
               >
-                {isActive ? children : null}
+                {pageChildren}
               </CanvasPage>
             </div>
           )

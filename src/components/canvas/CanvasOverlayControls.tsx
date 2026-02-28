@@ -304,7 +304,7 @@ export function CanvasOverlayControls({
             onChange={(e) => changePage(Number(e.target.value))}
             className={`${overlayUi.scrollInputText} rounded border border-border bg-background px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-ring`}
           />
-          <span className="mt-0.5 opacity-60">/ {totalPages}</span>
+          <span data-testid="canvas-page-total" className="mt-0.5 opacity-60">/ {totalPages}</span>
         </div>
         <EngineBtn
           label="Next"
