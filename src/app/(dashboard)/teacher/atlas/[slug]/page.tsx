@@ -46,7 +46,7 @@ function getSingleParam(value: string | string[] | undefined): string {
 
 function buildBackQueryString(searchParams: SearchParams): string {
   const params = new URLSearchParams()
-  const keys = ["q", "domain", "type", "era", "depth", "media", "layer", "display", "page"]
+  const keys = ["q", "domain", "domain_narrow", "domain_detail", "type", "era", "depth", "media", "layer", "display", "page"]
 
   for (const key of keys) {
     const value = getSingleParam(searchParams[key])

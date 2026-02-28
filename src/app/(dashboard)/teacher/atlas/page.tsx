@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { TimelineJsCard } from "@/components/encyclopedia/timelinejs-card"
+import { AtlasFilterBar } from "@/components/encyclopedia/atlas-filter-bar"
 import type { EntityType, AtlasLayer, AtlasContentType, ISCEDDomain } from "@/types/atlas"
 import { ENTITY_TYPES, MEDIA_TYPES, PRODUCT_TYPES, ACTIVITY_TYPES, ISCED_DOMAINS, getLayerName } from "@/types/atlas"
 
@@ -114,7 +115,7 @@ function buildQueryString(
   overrides: Record<string, string | null | undefined> = {},
 ): string {
   const params = new URLSearchParams()
-  const keys = ["q", "domain", "type", "era", "media", "layer", "display", "page", "item"]
+  const keys = ["q", "domain", "domain_narrow", "domain_detail", "type", "subtype", "era", "media", "layer", "order", "display", "page", "item"]
 
   for (const key of keys) {
     const value = getSingleParam(searchParams[key])
@@ -459,24 +460,16 @@ export default async function TeacherAtlasPage({
   const selectedItemSlug = getSingleParam(params.item)
   const requestedPage = parsePositiveInt(getSingleParam(params.page), 1)
   const selectedDomain = normalizeFilter(getSingleParam(params.domain))
+  const selectedDomainNarrow = normalizeFilter(getSingleParam(params.domain_narrow))
+  const selectedDomainDetail = normalizeFilter(getSingleParam(params.domain_detail))
   const selectedType = normalizeFilter(getSingleParam(params.type))
   const selectedEra = normalizeFilter(getSingleParam(params.era))
   const selectedMediaType = normalizeFilter(getSingleParam(params.media))
   const selectedLayer = normalizeFilter(getSingleParam(params.layer))
+  const selectedSubtype = normalizeFilter(getSingleParam(params.subtype))
+  const selectedOrder = normalizeFilter(getSingleParam(params.order))
 
   const eraOrder = ["ancient", "early-modern", "modern", "contemporary"]
-  const eraLabel: Record<string, string> = {
-    ancient: "Ancient",
-    "early-modern": "Early Modern",
-    modern: "Modern",
-    contemporary: "Contemporary",
-  }
-  const eraRangeLabel: Record<string, string> = {
-    ancient: "pre-500 CE",
-    "early-modern": "1500–1800",
-    modern: "1800–1945",
-    contemporary: "1945–today",
-  }
 
   const supabase = await createClient()
 
@@ -528,7 +521,7 @@ export default async function TeacherAtlasPage({
     let query = supabase
       .from("encyclopedia_items")
       .select("id,wikidata_id,title,knowledge_type,sub_type,domain,secondary_domains,era_group,era_label,depth,summary,tags,metadata", { count: "exact" })
-      .order("title", { ascending: true })
+      .order("title", { ascending: selectedOrder !== "desc" })
       .range(from, to)
 
     if (queryText.length > 2) {
@@ -684,178 +677,53 @@ export default async function TeacherAtlasPage({
   }
 
   return (
-    <div className="atlas-page atlas-sans">
+    <div className="atlas-page atlas-sans -mx-4 -mt-8 -mb-8 lg:-mx-8">
       <div className="meridian-line meridian-left" />
       <div className="meridian-line meridian-right" />
 
-      <section className="relative z-10 px-14 space-y-6">
-        <header className="pt-10 pb-6 flex justify-between items-start border-b border-[var(--atlas-border)]">
-          <div className="flex flex-col gap-0.5">
-            <span className="atlas-serif text-[11px] font-light tracking-[0.35em] uppercase text-[var(--atlas-silver-dim)]">
-              Neptino
-            </span>
-            <h1 className="atlas-serif text-[38px] font-light tracking-[0.08em] text-[var(--atlas-gold-light)] leading-none">
-              <em>Atlas</em>
-            </h1>
-            <span className="text-[10px] font-light tracking-[0.2em] uppercase text-[var(--atlas-text-dim)] mt-1">
-              4-Layer Educational Knowledge System
-            </span>
-          </div>
+      <section className="relative z-10 px-2 lg:px-4 space-y-6 pt-6">
+        <AtlasFilterBar
+          queryText={queryText}
+          domainOptions={domainOptions}
+          selectedDomain={selectedDomain}
+          selectedDomainNarrow={selectedDomainNarrow}
+          selectedDomainDetail={selectedDomainDetail}
+          selectedType={selectedType}
+          selectedLayer={selectedLayer}
+          selectedMediaType={selectedMediaType}
+          displayMode={displayMode}
+          selectedEra={selectedEra}
+          selectedSubtype={selectedSubtype}
+          eraOptions={eraOptions}
+          selectedOrder={selectedOrder}
+        />
 
-          <div className="flex flex-col gap-1.5 items-end pt-1.5">
-            <div className="flex gap-4">
-              <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase text-[var(--atlas-text-dim)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--atlas-accent-entity)]" />
-                Entity Types
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase text-[var(--atlas-text-dim)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--atlas-accent-media)]" />
-                Media Types
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase text-[var(--atlas-text-dim)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--atlas-accent-product)]" />
-                Products
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase text-[var(--atlas-text-dim)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--atlas-accent-activity)]" />
-                Activities
-              </span>
+
+        <div className="rounded-lg border border-[var(--atlas-border)]/50 bg-[var(--atlas-bg-elevated)]/20 px-3 py-2 backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-3 text-xs text-[var(--atlas-text-dim)]">
+            <span>
+              Showing {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {availableCount.toLocaleString()} · Page {activePage} / {totalPages}
+            </span>
+            <div className="flex items-center gap-1 rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] p-1">
+              <Link
+                href={`/teacher/atlas?${buildQueryString(params, { display: "small", page: String(activePage) })}`}
+                className={displayMode === "small"
+                  ? "rounded-md bg-[var(--primary)]/10 px-3 py-1 text-xs font-medium text-[var(--primary)]"
+                  : "rounded-md px-3 py-1 text-xs text-[var(--atlas-text-dim)] hover:bg-[var(--atlas-bg-elevated)]/50"
+                }
+              >
+                Small
+              </Link>
+              <Link
+                href={`/teacher/atlas?${buildQueryString(params, { display: "large", page: String(activePage) })}`}
+                className={displayMode === "large"
+                  ? "rounded-md bg-[var(--primary)]/10 px-3 py-1 text-xs font-medium text-[var(--primary)]"
+                  : "rounded-md px-3 py-1 text-xs text-[var(--atlas-text-dim)] hover:bg-[var(--atlas-bg-elevated)]/50"
+                }
+              >
+                Large
+              </Link>
             </div>
-          </div>
-        </header>
-
-        <form className="mt-6 rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/40 p-5 backdrop-blur-sm" method="get">
-          <input type="hidden" name="page" value="1" />
-          <input type="hidden" name="display" value={displayMode} />
-          <input type="hidden" name="era" value={selectedEra ?? "all"} />
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <input
-              name="q"
-              defaultValue={queryText}
-              placeholder="Names, events, concepts..."
-              className="min-w-[280px] rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] px-3 py-2 text-sm text-[var(--atlas-text)] placeholder:text-[var(--atlas-text-dim)]"
-            />
-
-            <select
-              name="domain"
-              defaultValue={selectedDomain ?? "all"}
-              className="min-w-[170px] rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] px-3 py-2 text-sm text-[var(--atlas-text)]"
-            >
-              <option value="all">All domains</option>
-              {domainOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-
-            <select
-              name="type"
-              defaultValue={selectedType ?? "all"}
-              className="min-w-[170px] rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] px-3 py-2 text-sm text-[var(--atlas-text)]"
-            >
-              <option value="all">All entity types</option>
-              {typeOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-
-            <select
-              name="layer"
-              defaultValue={selectedLayer ?? "all"}
-              className="min-w-[150px] rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] px-3 py-2 text-sm text-[var(--atlas-text)]"
-            >
-            <option value="all">All layers</option>
-            {layerOptions.map((option) => {
-              const layerNum = Number.parseInt(option, 10)
-              const layerLabel = layerNum === 2 ? "Layer 2 — Media" :
-                                layerNum === 3 ? "Layer 3 — Products" :
-                                layerNum === 4 ? "Layer 4 — Activities" : option
-              return (
-                <option key={option} value={option}>{layerLabel}</option>
-              )
-            })}
-          </select>
-
-            <select
-              name="media"
-              defaultValue={selectedMediaType ?? "all"}
-              className="min-w-[160px] rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] px-3 py-2 text-sm text-[var(--atlas-text)]"
-            >
-              <option value="all">All content types</option>
-              {mediaOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-
-            <button
-              type="submit"
-              className="shrink-0 rounded-md bg-[var(--atlas-gold)] px-6 py-2.5 text-sm font-semibold text-[var(--atlas-ink)] transition-all hover:bg-[var(--atlas-gold-light)]"
-            >
-              Apply filters
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-6 rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/30 px-4 py-3.5 backdrop-blur-sm">
-          <div className="mb-3 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--atlas-text)]">
-            <span>Era Timeline</span>
-            <div className="h-px flex-1 bg-gradient-to-r from-[var(--atlas-border)] via-transparent to-transparent" />
-            <span className="text-[10px] text-[var(--atlas-text-dim)]">Older → Newer</span>
-          </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <Link
-              href={`/teacher/atlas?${buildQueryString(params, { era: null, page: "1", item: null })}`}
-              className={
-                !selectedEra
-                  ? "shrink-0 rounded-full border border-[var(--atlas-gold)] bg-[var(--atlas-gold)]/10 px-4 py-2 text-xs font-semibold text-[var(--atlas-gold)] transition-all"
-                  : "shrink-0 rounded-full border border-[var(--atlas-border)] bg-transparent px-4 py-2 text-xs font-medium text-[var(--atlas-text-dim)] transition-all hover:border-[var(--atlas-gold)]/50 hover:text-[var(--atlas-text)]"
-              }
-            >
-              Any era
-            </Link>
-            {eraOptions.map((era) => {
-              const isActive = selectedEra === era
-              return (
-                <Link
-                  key={era}
-                  href={`/teacher/atlas?${buildQueryString(params, { era, page: "1", item: null })}`}
-                  className={
-                    isActive
-                      ? "shrink-0 rounded-full border border-[var(--atlas-gold)] bg-[var(--atlas-gold)]/10 px-4 py-2 text-xs font-semibold text-[var(--atlas-gold)] transition-all"
-                      : "shrink-0 rounded-full border border-[var(--atlas-border)] bg-transparent px-4 py-2 text-xs font-medium text-[var(--atlas-text-dim)] transition-all hover:border-[var(--atlas-gold)]/50 hover:text-[var(--atlas-text)]"
-                  }
-                >
-                  <span>{eraLabel[era] ?? era}</span>
-                  {eraRangeLabel[era] && <span className="ml-1 text-[10px] opacity-75"> · {eraRangeLabel[era]}</span>}
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--atlas-border)]/50 bg-[var(--atlas-bg-elevated)]/20 px-3 py-2 text-xs text-[var(--atlas-text-dim)] backdrop-blur-sm">
-          <span>
-            Showing {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of {availableCount.toLocaleString()} · Page {activePage} / {totalPages}
-          </span>
-          <div className="flex items-center gap-1 rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] p-1">
-            <Link
-              href={`/teacher/atlas?${buildQueryString(params, { display: "small", page: String(activePage) })}`}
-              className={displayMode === "small"
-                ? "rounded-md bg-[var(--atlas-gold)]/20 px-3 py-1 text-xs font-medium text-[var(--atlas-gold)]"
-                : "rounded-md px-3 py-1 text-xs text-[var(--atlas-text-dim)] hover:bg-[var(--atlas-bg-elevated)]/50"
-              }
-            >
-              Small
-            </Link>
-            <Link
-              href={`/teacher/atlas?${buildQueryString(params, { display: "large", page: String(activePage) })}`}
-              className={displayMode === "large"
-                ? "rounded-md bg-[var(--atlas-gold)]/20 px-3 py-1 text-xs font-medium text-[var(--atlas-gold)]"
-                : "rounded-md px-3 py-1 text-xs text-[var(--atlas-text-dim)] hover:bg-[var(--atlas-bg-elevated)]/50"
-              }
-            >
-              Large
-            </Link>
           </div>
         </div>
 
@@ -923,7 +791,7 @@ export default async function TeacherAtlasPage({
                               href={resource.url}
                               target="_blank"
                               rel="noreferrer"
-                              className="mt-1.5 inline-block text-xs font-medium text-[var(--atlas-gold)] hover:underline"
+                              className="mt-1.5 inline-block text-xs font-medium text-[var(--primary)] hover:underline"
                             >
                               Open resource
                             </a>
@@ -1094,7 +962,7 @@ export default async function TeacherAtlasPage({
                       {domainBadges.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {domainBadges.map((domain) => (
-                            <span key={`${item.id}-${domain}`} className="rounded-full border border-[var(--atlas-gold)] bg-[var(--atlas-gold)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--atlas-gold)]">
+                            <span key={`${item.id}-${domain}`} className="rounded-full border border-[var(--primary)]/40 bg-[var(--primary)]/8 px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)]">
                               {domain}
                             </span>
                           ))}
@@ -1131,7 +999,7 @@ export default async function TeacherAtlasPage({
                                     item: null,
                                     display: displayMode,
                                   })}`}
-                                  className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[11px] text-[var(--atlas-text-dim)] hover:border-[var(--atlas-gold)]/50 hover:text-[var(--atlas-text)] transition-all"
+                                  className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[11px] text-[var(--atlas-text-dim)] hover:border-[var(--primary)]/40 hover:text-[var(--atlas-text)] transition-all"
                                 >
                                   {tag}
                                 </Link>
@@ -1260,7 +1128,7 @@ export default async function TeacherAtlasPage({
             <Link
               href={`/teacher/atlas?${buildQueryString(params, { page: String(Math.max(1, activePage - 1)), display: displayMode })}`}
               className={`rounded-md border border-[var(--atlas-border)] px-3 py-1.5 text-xs text-[var(--atlas-text)] transition-all ${
-                activePage <= 1 ? "pointer-events-none opacity-30" : "hover:border-[var(--atlas-gold)]/50 hover:bg-[var(--atlas-bg-elevated)]/30"
+                activePage <= 1 ? "pointer-events-none opacity-30" : "hover:border-[var(--primary)]/40 hover:bg-[var(--primary)]/5"
               }`}
             >
               Previous
@@ -1272,8 +1140,8 @@ export default async function TeacherAtlasPage({
                 href={`/teacher/atlas?${buildQueryString(params, { page: String(pageNumber), display: displayMode })}`}
                 className={
                   pageNumber === activePage
-                    ? "rounded-md bg-[var(--atlas-gold)]/20 border border-[var(--atlas-gold)] px-3 py-1.5 text-xs font-medium text-[var(--atlas-gold)]"
-                    : "rounded-md border border-[var(--atlas-border)] px-3 py-1.5 text-xs text-[var(--atlas-text)] transition-all hover:border-[var(--atlas-gold)]/50 hover:bg-[var(--atlas-bg-elevated)]/30"
+                    ? "rounded-md bg-[var(--primary)]/10 border border-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary)]"
+                    : "rounded-md border border-[var(--atlas-border)] px-3 py-1.5 text-xs text-[var(--atlas-text)] transition-all hover:border-[var(--primary)]/40 hover:bg-[var(--primary)]/5"
                 }
               >
                 {pageNumber}
@@ -1283,7 +1151,7 @@ export default async function TeacherAtlasPage({
             <Link
               href={`/teacher/atlas?${buildQueryString(params, { page: String(Math.min(totalPages, activePage + 1)), display: displayMode })}`}
               className={`rounded-md border border-[var(--atlas-border)] px-3 py-1.5 text-xs text-[var(--atlas-text)] transition-all ${
-                activePage >= totalPages ? "pointer-events-none opacity-30" : "hover:border-[var(--atlas-gold)]/50 hover:bg-[var(--atlas-bg-elevated)]/30"
+                activePage >= totalPages ? "pointer-events-none opacity-30" : "hover:border-[var(--primary)]/40 hover:bg-[var(--primary)]/5"
               }`}
             >
               Next

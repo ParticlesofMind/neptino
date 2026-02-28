@@ -125,7 +125,7 @@ body {
 }
 
 .atlas-page {
-  background: var(--atlas-bg);
+  background: transparent;
   color: var(--atlas-text);
   min-height: 100vh;
   position: relative;
