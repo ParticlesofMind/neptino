@@ -20,6 +20,7 @@ import {
   BarChart3,
   Layers,
   GripVertical,
+  List,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -34,7 +35,7 @@ import { TemplateBlueprint } from "@/components/coursebuilder/template-blueprint
 import { DEFAULT_TEMPLATE_VISUAL_DENSITY, type TemplateVisualDensity } from "@/lib/curriculum/template-source-of-truth"
 import { OverlineLabel } from "@/components/ui/overline-label"
 
-export const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] as const
+export const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] as const
 export type TemplateType = (typeof TEMPLATE_TYPES)[number]
 
 interface TemplateMeta {
@@ -111,6 +112,12 @@ export const TEMPLATE_TYPE_META: Record<TemplateType, TemplateMeta> = {
     badge: "border-border bg-muted/60 text-foreground",
     icon: <HelpCircle className="h-4 w-4" />,
   },
+  table_of_contents: {
+    label: "Table of Contents",
+    description: "Structured listing of modules, lessons, and page numbers",
+    badge: "border-border bg-muted/60 text-foreground",
+    icon: <List className="h-4 w-4" />,
+  },
 }
 
 interface BlockMeta {
@@ -160,13 +167,13 @@ type TemplateSettingsPayload = {
 }
 
 export const ALL_BLOCKS: TemplateBlockConfig[] = [
-  { id: "header", label: "Header", description: "Title, date, student name", mandatory: true, previewH: 40, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+  { id: "header", label: "Header", description: "Title, date, student name", mandatory: true, previewH: 40, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
   { id: "program", label: "Program", description: "Objectives & lesson overview", mandatory: true, previewH: 52, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
   { id: "resources", label: "Resources", description: "Reference materials & links", mandatory: true, previewH: 44, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
-  { id: "content", label: "Content", description: "Main body — topics, notes, media", mandatory: true, previewH: 80, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+  { id: "content", label: "Content", description: "Main body — topics, notes, media", mandatory: true, previewH: 80, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
   { id: "assignment", label: "Assignment", description: "Tasks & exercises for students", mandatory: true, previewH: 60, forTypes: ["lesson", "quiz", "lab", "workshop"] },
   { id: "scoring", label: "Scoring", description: "Rubric & grading criteria", mandatory: true, previewH: 56, forTypes: ["assessment", "exam", "quiz", "project", "lab"] },
-  { id: "footer", label: "Footer", description: "Signatures, branding, page number", mandatory: true, previewH: 32, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+  { id: "footer", label: "Footer", description: "Signatures, branding, page number", mandatory: true, previewH: 32, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
 ]
 
 interface LocalTemplate {
@@ -208,10 +215,10 @@ export const BLOCK_FIELDS: Record<BlockId, TemplateFieldConfig[]> = {
     { key: "lesson_number", label: "Lesson Number", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
     { key: "lesson_title", label: "Lesson Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
     { key: "module_title", label: "Module Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
-    { key: "course_title", label: "Course Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
-    { key: "institution_name", label: "Institution Name", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
-    { key: "teacher_name", label: "Teacher Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
-    { key: "date", label: "Date", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "course_title", label: "Course Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
+    { key: "institution_name", label: "Institution Name", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
+    { key: "teacher_name", label: "Teacher Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
+    { key: "date", label: "Date", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
   ],
   program: [
     { key: "competence", label: "Competence", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab", "workshop"] },
@@ -262,10 +269,10 @@ export const BLOCK_FIELDS: Record<BlockId, TemplateFieldConfig[]> = {
     { key: "feedback", label: "Feedback", required: false, forTypes: ["quiz", "assessment", "exam", "project", "lab"] },
   ],
   footer: [
-    { key: "copyright", label: "Copyright", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
-    { key: "page_number", label: "Page Number", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
-    { key: "teacher_name", label: "Teacher Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
-    { key: "institution_name", label: "Institution Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "copyright", label: "Copyright", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
+    { key: "page_number", label: "Page Number", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
+    { key: "teacher_name", label: "Teacher Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
+    { key: "institution_name", label: "Institution Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
   ],
 }
 

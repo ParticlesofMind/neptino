@@ -5,6 +5,7 @@ import type { BlockId, TemplateFieldState } from "@/components/coursebuilder/sec
 import type { CanvasPageConfig } from "./create-view-types"
 import type { LessonCanvasPageProjection } from "@/lib/curriculum/canvas-projection"
 import type { TemplateVisualDensity } from "@/lib/curriculum/template-source-of-truth"
+import { TEMPLATE_BLUEPRINTS } from "@/lib/curriculum/template-json-blueprints"
 
 interface TemplateSurfaceProps {
   currentLessonPage: LessonCanvasPageProjection | null
@@ -53,8 +54,14 @@ export function TemplateSurface({
 }: TemplateSurfaceProps) {
   if (!currentLessonPage) return null
 
+  // Look up the blueprint for the current template type to drive header/footer field order.
+  // Falls back to the lesson blueprint if the type is not registered.
+  const blueprint = TEMPLATE_BLUEPRINTS[currentLessonPage.templateType] ?? TEMPLATE_BLUEPRINTS.lesson
+  const headerValueMap = Object.fromEntries(headerFieldValues.map((v) => [v.key, v.value]))
+  const footerValueMap = Object.fromEntries(footerFieldValues.map((v) => [v.key, v.value]))
+
   return (
-    <div className="relative w-full bg-transparent">
+    <div className="relative h-full w-full bg-transparent">
       {hasHeaderBlock && (
         <div
           className={`absolute top-0 overflow-hidden border-b border-border/60 ${headerPaddingClass}`}
@@ -64,37 +71,37 @@ export function TemplateSurface({
             height: canvasConfig.margins.top,
           }}
         >
-          <div className="flex h-full items-center gap-1.5 overflow-hidden">
-            {currentLessonPage.templateType === "lesson" ? (
-              <>
-                <span className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground">
-                  L{currentLessonPage.lessonNumber}
-                </span>
-                <span
-                  className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
-                  title={lessonHeaderTooltip}
-                >
-                  {currentLessonPage.lessonTitle}
-                </span>
-                {lessonMetaText && (
+          {/* Blueprint-driven header: left group (identity fields) + right group (date / teacher) */}
+          <div className="flex h-full items-center justify-between gap-2 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+              {blueprint.header.left.map((field) => {
+                const value = headerValueMap[field.key]
+                if (!value) return null
+                return (
                   <span
+                    key={field.key}
                     className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
-                    title={lessonMetaText}
+                    title={value}
                   >
-                    {lessonMetaText}
+                    {value}
                   </span>
-                )}
-              </>
-            ) : (
-              headerFieldValues.map((value, idx) => (
-                <span
-                  key={`header-value-${value.key}-${idx}`}
-                  className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
-                >
-                  {value.value}
-                </span>
-              ))
-            )}
+                )
+              })}
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-1.5">
+              {blueprint.header.right.map((field) => {
+                const value = headerValueMap[field.key]
+                if (!value) return null
+                return (
+                  <span
+                    key={field.key}
+                    className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-muted-foreground"
+                  >
+                    {value}
+                  </span>
+                )
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -123,6 +130,7 @@ export function TemplateSurface({
             droppedMediaByArea={currentDroppedMediaByArea}
             mediaDragActive={mediaDragActive}
             onRemoveAreaMedia={onRemoveAreaMedia}
+            canvasMode
           />
         </div>
       </div>
@@ -136,22 +144,40 @@ export function TemplateSurface({
             height: canvasConfig.margins.bottom,
           }}
         >
+          {/* Blueprint-driven footer: left group (copyright / institution) + right group (page number) */}
           <div className="flex h-full items-center justify-between gap-2 overflow-hidden">
             <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-              {footerFieldValues
-                .filter((entry) => entry.key !== "page_number")
-                .map((value, idx) => (
+              {blueprint.footer.left.map((field) => {
+                const value = footerValueMap[field.key]
+                if (!value) return null
+                return (
                   <span
-                    key={`footer-value-${value.key}-${idx}`}
+                    key={field.key}
                     className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-muted-foreground"
                   >
-                    {value.value}
+                    {value}
                   </span>
-                ))}
+                )
+              })}
             </div>
-            <span className="shrink-0 rounded border border-border/60 bg-background px-2 py-0.5 text-xs font-semibold text-foreground">
-              {footerFieldValues.find((entry) => entry.key === "page_number")?.value ?? `Page ${clampedCurrentPage} / ${totalPages}`}
-            </span>
+            <div className="flex flex-shrink-0 items-center gap-1.5">
+              {blueprint.footer.right.map((field) => {
+                const rawValue = footerValueMap[field.key]
+                const displayValue = rawValue ?? (field.key === "page_number" ? `${clampedCurrentPage} / ${totalPages}` : field.label)
+                return (
+                  <span
+                    key={field.key}
+                    className={`shrink-0 rounded border px-2 py-0.5 text-xs ${
+                      field.key === "page_number"
+                        ? "border-border/60 bg-background font-semibold text-foreground"
+                        : "border-border/60 bg-muted/20 text-muted-foreground"
+                    }`}
+                  >
+                    {displayValue}
+                  </span>
+                )
+              })}
+            </div>
           </div>
         </div>
       )}

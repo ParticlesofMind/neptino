@@ -23,7 +23,6 @@ import {
   useCourseRowLoader,
   useCourseSectionSave,
   useDebouncedChangeSave,
-  useStringListInput,
 } from "@/components/coursebuilder"
 
 type CourseEssentials = {
@@ -67,12 +66,11 @@ export function EssentialsSection({
     imageName: initialData?.imageName ?? null,
   })
   const [error, setError] = useState<string | null>(null)
-  const { markEmpty, markError, markSaved, markSaving } = useCourseSectionSave()
+  const { saveStatus, lastSavedAt, markEmpty, markError, markSaved, markSaving } = useCourseSectionSave()
   const [createdCourseId, setCreatedCourseId] = useState<string | null>(null)
   const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null)
   const imageRef = useRef<HTMLInputElement>(null)
   const imageFileRef = useRef<File | null>(null)
-  const courseGoals = useStringListInput({ maxItems: 8, maxDraftLength: 120 })
   const [teacherOptions, setTeacherOptions] = useState<Array<{ id: string; name: string }>>([])
   const [institutionOptions, setInstitutionOptions] = useState<string[]>(["Independent"])
   const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
@@ -110,10 +108,6 @@ export function EssentialsSection({
       generationSettingsRef.current = row.generation_settings
       const hydrated = mapGenerationSettingsToState(row.generation_settings)
       if (!hydrated) return
-
-      if (hydrated.goals) {
-        courseGoals.setItems(hydrated.goals)
-      }
 
       if (hydrated.teacherId || hydrated.teacherName) {
         setData((prev) => ({
@@ -171,7 +165,6 @@ export function EssentialsSection({
 
       const generationSettingsPayload = buildEssentialsGenerationSettings({
         existing: generationSettingsRef.current,
-        goals: courseGoals.items,
         teacherId: data.teacherId,
         teacherName: data.teacherName,
       })
@@ -209,7 +202,7 @@ export function EssentialsSection({
     } catch {
       markError()
     }
-  }, [data, existingCourseId, createdCourseId, initialImageUrl, onCourseCreated, courseGoals.items, markEmpty, markError, markSaved, markSaving])
+  }, [data, existingCourseId, createdCourseId, initialImageUrl, onCourseCreated, markEmpty, markError, markSaved, markSaving])
 
   useDebouncedChangeSave(persistEssentials, 800)
 
@@ -302,44 +295,6 @@ export function EssentialsSection({
             </div>
           </div>
           <div>
-            <FieldLabel>Course Goals / Outcomes</FieldLabel>
-            <p className="mb-2 text-xs text-muted-foreground">Define 3–8 high-level learning outcomes for the course.</p>
-            <div className="space-y-1.5">
-              {courseGoals.items.map((goal, i) => (
-                <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
-                  <span className="flex-1 text-sm text-foreground">{goal}</span>
-                  <button
-                    type="button"
-                    onClick={() => courseGoals.removeAt(i)}
-                    className="text-xs text-muted-foreground hover:text-destructive transition"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              {courseGoals.items.length < 8 && (
-                <div className="flex gap-2">
-                  <input
-                    value={courseGoals.draft}
-                    onChange={(e) => courseGoals.updateDraft(e.target.value)}
-                    onKeyDown={courseGoals.onDraftKeyDown}
-                    placeholder="e.g., Understand organic chemistry fundamentals"
-                    className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
-                  />
-                  <button
-                    type="button"
-                    disabled={!courseGoals.canAdd}
-                    onClick={courseGoals.addDraft}
-                    className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Add
-                  </button>
-                </div>
-              )}
-            </div>
-            <p className="mt-1 text-right text-[11px] text-muted-foreground">{courseGoals.items.length}/8 goals</p>
-          </div>
-          <div>
             <FieldLabel>Course Image</FieldLabel>
             <div
               onClick={() => imageRef.current?.click()}
@@ -374,6 +329,29 @@ export function EssentialsSection({
               {error}
             </p>
           )}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <span className="hidden text-xs text-muted-foreground md:block">
+              {saveStatus === "saving"
+                ? "Saving…"
+                : saveStatus === "error"
+                  ? "Could not save"
+                  : lastSavedAt
+                    ? `Saved ${new Date(lastSavedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                    : ""}
+            </span>
+            <button
+              type="button"
+              onClick={() => void persistEssentials()}
+              disabled={saveStatus === "saving"}
+              className="ml-auto rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saveStatus === "saving"
+                ? "Saving…"
+                : existingCourseId ?? createdCourseId
+                  ? "Save Changes"
+                  : "Create Course"}
+            </button>
+          </div>
         </SetupColumn>
 
         <SetupColumn className="space-y-3">

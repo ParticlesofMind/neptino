@@ -30,16 +30,16 @@ export function SetupSection({
   className?: string
 }) {
   return (
-    <div className={`flex h-full min-h-0 flex-col gap-2 overflow-hidden ${className}`}>
-      <div className="hidden rounded-lg border border-border bg-background p-3 md:block">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className={`flex h-full min-h-0 flex-col overflow-hidden ${className}`}>
+      {(title || headerActions) && (
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border pb-3 mb-4">
           <div>
-            <h2 className="text-base font-semibold text-foreground">{title}</h2>
-            {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
+            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+            {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
           </div>
           {headerActions ? <div className="flex flex-wrap items-center gap-2">{headerActions}</div> : null}
         </div>
-      </div>
+      )}
       {children}
     </div>
   )
@@ -53,7 +53,7 @@ export function SetupColumn({
   className?: string
 }) {
   return (
-    <div className={`no-scrollbar h-full min-h-0 max-h-full overflow-y-auto rounded-lg border border-border bg-background px-3 py-3 [&_button:not(:disabled)]:cursor-pointer ${className}`}>
+    <div className={`no-scrollbar h-full min-h-0 max-h-full overflow-y-auto [&_button:not(:disabled)]:cursor-pointer ${className}`}>
       {children}
     </div>
   )
@@ -70,16 +70,16 @@ export function SetupPanelLayout({
   const kids = Children.toArray(children)
 
   return (
-    <div className={`flex flex-1 min-h-0 flex-col gap-2 ${className}`}>
-      {/* Mobile config / preview toggle — hidden on lg+ */}
-      <div className="flex shrink-0 gap-1 rounded-lg border border-border bg-muted/50 p-1 lg:hidden">
+    <div className={`flex flex-1 min-h-0 flex-col ${className}`}>
+      {/* Mobile config / preview toggle */}
+      <div className="flex shrink-0 border-b border-border pb-2 mb-4 gap-4 lg:hidden">
         <button
           type="button"
           onClick={() => setPanel("config")}
-          className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+          className={`pb-1 text-xs font-medium transition border-b-2 -mb-[10px] ${
             panel === "config"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           Configure
@@ -87,22 +87,23 @@ export function SetupPanelLayout({
         <button
           type="button"
           onClick={() => setPanel("preview")}
-          className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+          className={`pb-1 text-xs font-medium transition border-b-2 -mb-[10px] ${
             panel === "preview"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           Preview
         </button>
       </div>
 
-      {/* Panels grid */}
-      <div className="grid flex-1 min-h-0 items-stretch gap-2 lg:grid-cols-2">
-        <div className={`min-h-0 ${panel === "preview" ? "hidden lg:block" : ""}`}>
+      {/* Panels — thin vertical divider on desktop */}
+      <div className="flex flex-1 min-h-0">
+        <div className={`min-h-0 flex-1 ${panel === "preview" ? "hidden lg:block" : ""} lg:pr-7`}>
           {kids[0]}
         </div>
-        <div className={`min-h-0 ${panel === "config" ? "hidden lg:block" : ""}`}>
+        <div className="hidden lg:block w-px shrink-0 bg-border" />
+        <div className={`min-h-0 flex-1 ${panel === "config" ? "hidden lg:block" : ""} lg:pl-7`}>
           {kids[1]}
         </div>
       </div>

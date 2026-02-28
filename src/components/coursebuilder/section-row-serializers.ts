@@ -20,7 +20,6 @@ type ClassificationSerializeArgs = {
 
 type EssentialsGenerationSettingsArgs = {
   existing: Record<string, unknown> | null
-  goals: string[]
   teacherId: string
   teacherName: string
 }
@@ -85,13 +84,11 @@ export function buildClassificationUpdatePayload({
 
 export function buildEssentialsGenerationSettings({
   existing,
-  goals,
   teacherId,
   teacherName,
 }: EssentialsGenerationSettingsArgs): Record<string, unknown> {
   return {
     ...(existing ?? {}),
-    course_goals: toNonEmptyStrings(goals),
     teacher_id: teacherId,
     teacher_name: teacherName,
   }

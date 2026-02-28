@@ -15,6 +15,7 @@ interface CanvasDocumentPayload {
 type TaskAreaKind = "instruction" | "student" | "teacher"
 
 interface ParsedTaskAreaKey {
+  block: "content" | "assignment"
   baseKey: string
   area: TaskAreaKind
   siblingAreaKeys: string[]
@@ -91,19 +92,24 @@ function parseDraggedMediaPayload(raw: string): TemplateAreaMediaItem | null {
 
 function parseTaskAreaKey(areaKey: string): ParsedTaskAreaKey | null {
   const parts = areaKey.split(":")
-  if (parts.length < 5) return null
+  if (parts.length !== 4) return null
 
   const block = parts[0]
   if (block !== "content" && block !== "assignment") return null
 
-  const areaRaw = parts[4]
+  if (parts[1] !== "key") return null
+  const stableTaskKey = parts[2]
+  if (!stableTaskKey) return null
+
+  const areaRaw = parts[3]
   if (!TASK_AREA_KINDS.includes(areaRaw as TaskAreaKind)) return null
 
   const area = areaRaw as TaskAreaKind
-  const baseKey = parts.slice(0, 4).join(":")
+  const baseKey = `${block}:key:${stableTaskKey}`
   const siblingAreaKeys = TASK_AREA_KINDS.map((kind) => `${baseKey}:${kind}`)
 
   return {
+    block,
     baseKey,
     area,
     siblingAreaKeys,
@@ -236,8 +242,7 @@ export function useCanvasDocumentState({
   const isAreaBlockActiveOnPage = useCallback((areaKey: string, pageGlobal: number): boolean => {
     const parsedArea = parseTaskAreaKey(areaKey)
     if (!parsedArea) return false
-    const block = areaKey.startsWith("assignment:") ? "assignment" : "content"
-    return activeBlocksByGlobalPage.get(pageGlobal)?.has(block) ?? false
+    return activeBlocksByGlobalPage.get(pageGlobal)?.has(parsedArea.block) ?? false
   }, [activeBlocksByGlobalPage])
 
   const appendMediaToArea = useCallback((scopeKey: string, areaKey: string, mediaItem: TemplateAreaMediaItem) => {

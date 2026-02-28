@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { CreateView } from "@/components/canvas/CreateView"
 import { computePageConfig } from "@/components/canvas/DomCanvas"
 import type { CanvasPageConfig } from "@/components/canvas/create-view-types"
@@ -26,6 +26,7 @@ import {
   selectCourseById,
   useCourseRowLoader,
   useDebouncedChangeSave,
+  deleteCourseById,
 } from "@/components/coursebuilder"
 import { OverlineLabel } from "@/components/ui/overline-label"
 import {
@@ -989,7 +990,25 @@ function PageSetupSection({
 
 // ─── Advanced ─────────────────────────────────────────────────────────────────
 
-function AdvancedSection() {
+function AdvancedSection({ courseId }: { courseId: string | null }) {
+  const router = useRouter()
+  const [confirm, setConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  async function handleDelete() {
+    if (!courseId) return
+    setDeleting(true)
+    setDeleteError(null)
+    const { error } = await deleteCourseById(courseId)
+    if (error) {
+      setDeleteError(error.message)
+      setDeleting(false)
+      return
+    }
+    router.push("/teacher/courses")
+  }
+
   return (
     <SetupSection title="Advanced Settings" description="Destructive actions and advanced configuration.">
       <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-5 space-y-3">
@@ -997,12 +1016,43 @@ function AdvancedSection() {
         <p className="text-sm text-muted-foreground">
           Once you delete a course, there is no going back. Please be certain.
         </p>
-        <button
-          type="button"
-          className="rounded-md border border-destructive bg-background px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive hover:text-destructive-foreground"
-        >
-          Delete Course
-        </button>
+        {!confirm ? (
+          <button
+            type="button"
+            disabled={!courseId}
+            onClick={() => setConfirm(true)}
+            className="rounded-md border border-destructive bg-background px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive hover:text-destructive-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Delete Course
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-destructive">
+              Are you sure? This action cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="rounded-md border border-destructive bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Yes, Delete Course"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setConfirm(false); setDeleteError(null) }}
+                disabled={deleting}
+                className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/30"
+              >
+                Cancel
+              </button>
+            </div>
+            {deleteError && (
+              <p className="text-xs text-destructive">{deleteError}</p>
+            )}
+          </div>
+        )}
       </div>
     </SetupSection>
   )
@@ -1207,7 +1257,7 @@ function SectionContent({
     case "integrations":   return <IntegrationsSection   courseId={existingCourseId} />
     case "communication":  return <CommunicationSection  courseId={existingCourseId} />
     case "page-setup":     return <PageSetupSection key={`${existingCourseId ?? "new"}-${pageConfig?.pageCount ?? 1}`} courseId={existingCourseId} initialConfig={pageConfig} onSaved={onPageConfigChange} />
-    case "advanced":       return <AdvancedSection />
+    case "advanced":       return <AdvancedSection courseId={existingCourseId} />
     default:               return <Placeholder />
   }
 }
@@ -1550,7 +1600,7 @@ function CourseBuilderPageInner() {
                 </nav>
               </aside>
 
-              <main className="flex-1 overflow-hidden bg-muted/20 px-4 pt-4 pb-4 md:px-8 md:pb-8">
+              <main className="flex-1 overflow-hidden bg-background px-6 pt-5 pb-5 md:px-10 md:pb-8">
                 <div className="mx-auto flex h-full min-h-0 flex-col">
                   {loadingCourse ? (
                     <div className="flex items-center justify-center h-48">

@@ -4,7 +4,9 @@
  * Based on legacy template system
  */
 
-export type TemplateType = "lesson" | "quiz" | "exam" | "assessment" | "certificate"
+import { TEMPLATE_BLUEPRINTS, slotToBlockId } from "@/lib/curriculum/template-json-blueprints"
+
+export type TemplateType = "lesson" | "quiz" | "exam" | "assessment" | "certificate" | "project" | "lab" | "workshop" | "discussion" | "reflection" | "survey" | "table_of_contents"
 
 export type TemplateBlockType = "header" | "program" | "resources" | "content" | "assignment" | "scoring" | "footer"
 
@@ -24,18 +26,6 @@ export interface TemplateDesignConfig {
 }
 
 /**
- * Template block sequences per template type
- * All templates follow header-body-footer structure, with different body sub-blocks
- */
-export const TEMPLATE_BLOCK_SEQUENCES: Record<TemplateType, TemplateBlockType[]> = {
-  lesson: ["header", "program", "resources", "content", "assignment", "footer"],
-  quiz: ["header", "program", "resources", "content", "scoring", "footer"],
-  exam: ["header", "program", "resources", "content", "scoring", "footer"],
-  assessment: ["header", "program", "resources", "content", "scoring", "footer"],
-  certificate: ["header", "content", "footer"],
-}
-
-/**
  * All available template blocks with metadata
  */
 export const ALL_TEMPLATE_BLOCKS: TemplateBlockConfig[] = [
@@ -45,7 +35,7 @@ export const ALL_TEMPLATE_BLOCKS: TemplateBlockConfig[] = [
     description: "Title, date, student metadata",
     mandatory: true,
     icon: "header",
-    forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"],
+    forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"],
   },
   {
     id: "program",
@@ -53,7 +43,7 @@ export const ALL_TEMPLATE_BLOCKS: TemplateBlockConfig[] = [
     description: "Objectives & lesson overview",
     mandatory: true,
     icon: "program",
-    forTypes: ["lesson", "quiz", "assessment", "exam"],
+    forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"],
   },
   {
     id: "resources",
@@ -61,7 +51,7 @@ export const ALL_TEMPLATE_BLOCKS: TemplateBlockConfig[] = [
     description: "Reference materials & links",
     mandatory: true,
     icon: "resources",
-    forTypes: ["lesson", "quiz", "assessment", "exam"],
+    forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"],
   },
   {
     id: "content",
@@ -69,7 +59,7 @@ export const ALL_TEMPLATE_BLOCKS: TemplateBlockConfig[] = [
     description: "Main body — topics, notes, media",
     mandatory: true,
     icon: "content",
-    forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"],
+    forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"],
   },
   {
     id: "assignment",
@@ -77,7 +67,7 @@ export const ALL_TEMPLATE_BLOCKS: TemplateBlockConfig[] = [
     description: "Tasks & exercises for students",
     mandatory: true,
     icon: "assignment",
-    forTypes: ["lesson", "quiz"],
+    forTypes: ["lesson", "quiz", "lab", "workshop"],
   },
   {
     id: "scoring",
@@ -85,7 +75,7 @@ export const ALL_TEMPLATE_BLOCKS: TemplateBlockConfig[] = [
     description: "Rubric & grading criteria",
     mandatory: true,
     icon: "scoring",
-    forTypes: ["assessment", "exam", "quiz"],
+    forTypes: ["assessment", "exam", "quiz", "project", "lab"],
   },
   {
     id: "footer",
@@ -93,15 +83,27 @@ export const ALL_TEMPLATE_BLOCKS: TemplateBlockConfig[] = [
     description: "Signatures, branding, page number",
     mandatory: true,
     icon: "footer",
-    forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"],
+    forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"],
   },
 ]
 
 /**
- * Get default enabled blocks for a template type
+ * Get default enabled blocks for a template type.
+ * Derived from the canonical JSON blueprint — TEMPLATE_BLUEPRINTS is the single source of
+ * truth, so block sequences can never drift from what the renderer actually renders.
  */
 export function getDefaultBlocksForType(templateType: TemplateType): TemplateBlockType[] {
-  return TEMPLATE_BLOCK_SEQUENCES[templateType] ?? []
+  const blueprint = TEMPLATE_BLUEPRINTS[templateType]
+  if (!blueprint) return []
+  const blocks: TemplateBlockType[] = ["header"]
+  for (const slot of blueprint.body) {
+    const blockId = slotToBlockId(slot.kind) as TemplateBlockType | null
+    if (blockId && !blocks.includes(blockId)) {
+      blocks.push(blockId)
+    }
+  }
+  blocks.push("footer")
+  return blocks
 }
 
 /**

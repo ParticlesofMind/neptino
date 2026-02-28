@@ -8,7 +8,7 @@ import {
 } from "@/lib/curriculum/canvas-projection"
 import { formatTemplateFieldValue } from "@/lib/curriculum/template-source-of-truth"
 import { BLOCK_FIELDS, type BlockId, type TemplateFieldState } from "@/components/coursebuilder/sections/templates-section"
-import type { TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
+import { buildStableTaskKey, type TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
 
 export function useTemplateProjectionState({
   currentLessonPage,
@@ -33,9 +33,7 @@ export function useTemplateProjectionState({
     topic: string
     objective: string
     task: string
-    topicIndex: number
-    objectiveIndex: number
-    taskIndex: number
+    stableTaskKey: string
     instructionArea: string
     studentArea: string
     teacherArea: string
@@ -280,6 +278,7 @@ export function useTemplateProjectionState({
     const objectivesPerTopic = Math.max(1, currentLessonPage.objectiveCount || currentLessonPage.objectives.length || 1)
     const tasksPerObjective = Math.max(1, currentLessonPage.taskCount || currentLessonPage.tasks.length || 1)
     const lessonDurationMinutes = Math.max(0, Number(currentLessonPage.durationMinutes ?? 0) || 0)
+    const activeBlockSet = new Set(lessonBlockPagination.activeBlocks)
 
     const sliceForBlockPage = <T,>(blockId: BlockId, values: T[]): T[] => {
       if (values.length === 0) return []
@@ -322,9 +321,7 @@ export function useTemplateProjectionState({
             objective,
             tasks: taskRows.map((taskRow) => ({
               task: taskRow.task,
-              topicIndex: taskRow.topicIndex,
-              objectiveIndex: taskRow.objectiveIndex,
-              taskIndex: taskRow.taskIndex,
+              stableTaskKey: taskRow.stableTaskKey,
               instructionArea: taskRow.instructionArea,
               studentArea: taskRow.studentArea,
               teacherArea: taskRow.teacherArea,
@@ -345,77 +342,72 @@ export function useTemplateProjectionState({
     ))
     const topicMinuteAllocations = splitMinutesAcrossTopics(lessonDurationMinutes, resolvedTopics.length)
 
-    const fullProgramRows = resolvedTopics.map((topic, topicIdx) => {
-      const objectiveCell = resolvedObjectives
-        .map((objective, objectiveIdx) => `${topicIdx + 1}.${objectiveIdx + 1} ${objective}`)
-        .join("\n")
-      const taskCell = resolvedObjectives
-        .flatMap((objective, objectiveIdx) => (
-          resolvedTasks.map((task, taskIdx) => `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${objective}: ${task}`)
+    const buildTaskRows = (block: "content" | "assignment"): TaskRow[] => {
+      return resolvedTopics.flatMap((topic, topicIdx) => (
+        resolvedObjectives.flatMap((objective, objectiveIdx) => (
+          resolvedTasks.map((task, taskIdx) => ({
+            topic,
+            objective,
+            task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
+            stableTaskKey: buildStableTaskKey({ block, topic, objective, task }),
+            instructionArea: scalarFieldValues.instruction_area,
+            studentArea: scalarFieldValues.student_area,
+            teacherArea: scalarFieldValues.teacher_area,
+          }))
         ))
-        .join("\n")
-
-      return {
-        topic,
-        objective: objectiveCell,
-        task: taskCell,
-        program_time: topicMinuteAllocations[topicIdx] > 0 ? `${topicMinuteAllocations[topicIdx]} min` : scalarFieldValues.program_time,
-        program_method: scalarFieldValues.program_method,
-        program_social_form: scalarFieldValues.program_social_form,
-      }
-    })
-
-    const fullResourceRows = resolvedTopics.flatMap((topic, topicIdx) => (
-      resolvedObjectives.flatMap((objective, objectiveIdx) => (
-        resolvedTasks.map((task, taskIdx) => ({
-          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${topic}: ${objective} — ${task}`,
-          type: scalarFieldValues.type,
-          origin: scalarFieldValues.origin,
-          state: scalarFieldValues.state,
-          quality: scalarFieldValues.quality,
-        }))
       ))
-    ))
-    const fullContentTaskRows: TaskRow[] = resolvedTopics.flatMap((topic, topicIdx) => (
-      resolvedObjectives.flatMap((objective, objectiveIdx) => (
-        resolvedTasks.map((task, taskIdx) => ({
+    }
+
+    const programRows = activeBlockSet.has("program")
+      ? sliceForBlockPage("program", resolvedTopics.map((topic, topicIdx) => {
+        const objectiveCell = resolvedObjectives
+          .map((objective, objectiveIdx) => `${topicIdx + 1}.${objectiveIdx + 1} ${objective}`)
+          .join("\n")
+        const taskCell = resolvedObjectives
+          .flatMap((objective, objectiveIdx) => (
+            resolvedTasks.map((task, taskIdx) => `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${objective}: ${task}`)
+          ))
+          .join("\n")
+
+        return {
           topic,
-          objective,
-          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
-          topicIndex: topicIdx,
-          objectiveIndex: objectiveIdx,
-          taskIndex: taskIdx,
-          instructionArea: scalarFieldValues.instruction_area,
-          studentArea: scalarFieldValues.student_area,
-          teacherArea: scalarFieldValues.teacher_area,
-        }))
-      ))
-    ))
-    const contentTaskRowsPaged = sliceForBlockPage("content", fullContentTaskRows)
-    const contentTopicGroups = groupTaskRowsByHierarchy(contentTaskRowsPaged)
+          objective: objectiveCell,
+          task: taskCell,
+          program_time: topicMinuteAllocations[topicIdx] > 0 ? `${topicMinuteAllocations[topicIdx]} min` : scalarFieldValues.program_time,
+          program_method: scalarFieldValues.program_method,
+          program_social_form: scalarFieldValues.program_social_form,
+        }
+      }))
+      : []
 
-    const fullAssignmentTaskRows: TaskRow[] = resolvedTopics.flatMap((topic, topicIdx) => (
-      resolvedObjectives.flatMap((objective, objectiveIdx) => (
-        resolvedTasks.map((task, taskIdx) => ({
-          topic,
-          objective,
-          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
-          topicIndex: topicIdx,
-          objectiveIndex: objectiveIdx,
-          taskIndex: taskIdx,
-          instructionArea: scalarFieldValues.instruction_area,
-          studentArea: scalarFieldValues.student_area,
-          teacherArea: scalarFieldValues.teacher_area,
-        }))
-      ))
-    ))
-    const assignmentTaskRowsPaged = sliceForBlockPage("assignment", fullAssignmentTaskRows)
+    const resourceRowsPaged = activeBlockSet.has("resources")
+      ? sliceForBlockPage("resources", resolvedTopics.flatMap((topic, topicIdx) => (
+        resolvedObjectives.flatMap((objective, objectiveIdx) => (
+          resolvedTasks.map((task, taskIdx) => ({
+            task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${topic}: ${objective} — ${task}`,
+            type: scalarFieldValues.type,
+            origin: scalarFieldValues.origin,
+            state: scalarFieldValues.state,
+            quality: scalarFieldValues.quality,
+          }))
+        ))
+      )))
+      : []
+
+    const contentTaskRowsPaged = activeBlockSet.has("content")
+      ? sliceForBlockPage("content", buildTaskRows("content"))
+      : []
+    const contentTopicGroups = contentTaskRowsPaged.length > 0 ? groupTaskRowsByHierarchy(contentTaskRowsPaged) : []
+
+    const assignmentTaskRowsPaged = activeBlockSet.has("assignment")
+      ? sliceForBlockPage("assignment", buildTaskRows("assignment"))
+      : []
     const assignmentTasks = assignmentTaskRowsPaged.map((row) => `${row.topic}: ${row.objective} — ${row.task}`)
-    const assignmentGroups = groupTaskRowsByHierarchy(assignmentTaskRowsPaged)
+    const assignmentGroups = assignmentTaskRowsPaged.length > 0 ? groupTaskRowsByHierarchy(assignmentTaskRowsPaged) : []
 
-    const programRows = sliceForBlockPage("program", fullProgramRows)
-    const resourceRowsPaged = sliceForBlockPage("resources", fullResourceRows)
-    const scoringItemsPaged = sliceForBlockPage("scoring", currentLessonPage.objectives.map((objective, idx) => `Criterion ${idx + 1}: ${objective}`))
+    const scoringItemsPaged = activeBlockSet.has("scoring")
+      ? sliceForBlockPage("scoring", currentLessonPage.objectives.map((objective, idx) => `Criterion ${idx + 1}: ${objective}`))
+      : []
 
     const assignmentGroupsFromContent = contentTopicGroups.map((topicGroup, topicIndex) => ({
       topic: topicGroup.topic,
@@ -423,9 +415,7 @@ export function useTemplateProjectionState({
         objective: objective.objective,
         tasks: objective.tasks.map((task, taskIndex) => ({
           task: `${topicIndex + 1}.${taskIndex + 1} ${task.task}`,
-          topicIndex: task.topicIndex,
-          objectiveIndex: task.objectiveIndex,
-          taskIndex: task.taskIndex,
+          stableTaskKey: task.stableTaskKey,
           instructionArea: task.instructionArea,
           studentArea: task.studentArea,
           teacherArea: task.teacherArea,

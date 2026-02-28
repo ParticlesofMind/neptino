@@ -18,3 +18,13 @@ export async function insertCourseReturningId(payload: Record<string, unknown>) 
     .select("id")
     .single()
 }
+
+export async function deleteCourseById(courseId: string) {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from("courses")
+    .delete()
+    .eq("id", courseId)
+
+  return { error }
+}

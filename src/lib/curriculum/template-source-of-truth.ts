@@ -46,6 +46,13 @@ export function asTemplateType(value: unknown): TemplateType {
     case "exam":
     case "assessment":
     case "certificate":
+    case "project":
+    case "lab":
+    case "workshop":
+    case "discussion":
+    case "reflection":
+    case "survey":
+    case "table_of_contents":
       return String(value).toLowerCase() as TemplateType
     default:
       return "lesson"
