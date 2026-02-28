@@ -18,8 +18,15 @@ import { ScheduleSection } from "@/components/coursebuilder/sections/schedule-se
 import { StudentsSection } from "@/components/coursebuilder/sections/students-section"
 import { TemplatesSection } from "@/components/coursebuilder/sections/templates-section"
 import { VisibilitySection } from "@/components/coursebuilder/sections/visibility-section"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { createClient } from "@/lib/supabase/client"
+import {
+  FieldLabel,
+  TextInput,
+  SelectInput,
+  updateCourseById,
+  selectCourseById,
+  useCourseRowLoader,
+  useDebouncedChangeSave,
+} from "@/components/coursebuilder"
 import {
   ArrowLeft,
   ArrowRight,
@@ -159,40 +166,6 @@ function isSectionId(value: string | null): value is SectionId {
   return typeof value === "string" && ALL_SECTION_IDS.includes(value)
 }
 
-// ─── Shared primitives ────────────────────────────────────────────────────────
-
-function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
-  return (
-    <div className="mb-1.5">
-      <span className="text-sm font-medium text-foreground">{children}</span>
-      {hint && <span className="ml-2 text-xs text-muted-foreground">{hint}</span>}
-    </div>
-  )
-}
-
-function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
-    />
-  )
-}
-
-function SelectInput({
-  children,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement> & { children: React.ReactNode }) {
-  return (
-    <select
-      {...props}
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {children}
-    </select>
-  )
-}
-
 function Placeholder() {
   return (
     <div className="space-y-6">
@@ -203,12 +176,6 @@ function Placeholder() {
   )
 }
 
-// ─── Sections ─────────────────────────────────────────────────────────────────
-
-// ─── Sections ─────────────────────────────────────────────────────────────────
-
-// ─── Students ─────────────────────────────────────────────────────────────────
-
 // ─── Marketplace ──────────────────────────────────────────────────────────────
 
 function MarketplaceSection({ courseId }: { courseId: string | null }) {
@@ -216,44 +183,31 @@ function MarketplaceSection({ courseId }: { courseId: string | null }) {
   const [targetAudience, setTargetAudience] = useState("")
   const [revenueShare, setRevenueShare] = useState(30)
   const [distribution, setDistribution] = useState("")
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase.from("courses").select("marketplace_settings").eq("id", courseId).single()
-      .then(({ data, error }) => {
-        if (!error && data?.marketplace_settings) {
-          const m = data.marketplace_settings as Record<string, unknown>
-          setListingStatus((m.listing_status as string) ?? "draft")
-          setTargetAudience((m.target_audience as string) ?? "")
-          setRevenueShare((m.revenue_share as number) ?? 30)
-          setDistribution((m.distribution_channels as string) ?? "")
-        }
-      })
-  }, [courseId])
+  useCourseRowLoader<{ marketplace_settings: Record<string, unknown> | null }>({
+    courseId,
+    select: "marketplace_settings",
+    onLoaded: (row) => {
+      const m = row.marketplace_settings
+      if (!m) return
+      setListingStatus((m.listing_status as string) ?? "draft")
+      setTargetAudience((m.target_audience as string) ?? "")
+      setRevenueShare((m.revenue_share as number) ?? 30)
+      setDistribution((m.distribution_channels as string) ?? "")
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    setSaveStatus("saving")
-    const supabase = createClient()
-    const { error } = await supabase.from("courses")
-      .update({
-        marketplace_settings: {
-          listing_status:       listingStatus,
-          target_audience:      targetAudience,
-          revenue_share:        revenueShare,
-          distribution_channels: distribution,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
-    if (error) setSaveStatus("error")
-    else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
+    await updateCourseById(courseId, {
+      marketplace_settings: {
+        listing_status:        listingStatus,
+        target_audience:       targetAudience,
+        revenue_share:         revenueShare,
+        distribution_channels: distribution,
+      },
+      updated_at: new Date().toISOString(),
+    })
   }, [courseId, listingStatus, targetAudience, revenueShare, distribution])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
@@ -324,46 +278,33 @@ function PricingSection({ courseId }: { courseId: string | null }) {
   const [currency, setCurrency] = useState("USD")
   const [trial, setTrial] = useState(false)
   const [discountNotes, setDiscountNotes] = useState("")
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase.from("courses").select("pricing_settings").eq("id", courseId).single()
-      .then(({ data, error }) => {
-        if (!error && data?.pricing_settings) {
-          const p = data.pricing_settings as Record<string, unknown>
-          setPricingModel((p.pricing_model as string) ?? "free")
-          setBasePrice(p.base_price != null ? String(p.base_price) : "")
-          setCurrency((p.currency as string) ?? "USD")
-          setTrial((p.trial as boolean) ?? false)
-          setDiscountNotes((p.discount_notes as string) ?? "")
-        }
-      })
-  }, [courseId])
+  useCourseRowLoader<{ pricing_settings: Record<string, unknown> | null }>({
+    courseId,
+    select: "pricing_settings",
+    onLoaded: (row) => {
+      const p = row.pricing_settings
+      if (!p) return
+      setPricingModel((p.pricing_model as string) ?? "free")
+      setBasePrice(p.base_price != null ? String(p.base_price) : "")
+      setCurrency((p.currency as string) ?? "USD")
+      setTrial((p.trial as boolean) ?? false)
+      setDiscountNotes((p.discount_notes as string) ?? "")
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    setSaveStatus("saving")
-    const supabase = createClient()
-    const { error } = await supabase.from("courses")
-      .update({
-        pricing_settings: {
-          pricing_model:  pricingModel,
-          base_price:     basePrice !== "" ? Number(basePrice) : null,
-          currency,
-          trial,
-          discount_notes: discountNotes || null,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
-    if (error) setSaveStatus("error")
-    else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
+    await updateCourseById(courseId, {
+      pricing_settings: {
+        pricing_model:  pricingModel,
+        base_price:     basePrice !== "" ? Number(basePrice) : null,
+        currency,
+        trial,
+        discount_notes: discountNotes || null,
+      },
+      updated_at: new Date().toISOString(),
+    })
   }, [courseId, pricingModel, basePrice, currency, trial, discountNotes])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
@@ -445,44 +386,31 @@ function IntegrationsSection({ courseId }: { courseId: string | null }) {
   const [apiAccess, setApiAccess] = useState(false)
   const [webhookUrl, setWebhookUrl] = useState("")
   const [integrationNotes, setIntegrationNotes] = useState("")
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase.from("courses").select("integration_settings").eq("id", courseId).single()
-      .then(({ data, error }) => {
-        if (!error && data?.integration_settings) {
-          const i = data.integration_settings as Record<string, unknown>
-          setLmsProvider((i.lms_provider as string) ?? "")
-          setApiAccess((i.api_access as boolean) ?? false)
-          setWebhookUrl((i.webhook_url as string) ?? "")
-          setIntegrationNotes((i.integration_notes as string) ?? "")
-        }
-      })
-  }, [courseId])
+  useCourseRowLoader<{ integration_settings: Record<string, unknown> | null }>({
+    courseId,
+    select: "integration_settings",
+    onLoaded: (row) => {
+      const i = row.integration_settings
+      if (!i) return
+      setLmsProvider((i.lms_provider as string) ?? "")
+      setApiAccess((i.api_access as boolean) ?? false)
+      setWebhookUrl((i.webhook_url as string) ?? "")
+      setIntegrationNotes((i.integration_notes as string) ?? "")
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    setSaveStatus("saving")
-    const supabase = createClient()
-    const { error } = await supabase.from("courses")
-      .update({
-        integration_settings: {
-          lms_provider:      lmsProvider || null,
-          api_access:        apiAccess,
-          webhook_url:       webhookUrl || null,
-          integration_notes: integrationNotes || null,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
-    if (error) setSaveStatus("error")
-    else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
+    await updateCourseById(courseId, {
+      integration_settings: {
+        lms_provider:      lmsProvider || null,
+        api_access:        apiAccess,
+        webhook_url:       webhookUrl || null,
+        integration_notes: integrationNotes || null,
+      },
+      updated_at: new Date().toISOString(),
+    })
   }, [courseId, lmsProvider, apiAccess, webhookUrl, integrationNotes])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
@@ -552,44 +480,31 @@ function CommunicationSection({ courseId }: { courseId: string | null }) {
   const [announcementChannel, setAnnouncementChannel] = useState("email")
   const [digest, setDigest] = useState(false)
   const [officeHours, setOfficeHours] = useState("")
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase.from("courses").select("communication_settings").eq("id", courseId).single()
-      .then(({ data, error }) => {
-        if (!error && data?.communication_settings) {
-          const c = data.communication_settings as Record<string, unknown>
-          setWelcomeMessage((c.welcome_message as string) ?? "")
-          setAnnouncementChannel((c.announcement_channel as string) ?? "email")
-          setDigest((c.digest as boolean) ?? false)
-          setOfficeHours((c.office_hours as string) ?? "")
-        }
-      })
-  }, [courseId])
+  useCourseRowLoader<{ communication_settings: Record<string, unknown> | null }>({
+    courseId,
+    select: "communication_settings",
+    onLoaded: (row) => {
+      const c = row.communication_settings
+      if (!c) return
+      setWelcomeMessage((c.welcome_message as string) ?? "")
+      setAnnouncementChannel((c.announcement_channel as string) ?? "email")
+      setDigest((c.digest as boolean) ?? false)
+      setOfficeHours((c.office_hours as string) ?? "")
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    setSaveStatus("saving")
-    const supabase = createClient()
-    const { error } = await supabase.from("courses")
-      .update({
-        communication_settings: {
-          welcome_message:      welcomeMessage || null,
-          announcement_channel: announcementChannel,
-          digest,
-          office_hours:         officeHours || null,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
-    if (error) setSaveStatus("error")
-    else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
+    await updateCourseById(courseId, {
+      communication_settings: {
+        welcome_message:      welcomeMessage || null,
+        announcement_channel: announcementChannel,
+        digest,
+        office_hours:         officeHours || null,
+      },
+      updated_at: new Date().toISOString(),
+    })
   }, [courseId, welcomeMessage, announcementChannel, digest, officeHours])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
@@ -676,8 +591,15 @@ function PageSetupSection({
   const [size, setSize]               = useState<"a4" | "us-letter">("a4")
   const [pageCount, setPageCount]     = useState(initialConfig?.pageCount ?? 1)
   const [margins, setMargins]         = useState({ top: 2.54, bottom: 2.54, left: 2.54, right: 2.54 })
-  const [saveStatus, setSaveStatus]   = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const existingGenerationSettingsRef = useRef<Record<string, unknown> | null>(null)
+
+  useCourseRowLoader<{ generation_settings: Record<string, unknown> | null }>({
+    courseId,
+    select: "generation_settings",
+    onLoaded: (row) => {
+      existingGenerationSettingsRef.current = row.generation_settings
+    },
+  })
 
   // ── Print options ──
   const [colorMode, setColorMode]       = useState<"color" | "grayscale" | "bw">("color")
@@ -694,10 +616,7 @@ function PageSetupSection({
     setMargins((prev) => ({ ...prev, [side]: parseFloat(val) || 0 }))
 
   const handleSave = useCallback(async () => {
-    if (!courseId) {
-      setSaveStatus("empty")
-      return
-    }
+    if (!courseId) return
 
     const factor = units === "cm" ? 10 : 25.4
     const marginsMm = {
@@ -706,10 +625,9 @@ function PageSetupSection({
       bottom: margins.bottom * factor,
       left:   margins.left   * factor,
     }
-    const cfg       = computePageConfig(size, orientation, pageCount, marginsMm)
+    const cfg = computePageConfig(size, orientation, pageCount, marginsMm)
 
-    const supabase = createClient()
-    const storedSettings = {
+    const pageSettings = {
       page_size:        size,
       page_orientation: orientation,
       page_count:       pageCount,
@@ -722,21 +640,17 @@ function PageSetupSection({
         crop_marks:      cropMarks,
         page_scaling:    pageScaling,
         custom_scale:    pageScaling === "custom" ? customScale : null,
-        duplex:          duplex,
+        duplex,
         export_quality:  exportQuality,
       },
     }
 
-    const { error } = await supabase
-      .from("courses")
-      .update({ generation_settings: storedSettings })
-      .eq("id", courseId)
+    const { error } = await updateCourseById(courseId, {
+      generation_settings: { ...(existingGenerationSettingsRef.current ?? {}), ...pageSettings },
+      updated_at: new Date().toISOString(),
+    })
 
-    if (error) {
-      setSaveStatus("error")
-    } else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
+    if (!error) {
       onSaved?.(cfg)
     }
   }, [courseId, units, margins, size, orientation, pageCount, onSaved, colorMode, headerFooter, inkSaver, bleed, cropMarks, pageScaling, customScale, duplex, exportQuality])
@@ -1178,17 +1092,13 @@ function LaunchView({
   async function handleLaunch() {
     if (!courseId) return
     setLaunching(true); setError(null)
-    const supabase = createClient()
-    const { error: err } = await supabase
-      .from("courses")
-      .update({
-        visibility_settings: {
-          visible: true, enrollment: true, approval: false,
-          notifications: true, public_discovery: true,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
+    const { error: err } = await updateCourseById(courseId, {
+      visibility_settings: {
+        visible: true, enrollment: true, approval: false,
+        notifications: true, public_discovery: true,
+      },
+      updated_at: new Date().toISOString(),
+    })
     setLaunching(false)
     if (err) setError(err.message)
     else setLaunched(true)
@@ -1394,53 +1304,51 @@ function CourseBuilderPageInner() {
 
   useEffect(() => {
     if (!urlCourseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("id, course_name, course_subtitle, course_description, course_language, course_type, course_image, teacher_id, institution, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout")
-      .eq("id", urlCourseId)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data) {
-          const gs = (data.generation_settings as Record<string, unknown> | null) ?? null
-          const loaded: CourseCreatedData = {
-            title: data.course_name ?? "",
-            subtitle: data.course_subtitle ?? "",
-            description: data.course_description ?? "",
-            language: data.course_language ?? "",
-            courseType: data.course_type ?? "",
-            teacherId: (typeof data.teacher_id === "string" ? data.teacher_id : (typeof gs?.teacher_id === "string" ? gs.teacher_id : "")) ?? "",
-            teacherName: (typeof gs?.teacher_name === "string" ? gs.teacher_name : "") ?? "",
-            institution: data.institution ?? "Independent",
-            imageName: null,
-            imageUrl: data.course_image ?? null,
-          }
-          setInitialEssentials(loaded)
-          setCourseCreatedData(loaded)
-          setCourseTitle(data.course_name ?? "Untitled Course")
-          setCourseId(urlCourseId)
-
-          // Restore page setup from generation_settings
-          const gsForPage = data.generation_settings as Record<string, unknown> | null
-          if (gsForPage?.page_size) {
-            try {
-              const cfg = computePageConfig(
-                gsForPage.page_size as "a4" | "us-letter",
-                (gsForPage.page_orientation as "portrait" | "landscape") ?? "portrait",
-                (gsForPage.page_count as number) ?? 1,
-                (gsForPage.margins_mm as { top: number; right: number; bottom: number; left: number }) ??
-                  { top: 25.4, right: 19.05, bottom: 25.4, left: 19.05 },
-              )
-              setPageConfig(cfg)
-            } catch {
-              // ignore malformed settings
-            }
-          }
-
-          hydrateSectionCompletion(data as Record<string, unknown>)
+    void (async () => {
+      const { data, error } = await selectCourseById<Record<string, unknown>>(
+        urlCourseId,
+        "id, course_name, course_subtitle, course_description, course_language, course_type, course_image, teacher_id, institution, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout",
+      )
+      if (!error && data) {
+        const gs = (data.generation_settings as Record<string, unknown> | null) ?? null
+        const loaded: CourseCreatedData = {
+          title: (data.course_name as string) ?? "",
+          subtitle: (data.course_subtitle as string) ?? "",
+          description: (data.course_description as string) ?? "",
+          language: (data.course_language as string) ?? "",
+          courseType: (data.course_type as string) ?? "",
+          teacherId: (typeof data.teacher_id === "string" ? data.teacher_id : (typeof gs?.teacher_id === "string" ? gs.teacher_id : "")) ?? "",
+          teacherName: (typeof gs?.teacher_name === "string" ? gs.teacher_name : "") ?? "",
+          institution: (data.institution as string) ?? "Independent",
+          imageName: null,
+          imageUrl: (data.course_image as string | null) ?? null,
         }
-        setLoadingCourse(false)
-      })
+        setInitialEssentials(loaded)
+        setCourseCreatedData(loaded)
+        setCourseTitle((data.course_name as string) ?? "Untitled Course")
+        setCourseId(urlCourseId)
+
+        // Restore page setup from generation_settings
+        const gsForPage = data.generation_settings as Record<string, unknown> | null
+        if (gsForPage?.page_size) {
+          try {
+            const cfg = computePageConfig(
+              gsForPage.page_size as "a4" | "us-letter",
+              (gsForPage.page_orientation as "portrait" | "landscape") ?? "portrait",
+              (gsForPage.page_count as number) ?? 1,
+              (gsForPage.margins_mm as { top: number; right: number; bottom: number; left: number }) ??
+                { top: 25.4, right: 19.05, bottom: 25.4, left: 19.05 },
+            )
+            setPageConfig(cfg)
+          } catch {
+            // ignore malformed settings
+          }
+        }
+
+        hydrateSectionCompletion(data)
+      }
+      setLoadingCourse(false)
+    })()
   }, [urlCourseId, hydrateSectionCompletion])
 
   useEffect(() => {
@@ -1452,16 +1360,13 @@ function CourseBuilderPageInner() {
       return
     }
     completionFetchRef.current = { courseId, at: now }
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("course_name, course_description, course_language, course_type, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) return
-        hydrateSectionCompletion(data as Record<string, unknown>)
-      })
+    void selectCourseById<Record<string, unknown>>(
+      courseId,
+      "course_name, course_description, course_language, course_type, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout",
+    ).then(({ data, error }) => {
+      if (error || !data) return
+      hydrateSectionCompletion(data)
+    })
   }, [courseId, activeSection, hydrateSectionCompletion])
 
   useEffect(() => {

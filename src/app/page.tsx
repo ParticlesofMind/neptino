@@ -69,7 +69,7 @@ export default function Home() {
             <div className="px-5 pt-3 pb-1">
               <h2 className="text-base font-semibold text-[#171717]">Orbit through a Neptino session.</h2>
               <p className="mt-1.5 text-sm text-[#525252] leading-relaxed">
-                We render entire courses on a high-performance PIXI.js canvas. Watch how builders plan, teach, and track progress in seconds.
+                We render entire courses on a high-performance canvas. Watch how builders plan, teach, and track progress in seconds.
               </p>
             </div>
             <ul className="mt-3 divide-y divide-[#f5f5f5]">

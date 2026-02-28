@@ -567,15 +567,15 @@ function LessonTemplatePreview({
   const densityConfig = {
     compact: {
       containerPadding: "p-0",
-      areaHeightClass: "h-8",
+      areaHeightClass: "min-h-8",
     },
     balanced: {
       containerPadding: "p-1",
-      areaHeightClass: "h-10",
+      areaHeightClass: "min-h-10",
     },
     comfortable: {
       containerPadding: "p-1.5 md:p-2",
-      areaHeightClass: "h-12",
+      areaHeightClass: "min-h-12",
     },
   }[density]
   const orderedBlocks = (() => {
@@ -597,7 +597,7 @@ function LessonTemplatePreview({
   })()
 
   return (
-    <div className={`h-full ${scrollable ? "overflow-auto" : "overflow-hidden"} bg-background ${densityConfig.containerPadding}`}>
+    <div className={`bg-background ${densityConfig.containerPadding}`}>
       <div className="flex w-full flex-col" style={{ rowGap: `${Math.max(0, bodyBlockGap)}px` }}>
             {enabled.header && (
               <DocumentSection title="Header" className="" style={{ order: sectionOrder.header }}>

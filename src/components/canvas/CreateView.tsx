@@ -124,6 +124,7 @@ export function CreateView({
     { id: "footer", name: "Footer Meta", visible: true, locked: true, indent: 0 },
   ])
   const [currentPage, setCurrentPage] = useState(1)
+  const [focusPageRequest, setFocusPageRequest] = useState<number | null>(null)
   const {
     courseTitle,
     courseType,

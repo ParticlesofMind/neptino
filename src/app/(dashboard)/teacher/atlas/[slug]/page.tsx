@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PageSection } from "@/components/ui/page-section"
 import { createClient } from "@/lib/supabase/server"
+import type { EntityType, AtlasLayer, AtlasContentType } from "@/types/atlas"
 
 type RouteParams = {
   slug: string
@@ -13,7 +14,8 @@ type DetailItemRow = {
   id: string
   wikidata_id: string | null
   title: string
-  knowledge_type: string
+  knowledge_type: EntityType
+  sub_type: string | null
   domain: string | null
   secondary_domains: string[] | null
   era_group: string | null
@@ -28,7 +30,8 @@ type DetailItemRow = {
 type MediaItemRow = {
   id: string
   item_id?: string
-  media_type: string
+  media_type: AtlasContentType
+  layer: AtlasLayer | null
   title: string
   description: string | null
   url: string | null
@@ -43,7 +46,7 @@ function getSingleParam(value: string | string[] | undefined): string {
 
 function buildBackQueryString(searchParams: SearchParams): string {
   const params = new URLSearchParams()
-  const keys = ["q", "domain", "type", "era", "depth", "media", "display", "page"]
+  const keys = ["q", "domain", "type", "era", "depth", "media", "layer", "display", "page"]
 
   for (const key of keys) {
     const value = getSingleParam(searchParams[key])
@@ -80,7 +83,7 @@ function metadataEntries(metadata: Record<string, unknown> | null): Array<[strin
     })
 }
 
-export default async function TeacherEncyclopediaDetailPage({
+export default async function TeacherAtlasDetailPage({
   params,
   searchParams,
 }: {
@@ -150,13 +153,13 @@ export default async function TeacherEncyclopediaDetailPage({
     supabase
       .from("encyclopedia_items")
       .select(
-        "id,wikidata_id,title,knowledge_type,domain,secondary_domains,era_group,era_label,depth,summary,tags,metadata,created_at",
+        "id,wikidata_id,title,knowledge_type,sub_type,domain,secondary_domains,era_group,era_label,depth,summary,tags,metadata,created_at",
       )
       .eq("id", slug)
       .single(),
     supabase
       .from("encyclopedia_media")
-      .select("id,media_type,title,description,url,item_id")
+      .select("id,media_type,layer,title,description,url,item_id")
       .eq("item_id", slug)
       .order("media_type", { ascending: true })
       .order("title", { ascending: true }),
@@ -189,14 +192,14 @@ export default async function TeacherEncyclopediaDetailPage({
   return (
     <PageSection
       title={item.title}
-      description="Encyclopedia detail view with linked media and metadata."
+      description="Atlas knowledge detail view with linked content and metadata."
     >
       <div className="mb-4 flex items-center justify-between gap-3">
         <Link
-          href={backQuery ? `/teacher/encyclopedia?${backQuery}` : "/teacher/encyclopedia"}
+          href={backQuery ? `/teacher/atlas?${backQuery}` : "/teacher/atlas"}
           className="rounded-md border border-border/40 px-3 py-1.5 text-xs hover:bg-accent/40"
         >
-          Back to encyclopedia
+          Back to Atlas
         </Link>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-accent/60 px-2.5 py-1 text-xs text-muted-foreground">
@@ -204,7 +207,7 @@ export default async function TeacherEncyclopediaDetailPage({
           </span>
           {previousId && (
             <Link
-              href={`/teacher/encyclopedia/${previousId}?${backQuery}`}
+              href={`/teacher/atlas/${previousId}?${backQuery}`}
               className="rounded-md border border-border/40 px-2.5 py-1 text-xs hover:bg-accent/40"
             >
               Previous
@@ -212,7 +215,7 @@ export default async function TeacherEncyclopediaDetailPage({
           )}
           {nextId && (
             <Link
-              href={`/teacher/encyclopedia/${nextId}?${backQuery}`}
+              href={`/teacher/atlas/${nextId}?${backQuery}`}
               className="rounded-md border border-border/40 px-2.5 py-1 text-xs hover:bg-accent/40"
             >
               Next
@@ -326,7 +329,7 @@ export default async function TeacherEncyclopediaDetailPage({
               {related.map((entry) => (
                 <Link
                   key={entry.id}
-                  href={`/teacher/encyclopedia/${entry.id}?${backQuery}`}
+                  href={`/teacher/atlas/${entry.id}?${backQuery}`}
                   className="block rounded-md border border-border/30 bg-background/80 p-3 hover:bg-accent/40"
                 >
                   <p className="text-sm font-medium text-foreground">{entry.title}</p>

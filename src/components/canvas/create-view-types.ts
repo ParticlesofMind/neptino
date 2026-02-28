@@ -84,8 +84,6 @@ export interface MediaAsset {
   url: string
 }
 
-// ── Added from PixiCanvas ─────────────────────────────────────────────────────
-
 export interface CanvasPageConfig {
   widthPx:   number
   heightPx:  number

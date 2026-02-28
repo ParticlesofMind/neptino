@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { TimelineJsCard } from "@/components/encyclopedia/timelinejs-card"
+import type { EntityType, AtlasLayer, AtlasContentType } from "@/types/atlas"
+import { ENTITY_TYPES, MEDIA_TYPES, PRODUCT_TYPES, ACTIVITY_TYPES, getLayerName } from "@/types/atlas"
 
 const PAGE_SIZE = 24
 
@@ -10,7 +12,8 @@ type EncyclopediaItemRow = {
   id: string
   wikidata_id: string | null
   title: string
-  knowledge_type: string
+  knowledge_type: EntityType
+  sub_type: string | null
   domain: string | null
   secondary_domains: string[] | null
   era_group: string | null
@@ -47,7 +50,8 @@ type WikidataEntityClaims = {
 type MediaRow = {
   id: string
   item_id: string
-  media_type: string
+  media_type: AtlasContentType
+  layer: AtlasLayer | null
   title: string
   description: string | null
   url: string | null
@@ -57,7 +61,8 @@ type MediaRow = {
 type PanelItemRow = {
   id: string
   title: string
-  knowledge_type: string
+  knowledge_type: EntityType
+  sub_type: string | null
   domain: string | null
   era_label: string | null
   depth: string | null
@@ -68,7 +73,8 @@ type PanelItemRow = {
 
 type PanelMediaRow = {
   id: string
-  media_type: string
+  media_type: AtlasContentType
+  layer: AtlasLayer | null
   title: string
   description: string | null
   url: string | null
@@ -108,7 +114,7 @@ function buildQueryString(
   overrides: Record<string, string | null | undefined> = {},
 ): string {
   const params = new URLSearchParams()
-  const keys = ["q", "domain", "type", "era", "media", "display", "page", "item"]
+  const keys = ["q", "domain", "type", "era", "media", "layer", "display", "page", "item"]
 
   for (const key of keys) {
     const value = getSingleParam(searchParams[key])
@@ -442,7 +448,7 @@ async function getWikidataCardData(wikidataId: string, expectedTitle: string): P
   }
 }
 
-export default async function TeacherEncyclopediaPage({
+export default async function TeacherAtlasPage({
   searchParams,
 }: {
   searchParams?: Promise<SearchParams>
@@ -456,6 +462,7 @@ export default async function TeacherEncyclopediaPage({
   const selectedType = normalizeFilter(getSingleParam(params.type))
   const selectedEra = normalizeFilter(getSingleParam(params.era))
   const selectedMediaType = normalizeFilter(getSingleParam(params.media))
+  const selectedLayer = normalizeFilter(getSingleParam(params.layer))
 
   const eraOrder = ["ancient", "early-modern", "modern", "contemporary"]
   const eraLabel: Record<string, string> = {
@@ -473,11 +480,12 @@ export default async function TeacherEncyclopediaPage({
 
   const supabase = await createClient()
 
-  const [domainOptionsRes, typeOptionsRes, eraOptionsRes, mediaOptionsRes] = await Promise.all([
+  const [domainOptionsRes, typeOptionsRes, eraOptionsRes, mediaOptionsRes, layerOptionsRes] = await Promise.all([
     supabase.from("encyclopedia_items").select("domain").not("domain", "is", null),
     supabase.from("encyclopedia_items").select("knowledge_type"),
     supabase.from("encyclopedia_items").select("era_group").not("era_group", "is", null),
-    supabase.from("encyclopedia_media").select("media_type"),
+    supabase.from("encyclopedia_media").select("media_type,layer").not("layer", "is", null),
+    supabase.from("encyclopedia_media").select("layer").not("layer", "is", null),
   ])
 
   const domainOptions = uniqueSorted((domainOptionsRes.data ?? []).map((row) => row.domain))
@@ -488,6 +496,7 @@ export default async function TeacherEncyclopediaPage({
     ...rawEraOptions.filter((era) => !eraOrder.includes(era)),
   ]
   const mediaOptions = uniqueSorted((mediaOptionsRes.data ?? []).map((row) => row.media_type))
+  const layerOptions = uniqueSorted((layerOptionsRes.data ?? []).map((row) => row.layer?.toString()))
 
   let itemIdsForMediaType: string[] | null = null
   if (selectedMediaType) {
@@ -499,12 +508,25 @@ export default async function TeacherEncyclopediaPage({
     itemIdsForMediaType = [...new Set((mediaFiltered.data ?? []).map((row) => row.item_id))]
   }
 
+  let itemIdsForLayer: string[] | null = null
+  if (selectedLayer) {
+    const layerNum = Number.parseInt(selectedLayer, 10)
+    if (!Number.isNaN(layerNum)) {
+      const layerFiltered = await supabase
+        .from("encyclopedia_media")
+        .select("item_id")
+        .eq("layer", layerNum)
+
+      itemIdsForLayer = [...new Set((layerFiltered.data ?? []).map((row) => row.item_id))]
+    }
+  }
+
   const buildItemsQuery = (page: number) => {
     const from = (page - 1) * PAGE_SIZE
     const to = from + PAGE_SIZE - 1
     let query = supabase
       .from("encyclopedia_items")
-      .select("id,wikidata_id,title,knowledge_type,domain,secondary_domains,era_group,era_label,depth,summary,tags,metadata", { count: "exact" })
+      .select("id,wikidata_id,title,knowledge_type,sub_type,domain,secondary_domains,era_group,era_label,depth,summary,tags,metadata", { count: "exact" })
       .order("title", { ascending: true })
       .range(from, to)
 
@@ -529,6 +551,14 @@ export default async function TeacherEncyclopediaPage({
         query = query.in("id", ["__no_items__"])
       } else {
         query = query.in("id", itemIdsForMediaType)
+      }
+    }
+
+    if (itemIdsForLayer) {
+      if (itemIdsForLayer.length === 0) {
+        query = query.in("id", ["__no_items__"])
+      } else {
+        query = query.in("id", itemIdsForLayer)
       }
     }
 
@@ -573,7 +603,7 @@ export default async function TeacherEncyclopediaPage({
   if (itemIds.length > 0) {
     const { data: mediaRows } = await supabase
       .from("encyclopedia_media")
-      .select("id,item_id,media_type,title,description,url,metadata")
+      .select("id,item_id,media_type,layer,title,description,url,metadata")
       .in("item_id", itemIds)
 
     for (const row of (mediaRows ?? []) as MediaRow[]) {
@@ -630,12 +660,12 @@ export default async function TeacherEncyclopediaPage({
     const [{ data: panelItemData }, { data: panelMediaRows }] = await Promise.all([
       supabase
         .from("encyclopedia_items")
-        .select("id,title,knowledge_type,domain,era_label,depth,summary,tags,metadata")
+        .select("id,title,knowledge_type,sub_type,domain,era_label,depth,summary,tags,metadata")
         .eq("id", selectedItemSlug)
         .single(),
       supabase
         .from("encyclopedia_media")
-        .select("id,media_type,title,description,url")
+        .select("id,media_type,layer,title,description,url")
         .eq("item_id", selectedItemSlug)
         .order("media_type", { ascending: true })
         .order("title", { ascending: true }),
@@ -653,8 +683,17 @@ export default async function TeacherEncyclopediaPage({
   }
 
   return (
-    <section className="space-y-4">
-      <form className="rounded-2xl border border-border/30 bg-background/70 p-3 shadow-sm" method="get">
+    <section className="space-y-6">
+      <div className="mb-8 space-y-2">
+        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">
+          Atlas
+        </h1>
+        <p className="text-base text-muted-foreground max-w-2xl">
+          Educational knowledge organized in 4 layers: <span className="font-semibold text-foreground">Entities</span>, <span className="font-semibold text-foreground">Media Types</span>, <span className="font-semibold text-foreground">Products</span>, and <span className="font-semibold text-foreground">Activities</span>
+        </p>
+      </div>
+
+      <form className="rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-background to-accent/10 p-5 shadow-lg" method="get">
         <input type="hidden" name="page" value="1" />
         <input type="hidden" name="display" value={displayMode} />
         <input type="hidden" name="era" value={selectedEra ?? "all"} />
@@ -690,11 +729,28 @@ export default async function TeacherEncyclopediaPage({
           </select>
 
           <select
+            name="layer"
+            defaultValue={selectedLayer ?? "all"}
+            className="min-w-[150px] rounded-lg border border-border/30 bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">All layers</option>
+            {layerOptions.map((option) => {
+              const layerNum = Number.parseInt(option, 10)
+              const layerLabel = layerNum === 2 ? "Layer 2 — Media" :
+                                layerNum === 3 ? "Layer 3 — Products" :
+                                layerNum === 4 ? "Layer 4 — Activities" : option
+              return (
+                <option key={option} value={option}>{layerLabel}</option>
+              )
+            })}
+          </select>
+
+          <select
             name="media"
             defaultValue={selectedMediaType ?? "all"}
             className="min-w-[160px] rounded-lg border border-border/30 bg-background px-3 py-2 text-sm"
           >
-            <option value="all">All media types</option>
+            <option value="all">All content types</option>
             {mediaOptions.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
@@ -702,7 +758,7 @@ export default async function TeacherEncyclopediaPage({
 
           <button
             type="submit"
-            className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            className="shrink-0 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:shadow-lg hover:scale-105"
           >
             Apply filters
           </button>
@@ -710,19 +766,19 @@ export default async function TeacherEncyclopediaPage({
 
       </form>
 
-      <div className="rounded-xl border border-border/25 bg-accent/15 px-3 py-2.5">
-        <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          <span>Era timeline</span>
-          <div className="h-px flex-1 bg-border/30" />
-          <span>Older → Newer</span>
+      <div className="rounded-xl border-2 border-primary/15 bg-gradient-to-r from-accent/20 via-accent/10 to-accent/20 px-4 py-3.5 shadow-sm">
+        <div className="mb-3 flex items-center gap-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+          <span>Era Timeline</span>
+          <div className="h-0.5 flex-1 bg-gradient-to-r from-border/40 via-border/20 to-transparent" />
+          <span className="text-[10px] text-muted-foreground">Older → Newer</span>
         </div>
-        <div className="flex items-center gap-1 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <Link
-            href={`/teacher/encyclopedia?${buildQueryString(params, { era: null, page: "1", item: null })}`}
+            href={`/teacher/atlas?${buildQueryString(params, { era: null, page: "1", item: null })}`}
             className={
               !selectedEra
-                ? "shrink-0 rounded-full border border-primary/40 bg-primary/15 px-3 py-1.5 text-xs font-medium text-foreground"
-                : "shrink-0 rounded-full border border-border/30 bg-background/80 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/40"
+                ? "shrink-0 rounded-full border-2 border-primary bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-md transition-all hover:shadow-lg"
+                : "shrink-0 rounded-full border-2 border-border/40 bg-background px-4 py-2 text-xs font-medium text-muted-foreground transition-all hover:border-primary/50 hover:bg-accent/60 hover:text-foreground"
             }
           >
             Any era
@@ -732,11 +788,11 @@ export default async function TeacherEncyclopediaPage({
             return (
               <Link
                 key={era}
-                href={`/teacher/encyclopedia?${buildQueryString(params, { era, page: "1", item: null })}`}
+                href={`/teacher/atlas?${buildQueryString(params, { era, page: "1", item: null })}`}
                 className={
                   isActive
-                    ? "shrink-0 rounded-full border border-primary/40 bg-primary/15 px-3 py-1.5 text-xs font-medium text-foreground"
-                    : "shrink-0 rounded-full border border-border/30 bg-background/80 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/40"
+                    ? "shrink-0 rounded-full border-2 border-primary bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-md transition-all hover:shadow-lg"
+                    : "shrink-0 rounded-full border-2 border-border/40 bg-background px-4 py-2 text-xs font-medium text-muted-foreground transition-all hover:border-primary/50 hover:bg-accent/60 hover:text-foreground"
                 }
               >
                 <span>{eraLabel[era] ?? era}</span>
@@ -753,7 +809,7 @@ export default async function TeacherEncyclopediaPage({
         </span>
         <div className="flex items-center gap-1 rounded-lg border border-border/30 bg-background p-1">
           <Link
-            href={`/teacher/encyclopedia?${buildQueryString(params, { display: "small", page: String(activePage) })}`}
+            href={`/teacher/atlas?${buildQueryString(params, { display: "small", page: String(activePage) })}`}
             className={displayMode === "small"
               ? "rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
               : "rounded-md px-3 py-1 text-xs text-muted-foreground hover:bg-accent/50"
@@ -762,7 +818,7 @@ export default async function TeacherEncyclopediaPage({
             Small
           </Link>
           <Link
-            href={`/teacher/encyclopedia?${buildQueryString(params, { display: "large", page: String(activePage) })}`}
+            href={`/teacher/atlas?${buildQueryString(params, { display: "large", page: String(activePage) })}`}
             className={displayMode === "large"
               ? "rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
               : "rounded-md px-3 py-1 text-xs text-muted-foreground hover:bg-accent/50"
@@ -786,7 +842,7 @@ export default async function TeacherEncyclopediaPage({
             </div>
             <div className="flex items-center gap-2">
               <Link
-                href={`/teacher/encyclopedia/${panelItem.id}?${buildQueryString(params, {
+                href={`/teacher/atlas/${panelItem.id}?${buildQueryString(params, {
                   page: String(activePage),
                   display: displayMode,
                   item: null,
@@ -796,7 +852,7 @@ export default async function TeacherEncyclopediaPage({
                 Full page
               </Link>
               <Link
-                href={`/teacher/encyclopedia?${buildQueryString(params, { item: null, page: String(activePage), display: displayMode })}`}
+                href={`/teacher/atlas?${buildQueryString(params, { item: null, page: String(activePage), display: displayMode })}`}
                 className="rounded-md border border-border/40 px-3 py-1.5 text-xs hover:bg-accent/40"
               >
                 Close
@@ -1039,7 +1095,7 @@ export default async function TeacherEncyclopediaPage({
                             {item.tags.slice(0, 7).map((tag) => (
                               <Link
                                 key={`${item.id}-related-${tag}`}
-                                href={`/teacher/encyclopedia?${buildQueryString(params, {
+                                href={`/teacher/atlas?${buildQueryString(params, {
                                   q: tag,
                                   page: "1",
                                   item: null,
@@ -1172,7 +1228,7 @@ export default async function TeacherEncyclopediaPage({
       {availableCount > PAGE_SIZE && (
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <Link
-            href={`/teacher/encyclopedia?${buildQueryString(params, { page: String(Math.max(1, activePage - 1)), display: displayMode })}`}
+            href={`/teacher/atlas?${buildQueryString(params, { page: String(Math.max(1, activePage - 1)), display: displayMode })}`}
             className={`rounded-md border border-border/30 px-3 py-1.5 text-xs ${activePage <= 1 ? "pointer-events-none opacity-50" : "hover:bg-accent"}`}
           >
             Previous
@@ -1181,7 +1237,7 @@ export default async function TeacherEncyclopediaPage({
           {visiblePages.map((pageNumber) => (
             <Link
               key={pageNumber}
-              href={`/teacher/encyclopedia?${buildQueryString(params, { page: String(pageNumber), display: displayMode })}`}
+              href={`/teacher/atlas?${buildQueryString(params, { page: String(pageNumber), display: displayMode })}`}
               className={
                 pageNumber === activePage
                   ? "rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
@@ -1193,7 +1249,7 @@ export default async function TeacherEncyclopediaPage({
           ))}
 
           <Link
-            href={`/teacher/encyclopedia?${buildQueryString(params, { page: String(Math.min(totalPages, activePage + 1)), display: displayMode })}`}
+            href={`/teacher/atlas?${buildQueryString(params, { page: String(Math.min(totalPages, activePage + 1)), display: displayMode })}`}
             className={`rounded-md border border-border/30 px-3 py-1.5 text-xs ${activePage >= totalPages ? "pointer-events-none opacity-50" : "hover:bg-accent"}`}
           >
             Next
@@ -1202,8 +1258,13 @@ export default async function TeacherEncyclopediaPage({
       )}
 
       {displayedCardsCount === 0 && (
-        <div className="mt-6 rounded-xl border border-border/30 border-dashed p-8 text-center text-sm text-muted-foreground">
-          No matching encyclopedia entries.
+        <div className="mt-8 rounded-2xl border-2 border-dashed border-border/40 bg-gradient-to-br from-accent/10 to-background p-12 text-center">
+          <div className="mx-auto max-w-md space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">No Atlas Entries Found</h3>
+            <p className="text-sm text-muted-foreground">
+              Try adjusting your filters or search terms to discover more educational content across our 4-layer knowledge system.
+            </p>
+          </div>
         </div>
       )}
     </section>

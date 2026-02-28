@@ -54,7 +54,7 @@ export function TemplateSurface({
   if (!currentLessonPage) return null
 
   return (
-    <div className="relative h-full w-full bg-transparent">
+    <div className="relative w-full bg-transparent">
       {hasHeaderBlock && (
         <div
           className={`absolute top-0 overflow-hidden border-b border-border/60 ${headerPaddingClass}`}
@@ -100,7 +100,7 @@ export function TemplateSurface({
       )}
 
       <div
-        className="absolute overflow-hidden"
+        className="absolute overflow-auto"
         style={{
           left: canvasConfig.margins.left,
           right: canvasConfig.margins.right,
@@ -108,7 +108,7 @@ export function TemplateSurface({
           bottom: hasFooterBlock ? canvasConfig.margins.bottom : 0,
         }}
       >
-        <div className="h-full w-full overflow-hidden bg-background/85">
+        <div className="w-full bg-background/85">
           <TemplateBlueprint
             type={currentLessonPage.templateType as never}
             enabled={perPageTemplateEnabledMap}
