@@ -4,9 +4,6 @@ const INPUT_CLASS =
   "w-full rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150"
 
 /** Wrapper for an icon-prefixed auth input field. */
-export function AuthInputWrapper({ children }: { children: ReactNode }) {
-  return <div className="relative">{children}</div>
-}
 
 /** Input field used inside login / signup forms. Supply `icon` to prepend an SVG. */
 export function AuthInput({
