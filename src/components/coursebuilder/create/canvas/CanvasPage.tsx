@@ -25,7 +25,6 @@ import { HeaderBlock } from "../blocks/Header"
 import { FooterBlock } from "../blocks/Footer"
 import { useCanvasOverflow } from "../hooks/useCanvasOverflow"
 import { useCanvasStore } from "../store/canvasStore"
-import { useCourseStore } from "../store/courseStore"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -58,12 +57,12 @@ export function CanvasPage({
   const zoomLevel   = useCanvasStore((s) => s.zoomLevel)
   const activeCanvasId = useCanvasStore((s) => s.activeCanvasId)
   const setActiveCanvas = useCanvasStore((s) => s.setActiveCanvas)
-  const setCanvasMeasuredHeight = useCourseStore((s) => s.setCanvasMeasuredHeight)
 
   const scale = zoomLevel / 100
 
-  // Overflow detection — visual indicator only (amber ring).
-  // Page-append is disabled; see useCanvasOverflow for rationale.
+  // Overflow detection: detects when body content exceeds the available height
+  // and automatically splits the topic list, trimming this page and appending
+  // a continuation canvas page for the remaining topics.
   const isOverflowing = useCanvasOverflow({
     canvasId:   page.id,
     sessionId:  page.sessionId,
@@ -120,18 +119,15 @@ export function CanvasPage({
           left:   dims.margins.left,
           overflow: "hidden",
         }}
-        onScroll={() => {
-          if (bodyRef.current) {
-            setCanvasMeasuredHeight(page.id, bodyRef.current.scrollHeight)
-          }
-        }}
       >
         <div ref={contentRef} className="w-full">
           <TemplateRenderer
             sessionId={session.id as SessionId}
+            canvasId={page.id}
             templateType={session.templateType as TemplateType}
             fieldValues={fieldValues}
             data={bodyData}
+            fieldEnabled={session.fieldEnabled}
             allowedBlocks={page.blockKeys}
           />
         </div>

@@ -4,60 +4,237 @@
  * useCanvasOverflow
  *
  * Monitors the body content area of a single canvas page with a ResizeObserver.
- * When `scrollHeight > clientHeight` the canvas is overflowing — the amber
- * ring indicator is shown and the caller receives `true`.
  *
- * Automatic page-append is intentionally disabled until ContentBlock supports
- * a range prop for slice-based pagination (rendering task[n..m] per page).
- * Without that, every continuation page renders all tasks, triggering another
- * overflow and creating an infinite append chain.
+ * When the rendered content height exceeds the available body height the hook:
  *
- * The hook is debounced (100 ms) to avoid thrashing during rapid layout changes.
+ *  1. Marks the canvas as overflowing in canvasStore (amber ring).
+ *  2. Performs a DOM split: queries `[data-topic-idx]` elements inside
+ *     contentRef, finds the last topic whose bottom fits within the available
+ *     height, and then:
+ *       a. Narrows this page\u2019s contentTopicRange to [currentStart, splitIdx).
+ *       b. Appends a new continuation canvas page starting at splitIdx.
+ *
+ * A per-instance ref (`splitGuard`) prevents re-entrant splits.  Once a split
+ * has been dispatched the guard is held for 600 ms to let React re-render the
+ * trimmed content; if that render still overflows (e.g. a single topic is
+ * larger than one page) the guard is released and the process repeats for the
+ * next split candidate, always making progress.
+ *
+ * The check is debounced at 120 ms to avoid thrashing during rapid layout
+ * changes (cards dropped, zoom changed, etc.).
  */
 
 import { useEffect, useRef, useCallback } from "react"
 import type { CanvasId, SessionId } from "../types"
 import { useCanvasStore } from "../store/canvasStore"
+import { useCourseStore } from "../store/courseStore"
 
 interface UseCanvasOverflowOptions {
   canvasId:   CanvasId
   sessionId:  SessionId
-  /** Ref to the body container — used for available height (clientHeight) */
+  /** Ref to the body container \u2014 used for available height (clientHeight) */
   bodyRef:    React.RefObject<HTMLElement | null>
-  /** Ref to the content inside the body — observed for natural height growth */
+  /** Ref to the content inside the body \u2014 observed for natural height growth */
   contentRef: React.RefObject<HTMLElement | null>
-  /** If false the hook is a no-op (e.g. last page — prevent infinite append) */
+  /** If false the hook is a no-op */
   enabled?:   boolean
 }
 
 export function useCanvasOverflow({
   canvasId,
-  sessionId: _sessionId,
+  sessionId,
   bodyRef,
   contentRef,
   enabled = true,
 }: UseCanvasOverflowOptions) {
-  const markCanvasOverflow = useCanvasStore((s) => s.markCanvasOverflow)
-  const overflowingIds     = useCanvasStore((s) => s.overflowingCanvasIds)
+  const markCanvasOverflow      = useCanvasStore((s) => s.markCanvasOverflow)
+  const overflowingIds          = useCanvasStore((s) => s.overflowingCanvasIds)
+  const setCanvasTopicRange     = useCourseStore((s) => s.setCanvasTopicRange)
+  const setCanvasObjectiveRange = useCourseStore((s) => s.setCanvasObjectiveRange)
+  const appendCanvasPage        = useCourseStore((s) => s.appendCanvasPage)
 
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Read the current contentTopicRange for this canvas from the store snapshot.
+  // We read via getState() inside the callback (not a selector) to always get
+  // the latest value without creating a reactive dependency that causes
+  // infinite check loops.
+  const getTopicRangeStart = useCallback((): number => {
+    const sessions = useCourseStore.getState().sessions
+    const session = sessions.find((s) => s.id === sessionId)
+    const canvas  = session?.canvases.find((c) => c.id === canvasId)
+    return canvas?.contentTopicRange?.start ?? 0
+  }, [canvasId, sessionId])
+
+  const getObjectiveRangeStart = useCallback((): number => {
+    const sessions = useCourseStore.getState().sessions
+    const session = sessions.find((s) => s.id === sessionId)
+    const canvas  = session?.canvases.find((c) => c.id === canvasId)
+    return canvas?.contentObjectiveRange?.start ?? 0
+  }, [canvasId, sessionId])
+
+  const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Prevent re-entrant splits: held for ~600 ms after a split is dispatched.
+  const splitGuard   = useRef(false)
 
   const check = useCallback(() => {
     const body    = bodyRef.current
     const content = contentRef.current
     if (!body || !content || !enabled) return
 
-    const overflowing = content.scrollHeight - body.clientHeight > 1
-    markCanvasOverflow(canvasId, overflowing)
+    const overflow = content.scrollHeight - body.clientHeight > 2
+    markCanvasOverflow(canvasId, overflow)
 
-    // NOTE: automatic page-append is intentionally disabled.
-    // ContentBlock renders all tasks on every page it appears on, so appending
-    // a continuation page with the same blockKeys always overflows again —
-    // creating an infinite append chain (observed as 100+ pages).
-    // The amber ring overflow indicator is the current signal; proper
-    // slice-based pagination (rendering task[n..m] per page) will re-enable
-    // this once content blocks support a range prop.
-  }, [bodyRef, contentRef, enabled, canvasId, markCanvasOverflow])
+    if (!overflow || splitGuard.current) return
+
+    // ── Topic-split logic ────────────────────────────────────────────────────
+    //
+    // Query topic containers tagged with data-topic-idx.  Each element\u2019s
+    // offsetTop + offsetHeight (relative to contentRef) tells us where it ends.
+    // We walk from the last topic backwards to find the deepest one that still
+    // fits inside the available body height.
+
+    const available = body.clientHeight
+    const topicEls  = Array.from(
+      content.querySelectorAll<HTMLElement>("[data-topic-idx]"),
+    ).sort((a, b) => Number(a.dataset.topicIdx) - Number(b.dataset.topicIdx))
+
+    // Need at least 2 topics to be able to split at topic boundaries.
+    // With only 1 topic, fall back to objective-level splitting so that a
+    // large single-topic page is still paginated rather than silently clipped.
+    if (topicEls.length < 2) {
+      const objEls = Array.from(
+        content.querySelectorAll<HTMLElement>("[data-objective-idx]"),
+      ).sort((a, b) => Number(a.dataset.objectiveIdx) - Number(b.dataset.objectiveIdx))
+
+      // Need at least 2 visible objectives to perform a split.
+      if (objEls.length < 2) return
+
+      let splitAtObjIdx: number | null = null
+      for (let i = objEls.length - 1; i >= 0; i--) {
+        const el = objEls[i]
+        if (!el) continue
+        const elBottom = el.offsetTop + el.offsetHeight
+        if (elBottom <= available) {
+          splitAtObjIdx = Number(el.dataset.objectiveIdx) + 1
+          break
+        }
+      }
+
+      if (splitAtObjIdx === null || splitAtObjIdx <= 0) return
+
+      const currentObjStart = getObjectiveRangeStart()
+      if (splitAtObjIdx <= currentObjStart) return
+
+      const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
+      const canvasSnap  = sessionSnap?.canvases.find((c) => c.id === canvasId)
+      const currentObjEnd   = canvasSnap?.contentObjectiveRange?.end
+      const currentTopicStart = canvasSnap?.contentTopicRange?.start ?? 0
+      const currentTopicEnd   = canvasSnap?.contentTopicRange?.end
+
+      const continuationObjExists = sessionSnap?.canvases.some(
+        (c) => c.id !== canvasId && c.contentObjectiveRange?.start === splitAtObjIdx,
+      )
+
+      if (currentObjEnd === splitAtObjIdx && continuationObjExists) return
+
+      splitGuard.current = true
+
+      // Narrow this page's objective range to [currentObjStart, splitAtObjIdx).
+      setCanvasObjectiveRange(canvasId, { start: currentObjStart, end: splitAtObjIdx })
+
+      // Append a continuation page with the same topic range + new objective start.
+      if (!continuationObjExists) {
+        appendCanvasPage(sessionId, currentTopicStart, {
+          topicEnd: currentTopicEnd,
+          objectiveStart: splitAtObjIdx,
+        })
+      }
+
+      setTimeout(() => { splitGuard.current = false }, 600)
+      return
+    }
+
+    // Find the last topic whose bottom fits inside the available height.
+    //
+    // IMPORTANT: do NOT use getBoundingClientRect here.  That method returns
+    // viewport-pixel coordinates which are affected by the canvas outer div's
+    // `transform: scale()`.  At zoom != 100 %, elBottom would be
+    // proportionally smaller than the CSS-pixel `available`, so every topic
+    // would appear to fit — producing a split point of topics.length, a no-op
+    // trim that still calls appendCanvasPage endlessly.
+    //
+    // `el.offsetTop` + `el.offsetHeight` returns CSS pixels relative to
+    // el.offsetParent, which is the `position: absolute` bodyRef (the nearest
+    // positioned ancestor).  These values are unaffected by CSS transforms.
+
+    let splitAtAbsoluteIdx: number | null = null
+    for (let i = topicEls.length - 1; i >= 0; i--) {
+      const el       = topicEls[i]
+      if (!el) continue
+      const elBottom = el.offsetTop + el.offsetHeight // CSS px from bodyRef top
+
+      // The first element from the end that fits defines the split boundary.
+      // splitAtAbsoluteIdx is the index of the FIRST topic that should appear
+      // on the NEXT page (i.e. topic i+1).
+      if (elBottom <= available) {
+        const absIdx = Number(el.dataset.topicIdx)
+        splitAtAbsoluteIdx = absIdx + 1 // next page starts after this topic
+        break
+      }
+    }
+
+    // If every single topic overflows even individually, we can't split further.
+    if (splitAtAbsoluteIdx === null || splitAtAbsoluteIdx <= 0) return
+
+    const currentStart = getTopicRangeStart()
+
+    // Nothing to do if the split point equals the current start (degenerate).
+    if (splitAtAbsoluteIdx <= currentStart) return
+
+    // Resolve the current end of this page's range so we can detect whether
+    // this would be a no-op split (splitAtAbsoluteIdx equals the existing end)
+    // or a duplicate continuation page (a page with that start already exists).
+    const sessions = useCourseStore.getState().sessions
+    const session  = sessions.find((s) => s.id === sessionId)
+    const canvas   = session?.canvases.find((c) => c.id === canvasId)
+    const currentEnd = canvas?.contentTopicRange?.end
+
+    // If the range wouldn't actually change, skip the store update but still
+    // guard against appending another page for the same start index.
+    const continuationAlreadyExists = session?.canvases.some(
+      (c) => c.id !== canvasId && c.contentTopicRange?.start === splitAtAbsoluteIdx,
+    )
+
+    if (currentEnd === splitAtAbsoluteIdx && continuationAlreadyExists) return
+
+    // Acquire the split guard to prevent re-entrancy.
+    splitGuard.current = true
+
+    // a) Narrow this page to [currentStart, splitAtAbsoluteIdx).
+    setCanvasTopicRange(canvasId, { start: currentStart, end: splitAtAbsoluteIdx })
+
+    // b) Append a continuation page starting from splitAtAbsoluteIdx, but only
+    //    if one doesn't already exist (prevents duplicate pages on re-split).
+    if (!continuationAlreadyExists) {
+      appendCanvasPage(sessionId, splitAtAbsoluteIdx)
+    }
+
+    // Release the guard after React has had time to re-render the trimmed content.
+    setTimeout(() => {
+      splitGuard.current = false
+    }, 600)
+  }, [
+    bodyRef,
+    contentRef,
+    enabled,
+    canvasId,
+    sessionId,
+    markCanvasOverflow,
+    setCanvasTopicRange,
+    setCanvasObjectiveRange,
+    appendCanvasPage,
+    getTopicRangeStart,
+    getObjectiveRangeStart,
+  ])
 
   useEffect(() => {
     const content = contentRef.current
@@ -65,7 +242,7 @@ export function useCanvasOverflow({
 
     const schedule = () => {
       if (timerRef.current) clearTimeout(timerRef.current)
-      timerRef.current = setTimeout(check, 100)
+      timerRef.current = setTimeout(check, 120)
     }
 
     schedule() // initial check
@@ -81,3 +258,4 @@ export function useCanvasOverflow({
 
   return overflowingIds.has(canvasId)
 }
+

@@ -6,10 +6,20 @@ import { useCourseStore } from "../store/courseStore"
 const TD = "px-2 py-1 border border-neutral-200 text-neutral-700 text-[11px] align-top"
 const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border border-neutral-200 bg-neutral-50"
 
-export function ResourcesBlock({ sessionId, fieldValues }: BlockRenderProps) {
+export function ResourcesBlock({ sessionId, fieldValues, fieldEnabled }: BlockRenderProps) {
   const topics = useCourseStore(
     (s) => s.sessions.find((sess) => sess.id === sessionId)?.topics ?? [],
   )
+
+  // Column visibility — default true when no fieldEnabled config is present
+  const fe = fieldEnabled?.resources
+  const showTask    = fe ? (fe["task"]    ?? true) : true
+  const showType    = fe ? (fe["type"]    ?? true) : true
+  const showOrigin  = fe ? (fe["origin"]  ?? true) : true
+  const showState   = fe ? (fe["state"]   ?? true) : true
+  const showQuality = fe ? (fe["quality"] ?? true) : true
+
+  const visibleColCount = [showTask, showType, showOrigin, showState, showQuality].filter(Boolean).length
 
   const origin = fieldValues["course_title"] ?? fieldValues["title"] ?? ""
 
@@ -35,28 +45,28 @@ export function ResourcesBlock({ sessionId, fieldValues }: BlockRenderProps) {
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className={TH}>Task</th>
-            <th className={TH}>Type</th>
-            <th className={TH}>Origin</th>
-            <th className={TH}>State</th>
-            <th className={TH}>Quality</th>
+            {showTask    && <th className={TH}>Task</th>}
+            {showType    && <th className={TH}>Type</th>}
+            {showOrigin  && <th className={TH}>Origin</th>}
+            {showState   && <th className={TH}>State</th>}
+            {showQuality && <th className={TH}>Quality</th>}
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={5} className="px-2 py-2 border border-neutral-200 text-neutral-400 text-[11px] italic">
+              <td colSpan={visibleColCount} className="px-2 py-2 border border-neutral-200 text-neutral-400 text-[11px] italic">
                 No tasks defined yet.
               </td>
             </tr>
           ) : (
             rows.map((row, i) => (
               <tr key={i}>
-                <td className={TD}>{row.label}</td>
-                <td className={TD}>{row.type}</td>
-                <td className={TD}>{row.origin}</td>
-                <td className={TD}>{row.state}</td>
-                <td className={TD}>{row.quality}</td>
+                {showTask    && <td className={TD}>{row.label}</td>}
+                {showType    && <td className={TD}>{row.type}</td>}
+                {showOrigin  && <td className={TD}>{row.origin}</td>}
+                {showState   && <td className={TD}>{row.state}</td>}
+                {showQuality && <td className={TD}>{row.quality}</td>}
               </tr>
             ))
           )}

@@ -32,9 +32,9 @@ export interface RawScheduleGeneratedEntry {
 export interface LessonCanvasPageProjection {
   globalPage: number
   sessionId: string
-  lessonNumber: number
-  lessonTitle: string
-  lessonNotes: string
+  sessionNumber: number
+  sessionTitle: string
+  sessionNotes: string
   topicCount: number
   objectiveCount: number
   taskCount: number
@@ -48,7 +48,7 @@ export interface LessonCanvasPageProjection {
   enabledBlocks: TemplateBlockType[]
   enabledFields: TemplateFieldState
   localPage: number
-  pagesInLesson: number
+  pagesInSession: number
   moduleName: string
   topics: string[]
   objectives: string[]
@@ -63,17 +63,17 @@ const LESSON_BODY_BLOCK_ORDER: LessonBodyBlockId[] = ["program", "resources", "c
 const LESSON_BLOCK_CAPACITY: Record<LessonBodyBlockId, number> = {
   program: 4,
   resources: 12,
-  content: 2,
-  assignment: 2,
+  content: 4,
+  assignment: 4,
   scoring: 8,
 }
 
 const LESSON_BLOCK_LOAD: Record<LessonBodyBlockId, { base: number; variable: number }> = {
   program: { base: 0.18, variable: 0.42 },
   resources: { base: 0.16, variable: 0.36 },
-  content: { base: 0.42, variable: 0.46 },
-  assignment: { base: 0.42, variable: 0.46 },
-  scoring: { base: 0.2, variable: 0.25 },
+  content: { base: 0.25, variable: 0.60 },
+  assignment: { base: 0.25, variable: 0.60 },
+  scoring: { base: 0.20, variable: 0.25 },
 }
 
 function estimateTaskExpansionUnits(task: string): number {
@@ -141,9 +141,9 @@ export function planLessonBodyLayout(args: {
   const { topicCount, objectiveCount, taskCount, enabledBlocks } = args
   const enabledSet = new Set(enabledBlocks)
 
-  const resolvedTopicCount = Math.max(1, topicCount)
-  const resolvedObjectiveCount = Math.max(1, objectiveCount)
-  const resolvedTaskCount = Math.max(1, taskCount)
+  const resolvedTopicCount = Math.max(0, topicCount)
+  const resolvedObjectiveCount = Math.max(0, objectiveCount)
+  const resolvedTaskCount = Math.max(0, taskCount)
 
   const itemCounts: Record<LessonBodyBlockId, number> = {
     program: resolvedTopicCount,
@@ -162,7 +162,8 @@ export function planLessonBodyLayout(args: {
 
     const totalItems = itemCounts[blockId]
     const capacity = LESSON_BLOCK_CAPACITY[blockId]
-    const chunkCount = Math.max(1, Math.ceil(totalItems / Math.max(1, capacity)))
+    const chunkCount = Math.ceil(totalItems / Math.max(1, capacity))
+    if (chunkCount === 0) return
 
     for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex += 1) {
       const itemStart = chunkIndex * capacity
@@ -204,7 +205,6 @@ export function resolveEnabledBlocks(templateType: TemplateType, templateDesign?
       .filter((block): block is TemplateBlockType => sequence.includes(block)),
   )
 
-  if (requested.size === 0) return sequence
   return sequence.filter((block) => requested.has(block))
 }
 

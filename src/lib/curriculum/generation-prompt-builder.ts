@@ -18,7 +18,7 @@ ${context.schedule.map((e) => `- ${e.day} ${e.date}${e.start_time ? ` at ${e.sta
 ### Curriculum Structure
 - Organization: ${context.curriculum.moduleOrganization}
 - Modules: ${context.curriculum.moduleCount}
-- Sessions/Lessons: ${context.curriculum.lessonCount}
+- Sessions: ${context.curriculum.sessionCount}
 - Average structure per lesson:
   - ${context.curriculum.topicsPerLesson} topic(s)
   - ${context.curriculum.objectivesPerTopic} objective(s) per topic
@@ -29,7 +29,7 @@ ${context.schedule.map((e) => `- ${e.day} ${e.date}${e.start_time ? ` at ${e.sta
   const sessionInfo =
     context.curriculum.sessionRows.length > 0
       ? `
-### Sessions to Generate (EXACTLY ${context.curriculum.sessionRows.length} lessons required)
+### Sessions to Generate (EXACTLY ${context.curriculum.sessionCount} sessions required)
 ${context.curriculum.sessionRows.map((s) => {
   const duration = s.duration ? ` (${s.duration}min)` : ""
   const customCounts = s.topics || s.objectives || s.tasks ? ` [${s.topics || "?"} topics, ${s.objectives || "?"} objectives, ${s.tasks || "?"} tasks]` : ""
@@ -130,7 +130,7 @@ ${sourceExcerpts}
   const namingInfo = context.namingRules
     ? `
 ### Naming Conventions
-${context.namingRules.lessonTitleRule ? `- Lesson titles: ${context.namingRules.lessonTitleRule}` : ""}${context.namingRules.topicRule ? `\n- Topic names: ${context.namingRules.topicRule}` : ""}${context.namingRules.objectiveRule ? `\n- Objectives: ${context.namingRules.objectiveRule}` : ""}${context.namingRules.taskRule ? `\n- Tasks: ${context.namingRules.taskRule}` : ""}
+${context.namingRules.lessonTitleRule ? `- Session titles: ${context.namingRules.lessonTitleRule}` : ""}${context.namingRules.topicRule ? `\n- Topic names: ${context.namingRules.topicRule}` : ""}${context.namingRules.objectiveRule ? `\n- Objectives: ${context.namingRules.objectiveRule}` : ""}${context.namingRules.taskRule ? `\n- Tasks: ${context.namingRules.taskRule}` : ""}
 `
     : ""
 
@@ -147,12 +147,12 @@ ${context.namingRules.lessonTitleRule ? `- Lesson titles: ${context.namingRules.
     : ""
 
   const outputInstructionByAction: Record<GenerationAction, string> = {
-    all: "Generate full curriculum content: module titles, lesson titles, topics, objectives, and tasks.",
-    modules: "Generate ONLY module titles. Do not generate lessons, topics, objectives, or tasks.",
-    lessons: "Generate ONLY lesson titles for each lesson number. Keep topics/objectives/tasks empty arrays.",
-    topics: "Generate ONLY topic titles for each lesson. Keep lesson titles unchanged and keep objectives/tasks empty arrays.",
-    objectives: "Generate ONLY objectives for each lesson. Keep lesson titles unchanged and keep topics/tasks empty arrays.",
-    tasks: "Generate ONLY tasks for each lesson. Keep lesson titles unchanged and keep topics/objectives empty arrays.",
+    all: "Generate full curriculum content: module titles, session titles, topics, objectives, and tasks.",
+    modules: "Generate ONLY module titles. Do not generate sessions, topics, objectives, or tasks.",
+    sessions: "Generate ONLY session titles for each session number. Keep topics/objectives/tasks empty arrays.",
+    topics: "Generate ONLY topic titles for each session. Keep session titles unchanged and keep objectives/tasks empty arrays.",
+    objectives: "Generate ONLY objectives for each session. Keep session titles unchanged and keep topics/tasks empty arrays.",
+    tasks: "Generate ONLY tasks for each session. Keep session titles unchanged and keep topics/objectives empty arrays.",
   }
 
   const outputSchemaByAction: Record<GenerationAction, string> = {
@@ -171,21 +171,21 @@ ${context.namingRules.lessonTitleRule ? `- Lesson titles: ${context.namingRules.
       "moduleTitle": "..."
     }
   ],
-  "lessons": [
+  "sessions": [
     {
-      "lessonNumber": 1,
-      "lessonTitle": "...",
+      "sessionNumber": 1,
+      "sessionTitle": "...",
       "topics": ["Topic 1", "Topic 2", ...],
       "objectives": ["Objective 1", "Objective 2", ...],
       "tasks": ["Task 1", "Task 2", ...]
     }
   ]
 }`,
-    lessons: `{
-  "lessons": [
+    sessions: `{
+  "sessions": [
     {
-      "lessonNumber": 1,
-      "lessonTitle": "...",
+      "sessionNumber": 1,
+      "sessionTitle": "...",
       "topics": [],
       "objectives": [],
       "tasks": []
@@ -193,10 +193,10 @@ ${context.namingRules.lessonTitleRule ? `- Lesson titles: ${context.namingRules.
   ]
 }`,
     topics: `{
-  "lessons": [
+  "sessions": [
     {
-      "lessonNumber": 1,
-      "lessonTitle": "",
+      "sessionNumber": 1,
+      "sessionTitle": "",
       "topics": ["Topic 1", "Topic 2", ...],
       "objectives": [],
       "tasks": []
@@ -204,10 +204,10 @@ ${context.namingRules.lessonTitleRule ? `- Lesson titles: ${context.namingRules.
   ]
 }`,
     objectives: `{
-  "lessons": [
+  "sessions": [
     {
-      "lessonNumber": 1,
-      "lessonTitle": "",
+      "sessionNumber": 1,
+      "sessionTitle": "",
       "topics": [],
       "objectives": ["Objective 1", "Objective 2", ...],
       "tasks": []
@@ -215,10 +215,10 @@ ${context.namingRules.lessonTitleRule ? `- Lesson titles: ${context.namingRules.
   ]
 }`,
     tasks: `{
-  "lessons": [
+  "sessions": [
     {
-      "lessonNumber": 1,
-      "lessonTitle": "",
+      "sessionNumber": 1,
+      "sessionTitle": "",
       "topics": [],
       "objectives": [],
       "tasks": ["Task 1", "Task 2", ...]
@@ -248,7 +248,7 @@ ${namingInfo}
 Action requested: ${action}
 ${outputInstructionByAction[action]}
 
-CRITICAL: You MUST generate EXACTLY ${context.curriculum.lessonCount} lessons — one for each session listed above. Do NOT skip any. Do NOT stop early. Do NOT generate fewer lessons than requested.
+CRITICAL: You MUST generate EXACTLY ${context.curriculum.sessionCount} sessions — one for each session listed above. Do NOT skip any. Do NOT stop early. Do NOT generate fewer sessions than requested.
 ${action === "modules" ? `
 For modules action: generate EXACTLY ${context.curriculum.moduleCount} module titles.
 ` : ""}

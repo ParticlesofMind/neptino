@@ -25,16 +25,17 @@ export interface TemplateFieldConfig {
 
 export type TemplateFieldState = Record<BlockId, Record<string, boolean>>
 
+// TemplateUiState is used for localStorage only (panel open/close, active id).
+// visualDensity is NOT included here — it lives in courses.course_layout.
 export type TemplateUiState = {
   activeId: string | null
   panelView: "config" | "preview"
   configView: "idle" | "create" | "edit"
-  visualDensity: TemplateVisualDensity
 }
 
+// Only templates[] is persisted to Supabase.  UI state is ephemeral / localStorage.
 export type TemplateSettingsPayload = {
   templates: LocalTemplate[]
-  ui?: TemplateUiState
 }
 
 // Preview heights (px) for each block in the configurator mini-preview.
@@ -194,8 +195,7 @@ export function normalizeTemplateSettings(raw: unknown): TemplateSettingsPayload
   if (raw && typeof raw === "object") {
     const obj = raw as Record<string, unknown>
     const templates = Array.isArray(obj.templates) ? (obj.templates as LocalTemplate[]) : []
-    const ui = obj.ui && typeof obj.ui === "object" ? (obj.ui as TemplateUiState) : undefined
-    return { templates, ui }
+    return { templates }
   }
   return { templates: [] }
 }

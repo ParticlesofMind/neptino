@@ -29,7 +29,7 @@ export interface CurriculumGenerationParams {
   scheduleEntries: ScheduleGeneratedEntry[]
   moduleOrg: string
   moduleCount: number
-  effectiveLessonCount: number
+  effectiveSessionCount: number
   topics: number
   objectives: number
   tasks: number
@@ -124,10 +124,10 @@ export function useCurriculumGeneration(params: CurriculumGenerationParams) {
 
   const actionUnits = useCallback((action: GenerationAction): number => {
     const p = paramsRef.current
-    const lessons = Math.max(1, p.effectiveLessonCount)
+    const sessions = Math.max(1, p.effectiveSessionCount)
     const modules = Math.max(1, p.moduleOrg === "linear" ? 1 : p.moduleCount)
     const map: Record<GenerationAction, number> = {
-      all: lessons * 2.4, modules, lessons, topics: lessons, objectives: lessons * 1.2, tasks: lessons * 1.4,
+      all: sessions * 2.4, modules, sessions, topics: sessions, objectives: sessions * 1.2, tasks: sessions * 1.4,
     }
     return Math.max(1, map[action])
   }, [])
@@ -199,7 +199,7 @@ export function useCurriculumGeneration(params: CurriculumGenerationParams) {
         courseId: p.courseId, courseInfo: p.courseInfo,
         actionLabel: GENERATION_ACTION_CONFIG.find((a) => a.key === action)?.label ?? "generation",
         scheduleEntries: p.scheduleEntries, moduleOrg: p.moduleOrg, moduleCount: p.moduleCount,
-        effectiveLessonCount: p.effectiveLessonCount, topics: p.topics, objectives: p.objectives, tasks: p.tasks,
+        effectiveSessionCount: p.effectiveSessionCount, topics: p.topics, objectives: p.objectives, tasks: p.tasks,
         sessionRows: p.sessionRows, moduleNames: p.moduleNames, optCtx: p.optCtx,
         classificationData: p.classificationData, pedagogyData: p.pedagogyData,
         courseGoalsList: p.courseGoalsList, keyTerms: p.keyTerms, mandatoryTopics: p.mandatoryTopics,

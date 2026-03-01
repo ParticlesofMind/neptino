@@ -33,7 +33,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   const [moduleOrg, setModuleOrg] = useState("linear")
   const [contentVolume, setContentVolume] = useState("single")
   const [courseType, setCourseType] = useState("essential")
-  const [lessonCount, setLessonCount] = useState(8)
+  const [sessionCount, setSessionCount] = useState(8)
   const [moduleCount, setModuleCount] = useState(3)
   const [topics, setTopics] = useState(2)
   const [objectives, setObjectives] = useState(2)
@@ -71,7 +71,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     setPriorKnowledge, setApplicationContext, setPedagogyData, setStudentsData,
     setOptCtx, setPreviewMode, setLastAction,
     setModuleOrg, setContentVolume, setCourseType, setSequencingMode, setNamingRules,
-    setTemplateDefaultType, setCertificateMode, setLessonCount, setModuleCount,
+    setTemplateDefaultType, setCertificateMode, setSessionCount, setModuleCount,
     setTopics, setObjectives, setTasks, setModuleNames, setScheduleEntries,
     setSessionRows, setSavedTemplates, setReadinessIssues, setMissing,
     generationSettingsRef,
@@ -98,7 +98,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   }, [moduleOrg, moduleCount])
 
   const hasGeneratedSchedule = scheduleEntries.length > 0
-  const effectiveLessonCount = hasGeneratedSchedule ? scheduleEntries.length : lessonCount
+  const effectiveSessionCount = hasGeneratedSchedule ? scheduleEntries.length : sessionCount
   const selectedCourseType = courseType as CourseType
 
   const objectiveInputMax = useMemo(
@@ -106,7 +106,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     [contentVolume],
   )
 
-  const { filteredTemplates, defaultTemplateOptions, lessonTemplateOptions } = useMemo(
+  const { filteredTemplates, defaultTemplateOptions, sessionTemplateOptions } = useMemo(
     () => deriveTemplateOptions({ savedTemplates, selectedCourseType, certificateMode, courseTypeTemplateFilters: COURSE_TYPE_TEMPLATE_FILTERS }),
     [savedTemplates, selectedCourseType, certificateMode],
   )
@@ -118,13 +118,13 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   }, [defaultTemplateOptions, templateDefaultType])
 
   const certificateLessonIndexes = useMemo(
-    () => buildCertificateLessonIndexes({ certificateMode, effectiveLessonCount, moduleOrg, moduleCount }),
-    [certificateMode, effectiveLessonCount, moduleOrg, moduleCount],
+    () => buildCertificateLessonIndexes({ certificateMode, effectiveSessionCount, moduleOrg, moduleCount }),
+    [certificateMode, effectiveSessionCount, moduleOrg, moduleCount],
   )
 
   const modulesForPreview = useMemo(
-    () => buildModulesForPreview({ moduleOrg, moduleCount, moduleNames, effectiveLessonCount }),
-    [moduleOrg, moduleCount, moduleNames, effectiveLessonCount],
+    () => buildModulesForPreview({ moduleOrg, moduleCount, moduleNames, effectiveSessionCount }),
+    [moduleOrg, moduleCount, moduleNames, effectiveSessionCount],
   )
 
   const templateTypeLabel = useCallback(
@@ -141,20 +141,20 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     [savedTemplates],
   )
 
-  const { resolveTemplateTypeForLesson, lessonRowsForPreview, upsertSessionRow } = useCurriculumSessionRows({
-    sessionRows, setSessionRows, effectiveLessonCount, scheduleEntries,
+  const { resolveTemplateTypeForSession, sessionRowsForPreview, upsertSessionRow } = useCurriculumSessionRows({
+    sessionRows, setSessionRows, effectiveSessionCount, scheduleEntries,
     topics, objectives, tasks, certificateLessonIndexes, templateDefaultType,
   })
 
   useCurriculumPersistence({
     courseId, moduleOrg, contentVolume, courseType, templateDefaultType, certificateMode,
-    effectiveLessonCount, moduleCount, moduleNames, topics, objectives, tasks,
-    sequencingMode, namingRules, sessionRows, scheduleEntries, resolveTemplateTypeForLesson,
+    effectiveSessionCount, moduleCount, moduleNames, topics, objectives, tasks,
+    sequencingMode, namingRules, sessionRows, scheduleEntries, resolveTemplateTypeForSession,
     optCtx, previewMode, lastAction, generationSettingsRef,
   })
 
   const generation = useCurriculumGeneration({
-    courseId, courseInfo, scheduleEntries, moduleOrg, moduleCount, effectiveLessonCount,
+    courseId, courseInfo, scheduleEntries, moduleOrg, moduleCount, effectiveSessionCount,
     topics, objectives, tasks, sessionRows, moduleNames, optCtx,
     isGenerationReady: readinessIssues.length === 0,
     classificationData, pedagogyData, courseGoalsList, keyTerms, mandatoryTopics,
@@ -172,7 +172,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
       <SetupPanelLayout>
         <CurriculumStructurePanel
           moduleOrg={moduleOrg} setModuleOrg={setModuleOrg}
-          effectiveLessonCount={effectiveLessonCount} lessonCount={lessonCount} setLessonCount={setLessonCount}
+          effectiveSessionCount={effectiveSessionCount} sessionCount={sessionCount} setSessionCount={setSessionCount}
           hasGeneratedSchedule={hasGeneratedSchedule} moduleCount={moduleCount} setModuleCount={setModuleCount}
           contentVolume={contentVolume} setContentVolume={setContentVolume}
           topics={topics} setTopics={setTopics} objectives={objectives} setObjectives={setObjectives}
@@ -196,10 +196,10 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
         />
         <CurriculumPreviewPanel
           previewMode={previewMode} setPreviewMode={setPreviewMode}
-          modulesForPreview={modulesForPreview} lessonRowsForPreview={lessonRowsForPreview}
+          modulesForPreview={modulesForPreview} sessionRowsForPreview={sessionRowsForPreview}
           scheduleEntries={scheduleEntries} moduleNames={moduleNames} setModuleNames={setModuleNames}
           filteredTemplates={filteredTemplates} templateDefaultType={templateDefaultType}
-          lessonTemplateOptions={lessonTemplateOptions} templateTypeLabel={templateTypeLabel}
+          sessionTemplateOptions={sessionTemplateOptions} templateTypeLabel={templateTypeLabel}
           topics={topics} objectives={objectives} tasks={tasks}
           upsertSessionRow={upsertSessionRow} setSessionRows={setSessionRows} lastAction={lastAction}
         />

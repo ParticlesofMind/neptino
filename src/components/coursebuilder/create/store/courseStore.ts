@@ -11,8 +11,13 @@ import type {
   CourseSession,
   CanvasPage,
   DroppedCard,
+  Topic,
+  Objective,
+  Task,
   SessionId,
   CanvasId,
+  TopicId,
+  ObjectiveId,
   TaskId,
   BlockKey,
   TemplateType,
@@ -44,8 +49,38 @@ interface CourseState {
 
   // ── Canvas-page mutations ──────────────────────────────────────────────────
 
-  /** Append a new blank canvas page to a session */
-  appendCanvasPage: (sessionId: SessionId) => void
+  /**
+   * Append a new blank canvas page to a session.
+   * `contentTopicStart` — if provided, the new page’s ContentBlock starts
+   * rendering from this absolute topic index (for overflow continuation).
+   * `options.topicEnd` — upper bound for the topic range on the new page.
+   * `options.objectiveStart` — if provided, the new page starts at this absolute
+   *   flat objective index (used for within-topic objective-level splits).
+   */
+  appendCanvasPage: (
+    sessionId: SessionId,
+    contentTopicStart?: number,
+    options?: { topicEnd?: number; objectiveStart?: number },
+  ) => void
+
+  /**
+   * Set (or update) the contentTopicRange on a specific canvas page.
+   * Used by the overflow hook to constrain how many topics appear on a page.
+   */
+  setCanvasTopicRange: (
+    canvasId: CanvasId,
+    range: { start: number; end?: number },
+  ) => void
+
+  /**
+   * Set (or update) the contentObjectiveRange on a specific canvas page.
+   * Used by the overflow hook as a fallback when only one topic is present
+   * and a topic-boundary split cannot be performed.
+   */
+  setCanvasObjectiveRange: (
+    canvasId: CanvasId,
+    range: { start: number; end?: number },
+  ) => void
 
   /** Update the measured content height of a specific canvas page */
   setCanvasMeasuredHeight: (canvasId: CanvasId, heightPx: number) => void
@@ -85,22 +120,68 @@ export const useCourseStore = create<CourseState>()(
       hydrateSessions: (sessions) => set({ sessions }),
 
       addDroppedCard: (sessionId, taskId, card) =>
-        set((state) => ({
-          sessions: mapSession(state.sessions, sessionId, (session) => ({
-            ...session,
-            topics: session.topics.map((topic) => ({
-              ...topic,
-              objectives: topic.objectives.map((obj) => ({
-                ...obj,
-                tasks: obj.tasks.map((task) =>
-                  task.id === taskId
-                    ? { ...task, droppedCards: [...task.droppedCards, card] }
-                    : task,
-                ),
+        set((state) => {
+          const session = state.sessions.find((s) => s.id === sessionId)
+          if (!session) return state
+
+          // Fast path: task exists in the current tree — just update it.
+          const taskExists = session.topics.some((t) =>
+            t.objectives.some((o) => o.tasks.some((ta) => ta.id === taskId)),
+          )
+          if (taskExists) {
+            return {
+              sessions: mapSession(state.sessions, sessionId, (s) => ({
+                ...s,
+                topics: s.topics.map((topic) => ({
+                  ...topic,
+                  objectives: topic.objectives.map((obj) => ({
+                    ...obj,
+                    tasks: obj.tasks.map((task) =>
+                      task.id === taskId
+                        ? { ...task, droppedCards: [...task.droppedCards, card] }
+                        : task,
+                    ),
+                  })),
+                })),
               })),
+            }
+          }
+
+          // Fallback path: task not found (drop zone shown before any topics were
+          // loaded).  Bootstrap a minimal topic \u2192 objective \u2192 task chain so the
+          // card is immediately visible and subsequent drops have a real target.
+          const topicId   = `${sessionId}-default-topic`   as TopicId
+          const objId     = `${sessionId}-default-obj`     as ObjectiveId
+
+          const defaultTask: Task = {
+            id: taskId,
+            objectiveId: objId,
+            label: "",
+            order: 0,
+            droppedCards: [card],
+          }
+          const defaultObj: Objective = {
+            id: objId,
+            topicId,
+            label: "",
+            order: 0,
+            tasks: [defaultTask],
+          }
+          const defaultTopic: Topic = {
+            id: topicId,
+            sessionId,
+            label: "",
+            order: 0,
+            objectives: [defaultObj],
+          }
+
+          return {
+            sessions: mapSession(state.sessions, sessionId, (s) => ({
+              ...s,
+              topics: [defaultTopic],
             })),
-          })),
-        })),
+          }
+        }),
 
       removeDroppedCard: (sessionId, taskId, cardId) =>
         set((state) => ({
@@ -123,7 +204,7 @@ export const useCourseStore = create<CourseState>()(
           })),
         })),
 
-      appendCanvasPage: (sessionId) =>
+      appendCanvasPage: (sessionId, contentTopicStart, options) =>
         set((state) => ({
           sessions: mapSession(state.sessions, sessionId, (session) => {
             const nextPage = session.canvases.length + 1
@@ -135,18 +216,22 @@ export const useCourseStore = create<CourseState>()(
 
             let continuationBlockKeys: BlockKey[] | undefined
             if (lastCanvas?.blockKeys === undefined) {
-              // Page 1 of a non-lesson template uses blockKeys:undefined (render all).
-              // Derive an explicit continuation set from the template definition,
-              // excluding header, footer, and the session-once blocks.
               const def = getTemplateDefinition(session.templateType as TemplateType)
               const contKeys = def.blocks
                 .map((b) => b.key as BlockKey)
                 .filter((k) => !SESSION_ONCE_BLOCKS.has(k) && k !== "header" && k !== "footer")
               continuationBlockKeys = contKeys.length > 0 ? contKeys : undefined
             } else {
-              // Explicit blockKeys: strip session-once blocks as a safety net.
               const filtered = lastCanvas.blockKeys.filter((k) => !SESSION_ONCE_BLOCKS.has(k))
-              continuationBlockKeys = filtered.length > 0 ? filtered : lastCanvas.blockKeys
+              if (filtered.length > 0) {
+                continuationBlockKeys = filtered
+              } else {
+                const def = getTemplateDefinition(session.templateType as TemplateType)
+                const contKeys = def.blocks
+                  .map((b) => b.key as BlockKey)
+                  .filter((k) => !SESSION_ONCE_BLOCKS.has(k) && k !== "header" && k !== "footer")
+                continuationBlockKeys = contKeys.length > 0 ? contKeys : undefined
+              }
             }
 
             const newCanvas: CanvasPage = {
@@ -154,9 +239,43 @@ export const useCourseStore = create<CourseState>()(
               sessionId,
               pageNumber: nextPage,
               blockKeys: continuationBlockKeys,
+              // If the caller supplies a topic start index this page continues from
+              // that point in the flat topic list (overflow-driven pagination).
+              ...(contentTopicStart !== undefined
+                ? {
+                    contentTopicRange: {
+                      start: contentTopicStart,
+                      ...(options?.topicEnd !== undefined ? { end: options.topicEnd } : {}),
+                    },
+                  }
+                : {}),
+              // Objective-level split: restrict which objectives are shown on this page.
+              ...(options?.objectiveStart !== undefined
+                ? { contentObjectiveRange: { start: options.objectiveStart } }
+                : {}),
             }
             return { ...session, canvases: [...session.canvases, newCanvas] }
           }),
+        })),
+
+      setCanvasTopicRange: (canvasId, range) =>
+        set((state) => ({
+          sessions: state.sessions.map((session) => ({
+            ...session,
+            canvases: session.canvases.map((c) =>
+              c.id === canvasId ? { ...c, contentTopicRange: range } : c,
+            ),
+          })),
+        })),
+
+      setCanvasObjectiveRange: (canvasId, range) =>
+        set((state) => ({
+          sessions: state.sessions.map((session) => ({
+            ...session,
+            canvases: session.canvases.map((c) =>
+              c.id === canvasId ? { ...c, contentObjectiveRange: range } : c,
+            ),
+          })),
         })),
 
       setCanvasMeasuredHeight: (canvasId, heightPx) =>

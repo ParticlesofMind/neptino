@@ -42,23 +42,23 @@ export function buildLocalGeneratedCurriculum(context: GenerationContext): Gener
   const primaryKeyword = keywords[0] ? titleCase(keywords[0]) : "Core"
   const secondaryKeyword = keywords[1] ? titleCase(keywords[1]) : "Practice"
 
-  const lessonCount = Math.max(1, context.curriculum.lessonCount || context.curriculum.sessionRows.length || 1)
+  const sessionCount = Math.max(1, context.curriculum.sessionCount || context.curriculum.sessionRows.length || 1)
   const moduleCount = context.curriculum.moduleOrganization === "linear" ? 1 : Math.max(1, context.curriculum.moduleCount || 1)
-  const lessonsPerModule = Math.ceil(lessonCount / moduleCount)
+  const sessionsPerModule = Math.ceil(sessionCount / moduleCount)
 
   const modules = Array.from({ length: moduleCount }, (_, index) => {
-    const moduleStart = index * lessonsPerModule + 1
-    const moduleEnd = Math.min((index + 1) * lessonsPerModule, lessonCount)
+    const moduleStart = index * sessionsPerModule + 1
+    const moduleEnd = Math.min((index + 1) * sessionsPerModule, sessionCount)
     return {
       moduleNumber: index + 1,
-      moduleTitle: `${primaryKeyword} Module ${index + 1}: Lessons ${moduleStart}-${Math.max(moduleStart, moduleEnd)}`,
+      moduleTitle: `${primaryKeyword} Module ${index + 1}: Sessions ${moduleStart}-${Math.max(moduleStart, moduleEnd)}`,
     }
   })
 
-  const lessons = Array.from({ length: lessonCount }, (_, lessonIndex) => {
-    const baseRow = context.curriculum.sessionRows[lessonIndex]
+  const sessions = Array.from({ length: sessionCount }, (_, sessionIndex) => {
+    const baseRow = context.curriculum.sessionRows[sessionIndex]
     const titleSeed = baseRow?.title && !/^session\s+\d+$/i.test(baseRow.title) ? baseRow.title : `${primaryKeyword} Foundations`
-    const lessonLabel = `Lesson ${lessonIndex + 1}`
+    const sessionLabel = `Session ${sessionIndex + 1}`
     const normalizedCounts = normalizeContentLoadConfig(
       {
         topicsPerLesson: baseRow?.topics ?? context.curriculum.topicsPerLesson ?? 2,
@@ -72,7 +72,7 @@ export function buildLocalGeneratedCurriculum(context: GenerationContext): Gener
     const taskCount = normalizedCounts.tasksPerObjective
 
     const topics = Array.from({ length: topicCount }, (_, topicIndex) => {
-      const topicWord = keywords[(topicIndex + lessonIndex) % Math.max(1, keywords.length)]
+      const topicWord = keywords[(topicIndex + sessionIndex) % Math.max(1, keywords.length)]
       const topicSeed = topicWord ? titleCase(topicWord) : secondaryKeyword
       return `${topicSeed} Topic ${topicIndex + 1}`
     })
@@ -86,15 +86,15 @@ export function buildLocalGeneratedCurriculum(context: GenerationContext): Gener
     ))
 
     return {
-      lessonNumber: lessonIndex + 1,
-      lessonTitle: `${lessonLabel}: ${titleCase(titleSeed)}`,
+      sessionNumber: sessionIndex + 1,
+      sessionTitle: `${sessionLabel}: ${titleCase(titleSeed)}`,
       topics,
       objectives,
       tasks,
     }
   })
 
-  return { modules, lessons }
+  return { modules, sessions }
 }
 
 /**
@@ -130,7 +130,7 @@ export function buildGenerationContext(
     curriculum: {
       moduleOrganization: moduleOrg,
       moduleCount,
-      lessonCount,
+      sessionCount: lessonCount,
       topicsPerLesson: normalizedGlobalCounts.topicsPerLesson,
       objectivesPerTopic: normalizedGlobalCounts.objectivesPerTopic,
       tasksPerObjective: normalizedGlobalCounts.tasksPerObjective,

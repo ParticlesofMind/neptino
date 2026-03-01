@@ -18,9 +18,12 @@ function estimateSessionPages(session: {
   enabledBlocks: TemplateBlockType[]
 }): number {
   if (session.templateType === "lesson") {
-    const effectiveTopicCount = Math.max(1, session.topics.length, session.topicCount)
-    const effectiveObjectiveCount = Math.max(1, session.objectives.length, session.objectiveCount)
-    const effectiveTaskCount = estimateExpandedTaskCount(session.tasks, session.taskCount)
+    const effectiveTopicCount = Math.max(0, session.topics.length, session.topicCount)
+    const effectiveObjectiveCount = Math.max(0, session.objectives.length, session.objectiveCount)
+    const effectiveTaskCount =
+      session.tasks.length > 0 || session.taskCount > 0
+        ? estimateExpandedTaskCount(session.tasks, session.taskCount)
+        : 0
 
     return planLessonBodyLayout({
       topicCount: effectiveTopicCount,
@@ -31,8 +34,8 @@ function estimateSessionPages(session: {
   }
 
   const effectiveTopicCount = Math.max(session.topics.length, session.topicCount)
-  const effectiveObjectiveCount = Math.max(session.objectives.length, session.topicCount * session.objectiveCount)
-  const effectiveTaskCount = Math.max(session.tasks.length, session.topicCount * session.objectiveCount * session.taskCount)
+  const effectiveObjectiveCount = Math.max(session.objectives.length, session.objectiveCount)
+  const effectiveTaskCount = Math.max(session.tasks.length, session.taskCount)
 
   const complexityUnits =
     effectiveTopicCount * 1.2 +
@@ -43,8 +46,8 @@ function estimateSessionPages(session: {
 }
 
 function resolveModuleNameForIndex(
-  lessonIndex: number,
-  totalLessons: number,
+  sessionIndex: number,
+  totalSessions: number,
   curriculum: Record<string, unknown>,
 ): string {
   const moduleNames = Array.isArray(curriculum.module_names)
@@ -57,21 +60,21 @@ function resolveModuleNameForIndex(
 
   if (moduleNames.length > 0) {
     if (moduleOrg === "linear") return moduleNames[0] ?? "Module 1"
-    const perModule = Math.max(1, Math.ceil(Math.max(1, totalLessons) / effectiveModuleCount))
-    const moduleIndex = Math.min(moduleNames.length - 1, Math.floor(lessonIndex / perModule))
+    const perModule = Math.max(1, Math.ceil(Math.max(1, totalSessions) / effectiveModuleCount))
+    const moduleIndex = Math.min(moduleNames.length - 1, Math.floor(sessionIndex / perModule))
     return moduleNames[moduleIndex] ?? `Module ${moduleIndex + 1}`
   }
 
   if (modules.length > 0) {
-    const moduleRaw = modules[lessonIndex % Math.max(1, modules.length)] as Record<string, unknown> | string | undefined
+    const moduleRaw = modules[sessionIndex % Math.max(1, modules.length)] as Record<string, unknown> | string | undefined
     return typeof moduleRaw === "string"
       ? moduleRaw
-      : String(moduleRaw?.name ?? moduleRaw?.title ?? moduleRaw?.module_name ?? `Module ${Math.floor(lessonIndex / 4) + 1}`)
+      : String(moduleRaw?.name ?? moduleRaw?.title ?? moduleRaw?.module_name ?? `Module ${Math.floor(sessionIndex / 4) + 1}`)
   }
 
   if (moduleOrg === "linear") return "Module 1"
-  const perModule = Math.max(1, Math.ceil(Math.max(1, totalLessons) / effectiveModuleCount))
-  const moduleIndex = Math.floor(lessonIndex / perModule)
+  const perModule = Math.max(1, Math.ceil(Math.max(1, totalSessions) / effectiveModuleCount))
+  const moduleIndex = Math.floor(sessionIndex / perModule)
   return `Module ${moduleIndex + 1}`
 }
 
@@ -88,11 +91,11 @@ export function projectLessonPages(args: {
     ? scheduleRows.map((entry, index) => {
         const rowByScheduleId = sessionRows.find((row) => row.schedule_entry_id === entry.id)
         const rowBySessionNumber = sessionRows.find((row) => row.session_number === (entry.session ?? index + 1))
-        return rowByScheduleId ?? rowBySessionNumber ?? sessionRows[index] ?? {
+        return rowByScheduleId ?? rowBySessionNumber ?? {
           id: `scheduled-${entry.id || index + 1}`,
           schedule_entry_id: entry.id,
           session_number: entry.session ?? index + 1,
-          title: `Lesson ${entry.session ?? index + 1}`,
+          title: `Session ${entry.session ?? index + 1}`,
           template_type: "lesson" as TemplateType,
           topic_names: [],
           objective_names: [],
@@ -122,8 +125,8 @@ export function projectLessonPages(args: {
 
     return {
       id: row.id || `session-${index + 1}`,
-      lessonNumber: row.session_number ?? index + 1,
-      title: row.title?.trim() || `Lesson ${index + 1}`,
+      sessionNumber: row.session_number ?? index + 1,
+      title: row.title?.trim() || `Session ${index + 1}`,
       notes: row.notes?.trim() || "",
       topicCount,
       objectiveCount,
@@ -164,9 +167,9 @@ export function projectLessonPages(args: {
       pages.push({
         globalPage,
         sessionId: session.id,
-        lessonNumber: session.lessonNumber,
-        lessonTitle: session.title,
-        lessonNotes: session.notes,
+        sessionNumber: session.sessionNumber,
+        sessionTitle: session.title,
+        sessionNotes: session.notes,
         topicCount: session.topicCount,
         objectiveCount: session.objectiveCount,
         taskCount: session.taskCount,
@@ -180,7 +183,7 @@ export function projectLessonPages(args: {
         enabledBlocks: session.enabledBlocks,
         enabledFields: session.enabledFields,
         localPage,
-        pagesInLesson: session.pages,
+        pagesInSession: session.pages,
         moduleName: session.moduleName,
         topics: session.topics,
         objectives: session.objectives,

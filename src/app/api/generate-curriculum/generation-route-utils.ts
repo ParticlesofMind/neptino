@@ -2,10 +2,10 @@
 // Extracted to keep route.ts focused on the HTTP handler and LLM integration.
 import { MIN_TASKS_PER_OBJECTIVE, normalizeContentLoadConfig } from "@/lib/curriculum/content-load-service"
 
-/** Shape of each lesson in the generated curriculum */
-export interface GeneratedLesson {
-  lessonNumber: number
-  lessonTitle: string
+/** Shape of each session in the generated curriculum */
+export interface GeneratedSession {
+  sessionNumber: number
+  sessionTitle: string
   topics: string[]
   objectives: string[]
   tasks: string[]
@@ -17,7 +17,7 @@ export interface GeneratedModule {
 }
 
 export interface PromptLessonConstraint {
-  lessonNumber: number
+  sessionNumber: number
   durationMinutes?: number
   topics?: number
   objectives?: number
@@ -83,15 +83,15 @@ export function repairJSON(raw: string): string {
  * Regex-based fallback: extract individual lesson objects from malformed JSON.
  * Works even when the overall JSON structure is broken (e.g. truncated mid-lesson).
  */
-export function extractLessonsViaRegex(text: string): GeneratedLesson[] {
-  const lessons: GeneratedLesson[] = []
+export function extractSessionsViaRegex(text: string): GeneratedSession[] {
+  const sessions: GeneratedSession[] = []
 
-  // Match individual lesson-like objects: { "lessonNumber": N, ... }
-  // We look for complete-ish objects that have at least lessonNumber and lessonTitle
-  const lessonPattern = /\{\s*"lessonNumber"\s*:\s*(\d+)\s*,\s*"lessonTitle"\s*:\s*"([^"]*?)"/g
+  // Match individual session-like objects: { "sessionNumber": N, ... }
+  // We look for complete-ish objects that have at least sessionNumber and sessionTitle
+  const sessionPattern = /\{\s*"sessionNumber"\s*:\s*(\d+)\s*,\s*"sessionTitle"\s*:\s*"([^"]*?)"/g
   let match
 
-  while ((match = lessonPattern.exec(text)) !== null) {
+  while ((match = sessionPattern.exec(text)) !== null) {
     const startIdx = match.index
 
     // Find the closing brace for this lesson object by counting braces
@@ -119,10 +119,10 @@ export function extractLessonsViaRegex(text: string): GeneratedLesson[] {
       try {
         const repaired = repairJSON(fragment)
         const obj = JSON.parse(repaired)
-        if (obj.lessonNumber && obj.lessonTitle) {
-          lessons.push({
-            lessonNumber: obj.lessonNumber,
-            lessonTitle: obj.lessonTitle,
+        if (obj.sessionNumber && obj.sessionTitle) {
+          sessions.push({
+            sessionNumber: obj.sessionNumber,
+            sessionTitle: obj.sessionTitle,
             topics: Array.isArray(obj.topics) ? obj.topics : [],
             objectives: Array.isArray(obj.objectives) ? obj.objectives : [],
             tasks: Array.isArray(obj.tasks) ? obj.tasks : [],
@@ -130,18 +130,18 @@ export function extractLessonsViaRegex(text: string): GeneratedLesson[] {
         }
       } catch {
         // This fragment is too broken — skip it
-        console.warn(`[generate-curriculum] Could not repair lesson fragment at index ${startIdx}`)
+        console.warn(`[generate-curriculum] Could not repair session fragment at index ${startIdx}`)
       }
-      break // Truncated = last lesson, stop here
+      break // Truncated = last session, stop here
     }
 
     const objStr = text.slice(startIdx, endIdx + 1)
     try {
       const obj = JSON.parse(objStr)
-      if (obj.lessonNumber && obj.lessonTitle) {
-        lessons.push({
-          lessonNumber: obj.lessonNumber,
-          lessonTitle: obj.lessonTitle,
+      if (obj.sessionNumber && obj.sessionTitle) {
+        sessions.push({
+          sessionNumber: obj.sessionNumber,
+          sessionTitle: obj.sessionTitle,
           topics: Array.isArray(obj.topics) ? obj.topics : [],
           objectives: Array.isArray(obj.objectives) ? obj.objectives : [],
           tasks: Array.isArray(obj.tasks) ? obj.tasks : [],
@@ -152,22 +152,22 @@ export function extractLessonsViaRegex(text: string): GeneratedLesson[] {
       try {
         const repaired = repairJSON(objStr)
         const obj = JSON.parse(repaired)
-        if (obj.lessonNumber && obj.lessonTitle) {
-          lessons.push({
-            lessonNumber: obj.lessonNumber,
-            lessonTitle: obj.lessonTitle,
+        if (obj.sessionNumber && obj.sessionTitle) {
+          sessions.push({
+            sessionNumber: obj.sessionNumber,
+            sessionTitle: obj.sessionTitle,
             topics: Array.isArray(obj.topics) ? obj.topics : [],
             objectives: Array.isArray(obj.objectives) ? obj.objectives : [],
             tasks: Array.isArray(obj.tasks) ? obj.tasks : [],
           })
         }
       } catch {
-        console.warn(`[generate-curriculum] Skipping malformed lesson object at index ${startIdx}`)
+        console.warn(`[generate-curriculum] Skipping malformed session object at index ${startIdx}`)
       }
     }
   }
 
-  return lessons
+  return sessions
 }
 
 export function extractModulesViaRegex(text: string): GeneratedModule[] {
@@ -224,16 +224,16 @@ export function parsePromptLessonConstraints(prompt: string): Map<number, Prompt
 
   let match: RegExpExecArray | null
   while ((match = sessionLineRegex.exec(prompt)) !== null) {
-    const lessonNumber = Number.parseInt(match[1], 10)
-    if (!Number.isFinite(lessonNumber) || lessonNumber < 1) continue
+    const sessionNumber = Number.parseInt(match[1], 10)
+    if (!Number.isFinite(sessionNumber) || sessionNumber < 1) continue
 
     const durationMinutes = match[2] ? Number.parseInt(match[2], 10) : undefined
     const topics = match[3] && match[3] !== "?" ? Number.parseInt(match[3], 10) : undefined
     const objectives = match[4] && match[4] !== "?" ? Number.parseInt(match[4], 10) : undefined
     const tasks = match[5] && match[5] !== "?" ? Number.parseInt(match[5], 10) : undefined
 
-    constraints.set(lessonNumber, {
-      lessonNumber,
+    constraints.set(sessionNumber, {
+      sessionNumber,
       durationMinutes,
       topics,
       objectives,
@@ -255,34 +255,34 @@ export function fitToCount(items: string[], targetCount: number, fallbackPrefix:
   ))
 }
 
-export function normalizeGeneratedLessons(
-  lessons: GeneratedLesson[],
+export function normalizeGeneratedSessions(
+  sessions: GeneratedSession[],
   prompt: string,
-): GeneratedLesson[] {
+): GeneratedSession[] {
   const globalConstraint = parsePromptGlobalConstraint(prompt)
   const lessonConstraints = parsePromptLessonConstraints(prompt)
 
-  return lessons.map((lesson, index) => {
-    const lessonNumber = Number.isFinite(lesson.lessonNumber) && lesson.lessonNumber > 0
-      ? lesson.lessonNumber
+  return sessions.map((session, index) => {
+    const sessionNumber = Number.isFinite(session.sessionNumber) && session.sessionNumber > 0
+      ? session.sessionNumber
       : index + 1
-    const lessonConstraint = lessonConstraints.get(lessonNumber)
+    const lessonConstraint = lessonConstraints.get(sessionNumber)
 
     const normalizedCounts = normalizeContentLoadConfig(
       {
-        topicsPerLesson: lessonConstraint?.topics ?? globalConstraint.topics ?? lesson.topics?.length ?? 1,
-        objectivesPerTopic: lessonConstraint?.objectives ?? globalConstraint.objectives ?? lesson.objectives?.length ?? 2,
-        tasksPerObjective: lessonConstraint?.tasks ?? globalConstraint.tasks ?? lesson.tasks?.length ?? MIN_TASKS_PER_OBJECTIVE,
+        topicsPerLesson: lessonConstraint?.topics ?? globalConstraint.topics ?? session.topics?.length ?? 1,
+        objectivesPerTopic: lessonConstraint?.objectives ?? globalConstraint.objectives ?? session.objectives?.length ?? 2,
+        tasksPerObjective: lessonConstraint?.tasks ?? globalConstraint.tasks ?? session.tasks?.length ?? MIN_TASKS_PER_OBJECTIVE,
       },
       lessonConstraint?.durationMinutes ?? null,
     )
 
     return {
-      lessonNumber,
-      lessonTitle: lesson.lessonTitle,
-      topics: fitToCount(lesson.topics ?? [], normalizedCounts.topicsPerLesson, "Topic"),
-      objectives: fitToCount(lesson.objectives ?? [], normalizedCounts.objectivesPerTopic, "Objective"),
-      tasks: fitToCount(lesson.tasks ?? [], normalizedCounts.tasksPerObjective, "Task"),
+      sessionNumber,
+      sessionTitle: session.sessionTitle,
+      topics: fitToCount(session.topics ?? [], normalizedCounts.topicsPerLesson, "Topic"),
+      objectives: fitToCount(session.objectives ?? [], normalizedCounts.objectivesPerTopic, "Objective"),
+      tasks: fitToCount(session.tasks ?? [], normalizedCounts.tasksPerObjective, "Task"),
     }
   })
 }

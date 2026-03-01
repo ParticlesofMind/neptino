@@ -53,7 +53,7 @@ export const AVAILABLE_MODELS: OllamaModel[] = [
     family: "llama",
   },
   {
-    name: "gemma3",
+    name: "gemma3:4b",
     displayName: "Gemma 3",
     description:
       "Google's lightweight, efficient model. Extremely fast inference with good quality for standard tasks. Ideal when you need quick results for lesson and topic generation. Lower resource usage on your machine.",
@@ -109,7 +109,7 @@ export const AVAILABLE_MODELS: OllamaModel[] = [
   },
 ]
 
-export const DEFAULT_MODEL = "gemma3"
+export const DEFAULT_MODEL = "gemma3:4b"
 
 function candidateBaseUrls(baseUrl: string): string[] {
   const normalized = baseUrl.replace(/\/$/, "")

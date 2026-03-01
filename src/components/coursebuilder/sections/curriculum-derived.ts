@@ -11,8 +11,8 @@ export interface SavedTemplateLike {
 
 export interface ModulePreviewItem {
   title: string
-  lessonStart: number
-  lessonEnd: number
+  sessionStart: number
+  sessionEnd: number
   index: number
 }
 
@@ -25,7 +25,7 @@ export function deriveTemplateOptions(args: {
   filteredTemplates: SavedTemplateLike[]
   availableTemplateTypes: TemplateType[]
   defaultTemplateOptions: TemplateType[]
-  lessonTemplateOptions: TemplateType[]
+  sessionTemplateOptions: TemplateType[]
 } {
   const { savedTemplates, selectedCourseType, certificateMode, courseTypeTemplateFilters } = args
   const filteredTemplates = savedTemplates.filter((template) => {
@@ -42,7 +42,7 @@ export function deriveTemplateOptions(args: {
   )
 
   const defaultTemplateOptions: TemplateType[] = availableTemplateTypes.length > 0 ? availableTemplateTypes : ["lesson"]
-  const lessonTemplateOptions: TemplateType[] = defaultTemplateOptions.includes("certificate") || certificateMode === "never"
+  const sessionTemplateOptions: TemplateType[] = defaultTemplateOptions.includes("certificate") || certificateMode === "never"
     ? defaultTemplateOptions
     : [...defaultTemplateOptions, "certificate"]
 
@@ -50,27 +50,27 @@ export function deriveTemplateOptions(args: {
     filteredTemplates,
     availableTemplateTypes,
     defaultTemplateOptions,
-    lessonTemplateOptions,
+    sessionTemplateOptions,
   }
 }
 
 export function buildCertificateLessonIndexes(args: {
   certificateMode: CertificateMode
-  effectiveLessonCount: number
+  effectiveSessionCount: number
   moduleOrg: string
   moduleCount: number
 }): Set<number> {
-  const { certificateMode, effectiveLessonCount, moduleOrg, moduleCount } = args
+  const { certificateMode, effectiveSessionCount, moduleOrg, moduleCount } = args
 
-  if (certificateMode === "never" || effectiveLessonCount < 1) return new Set<number>()
-  if (certificateMode === "end-course") return new Set<number>([effectiveLessonCount - 1])
+  if (certificateMode === "never" || effectiveSessionCount < 1) return new Set<number>()
+  if (certificateMode === "end-course") return new Set<number>([effectiveSessionCount - 1])
 
   const modules = Math.max(1, moduleOrg === "linear" ? 1 : moduleCount)
-  const perModule = Math.ceil(effectiveLessonCount / modules)
+  const perModule = Math.ceil(effectiveSessionCount / modules)
   const indexes = new Set<number>()
 
   for (let moduleIndex = 0; moduleIndex < modules; moduleIndex += 1) {
-    const moduleEnd = Math.min((moduleIndex + 1) * perModule, effectiveLessonCount)
+    const moduleEnd = Math.min((moduleIndex + 1) * perModule, effectiveSessionCount)
     indexes.add(Math.max(0, moduleEnd - 1))
   }
 
@@ -81,24 +81,24 @@ export function buildModulesForPreview(args: {
   moduleOrg: string
   moduleCount: number
   moduleNames: string[]
-  effectiveLessonCount: number
+  effectiveSessionCount: number
 }): ModulePreviewItem[] {
-  const { moduleOrg, moduleCount, moduleNames, effectiveLessonCount } = args
+  const { moduleOrg, moduleCount, moduleNames, effectiveSessionCount } = args
 
   if (moduleOrg === "linear") {
-    return [{ title: moduleNames[0] || "Module 1", lessonStart: 1, lessonEnd: effectiveLessonCount, index: 0 }]
+    return [{ title: moduleNames[0] || "Module 1", sessionStart: 1, sessionEnd: effectiveSessionCount, index: 0 }]
   }
 
   const modules = Math.max(1, moduleCount)
-  const perModule = Math.ceil(effectiveLessonCount / modules)
+  const perModule = Math.ceil(effectiveSessionCount / modules)
 
   return Array.from({ length: modules }, (_, moduleIndex) => {
-    const lessonStart = moduleIndex * perModule + 1
-    const lessonEnd = Math.min((moduleIndex + 1) * perModule, effectiveLessonCount)
+    const sessionStart = moduleIndex * perModule + 1
+    const sessionEnd = Math.min((moduleIndex + 1) * perModule, effectiveSessionCount)
     return {
       title: moduleNames[moduleIndex] || `Module ${moduleIndex + 1}`,
-      lessonStart,
-      lessonEnd: Math.max(lessonStart, lessonEnd),
+      sessionStart,
+      sessionEnd: Math.max(sessionStart, sessionEnd),
       index: moduleIndex,
     }
   })

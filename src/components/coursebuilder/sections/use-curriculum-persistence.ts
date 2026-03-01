@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useRef } from "react"
-import { updateCourseById, useDebouncedChangeSave } from "@/components/coursebuilder"
+import { useCallback, useEffect, useRef } from "react"
+import { updateCourseById } from "@/components/coursebuilder"
 import type { GenerationAction, NamingRules } from "@/lib/curriculum/ai-generation-service"
 import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import type { CertificateMode } from "./curriculum-derived"
@@ -15,7 +15,7 @@ export interface CurriculumPersistenceParams {
   courseType: string
   templateDefaultType: TemplateType
   certificateMode: CertificateMode
-  effectiveLessonCount: number
+  effectiveSessionCount: number
   moduleCount: number
   moduleNames: string[]
   topics: number
@@ -25,7 +25,7 @@ export interface CurriculumPersistenceParams {
   namingRules: NamingRules
   sessionRows: CurriculumSessionRow[]
   scheduleEntries: ScheduleGeneratedEntry[]
-  resolveTemplateTypeForLesson: (row: Partial<CurriculumSessionRow> | undefined, index: number) => TemplateType
+  resolveTemplateTypeForSession: (row: Partial<CurriculumSessionRow> | undefined, index: number) => TemplateType
   optCtx: { schedule: boolean; structure: boolean; existing: boolean }
   previewMode: PreviewMode
   lastAction: GenerationAction | null
@@ -48,7 +48,7 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
       title: row.title,
       notes: row.notes,
       template_id: row.template_id,
-      template_type: p.resolveTemplateTypeForLesson(row, i),
+      template_type: p.resolveTemplateTypeForSession(row, i),
       duration_minutes: row.duration_minutes,
       topics: row.topics,
       objectives: row.objectives,
@@ -60,10 +60,10 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
       template_design: row.template_design,
     }))
 
-    const lessons = p.sessionRows.map((row, i) => {
+    const sessions = p.sessionRows.map((row, i) => {
       const schedule = p.scheduleEntries[i]
       return {
-        lessonNumber: i + 1,
+        sessionNumber: i + 1,
         title: row.title,
         notes: row.notes,
         scheduleEntryId: row.schedule_entry_id,
@@ -80,7 +80,7 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
         course_type: p.courseType,
         template_default_type: p.templateDefaultType,
         certificate_mode: p.certificateMode,
-        lesson_count: p.effectiveLessonCount,
+        session_count: p.effectiveSessionCount,
         module_count: p.moduleCount,
         module_names: p.moduleNames,
         topics: p.topics,
@@ -89,7 +89,7 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
         sequencing_mode: p.sequencingMode,
         naming_rules: p.namingRules,
         session_rows: serializedRows,
-        lessons,
+        sessions,
       },
       updated_at: new Date().toISOString(),
     })
@@ -116,14 +116,14 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
           module_org: p.moduleOrg,
           module_count: p.moduleCount,
           module_names: p.moduleNames,
-          lesson_count: p.effectiveLessonCount,
+          session_count: p.effectiveSessionCount,
           topics_per_lesson: p.topics,
           objectives_per_topic: p.objectives,
           tasks_per_objective: p.tasks,
           session_rows: p.sessionRows.map((row, i) => ({
             id: row.id,
             session_number: row.session_number ?? i + 1,
-            title: row.title ?? `Lesson ${i + 1}`,
+            title: row.title ?? `Session ${i + 1}`,
             notes: row.notes ?? "",
           })),
         },
@@ -139,8 +139,78 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
     p.generationSettingsRef.current = next
   }, [])
 
-  useDebouncedChangeSave(handleSave, 800, Boolean(params.courseId))
-  useDebouncedChangeSave(persistGenerationSettings, 600, Boolean(params.courseId))
+  // ── Debounced curriculum_data save ────────────────────────────────────────
+  //
+  // useDebouncedChangeSave watches the callback reference for changes.
+  // handleSave has an empty deps array (reads via paramsRef) so its reference
+  // never changes — the debounce would therefore fire only once and be skipped
+  // by the isFirstRun guard, meaning saves would never run.
+  //
+  // Fix: watch a serialized fingerprint of the key fields we want to save.
+  // When any value changes the fingerprint changes, the effect re-runs, and
+  // the 800 ms debounce fires handleSave with fresh data from paramsRef.
+
+  const sessionRowsFingerprint = params.sessionRows
+    .map((r) => `${r.id}:${r.title}:${r.template_type ?? ""}:${r.topics ?? ""}:${r.objectives ?? ""}:${r.tasks ?? ""}`)
+    .join("|")
+  const moduleNamesFingerprint = params.moduleNames.join(",")
+  const namingRulesFingerprint = `${params.namingRules.lessonTitleRule}:${params.namingRules.topicRule}:${params.namingRules.objectiveRule}:${params.namingRules.taskRule}`
+
+  const isFirstCurriculumSave = useRef(true)
+  useEffect(() => {
+    if (!params.courseId) return
+    if (isFirstCurriculumSave.current) {
+      isFirstCurriculumSave.current = false
+      return
+    }
+    const timer = setTimeout(() => { void handleSave() }, 800)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    params.courseId,
+    params.moduleOrg,
+    params.contentVolume,
+    params.courseType,
+    params.templateDefaultType,
+    params.certificateMode,
+    params.effectiveSessionCount,
+    params.moduleCount,
+    params.topics,
+    params.objectives,
+    params.tasks,
+    params.sequencingMode,
+    sessionRowsFingerprint,
+    moduleNamesFingerprint,
+    namingRulesFingerprint,
+  ])
+
+  // ── Debounced generation_settings save ────────────────────────────────────
+
+  const isFirstGenSave = useRef(true)
+  useEffect(() => {
+    if (!params.courseId) return
+    if (isFirstGenSave.current) {
+      isFirstGenSave.current = false
+      return
+    }
+    const timer = setTimeout(() => { void persistGenerationSettings() }, 600)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    params.courseId,
+    params.optCtx.schedule,
+    params.optCtx.structure,
+    params.optCtx.existing,
+    params.previewMode,
+    params.lastAction,
+    params.topics,
+    params.objectives,
+    params.tasks,
+    params.moduleOrg,
+    params.moduleCount,
+    params.effectiveSessionCount,
+    sessionRowsFingerprint,
+  ])
 
   return { handleSave, persistGenerationSettings }
 }

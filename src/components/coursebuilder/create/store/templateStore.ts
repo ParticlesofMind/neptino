@@ -52,8 +52,12 @@ interface TemplateState {
   toggleBlock:      (sessionId: SessionId, block: BlockKey) => void
   setBlockOrder:    (sessionId: SessionId, order: BlockKey[]) => void
   setDensity:       (sessionId: SessionId, density: VisualDensity) => void
-  /** Initialise a session config from an existing definition */
-  initSession:      (sessionId: SessionId, partial?: Partial<SessionTemplateConfig>) => void
+  /** Initialise a session config from an existing definition.
+   * When `force` is true the update is applied even if a config already exists
+   * for this session (used by the session loader to apply Supabase template
+   * settings, overriding any stale localStorage-persisted value).
+   */
+  initSession:      (sessionId: SessionId, partial?: Partial<SessionTemplateConfig>, force?: boolean) => void
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -117,12 +121,13 @@ export const useTemplateStore = create<TemplateState>()(
       setDensity: (sessionId, density) =>
         set((s) => ({ configs: patchConfig(s.configs, sessionId, { visualDensity: density }) })),
 
-      initSession: (sessionId, partial = {}) =>
+      initSession: (sessionId, partial = {}, force = false) =>
         set((s) => {
           const existing = s.configs[sessionId]
           const incomingType = partial.templateType ?? DEFAULT_SESSION_CONFIG.templateType
-          // Re-derive if no config exists OR if the template type changed
-          if (existing && existing.templateType === incomingType) return s
+          // Skip if config already exists with the same type and force is not set.
+          // force=true is passed by the session loader (Supabase wins over localStorage).
+          if (existing && existing.templateType === incomingType && !force) return s
           const derived = deriveBlocksFromDefinition(incomingType)
           return {
             configs: {

@@ -14,7 +14,7 @@ import {
 export function useCurriculumSessionRows(params: {
   sessionRows: CurriculumSessionRow[]
   setSessionRows: React.Dispatch<React.SetStateAction<CurriculumSessionRow[]>>
-  effectiveLessonCount: number
+  effectiveSessionCount: number
   scheduleEntries: ScheduleGeneratedEntry[]
   topics: number
   objectives: number
@@ -23,11 +23,11 @@ export function useCurriculumSessionRows(params: {
   templateDefaultType: TemplateType
 }) {
   const {
-    sessionRows, setSessionRows, effectiveLessonCount, scheduleEntries,
+    sessionRows, setSessionRows, effectiveSessionCount, scheduleEntries,
     topics, objectives, tasks, certificateLessonIndexes, templateDefaultType,
   } = params
 
-  const resolveTemplateTypeForLesson = useCallback(
+  const resolveTemplateTypeForSession = useCallback(
     (row: Partial<CurriculumSessionRow> | undefined, index: number): TemplateType => {
       if (row?.template_type) return row.template_type
       if (certificateLessonIndexes.has(index)) return "certificate"
@@ -38,13 +38,13 @@ export function useCurriculumSessionRows(params: {
 
   useEffect(() => {
     setSessionRows((prev) => {
-      const targetCount = Math.max(1, effectiveLessonCount)
+      const targetCount = Math.max(1, effectiveSessionCount)
       let changed = prev.length !== targetCount
 
       const next = Array.from({ length: targetCount }, (_, index) => {
         const existing = prev[index]
         const schedule = scheduleEntries[index]
-        const resolvedType = resolveTemplateTypeForLesson(existing, index)
+        const resolvedType = resolveTemplateTypeForSession(existing, index)
         const scheduleDuration = calculateSessionDuration(schedule?.start_time, schedule?.end_time)
         const durationForCaps = existing?.duration_minutes ?? scheduleDuration ?? null
         const norm = normalizeContentLoadConfig(
@@ -89,11 +89,11 @@ export function useCurriculumSessionRows(params: {
 
       return changed ? next : prev
     })
-  }, [effectiveLessonCount, scheduleEntries, topics, objectives, tasks, resolveTemplateTypeForLesson, setSessionRows])
+  }, [effectiveSessionCount, scheduleEntries, topics, objectives, tasks, resolveTemplateTypeForSession, setSessionRows])
 
-  const lessonRowsForPreview = useMemo(
+  const sessionRowsForPreview = useMemo(
     () =>
-      Array.from({ length: effectiveLessonCount }, (_, index) => {
+      Array.from({ length: effectiveSessionCount }, (_, index) => {
         const row = sessionRows[index]
         const norm = normalizeContentLoadConfig(
           {
@@ -105,11 +105,11 @@ export function useCurriculumSessionRows(params: {
         )
         return {
           ...(row ?? {}),
-          id: row?.id ?? `lesson-${index + 1}`,
+          id: row?.id ?? `session-${index + 1}`,
           session_number: row?.session_number ?? index + 1,
-          title: row?.title?.trim() || `Lesson ${index + 1}`,
+          title: row?.title?.trim() || `Session ${index + 1}`,
           template_id: row?.template_id,
-          template_type: resolveTemplateTypeForLesson(row, index),
+          template_type: resolveTemplateTypeForSession(row, index),
           topics: norm.topicsPerLesson,
           objectives: norm.objectivesPerTopic,
           tasks: norm.tasksPerObjective,
@@ -118,14 +118,14 @@ export function useCurriculumSessionRows(params: {
           task_names: Array.from({ length: norm.tasksPerObjective }, (_, i) => row?.task_names?.[i] || ""),
         }
       }),
-    [effectiveLessonCount, sessionRows, topics, objectives, tasks, resolveTemplateTypeForLesson],
+    [effectiveSessionCount, sessionRows, topics, objectives, tasks, resolveTemplateTypeForSession],
   )
 
   const upsertSessionRow = useCallback(
     (index: number, updates: Partial<CurriculumSessionRow>) => {
       setSessionRows((prev) => {
         const next = [...prev]
-        const preview = lessonRowsForPreview[index]
+        const preview = sessionRowsForPreview[index]
         if (!preview) return prev
 
         const existing = next[index] ?? {
@@ -150,8 +150,8 @@ export function useCurriculumSessionRows(params: {
         return next
       })
     },
-    [setSessionRows, lessonRowsForPreview],
+    [setSessionRows, sessionRowsForPreview],
   )
 
-  return { resolveTemplateTypeForLesson, lessonRowsForPreview, upsertSessionRow }
+  return { resolveTemplateTypeForSession, sessionRowsForPreview, upsertSessionRow }
 }

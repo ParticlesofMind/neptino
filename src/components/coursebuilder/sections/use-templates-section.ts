@@ -20,7 +20,6 @@ import {
   type LocalTemplate,
   type TemplateBlockConfig,
   type TemplateFieldState,
-  type TemplateSettingsPayload,
   type TemplateUiState,
 } from "./template-section-data"
 
@@ -42,7 +41,6 @@ export function useTemplatesSection(courseId: string | null) {
   // ── UI hydration state ────────────────────────────────────────────────────
   const [uiStateLoaded, setUiStateLoaded]     = useState(false)
   const [localUiState, setLocalUiState]       = useState<TemplateUiState | null>(null)
-  const [serverUiState, setServerUiState]     = useState<TemplateUiState | null>(null)
 
   const uiStorageKey = courseId ? `coursebuilder:templates:ui:${courseId}` : null
 
@@ -56,7 +54,7 @@ export function useTemplatesSection(courseId: string | null) {
 
   // ── Load templates on courseId change ─────────────────────────────────────
   useEffect(() => {
-    queueMicrotask(() => { setUiStateLoaded(false); setLocalUiState(null); setServerUiState(null) })
+    queueMicrotask(() => { setUiStateLoaded(false); setLocalUiState(null) })
   }, [courseId])
 
   useEffect(() => {
@@ -71,36 +69,39 @@ export function useTemplatesSection(courseId: string | null) {
       }
     }
     const supabase = createClient()
-    supabase.from("courses").select("template_settings").eq("id", courseId).single().then(({ data, error }) => {
+    // Fetch templates + course_layout (owns visualDensity / bodyBlockGap since the
+    // 20260301120000 migration; template_settings no longer carries ui state).
+    supabase.from("courses").select("template_settings, course_layout").eq("id", courseId).single().then(({ data, error }) => {
       if (error) return
       const settings = normalizeTemplateSettings(data?.template_settings)
       setTemplates(settings.templates.map(normalizeTemplate))
-      setServerUiState(settings.ui ?? null)
+      // Seed visualDensity from course_layout so the template preview matches
+      // the setting the teacher configured in the Interface section.
+      const layout = data?.course_layout as { visualDensity?: TemplateVisualDensity } | null
+      if (layout?.visualDensity) setVisualDensity(layout.visualDensity)
     })
   }, [courseId, uiStorageKey])
 
   // ── Persist to Supabase ───────────────────────────────────────────────────
-  const persistTemplates = useCallback(async (list: LocalTemplate[], uiOverrides?: Partial<TemplateUiState>) => {
+  // Only the templates[] array is persisted.  UI state (active panel, view mode)
+  // is ephemeral and lives in localStorage only.  visualDensity / bodyBlockGap
+  // are owned by course_layout and written exclusively by InterfaceSection.
+  const persistTemplates = useCallback(async (list: LocalTemplate[]) => {
     if (!courseId) return
     const supabase = createClient()
-    const payload: TemplateSettingsPayload = {
-      templates: list,
-      ui: {
-        activeId:       uiOverrides?.activeId     ?? activeId,
-        panelView:      uiOverrides?.panelView    ?? panelView,
-        configView:     uiOverrides?.configView   ?? configView,
-        visualDensity:  uiOverrides?.visualDensity ?? visualDensity,
-      },
-    }
-    await supabase.from("courses").update({ template_settings: payload, updated_at: new Date().toISOString() }).eq("id", courseId)
-  }, [courseId, activeId, panelView, configView, visualDensity])
+    await supabase
+      .from("courses")
+      .update({ template_settings: { templates: list }, updated_at: new Date().toISOString() })
+      .eq("id", courseId)
+  }, [courseId])
 
-  // ── Persist UI state to localStorage ─────────────────────────────────────
+  // ── Persist panel UI state to localStorage ───────────────────────────────
+  // Only panel/nav state is stored here.  visualDensity is owned by course_layout.
   useEffect(() => {
     if (!uiStorageKey) return
-    const nextState: TemplateUiState = { activeId, panelView, configView, visualDensity }
+    const nextState: TemplateUiState = { activeId, panelView, configView }
     localStorage.setItem(uiStorageKey, JSON.stringify(nextState))
-  }, [uiStorageKey, activeId, panelView, configView, visualDensity])
+  }, [uiStorageKey, activeId, panelView, configView])
 
   // ── Body scroll lock when overlays are open ───────────────────────────────
   useEffect(() => {
@@ -114,19 +115,16 @@ export function useTemplatesSection(courseId: string | null) {
   useEffect(() => {
     if (uiStateLoaded) return
     if (templates.length === 0) return
-    const savedUi     = localUiState ?? serverUiState
-    const targetId    = savedUi?.activeId ?? templates[0]?.id ?? null
-    const targetTpl   = targetId ? templates.find(t => t.id === targetId) ?? null : null
-    const nextPanelView   = savedUi?.panelView
-    const nextDensity     = savedUi?.visualDensity ?? DEFAULT_TEMPLATE_VISUAL_DENSITY
+    const savedUi   = localUiState
+    const targetId  = savedUi?.activeId ?? templates[0]?.id ?? null
+    const targetTpl = targetId ? templates.find(t => t.id === targetId) ?? null : null
     queueMicrotask(() => {
       if (targetTpl) loadTemplate(targetTpl)
-      if (nextPanelView) setPanelView(nextPanelView)
-      setVisualDensity(nextDensity)
+      if (savedUi?.panelView) setPanelView(savedUi.panelView)
       setUiStateLoaded(true)
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [templates, localUiState, serverUiState, uiStateLoaded])
+  }, [templates, localUiState, uiStateLoaded])
 
   // ── DnD sensors ───────────────────────────────────────────────────────────
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))

@@ -42,12 +42,12 @@ function repairJSON(raw: string): string {
  * Regex-based fallback: extract individual lesson objects from malformed JSON.
  * Works even when the overall JSON structure is broken (e.g. truncated mid-lesson).
  */
-function extractLessonsViaRegex(text: string): Record<string, unknown>[] {
-  const lessons: Record<string, unknown>[] = []
-  const lessonPattern = /\{\s*"lessonNumber"\s*:\s*(\d+)\s*,\s*"lessonTitle"\s*:\s*"([^"]*?)"/g
+function extractSessionsViaRegex(text: string): Record<string, unknown>[] {
+  const sessions: Record<string, unknown>[] = []
+  const sessionPattern = /\{\s*"sessionNumber"\s*:\s*(\d+)\s*,\s*"sessionTitle"\s*:\s*"([^"]*?)"/g
   let match
 
-  while ((match = lessonPattern.exec(text)) !== null) {
+  while ((match = sessionPattern.exec(text)) !== null) {
     const startIdx = match.index
 
     // Find closing brace by counting depth
@@ -66,10 +66,10 @@ function extractLessonsViaRegex(text: string): Record<string, unknown>[] {
     try {
       const repaired = endIdx === -1 ? repairJSON(fragment) : fragment
       const obj = JSON.parse(repaired) as Record<string, unknown>
-      if (obj.lessonNumber && obj.lessonTitle) {
-        lessons.push({
-          lessonNumber: obj.lessonNumber,
-          lessonTitle: obj.lessonTitle,
+      if (obj.sessionNumber && obj.sessionTitle) {
+        sessions.push({
+          sessionNumber: obj.sessionNumber,
+          sessionTitle: obj.sessionTitle,
           topics: Array.isArray(obj.topics) ? obj.topics : [],
           objectives: Array.isArray(obj.objectives) ? obj.objectives : [],
           tasks: Array.isArray(obj.tasks) ? obj.tasks : [],
@@ -79,10 +79,10 @@ function extractLessonsViaRegex(text: string): Record<string, unknown>[] {
       // Fragment too broken — skip
     }
 
-    if (endIdx === -1) break // Truncated = last lesson
+    if (endIdx === -1) break // Truncated = last session
   }
 
-  return lessons
+  return sessions
 }
 
 export function parseGenerationResponse(responseText: string): GenerationResponse {
@@ -131,47 +131,47 @@ export function parseGenerationResponse(responseText: string): GenerationRespons
       ) as GeneratedCurriculumContent["modules"]
       : []
 
-    const validatedLessons = Array.isArray(parsed?.lessons)
-      ? (parsed.lessons as Record<string, unknown>[]).filter(
-        (lesson) =>
-          lesson.lessonNumber &&
-          lesson.lessonTitle &&
-          Array.isArray(lesson.topics) &&
-          Array.isArray(lesson.objectives) &&
-          Array.isArray(lesson.tasks),
-      ) as GeneratedCurriculumContent["lessons"]
+    const validatedSessions = Array.isArray(parsed?.sessions)
+      ? (parsed.sessions as Record<string, unknown>[]).filter(
+        (session) =>
+          session.sessionNumber &&
+          session.sessionTitle &&
+          Array.isArray(session.topics) &&
+          Array.isArray(session.objectives) &&
+          Array.isArray(session.tasks),
+      ) as GeneratedCurriculumContent["sessions"]
       : []
 
-    if ((validatedLessons?.length ?? 0) > 0 || (validatedModules?.length ?? 0) > 0) {
+    if ((validatedSessions?.length ?? 0) > 0 || (validatedModules?.length ?? 0) > 0) {
       const parts: string[] = []
       if ((validatedModules?.length ?? 0) > 0) parts.push(`${validatedModules?.length} module(s)`)
-      if ((validatedLessons?.length ?? 0) > 0) parts.push(`${validatedLessons?.length} lesson(s)`)
+      if ((validatedSessions?.length ?? 0) > 0) parts.push(`${validatedSessions?.length} session(s)`)
       return {
         success: true,
         message: `Successfully generated ${parts.join(" and ")}`,
         content: {
           ...(validatedModules && validatedModules.length > 0 ? { modules: validatedModules } : {}),
-          ...(validatedLessons && validatedLessons.length > 0 ? { lessons: validatedLessons } : {}),
+          ...(validatedSessions && validatedSessions.length > 0 ? { sessions: validatedSessions } : {}),
         },
         generatedAt: new Date().toISOString(),
       }
     }
 
-    // ── Strategy 2: Regex-based lesson extraction ──
-    const extractedLessons = extractLessonsViaRegex(cleaned) as GeneratedCurriculumContent["lessons"]
-    if (extractedLessons && extractedLessons.length > 0) {
+    // ── Strategy 2: Regex-based session extraction ──
+    const extractedSessions = extractSessionsViaRegex(cleaned) as GeneratedCurriculumContent["sessions"]
+    if (extractedSessions && extractedSessions.length > 0) {
       return {
         success: true,
-        message: `Successfully extracted ${extractedLessons.length} lesson(s) from partial response`,
-        content: { lessons: extractedLessons },
+        message: `Successfully extracted ${extractedSessions.length} session(s) from partial response`,
+        content: { sessions: extractedSessions },
         generatedAt: new Date().toISOString(),
       }
     }
 
     return {
       success: false,
-      message: "No valid lessons in response",
-      error: "Could not extract any valid lessons from AI response",
+      message: "No valid sessions in response",
+      error: "Could not extract any valid sessions from AI response",
     }
   } catch (error) {
     return {
@@ -234,7 +234,7 @@ export async function callGenerationAPI(
 
   const prompt = formatGenerationPrompt(context, sourceExcerpts, action)
   console.log("[callGenerationAPI] Prompt length:", prompt.length, "chars")
-  console.log("[callGenerationAPI] Lesson count requested:", context.curriculum.lessonCount)
+  console.log("[callGenerationAPI] Session count requested:", context.curriculum.sessionCount)
   if (selectedModel) {
     console.log("[callGenerationAPI] Selected model:", selectedModel)
   }
@@ -291,9 +291,9 @@ export async function callGenerationAPI(
 
     const result = parseGenerationResponse(rawText)
     console.log("[callGenerationAPI] Parse result:", result.success, result.message)
-    if (result.content?.lessons) {
-      console.log("[callGenerationAPI] Lessons generated:", result.content.lessons.length)
-      console.log("[callGenerationAPI] First lesson title:", result.content.lessons[0]?.lessonTitle)
+    if (result.content?.sessions) {
+      console.log("[callGenerationAPI] Sessions generated:", result.content.sessions.length)
+      console.log("[callGenerationAPI] First session title:", result.content.sessions[0]?.sessionTitle)
     }
     return result
   } catch (error) {

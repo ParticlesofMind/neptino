@@ -23,12 +23,12 @@ export function InterfaceSection({ courseId }: { courseId: string | null }) {
     const supabase = createClient()
     supabase
       .from("courses")
-      .select("template_settings")
+      .select("course_layout")
       .eq("id", courseId)
       .single()
       .then(({ data, error }) => {
-        if (!error && data?.template_settings) {
-          const settings = normalizeTemplateUiSettings(data.template_settings)
+        if (!error && data?.course_layout) {
+          const settings = normalizeTemplateUiSettings(data.course_layout)
           setVisualDensity(settings.visualDensity)
           setBodyBlockGap(settings.bodyBlockGap)
         }
@@ -45,37 +45,27 @@ export function InterfaceSection({ courseId }: { courseId: string | null }) {
     const supabase = createClient()
     const { error } = await supabase
       .from("courses")
-      .select("template_settings")
+      .select("course_layout")
       .eq("id", courseId)
       .single()
       .then(async ({ data: currentData, error: fetchError }) => {
-        if (fetchError || !currentData?.template_settings) {
+        if (fetchError || !currentData?.course_layout) {
           return { error: true }
         }
 
-        const currentSettings =
-          typeof currentData.template_settings === "object"
-            ? (currentData.template_settings as Record<string, unknown>)
+        const currentLayout =
+          typeof currentData.course_layout === "object" && currentData.course_layout !== null
+            ? (currentData.course_layout as Record<string, unknown>)
             : {}
-
-        const templates = Array.isArray(currentSettings.templates)
-          ? currentSettings.templates
-          : Array.isArray(currentSettings)
-            ? currentSettings
-            : []
-
-        const nextPayload = {
-          templates,
-          ui: {
-            visualDensity,
-            bodyBlockGap,
-          },
-        }
 
         return await supabase
           .from("courses")
           .update({
-            template_settings: nextPayload,
+            course_layout: {
+              ...currentLayout,
+              visualDensity,
+              bodyBlockGap,
+            },
             updated_at: new Date().toISOString(),
           })
           .eq("id", courseId)

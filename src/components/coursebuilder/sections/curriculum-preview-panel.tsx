@@ -10,7 +10,7 @@ import { CurriculumPreviewAllView } from "./curriculum-preview-all-view"
 
 const MODE_BUTTONS: Array<{ key: PreviewMode; label: string }> = [
   { key: "modules", label: "Modules" },
-  { key: "lessons", label: "Lessons" },
+  { key: "sessions", label: "Sessions" },
   { key: "topics", label: "Topics" },
   { key: "objectives", label: "Objectives" },
   { key: "tasks", label: "Tasks" },
@@ -21,13 +21,13 @@ export interface CurriculumPreviewPanelProps {
   previewMode: PreviewMode
   setPreviewMode: (v: PreviewMode) => void
   modulesForPreview: ModulePreviewItem[]
-  lessonRowsForPreview: Array<CurriculumSessionRow & { id: string; session_number: number; title: string; template_type: TemplateType; topics: number; objectives: number; tasks: number; topic_names: string[]; objective_names: string[]; task_names: string[] }>
+  sessionRowsForPreview: Array<CurriculumSessionRow & { id: string; session_number: number; title: string; template_type: TemplateType; topics: number; objectives: number; tasks: number; topic_names: string[]; objective_names: string[]; task_names: string[] }>
   scheduleEntries: ScheduleGeneratedEntry[]
   moduleNames: string[]
   setModuleNames: React.Dispatch<React.SetStateAction<string[]>>
   filteredTemplates: SavedTemplateSummary[]
   templateDefaultType: TemplateType
-  lessonTemplateOptions: TemplateType[]
+  sessionTemplateOptions: TemplateType[]
   templateTypeLabel: (type: TemplateType) => string
   topics: number
   objectives: number
@@ -57,12 +57,12 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
         {props.previewMode === "modules" && (
           <div className="space-y-3">
             {props.modulesForPreview.map((module) => {
-              const lessons = props.lessonRowsForPreview.slice(module.lessonStart - 1, module.lessonEnd)
+              const sessions = props.sessionRowsForPreview.slice(module.sessionStart - 1, module.sessionEnd)
               return (
                 <div key={module.title} className="rounded-md border border-border bg-card p-3">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="text-xs font-medium text-muted-foreground">Module {module.index + 1}</span>
-                    <span className="text-xs text-muted-foreground">{lessons.length} lessons</span>
+                    <span className="text-xs text-muted-foreground">{sessions.length} sessions</span>
                   </div>
                   <input type="text" value={module.title}
                     onChange={(e) => { props.setModuleNames((prev) => { const updated = [...prev]; updated[module.index] = e.target.value; return updated }) }}
@@ -70,9 +70,9 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                     placeholder={`Module ${module.index + 1}`}
                   />
                   <div className="space-y-1.5 rounded-md border border-border/50 bg-background p-2">
-                    {lessons.map((row, li) => (
+                    {sessions.map((row, si) => (
                       <div key={row.id} className="border-l-2 border-primary/30 pl-2.5 py-1 text-sm text-muted-foreground">
-                        <span className="font-semibold">L{module.lessonStart + li}:</span> {row.title || "Untitled"}
+                        <span className="font-semibold">S{module.sessionStart + si}:</span> {row.title || "Untitled"}
                       </div>
                     ))}
                   </div>
@@ -82,21 +82,21 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
           </div>
         )}
 
-        {props.previewMode === "lessons" && (
+        {props.previewMode === "sessions" && (
           <div className="space-y-2.5">
-            {props.lessonRowsForPreview.map((row, index) => {
+            {props.sessionRowsForPreview.map((row, index) => {
               const schedule = props.scheduleEntries[index]
               return (
                 <div key={row.id} className="rounded-md border border-border bg-card p-3">
                   <div className="mb-2 flex items-end justify-between gap-2">
                     <label className="text-xs font-semibold text-muted-foreground">
-                      Lesson {index + 1}{schedule && ` · ${schedule.day}`}
+                      Session {index + 1}{schedule && ` · ${schedule.day}`}
                     </label>
                     <div className="grid w-[360px] grid-cols-2 gap-2">
                       <select value={row.template_type ?? props.templateDefaultType}
                         onChange={(e) => { const t = e.target.value as TemplateType; const first = props.filteredTemplates.find((f) => f.type === t); props.upsertSessionRow(index, { template_type: t, template_id: first?.id }) }}
                         className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary">
-                        {props.lessonTemplateOptions.map((type) => (
+                        {props.sessionTemplateOptions.map((type) => (
                           <option key={`${row.id}-${type}`} value={type}>{props.templateTypeLabel(type)}</option>
                         ))}
                       </select>
@@ -112,7 +112,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                   </div>
                   <input type="text" value={row.title} onChange={(e) => props.upsertSessionRow(index, { title: e.target.value })}
                     className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder={`Lesson ${index + 1}`} />
+                    placeholder={`Session ${index + 1}`} />
                 </div>
               )
             })}
@@ -121,10 +121,10 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
 
         {props.previewMode === "topics" && (
           <div className="space-y-3">
-            {props.lessonRowsForPreview.map((row, index) => (
+            {props.sessionRowsForPreview.map((row, index) => (
               <div key={row.id} className="rounded-md border border-border bg-card p-3">
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <h4 className="text-sm font-semibold text-foreground">L{index + 1}: {row.title}</h4>
+                  <h4 className="text-sm font-semibold text-foreground">S{index + 1}: {row.title}</h4>
                   <span className="text-xs text-muted-foreground">{row.topics ?? props.topics} topics</span>
                 </div>
                 <div className="space-y-2.5">
@@ -145,10 +145,10 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
 
         {props.previewMode === "objectives" && (
           <div className="space-y-3">
-            {props.lessonRowsForPreview.map((row, index) => (
+            {props.sessionRowsForPreview.map((row, index) => (
               <div key={row.id} className="rounded-md border border-border bg-card p-3">
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <h4 className="text-sm font-semibold text-foreground">L{index + 1}: {row.title}</h4>
+                  <h4 className="text-sm font-semibold text-foreground">S{index + 1}: {row.title}</h4>
                   <span className="text-xs text-muted-foreground">{row.objectives ?? props.objectives} objectives</span>
                 </div>
                 <div className="space-y-3">
@@ -176,10 +176,10 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
 
         {props.previewMode === "tasks" && (
           <div className="space-y-3">
-            {props.lessonRowsForPreview.map((row, index) => (
+            {props.sessionRowsForPreview.map((row, index) => (
               <div key={row.id} className="rounded-md border border-border bg-card p-3">
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <h4 className="text-sm font-semibold text-foreground">L{index + 1}: {row.title}</h4>
+                  <h4 className="text-sm font-semibold text-foreground">S{index + 1}: {row.title}</h4>
                   <span className="text-xs text-muted-foreground">{row.tasks ?? props.tasks} tasks</span>
                 </div>
                 <div className="space-y-3">
@@ -215,7 +215,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
         {props.previewMode === "all" && (
           <CurriculumPreviewAllView
             modulesForPreview={props.modulesForPreview}
-            lessonRowsForPreview={props.lessonRowsForPreview}
+            sessionRowsForPreview={props.sessionRowsForPreview}
             topics={props.topics}
             objectives={props.objectives}
             tasks={props.tasks}

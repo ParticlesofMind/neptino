@@ -27,6 +27,7 @@ import { LayersPanel }       from "@/components/coursebuilder/create/layers/Laye
 import { CanvasVirtualizer } from "@/components/coursebuilder/create/canvas/CanvasVirtualizer"
 import { useCardDrop }             from "@/components/coursebuilder/create/hooks/useCardDrop"
 import { useCourseSessionLoader }  from "@/components/coursebuilder/create/hooks/useCourseSessionLoader"
+import { useCanvasPersistence }    from "@/components/coursebuilder/create/hooks/useCanvasPersistence"
 import { useCourseStore }          from "@/components/coursebuilder/create/store/courseStore"
 import { useTemplateStore }  from "@/components/coursebuilder/create/store/templateStore"
 import { DEFAULT_PAGE_DIMENSIONS } from "@/components/coursebuilder/create/types"
@@ -48,6 +49,9 @@ export function CreateEditorLayout({ courseId, className }: CreateEditorLayoutPr
   // Load sessions from Supabase whenever courseId changes
   const { loading } = useCourseSessionLoader(courseId)
 
+  // Persist canvas state (topics tree, canvas pages, fieldEnabled) back to Supabase
+  useCanvasPersistence()
+
   const sessions         = useCourseStore((s) => s.sessions)
   const activeSessionId  = useCourseStore((s) => s.activeSessionId)
   const setActiveSession = useCourseStore((s) => s.setActiveSession)
@@ -59,9 +63,16 @@ export function CreateEditorLayout({ courseId, className }: CreateEditorLayoutPr
     [sessions, activeSessionId],
   )
 
-  // Initialise template-store entries for every session on load
+  // Initialise template-store entries for every session on load.
+  // Guard: read the current configs snapshot via getState() (not a reactive
+  // dependency) and skip any session that is already initialised with the
+  // same templateType — avoids clobbering in-progress user edits when an
+  // unrelated Zustand update produces a new sessions array reference.
   useEffect(() => {
+    const { configs } = useTemplateStore.getState()
     for (const session of sessions) {
+      const existing = configs[session.id as SessionId]
+      if (existing && existing.templateType === session.templateType) continue
       initSession(session.id as SessionId, { templateType: session.templateType })
     }
   }, [sessions, initSession])

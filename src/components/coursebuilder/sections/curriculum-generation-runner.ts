@@ -22,7 +22,7 @@ export interface GenerationRunnerParams {
   scheduleEntries: ScheduleGeneratedEntry[]
   moduleOrg: string
   moduleCount: number
-  effectiveLessonCount: number
+  effectiveSessionCount: number
   topics: number
   objectives: number
   tasks: number
@@ -80,7 +80,7 @@ export async function runGenerationAction(
 
   const context = buildGenerationContext(
     p.courseInfo.name, p.courseInfo.description, p.courseInfo.goals,
-    p.scheduleEntries, p.moduleOrg, p.moduleCount, p.effectiveLessonCount,
+    p.scheduleEntries, p.moduleOrg, p.moduleCount, p.effectiveSessionCount,
     p.topics, p.objectives, p.tasks, p.sessionRows,
     { schedule: p.optCtx.schedule, structure: p.optCtx.structure, existing: p.optCtx.existing },
     extras,
@@ -106,7 +106,7 @@ export async function runGenerationAction(
 
   const wipedRows = p.sessionRows.map((row) => {
     const cleared: Partial<CurriculumSessionRow> = {}
-    if (action === "all" || action === "lessons") cleared.title = `Session ${row.session_number ?? 0}`
+    if (action === "all" || action === "sessions") cleared.title = `Session ${row.session_number ?? 0}`
     if (action === "all" || action === "topics") cleared.topic_names = []
     if (action === "all" || action === "objectives") cleared.objective_names = []
     if (action === "all" || action === "tasks") cleared.task_names = []
@@ -134,11 +134,11 @@ export async function runGenerationAction(
   setRunProgress(85)
   await new Promise((resolve) => setTimeout(resolve, 300))
 
-  const generatedLessons = response.content?.lessons ?? []
+  const generatedRows = response.content?.sessions ?? []
   const generatedModules = response.content?.modules ?? []
 
-  if (action !== "modules" && generatedLessons.length === 0) {
-    setRunStatus("Generation returned no lesson data. Please try again.")
+  if (action !== "modules" && generatedRows.length === 0) {
+    setRunStatus("Generation returned no session data. Please try again.")
     setTimeout(() => setRunStatus(null), 4000)
     return { success: false, elapsedMs: Date.now() - startedAt }
   }
@@ -156,24 +156,24 @@ export async function runGenerationAction(
 
   const seedRows: CurriculumSessionRow[] = baseRows.length > 0
     ? baseRows
-    : generatedLessons.map((lesson) => ({
+    : generatedRows.map((session) => ({
         id: createRowId(),
         schedule_entry_id: "",
-        session_number: lesson.lessonNumber,
-        title: lesson.lessonTitle,
+        session_number: session.sessionNumber,
+        title: session.sessionTitle,
         notes: "",
         template_type: "lesson" as TemplateType,
       }))
 
   const updatedSessionRows = seedRows.map((row, index) => {
-    const gen = generatedLessons[index]
+    const gen = generatedRows[index]
     if (!gen) return row
     const norm = normalizeContentLoadConfig(
       { topicsPerLesson: row.topics ?? p.topics, objectivesPerTopic: row.objectives ?? p.objectives, tasksPerObjective: row.tasks ?? p.tasks },
       row.duration_minutes ?? null,
     )
     const updates: Partial<CurriculumSessionRow> = {}
-    if (action === "all" || action === "lessons") updates.title = gen.lessonTitle
+    if (action === "all" || action === "sessions") updates.title = gen.sessionTitle
     if (action === "all" || action === "topics") {
       updates.topics = norm.topicsPerLesson
       updates.topic_names = Array.from({ length: norm.topicsPerLesson }, (_, i) => gen.topics?.[i] ?? row.topic_names?.[i] ?? "")

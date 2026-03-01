@@ -47,7 +47,7 @@ export interface CurriculumLoaderSetters {
   setNamingRules: (v: NamingRules) => void
   setTemplateDefaultType: (v: TemplateType) => void
   setCertificateMode: (v: CertificateMode) => void
-  setLessonCount: (v: number) => void
+  setSessionCount: (v: number) => void
   setModuleCount: (v: number) => void
   setTopics: (v: number) => void
   setObjectives: (v: number) => void
@@ -91,7 +91,10 @@ async function loadCourse(courseId: string, s: CurriculumLoaderSetters) {
 
   const loadedGoals = Array.isArray(gs.course_goals) ? (gs.course_goals as string[]) : []
   s.setCourseGoalsList(loadedGoals)
-  s.setSelectedLLMModel((gs.selected_llm_model as string | undefined) ?? null)
+  // Normalise legacy model names stored without an explicit tag (e.g. "gemma3" → "gemma3:4b").
+  const rawModel = (gs.selected_llm_model as string | undefined) ?? null
+  const LEGACY_MODEL_ALIASES: Record<string, string> = { gemma3: "gemma3:4b", "gemma3:latest": "gemma3:4b" }
+  s.setSelectedLLMModel(rawModel !== null ? (LEGACY_MODEL_ALIASES[rawModel] ?? rawModel) : null)
 
   const savedResources = gs.resources_preferences as ResourcePreference[] | undefined
   s.setResourcePreferences(mergeResourcePreferences(Array.isArray(savedResources) ? savedResources : null))
@@ -170,7 +173,7 @@ async function loadCourse(courseId: string, s: CurriculumLoaderSetters) {
 
   s.setTemplateDefaultType((c.template_default_type as TemplateType) ?? "lesson")
   s.setCertificateMode((c.certificate_mode as CertificateMode) ?? "never")
-  s.setLessonCount(loadedScheduleEntries.length > 0 ? loadedScheduleEntries.length : ((c.lesson_count as number) ?? 8))
+  s.setSessionCount(loadedScheduleEntries.length > 0 ? loadedScheduleEntries.length : ((c.session_count as number) ?? (c.lesson_count as number) ?? 8))
   s.setModuleCount((c.module_count as number) ?? 3)
 
   const normalized = normalizeContentLoadConfig({

@@ -8,7 +8,7 @@
  * This file never needs to change.
  */
 
-import type { BlockRenderProps, SessionId, TemplateType } from "../types"
+import type { BlockRenderProps, CanvasId, SessionId, TemplateFieldState, TemplateType } from "../types"
 import { getTemplateDefinition } from "./definitions"
 import { DEFAULT_BLOCK_REGISTRY, type BlockRegistry } from "./BlockRegistry"
 import { useTemplateStore } from "../store/templateStore"
@@ -17,11 +17,18 @@ import { useTemplateStore } from "../store/templateStore"
 
 interface TemplateRendererProps {
   sessionId:   SessionId
+  /** The canvas page this renderer is mounted on — forwarded to blocks for range logic */
+  canvasId?:   CanvasId
   templateType: TemplateType
   /** Field values forwarded to every block (header/footer metadata, etc.) */
   fieldValues:  Record<string, string>
   /** Body data forwarded to complex blocks (program rows, topic tree, etc.) */
   data?:        Record<string, Record<string, unknown>>
+  /**
+   * Per-field visibility from the applied template — forwarded to every body block
+   * so they can show/hide optional columns and areas.
+   */
+  fieldEnabled?: TemplateFieldState
   /**
    * When provided, only these body block keys are rendered on this canvas page.
    * Header and footer are rendered in the page margin bands by CanvasPage — not here.
@@ -35,9 +42,11 @@ interface TemplateRendererProps {
 
 export function TemplateRenderer({
   sessionId,
+  canvasId,
   templateType,
   fieldValues,
   data = {},
+  fieldEnabled,
   allowedBlocks,
   registry,
 }: TemplateRendererProps) {
@@ -71,8 +80,10 @@ export function TemplateRenderer({
         if (!BlockComponent) return null
         const blockProps: BlockRenderProps = {
           sessionId,
+          canvasId,
           fieldValues,
           data: data[key],
+          fieldEnabled,
         }
         return <BlockComponent key={key} {...blockProps} />
       })}

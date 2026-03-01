@@ -13,9 +13,9 @@ export interface NormalizedTemplateConfig {
 }
 
 export interface TemplateFieldContext {
-  lessonNumber: number
-  lessonTitle: string
-  lessonNotes?: string
+  sessionNumber: number
+  sessionTitle: string
+  sessionNotes?: string
   moduleName: string
   courseTitle: string
   courseType?: string
@@ -89,12 +89,14 @@ export function normalizeTemplateUiSettings(raw: unknown): TemplateUiSettings {
   }
 
   if (!raw || typeof raw !== "object") return defaultSettings
-  const uiRaw = (raw as { ui?: unknown }).ui
-  if (!uiRaw || typeof uiRaw !== "object") return defaultSettings
+  // Reads directly from the object's top-level keys (course_layout shape).
+  // Previously this read from raw.ui — that wrapper is gone after the
+  // 20260301120000 migration which moved these fields into course_layout.
+  const r = raw as Record<string, unknown>
 
-  const visualDensityRaw = (uiRaw as { visualDensity?: unknown }).visualDensity
+  const visualDensityRaw = r.visualDensity
   const visualDensity = String(visualDensityRaw ?? "").toLowerCase()
-  const rawGap = Number((uiRaw as { bodyBlockGap?: unknown }).bodyBlockGap)
+  const rawGap = Number(r.bodyBlockGap)
   const bodyBlockGap = Number.isFinite(rawGap)
     ? Math.max(0, Math.min(24, Math.round(rawGap)))
     : defaultSettings.bodyBlockGap
@@ -144,9 +146,9 @@ export function formatTemplateFieldValue(fieldKey: string, context: TemplateFiel
 
   switch (fieldKey) {
     case "lesson_number":
-      return `Lesson ${context.lessonNumber}`
+      return `Session ${context.sessionNumber}`
     case "lesson_title":
-      return context.lessonTitle
+      return context.sessionTitle
     case "module_title":
       return context.moduleName
     case "course_title":
@@ -189,7 +191,7 @@ export function formatTemplateFieldValue(fieldKey: string, context: TemplateFiel
     case "max_points":
       return "100"
     case "feedback":
-      return context.lessonNotes || ""
+      return context.sessionNotes || ""
     case "submission_format":
       return "Coursebuilder submission"
     case "due_date":

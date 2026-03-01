@@ -62,7 +62,7 @@ export function extractSavedTemplates(raw: unknown): SavedTemplateSummary[] {
   }))
 }
 
-export type PreviewMode = "modules" | "lessons" | "topics" | "objectives" | "tasks" | "all"
+export type PreviewMode = "modules" | "sessions" | "topics" | "objectives" | "tasks" | "all"
 
 export const TEMPLATE_TYPE_OPTIONS: Array<{ value: TemplateType; label: string }> = [
   { value: "lesson", label: "Lesson" },
@@ -134,7 +134,7 @@ export function extractExistingSessionRows(curriculumData: Record<string, unknow
       return {
         id: createRowId(),
         schedule_entry_id: (l.scheduleEntryId as string) || "",
-        session_number: (l.lessonNumber as number) || index + 1,
+        session_number: ((l.sessionNumber ?? l.lessonNumber) as number) || index + 1,
         title: (l.title as string) || `Session ${index + 1}`,
         notes: (l.notes as string) || "",
         topic_names: [],
@@ -205,10 +205,10 @@ export const GENERATION_ACTION_CONFIG: Array<{
   description: string
   primary?: boolean
 }> = [
-  { key: "all", label: "Generate All", description: "Modules, lessons, topics, objectives, and tasks.", primary: true },
+  { key: "all", label: "Generate All", description: "Modules, sessions, topics, objectives, and tasks.", primary: true },
   { key: "modules", label: "Generate Module Names", description: "Auto-title modules based on structure." },
-  { key: "lessons", label: "Generate Lesson Names", description: "Create lesson titles for each session." },
-  { key: "topics", label: "Generate Topic Titles", description: "Fill in topics per lesson." },
+  { key: "sessions", label: "Generate Session Names", description: "Create session titles for each session." },
+  { key: "topics", label: "Generate Topic Titles", description: "Fill in topics per session." },
   { key: "objectives", label: "Generate Objectives", description: "Add objectives aligned to topics." },
   { key: "tasks", label: "Generate Tasks", description: "Create tasks per objective." },
 ]

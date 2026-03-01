@@ -20,9 +20,9 @@ import { Divider, RadioCard } from "./curriculum-primitives"
 export interface CurriculumStructurePanelProps {
   moduleOrg: string
   setModuleOrg: (v: string) => void
-  effectiveLessonCount: number
-  lessonCount: number
-  setLessonCount: (v: number) => void
+  effectiveSessionCount: number
+  sessionCount: number
+  setSessionCount: (v: number) => void
   hasGeneratedSchedule: boolean
   moduleCount: number
   setModuleCount: (v: number) => void
@@ -84,10 +84,10 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <FieldLabel>Number of Lessons</FieldLabel>
+          <FieldLabel>Number of Sessions</FieldLabel>
           <input
-            type="number" min={1} max={60} value={props.effectiveLessonCount}
-            onChange={(e) => props.setLessonCount(Math.min(60, Math.max(1, Number(e.target.value))))}
+            type="number" min={1} max={60} value={props.effectiveSessionCount}
+            onChange={(e) => props.setSessionCount(Math.min(60, Math.max(1, Number(e.target.value))))}
             disabled={props.hasGeneratedSchedule}
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
           />
@@ -199,7 +199,7 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
       <p className="text-sm text-muted-foreground -mt-4 mb-3">How generated content items should be named.</p>
       <div className="grid gap-3 sm:grid-cols-2">
         {([
-          { key: "lessonTitleRule" as const, label: "Lesson Titles" },
+          { key: "lessonTitleRule" as const, label: "Session Titles" },
           { key: "topicRule" as const, label: "Topics" },
           { key: "objectiveRule" as const, label: "Objectives" },
           { key: "taskRule" as const, label: "Tasks" },

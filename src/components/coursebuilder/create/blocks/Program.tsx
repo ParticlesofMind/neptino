@@ -23,10 +23,19 @@ const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border 
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ProgramBlock({ sessionId, fieldValues, data }: BlockRenderProps) {
+export function ProgramBlock({ sessionId, fieldValues, data, fieldEnabled }: BlockRenderProps) {
   const topics = useCourseStore(
     (s) => s.sessions.find((sess) => sess.id === sessionId)?.topics ?? [],
   )
+
+  // Column visibility — default true when no fieldEnabled config is present
+  const fe = fieldEnabled?.program
+  const showTopic       = fe ? (fe["topic"]               ?? true) : true
+  const showObjective   = fe ? (fe["objective"]           ?? true) : true
+  const showTask        = fe ? (fe["task"]                ?? true) : true
+  const showMethod      = fe ? (fe["program_method"]      ?? true) : true
+  const showSocialForm  = fe ? (fe["program_social_form"] ?? true) : true
+  const showTime        = fe ? (fe["program_time"]        ?? true) : true
 
   // Session-level pedagogical defaults — can be overridden via fieldValues
   const defaultMethod     = fieldValues["method"]      ?? data?.["method"]      as string ?? "Guided instruction"
@@ -77,30 +86,32 @@ export function ProgramBlock({ sessionId, fieldValues, data }: BlockRenderProps)
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className={TH}>Topic</th>
-            <th className={TH}>Objective</th>
-            <th className={TH}>Task</th>
-            <th className={TH}>Method</th>
-            <th className={TH}>Social Form</th>
-            <th className={TH}>Time</th>
+            {showTopic      && <th className={TH}>Topic</th>}
+            {showObjective  && <th className={TH}>Objective</th>}
+            {showTask       && <th className={TH}>Task</th>}
+            {showMethod     && <th className={TH}>Method</th>}
+            {showSocialForm && <th className={TH}>Social Form</th>}
+            {showTime       && <th className={TH}>Time</th>}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={i}>
-              {row.isTopicFirst && (
+              {showTopic     && row.isTopicFirst && (
                 <td className={TD} rowSpan={row.topicSpan}>{row.topicLabel}</td>
               )}
-              {row.isObjFirst && (
+              {showObjective && row.isObjFirst && (
                 <td className={TD} rowSpan={row.objSpan}>{row.objLabel}</td>
               )}
-              <td className={TD}>{row.taskLabel}</td>
-              {row.isTopicFirst && (
-                <>
-                  <td className={TD} rowSpan={row.topicSpan}>{row.method}</td>
-                  <td className={TD} rowSpan={row.topicSpan}>{row.socialForm}</td>
-                  <td className={TD} rowSpan={row.topicSpan}>{row.time}</td>
-                </>
+              {showTask      && <td className={TD}>{row.taskLabel}</td>}
+              {showMethod    && row.isTopicFirst && (
+                <td className={TD} rowSpan={row.topicSpan}>{row.method}</td>
+              )}
+              {showSocialForm && row.isTopicFirst && (
+                <td className={TD} rowSpan={row.topicSpan}>{row.socialForm}</td>
+              )}
+              {showTime      && row.isTopicFirst && (
+                <td className={TD} rowSpan={row.topicSpan}>{row.time}</td>
               )}
             </tr>
           ))}

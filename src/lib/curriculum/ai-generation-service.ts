@@ -90,7 +90,7 @@ export interface GenerationContext {
   curriculum: {
     moduleOrganization: string
     moduleCount: number
-    lessonCount: number
+    sessionCount: number
     topicsPerLesson: number
     objectivesPerTopic: number
     tasksPerObjective: number
@@ -127,9 +127,9 @@ export interface GeneratedCurriculumContent {
     moduleNumber: number
     moduleTitle: string
   }>
-  lessons?: Array<{
-    lessonNumber: number
-    lessonTitle: string
+  sessions?: Array<{
+    sessionNumber: number
+    sessionTitle: string
     topics?: string[]
     objectives?: string[]
     tasks?: string[]
@@ -142,7 +142,7 @@ export interface GeneratedCurriculumContent {
   }>
 }
 
-export type GenerationAction = "all" | "modules" | "lessons" | "topics" | "objectives" | "tasks"
+export type GenerationAction = "all" | "modules" | "sessions" | "topics" | "objectives" | "tasks"
 
 export interface GenerationResponse {
   success: boolean

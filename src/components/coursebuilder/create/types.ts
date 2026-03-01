@@ -113,7 +113,22 @@ export interface CanvasPage {
    * undefined = render all blocks in template order (non-lesson fallback).
    */
   blockKeys?: BlockKey[]
-  /** Ephemeral — set by useTaskHeight, not persisted */
+  /**
+   * Slice of the session's flat topic list to render inside the ContentBlock
+   * on this page.  Both bounds are absolute topic indices (0-based, inclusive
+   * start, exclusive end).
+   * undefined → render all topics (page not yet split).
+   */
+  contentTopicRange?: { start: number; end?: number }
+  /**
+   * Objective-level split within the topics shown on this page.
+   * Both bounds are session-global flat objective indices (0-based, inclusive
+   * start, exclusive end) spanning all objectives across all topics in order.
+   * undefined → render all objectives for the visible topic slice.
+   * Used as a fallback when a single large topic cannot be split at topic boundaries.
+   */
+  contentObjectiveRange?: { start: number; end?: number }
+  /** Ephemeral — set by useCanvasOverflow, not persisted */
   measuredContentHeightPx?: number
 }
 
@@ -187,6 +202,8 @@ export interface TemplateDefinition {
 // ─── Block render props ───────────────────────────────────────────────────────
 export interface BlockRenderProps {
   sessionId: SessionId
+  /** The canvas page this block is being rendered on — used by ContentBlock for topic-range slicing */
+  canvasId?: CanvasId
   /** Field values sourced from the course/session metadata */
   fieldValues: Record<string, string>
   /** Body data for complex blocks (program table rows, resource rows, topic tree) */
