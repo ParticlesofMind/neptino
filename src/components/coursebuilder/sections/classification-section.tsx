@@ -22,6 +22,7 @@ import {
 } from "@/components/coursebuilder"
 import iscedData from "@/data/isced2011.json"
 import { OverlineLabel } from "@/components/ui/overline-label"
+import { CLASS_YEARS, CURRICULAR_FRAMEWORKS } from "./classification-section-data"
 
 type CourseCreatedData = {
   title: string
@@ -121,108 +122,10 @@ export function ClassificationSection({
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId) && !loading)
 
-  const classYears = [
-    // Pre-Primary
-    "Pre-Primary (Early Childhood)",
-    // Primary — mandatory schooling
-    "Primary — Year 1",
-    "Primary — Year 2",
-    "Primary — Year 3",
-    "Primary — Year 4",
-    "Primary — Year 5",
-    "Primary — Year 6",
-    // Lower Secondary — mandatory schooling
-    "Lower Secondary — Year 7",
-    "Lower Secondary — Year 8",
-    "Lower Secondary — Year 9",
-    // Upper Secondary — high school
-    "Upper Secondary — Year 10",
-    "Upper Secondary — Year 11",
-    "Upper Secondary — Year 12",
-    "Upper Secondary — Year 13",
-    // Higher Education
-    "Higher Education — Year 1",
-    "Higher Education — Year 2",
-    "Higher Education — Year 3",
-    "Higher Education — Year 4",
-    "Postgraduate",
-    // Adult / Continuing Education
-    "Adult / Continuing Education",
-    // Unspecified
-    "Unspecified",
-  ]
+  const classYears = CLASS_YEARS
+  const curricularFrameworks = CURRICULAR_FRAMEWORKS
 
-  // Comprehensive list of curricular frameworks
-  const curricularFrameworks = [
-    "IB (International Baccalaureate)",
-    "Cambridge (IGCSE / A-Level)",
-    "AP (Advanced Placement)",
-    "French Baccalaureate",
-    "German Abitur",
-    "Swiss Maturité",
-    "Italian Maturità",
-    "Spanish Bachillerato",
-    "Common Core (US)",
-    "National Curriculum (UK)",
-    "Australian Curriculum",
-    "Canadian Provincial Curriculum",
-    "New Zealand Curriculum",
-    "Singapore Curriculum",
-    "Indian CBSE",
-    "Indian ICSE",
-    "Indian State Boards",
-    "Chinese National Curriculum",
-    "Japanese Course of Study",
-    "Korean National Curriculum",
-    "Finnish National Core Curriculum",
-    "Swedish Curriculum",
-    "Norwegian Curriculum",
-    "Danish Curriculum",
-    "Dutch Curriculum",
-    "Belgian Curriculum (French)",
-    "Belgian Curriculum (Flemish)",
-    "Austrian Curriculum",
-    "Polish National Curriculum",
-    "Russian Federal Curriculum",
-    "Brazilian National Curriculum (BNCC)",
-    "Mexican National Curriculum",
-    "Argentinian Curriculum",
-    "Chilean Curriculum",
-    "South African CAPS",
-    "UAE Ministry of Education",
-    "Saudi Arabian Curriculum",
-    "Turkish National Curriculum",
-    "Israeli Curriculum",
-    "Egyptian National Curriculum",
-    "Kenyan 8-4-4 System",
-    "Nigerian National Curriculum",
-    "Hong Kong Curriculum",
-    "Taiwanese Curriculum",
-    "Thai National Curriculum",
-    "Vietnamese National Curriculum",
-    "Indonesian Curriculum",
-    "Malaysian Curriculum (KSSM)",
-    "Philippine K-12 Curriculum",
-    "Montessori",
-    "Waldorf/Steiner",
-    "Reggio Emilia",
-    "Project-Based Learning",
-    "Inquiry-Based Learning",
-    "STEAM Curriculum",
-    "Classical Education",
-    "Charlotte Mason",
-    "Unschooling",
-    "Homeschool - Eclectic",
-    "Homeschool - Traditional",
-    "College Preparatory",
-    "Vocational/Technical",
-    "Special Education (Individualized)",
-    "Gifted and Talented",
-    "Custom/Proprietary",
-    "Other",
-  ]
-
-  // Helper to match display string "01 — Education" or legacy value "education"
+    // Helper to match display string "01 — Education" or legacy value "education"
   const selectedDomain = domains.find((d) => `${d.code} — ${d.label}` === domain || d.value === domain)
   const subjects = selectedDomain?.subjects ?? []
   const selectedSubject = subjects.find((s) => `${s.code} — ${s.label}` === subject || s.value === subject)
