@@ -469,9 +469,9 @@ function NestedSlotView({
   areas: ("instruction" | "student" | "teacher")[]
 }) {
   const areaLabels: Record<string, string> = {
-    instruction: "Instruction",
-    student: "Student",
-    teacher: "Teacher",
+    instruction: "Phase 1",
+    student: "Phase 2",
+    teacher: "Phase 3",
   }
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">
@@ -749,20 +749,25 @@ function LiveNestedSlot({
                       return (
                         <div key={taskIdx} className="rounded border border-border/60 bg-background p-1.5">
                           <p className="font-semibold">Task {taskIdx + 1}: {task.task}</p>
-                          <div className="mt-1 space-y-1">
+                          <div className="mt-1 flex flex-col gap-1">
                             {resolvedAreas.map((areaKind, areaIndex) => {
                               const areaKey = buildTaskAreaKey(block, stableTaskKey, areaKind)
                               const phaseLabel = phaseLabels[Math.min(areaIndex, phaseLabels.length - 1)]
                               return (
-                                <TaskAreaDropZone
-                                  key={`${areaKey}:zone`}
-                                  seedText={phaseLabel}
-                                  areaKey={areaKey}
-                                  droppedMedia={droppedMediaByArea?.[areaKey] ?? []}
-                                  mediaDragActive={mediaDragActive}
-                                  areaHeightClass={densityAreaHeightClass}
-                                  onRemoveMedia={onRemoveAreaMedia}
-                                />
+                                <div key={`${areaKey}:wrap`} className="space-y-0.5">
+                                  <p className="text-[8px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-0.5">
+                                    {phaseLabel}
+                                  </p>
+                                  <TaskAreaDropZone
+                                    key={`${areaKey}:zone`}
+                                    seedText={phaseLabel}
+                                    areaKey={areaKey}
+                                    droppedMedia={droppedMediaByArea?.[areaKey] ?? []}
+                                    mediaDragActive={mediaDragActive}
+                                    areaHeightClass={densityAreaHeightClass}
+                                    onRemoveMedia={onRemoveAreaMedia}
+                                  />
+                                </div>
                               )
                             })}
                           </div>

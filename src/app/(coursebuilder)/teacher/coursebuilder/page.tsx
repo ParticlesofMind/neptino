@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
-import { CreateView } from "@/components/canvas/CreateView"
-import { computePageConfig } from "@/components/canvas/DomCanvas"
-import type { CanvasPageConfig } from "@/components/canvas/create-view-types"
+import { CreateEditorLayout } from "@/components/coursebuilder/create/CreateEditorLayout"
+import { computePageConfig } from "@/lib/page-config"
+import type { CanvasPageConfig } from "@/lib/page-config"
 import { SetupColumn, SetupPanelLayout, SetupPanels, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { ClassificationSection } from "@/components/coursebuilder/sections/classification-section"
 import { CurriculumSection } from "@/components/coursebuilder/sections/curriculum-section"
@@ -596,7 +596,7 @@ function PageSetupSection({
   const existingGenerationSettingsRef = useRef<Record<string, unknown> | null>(null)
 
   useCourseRowLoader<{ generation_settings: Record<string, unknown> | null }>({
-    courseId,
+    courseId: courseId ?? null,
     select: "generation_settings",
     onLoaded: (row) => {
       existingGenerationSettingsRef.current = row.generation_settings
@@ -1655,7 +1655,7 @@ function CourseBuilderPageInner() {
         ) : view === "create" ? (
           <div className="flex flex-1 overflow-hidden p-2 bg-muted/10">
             <div className="flex flex-1 overflow-hidden rounded-xl border border-border shadow-sm">
-              <CreateView canvasConfig={pageConfig} courseId={courseId} />
+              <CreateEditorLayout courseId={courseId} />
             </div>
           </div>
         ) : view === "preview" ? (

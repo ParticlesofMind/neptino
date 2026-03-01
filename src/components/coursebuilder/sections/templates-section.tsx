@@ -33,10 +33,11 @@ import {
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { TemplateBlueprint } from "@/components/coursebuilder/template-blueprint"
 import { DEFAULT_TEMPLATE_VISUAL_DENSITY, type TemplateVisualDensity } from "@/lib/curriculum/template-source-of-truth"
+import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import { OverlineLabel } from "@/components/ui/overline-label"
 
+export type { TemplateType }
 export const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] as const
-export type TemplateType = (typeof TEMPLATE_TYPES)[number]
 
 interface TemplateMeta {
   label: string
