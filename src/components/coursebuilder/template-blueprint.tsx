@@ -80,7 +80,7 @@ export function JsonTemplatePreview({
   }, [blockOrder, blueprint.body])
 
   return (
-    <div className={`flex h-full min-h-full w-full flex-col ${omitMargins ? "bg-transparent" : "bg-background"}`}>
+    <div className={`flex h-full min-h-full w-full flex-col ${omitMargins ? "bg-transparent" : "bg-white"}`}>
       {/* ── Top margin ── Header ───────────────────────────────────── */}
       {!omitMargins && (
         <MarginBand
@@ -93,7 +93,7 @@ export function JsonTemplatePreview({
 
       {/* ── Body ── content blocks ─────────────────────────────────── */}
       <div
-        className="flex-1 min-h-0 px-2 py-2"
+        className="flex-1 min-h-0 px-3 py-2"
         style={{ display: "flex", flexDirection: "column", gap: `${Math.max(0, bodyBlockGap)}px` }}
       >
         {orderedBodySlots.map((slot, idx) => (
@@ -149,7 +149,7 @@ export function TemplateBlueprint({
   }[density]
 
   const orderedTaskAreas: TaskAreaKind[] = (() => {
-    const defaults: TaskAreaKind[] = ["instruction", "student", "teacher"]
+    const defaults: TaskAreaKind[] = ["instruction", "practice", "feedback"]
     if (!taskAreaOrder || taskAreaOrder.length === 0) return defaults
     const deduped = Array.from(new Set(taskAreaOrder))
     const missing = defaults.filter((kind) => !deduped.includes(kind))
@@ -188,19 +188,19 @@ export function TemplateBlueprint({
   // tri-region blueprint (header band → body blocks → footer band).
   return (
     <TemplateBlueprintContext.Provider value={contextValue}>
-      <div className="flex w-full flex-col overflow-hidden rounded-xl bg-background">
-        {/* Type + name badge — identifies the template */}
+      <div className="flex w-full flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+        {/* Type + name badge — UI chrome, identifies the template in the configurator */}
         <div
-          className={`flex items-center justify-between border-b border-border bg-muted/40 ${config.headerPadding}`}
+          className={`flex items-center justify-between border-b border-neutral-200 bg-neutral-50 ${config.headerPadding}`}
         >
           <div className="min-w-0">
-            <p className={`truncate font-semibold text-foreground ${config.headerFontSize}`}>
+            <p className={`truncate font-semibold text-neutral-800 ${config.headerFontSize}`}>
               {name || "Untitled template"}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex-shrink-0 text-muted-foreground">{meta.icon}</span>
-            <span className={`rounded border ${meta.badge} px-2 py-1 text-xs font-semibold`}>
+            <span className="flex-shrink-0 text-neutral-400">{meta.icon}</span>
+            <span className="rounded border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-500">
               {meta.label}
             </span>
           </div>

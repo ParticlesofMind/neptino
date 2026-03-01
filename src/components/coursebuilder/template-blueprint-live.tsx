@@ -123,18 +123,18 @@ export function BlueprintBodySlot({
       if (data?.programRows && data.programRows.length > 0) {
         const cols = slot.columns
         return (
-          <div className="overflow-hidden rounded-lg border border-border/60">
+          <div className="overflow-hidden rounded-lg border border-neutral-200">
             {!isContinuation && (
-              <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+              <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
                 <SlotSectionLabel>Program</SlotSectionLabel>
               </div>
             )}
             <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-[10px] text-muted-foreground">
+              <table className="min-w-full border-collapse text-[10px] text-neutral-600">
                 <thead>
                   <tr>
                     {cols.map((col) => (
-                      <th key={col.key} className="border-b border-r border-border/50 bg-muted/20 px-1.5 py-0.5 text-left font-semibold text-muted-foreground last:border-r-0">
+                      <th key={col.key} className="border-b border-r border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-left font-semibold text-neutral-500 last:border-r-0">
                         {col.label}
                       </th>
                     ))}
@@ -150,17 +150,17 @@ export function BlueprintBodySlot({
                           : []
                         if (segmentedLines.length > 0) {
                           return (
-                            <td key={col.key} className="border-b border-r border-border/40 bg-background p-0 align-top last:border-r-0">
+                            <td key={col.key} className="border-b border-r border-neutral-100 bg-white p-0 align-top last:border-r-0">
                               <div className="flex flex-col">
                                 {segmentedLines.map((line, lineIdx) => (
-                                  <div key={lineIdx} className={`px-1.5 py-1 ${lineIdx > 0 ? "border-t border-border/40" : ""}`}>{line}</div>
+                                  <div key={lineIdx} className={`px-1.5 py-1 ${lineIdx > 0 ? "border-t border-neutral-100" : ""}`}>{line}</div>
                                 ))}
                               </div>
                             </td>
                           )
                         }
                         return (
-                          <td key={col.key} className="whitespace-pre-wrap border-b border-r border-border/40 bg-background px-1.5 py-1 align-top last:border-r-0">
+                          <td key={col.key} className="whitespace-pre-wrap border-b border-r border-neutral-100 bg-white px-1.5 py-1 align-top last:border-r-0">
                             {rawValue}
                           </td>
                         )
@@ -180,18 +180,18 @@ export function BlueprintBodySlot({
       if (data?.resourceRows && data.resourceRows.length > 0) {
         const cols = slot.columns
         return (
-          <div className="overflow-hidden rounded-lg border border-border/60">
+          <div className="overflow-hidden rounded-lg border border-neutral-200">
             {!isContinuation && (
-              <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+              <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
                 <SlotSectionLabel>Resources</SlotSectionLabel>
               </div>
             )}
             <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-[10px] text-muted-foreground">
+              <table className="min-w-full border-collapse text-[10px] text-neutral-600">
                 <thead>
                   <tr>
                     {cols.map((col) => (
-                      <th key={col.key} className="border-b border-r border-border/50 bg-muted/20 px-1.5 py-0.5 text-left font-semibold text-muted-foreground last:border-r-0">
+                      <th key={col.key} className="border-b border-r border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-left font-semibold text-neutral-500 last:border-r-0">
                         {col.label}
                       </th>
                     ))}
@@ -201,7 +201,7 @@ export function BlueprintBodySlot({
                   {data.resourceRows.map((row, rowIdx) => (
                     <tr key={rowIdx}>
                       {cols.map((col) => (
-                        <td key={col.key} className="whitespace-pre-wrap border-b border-r border-border/40 bg-background px-1.5 py-1 align-top last:border-r-0">
+                        <td key={col.key} className="whitespace-pre-wrap border-b border-r border-neutral-100 bg-white px-1.5 py-1 align-top last:border-r-0">
                           {row[col.key] || "—"}
                         </td>
                       ))}
@@ -241,15 +241,15 @@ export function BlueprintBodySlot({
     case "scoring_rubric": {
       if (data?.scoringItems && data.scoringItems.length > 0) {
         return (
-          <div className="overflow-hidden rounded-lg border border-border/60">
+          <div className="overflow-hidden rounded-lg border border-neutral-200">
             {!isContinuation && (
-              <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+              <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
                 <SlotSectionLabel>Scoring</SlotSectionLabel>
               </div>
             )}
-            <div className="p-1.5 space-y-1 text-[10px] text-muted-foreground">
+            <div className="bg-white p-1.5 space-y-1 text-[10px] text-neutral-600">
               {data.scoringItems.map((criterion, idx) => (
-                <p key={idx} className="rounded border border-border/70 bg-background px-1.5 py-0.5">{criterion}</p>
+                <p key={idx} className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5">{criterion}</p>
               ))}
             </div>
           </div>

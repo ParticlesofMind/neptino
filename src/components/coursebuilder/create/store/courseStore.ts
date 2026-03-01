@@ -14,7 +14,10 @@ import type {
   SessionId,
   CanvasId,
   TaskId,
+  BlockKey,
+  TemplateType,
 } from "../types"
+import { getTemplateDefinition } from "../templates/definitions"
 
 // ─── Shape ────────────────────────────────────────────────────────────────────
 
@@ -124,14 +127,33 @@ export const useCourseStore = create<CourseState>()(
         set((state) => ({
           sessions: mapSession(state.sessions, sessionId, (session) => {
             const nextPage = session.canvases.length + 1
-            // Inherit blockKeys from the last canvas so overflow pages show
-            // the same block(s) as the page that triggered overflow.
             const lastCanvas = session.canvases[session.canvases.length - 1]
+
+            // program and resources are session-level summary blocks — shown only
+            // once on page 1 and must never repeat on continuation pages.
+            const SESSION_ONCE_BLOCKS = new Set<BlockKey>(["program", "resources"])
+
+            let continuationBlockKeys: BlockKey[] | undefined
+            if (lastCanvas?.blockKeys === undefined) {
+              // Page 1 of a non-lesson template uses blockKeys:undefined (render all).
+              // Derive an explicit continuation set from the template definition,
+              // excluding header, footer, and the session-once blocks.
+              const def = getTemplateDefinition(session.templateType as TemplateType)
+              const contKeys = def.blocks
+                .map((b) => b.key as BlockKey)
+                .filter((k) => !SESSION_ONCE_BLOCKS.has(k) && k !== "header" && k !== "footer")
+              continuationBlockKeys = contKeys.length > 0 ? contKeys : undefined
+            } else {
+              // Explicit blockKeys: strip session-once blocks as a safety net.
+              const filtered = lastCanvas.blockKeys.filter((k) => !SESSION_ONCE_BLOCKS.has(k))
+              continuationBlockKeys = filtered.length > 0 ? filtered : lastCanvas.blockKeys
+            }
+
             const newCanvas: CanvasPage = {
               id: crypto.randomUUID() as CanvasId,
               sessionId,
               pageNumber: nextPage,
-              blockKeys: lastCanvas?.blockKeys,
+              blockKeys: continuationBlockKeys,
             }
             return { ...session, canvases: [...session.canvases, newCanvas] }
           }),
@@ -154,9 +176,10 @@ export const useCourseStore = create<CourseState>()(
     }),
     {
       name: "neptino-course-store",
-      // Only persist the session data, not derived UI state
+      // Sessions are always authoritative from Supabase — do NOT persist them
+      // to localStorage. Persisting session.canvases causes stale blockKeys to
+      // outlive code changes and triggers the overflow-append loop on every load.
       partialize: (state) => ({
-        sessions: state.sessions,
         activeSessionId: state.activeSessionId,
       }),
     },

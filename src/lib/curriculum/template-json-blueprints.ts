@@ -67,13 +67,13 @@ export interface ResourcesTableSlot {
 export interface ContentNestedSlot {
   kind: "content_nested"
   /** Which task-area sub-zones to include. */
-  areas: ("instruction" | "student" | "teacher")[]
+  areas: ("instruction" | "practice" | "feedback")[]
 }
 
 /** Same nested hierarchy framed as an exercise/homework assignment. */
 export interface AssignmentNestedSlot {
   kind: "assignment_nested"
-  areas: ("instruction" | "student" | "teacher")[]
+  areas: ("instruction" | "practice" | "feedback")[]
 }
 
 /** Scoring rubric table: criterion / weight / max points / feedback. */
@@ -177,15 +177,15 @@ const SCORING_COLUMNS: FieldRef[] = [
   { key: "feedback",   label: "Feedback" },
 ]
 
-const ALL_AREAS: ("instruction" | "student" | "teacher")[] = [
+const ALL_AREAS: ("instruction" | "practice" | "feedback")[] = [
   "instruction",
-  "student",
-  "teacher",
+  "practice",
+  "feedback",
 ]
 
-const TWO_AREAS: ("instruction" | "student" | "teacher")[] = [
+const TWO_AREAS: ("instruction" | "practice" | "feedback")[] = [
   "instruction",
-  "student",
+  "practice",
 ]
 
 // ─── Blueprint Definitions ────────────────────────────────────────────────────
@@ -347,7 +347,7 @@ export const TEMPLATE_BLUEPRINTS: Record<string, TemplateBlueprintJson> = {
     body: [
       { kind: "program_table",   columns: PROGRAM_COLUMNS },
       { kind: "resources_table", columns: RESOURCES_COLUMNS },
-      { kind: "content_nested",  areas: ALL_AREAS },
+      { kind: "content_nested",  areas: TWO_AREAS },
     ],
     footer: { left: COMMON_FOOTER_LEFT, right: COMMON_FOOTER_RIGHT },
   },

@@ -6,11 +6,11 @@
  * `CourseSession` — including the full Topic → Objective → Task tree —
  * then hydrates the Zustand course store.
  *
- * For lesson-type sessions the loader pre-creates three canvas pages so
- * each logical section always occupies its own canvas:
- *   Page 1 — program + resources  (the session overview)
- *   Page 2 — content              (instruction area)
- *   Page 3 — assignment           (student work area)
+ * Canvas pages are generated from the template definition:
+ *   Page 1   — session-once blocks (program / resources), if the template has them.
+ *   Page 2+  — one page per remaining content block (content, assignment, scoring, …).
+ * Templates with no session-once blocks start on a single page.
+ * Overflow detection appends further pages automatically at runtime.
  *
  * Call this once in CreateEditorLayout so the store is populated on mount.
  */
@@ -30,8 +30,10 @@ import type {
   Objective,
   Task,
   CanvasPage,
+  BlockKey,
 } from "../types"
 import type { TemplateType } from "@/lib/curriculum/template-blocks"
+import { getTemplateDefinition } from "../templates/definitions"
 
 // ─── Raw DB shape (subset of CurriculumSessionRow) ────────────────────────────
 
@@ -135,31 +137,50 @@ function mapRowToSession(
   })
 
   // ── Canvas pages ──────────────────────────────────────────────────────────
-  // For lesson templates: reserve page 1 for program + resources, page 2 for
-  // content, page 3 for assignment.  All other template types start with a
-  // single blank canvas and rely on overflow detection to append more.
-  const canvases: CanvasPage[] = templateType === "lesson"
-    ? [
-        {
-          id:         `${sessionId}-canvas-1` as CanvasId,
-          sessionId,
-          pageNumber: 1,
-          blockKeys:  ["program", "resources"],
-        },
-        {
-          id:         `${sessionId}-canvas-2` as CanvasId,
-          sessionId,
-          pageNumber: 2,
-          blockKeys:  ["content"],
-        },
-        {
-          id:         `${sessionId}-canvas-3` as CanvasId,
-          sessionId,
-          pageNumber: 3,
-          blockKeys:  ["assignment"],
-        },
-      ]
-    : [{ id: `${sessionId}-canvas-1` as CanvasId, sessionId, pageNumber: 1 }]
+  // Build initial pages driven by the template definition:
+  //   Page 1 — session-once blocks (program, resources) if the template has them.
+  //   Page 2+ — each content block (content, assignment, scoring, …) on its own page.
+  // Templates with no session-once blocks start with a single page.
+  // Overflow detection appends further pages automatically at runtime.
+
+  const SESSION_ONCE: Set<BlockKey> = new Set(["program", "resources"])
+
+  const def = getTemplateDefinition(templateType as TemplateType)
+  const bodyBlocks = def.blocks
+    .filter((b) => b.key !== "header" && b.key !== "footer" && b.defaultVisible)
+    .map((b) => b.key as BlockKey)
+
+  const sessionOnceKeys = bodyBlocks.filter((k) => SESSION_ONCE.has(k))
+  const contentKeys     = bodyBlocks.filter((k) => !SESSION_ONCE.has(k))
+
+  const canvases: CanvasPage[] = []
+  let   pageNum = 1
+
+  if (sessionOnceKeys.length > 0) {
+    canvases.push({
+      id:         `${sessionId}-canvas-${pageNum}` as CanvasId,
+      sessionId,
+      pageNumber: pageNum++,
+      blockKeys:  sessionOnceKeys,
+    })
+  }
+
+  if (contentKeys.length > 0) {
+    // Give each content block its own page so overflow detection per-block works cleanly.
+    contentKeys.forEach((key) => {
+      canvases.push({
+        id:         `${sessionId}-canvas-${pageNum}` as CanvasId,
+        sessionId,
+        pageNumber: pageNum++,
+        blockKeys:  [key],
+      })
+    })
+  }
+
+  // Safety: always have at least one canvas
+  if (canvases.length === 0) {
+    canvases.push({ id: `${sessionId}-canvas-1` as CanvasId, sessionId, pageNumber: 1 })
+  }
 
   return {
     id:              sessionId,

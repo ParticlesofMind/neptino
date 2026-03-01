@@ -5,7 +5,7 @@ import React from "react"
 
 export function SlotSectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50">
+    <p className="mb-0.5 text-[8px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
       {children}
     </p>
   )
@@ -19,8 +19,8 @@ export function TableSlotView({
   columns: Array<{ key: string; label: string }>
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
-      <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+    <div className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
         <SlotSectionLabel>{label}</SlotSectionLabel>
       </div>
       <div className="overflow-x-auto">
@@ -30,7 +30,7 @@ export function TableSlotView({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="border-b border-r border-border/50 bg-muted/20 px-1.5 py-0.5 text-left font-semibold text-muted-foreground last:border-r-0"
+                  className="border-b border-r border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-left font-semibold text-neutral-500 last:border-r-0"
                 >
                   {col.label}
                 </th>
@@ -43,10 +43,10 @@ export function TableSlotView({
                 {columns.map((col, colIdx) => (
                   <td
                     key={col.key}
-                    className="border-b border-r border-border/40 px-1.5 py-1 last:border-r-0"
+                    className="border-b border-r border-neutral-100 bg-white px-1.5 py-1 last:border-r-0"
                   >
                     <div
-                      className="h-2 rounded-sm bg-muted/50"
+                      className="h-2 rounded-sm bg-neutral-200"
                       style={{ width: colIdx === 0 ? "80%" : colIdx === columns.length - 1 ? "55%" : "70%" }}
                     />
                   </td>
@@ -65,34 +65,34 @@ export function NestedSlotView({
   areas,
 }: {
   label: string
-  areas: ("instruction" | "student" | "teacher")[]
+  areas: ("instruction" | "practice" | "feedback")[]
 }) {
   const areaLabels: Record<string, string> = {
-    instruction: "Phase 1",
-    student: "Phase 2",
-    teacher: "Phase 3",
+    instruction: "Instruction",
+    practice: "Practice",
+    feedback: "Feedback",
   }
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
-      <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+    <div className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
         <SlotSectionLabel>{label}</SlotSectionLabel>
       </div>
-      <div className="p-1.5 space-y-1">
-        <div className="rounded border border-border/60 bg-background p-1">
-          <p className="mb-0.5 text-[7px] font-bold uppercase tracking-wide text-muted-foreground/50">Topic</p>
-          <div className="h-1.5 w-4/5 rounded-sm bg-muted/60" />
-          <div className="mt-1 ml-1.5 rounded border border-border/50 bg-muted/5 p-1">
-            <p className="mb-0.5 text-[7px] font-bold uppercase tracking-wide text-muted-foreground/40">Objective</p>
-            <div className="h-1.5 w-3/4 rounded-sm bg-muted/50" />
-            <div className="mt-1 ml-1.5 rounded border border-border/40 bg-background p-1">
-              <p className="mb-0.5 text-[7px] font-bold uppercase tracking-wide text-muted-foreground/35">Task</p>
+      <div className="bg-white p-1.5 space-y-1">
+        <div className="rounded border border-neutral-200 bg-neutral-50 p-1">
+          <p className="mb-0.5 text-[7px] font-bold uppercase tracking-[0.1em] text-neutral-400">Topic</p>
+          <div className="h-1.5 w-4/5 rounded-sm bg-neutral-200" />
+          <div className="mt-1 ml-1.5 rounded border border-neutral-200 bg-white p-1">
+            <p className="mb-0.5 text-[7px] font-bold uppercase tracking-[0.1em] text-neutral-400">Objective</p>
+            <div className="h-1.5 w-3/4 rounded-sm bg-neutral-200" />
+            <div className="mt-1 ml-1.5 rounded border border-neutral-100 bg-neutral-50 p-1">
+              <p className="mb-0.5 text-[7px] font-bold uppercase tracking-[0.1em] text-neutral-400">Task</p>
               <div className="ml-1 space-y-0.5">
                 {areas.map((area) => (
                   <div key={area} className="flex items-center gap-1">
-                    <span className="w-12 flex-shrink-0 text-[6px] font-medium uppercase tracking-wide text-muted-foreground/35">
+                    <span className="w-12 flex-shrink-0 text-[6px] font-medium uppercase tracking-[0.08em] text-neutral-400">
                       {areaLabels[area]}
                     </span>
-                    <div className="h-1.5 flex-1 rounded-sm bg-muted/40" />
+                    <div className="h-1.5 flex-1 rounded-sm bg-neutral-200" />
                   </div>
                 ))}
               </div>
@@ -112,8 +112,8 @@ export function ScoringRubricView({
   const previewWeights = ["30 %", "20 %", "25 %"]
   const previewPoints = ["30", "20", "25"]
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
-      <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+    <div className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
         <SlotSectionLabel>Scoring</SlotSectionLabel>
       </div>
       <div className="overflow-x-auto">
@@ -123,7 +123,7 @@ export function ScoringRubricView({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="border-b border-r border-border/50 bg-muted/20 px-1.5 py-0.5 text-left font-semibold text-muted-foreground last:border-r-0"
+                  className="border-b border-r border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-left font-semibold text-neutral-500 last:border-r-0"
                 >
                   {col.label}
                 </th>
@@ -136,15 +136,15 @@ export function ScoringRubricView({
                 {columns.map((col, colIdx) => (
                   <td
                     key={col.key}
-                    className="border-b border-r border-border/40 px-1.5 py-1 last:border-r-0"
+                    className="border-b border-r border-neutral-100 bg-white px-1.5 py-1 last:border-r-0"
                   >
                     {col.key === "weight" ? (
-                      <span className="text-[8px] text-muted-foreground/70">{previewWeights[rowIdx]}</span>
+                      <span className="text-[8px] text-neutral-500">{previewWeights[rowIdx]}</span>
                     ) : col.key === "max_points" ? (
-                      <span className="text-[8px] text-muted-foreground/70">{previewPoints[rowIdx]}</span>
+                      <span className="text-[8px] text-neutral-500">{previewPoints[rowIdx]}</span>
                     ) : (
                       <div
-                        className="h-2 rounded-sm bg-muted/50"
+                        className="h-2 rounded-sm bg-neutral-200"
                         style={{ width: colIdx === 0 ? "85%" : "65%" }}
                       />
                     )}
@@ -207,27 +207,27 @@ export function TocListView() {
 
 export function CertificateBodyView() {
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
-      <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+    <div className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
         <SlotSectionLabel>Certificate</SlotSectionLabel>
       </div>
-      <div className="flex flex-col items-center gap-2 p-4 text-center">
-        <div className="h-px w-full bg-border/50" />
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-foreground/55">
+      <div className="flex flex-col items-center gap-2 bg-white p-4 text-center">
+        <div className="h-px w-full bg-neutral-200" />
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-600">
           Certificate of Completion
         </p>
-        <div className="h-px w-full bg-border/50" />
+        <div className="h-px w-full bg-neutral-200" />
         <div className="space-y-1.5 py-1">
-          <p className="text-[8px] text-muted-foreground/55">This is to certify that</p>
-          <div className="mx-auto h-px w-32 bg-border/60" />
-          <p className="text-[8px] text-muted-foreground/55">has successfully completed</p>
-          <div className="mx-auto h-2 w-36 rounded-sm bg-muted/50" />
+          <p className="text-[8px] text-neutral-400">This is to certify that</p>
+          <div className="mx-auto h-px w-32 bg-neutral-300" />
+          <p className="text-[8px] text-neutral-400">has successfully completed</p>
+          <div className="mx-auto h-2 w-36 rounded-sm bg-neutral-200" />
         </div>
         <div className="flex w-full items-end justify-around pt-1">
           {["Signature", "Date"].map((label) => (
             <div key={label} className="flex flex-col items-center gap-0.5">
-              <div className="h-px w-20 bg-border/55" />
-              <p className="text-[7px] text-muted-foreground/45">{label}</p>
+              <div className="h-px w-20 bg-neutral-300" />
+              <p className="text-[7px] text-neutral-400">{label}</p>
             </div>
           ))}
         </div>
@@ -238,20 +238,20 @@ export function CertificateBodyView() {
 
 export function DiscussionPromptView() {
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
-      <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+    <div className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
         <SlotSectionLabel>Discussion Prompt</SlotSectionLabel>
       </div>
-      <div className="p-1.5 space-y-2">
-        <div className="rounded border border-border/40 bg-background p-1.5 space-y-1">
+      <div className="bg-white p-1.5 space-y-2">
+        <div className="rounded border border-neutral-200 bg-neutral-50 p-1.5 space-y-1">
           {[1, 0.85, 0.6].map((w, i) => (
-            <div key={i} className="h-1.5 rounded-sm bg-muted/50" style={{ width: `${w * 100}%` }} />
+            <div key={i} className="h-1.5 rounded-sm bg-neutral-200" style={{ width: `${w * 100}%` }} />
           ))}
         </div>
         <div className="space-y-0.5">
-          <p className="text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/45">Response</p>
+          <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-neutral-400">Response</p>
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-px w-full border-b border-border/30" />
+            <div key={i} className="h-px w-full border-b border-neutral-100" />
           ))}
         </div>
       </div>
@@ -261,14 +261,14 @@ export function DiscussionPromptView() {
 
 export function ReflectionJournalView() {
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
-      <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+    <div className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
         <SlotSectionLabel>Reflection Journal</SlotSectionLabel>
       </div>
-      <div className="p-1.5 space-y-0.5">
-        <div className="mb-2 h-1.5 w-3/4 rounded-sm bg-muted/40" />
+      <div className="bg-white p-1.5 space-y-0.5">
+        <div className="mb-2 h-1.5 w-3/4 rounded-sm bg-neutral-200" />
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-px w-full border-b border-border/25" />
+          <div key={i} className="h-px w-full border-b border-neutral-100" />
         ))}
       </div>
     </div>
@@ -277,21 +277,21 @@ export function ReflectionJournalView() {
 
 export function SurveyFormView() {
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
-      <div className="border-b border-border/50 bg-muted/15 px-1.5 py-0.5">
+    <div className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-1.5 py-0.5">
         <SlotSectionLabel>Survey</SlotSectionLabel>
       </div>
-      <div className="p-1.5 space-y-2">
+      <div className="bg-white p-1.5 space-y-2">
         {[1, 2, 3].map((qNum) => (
           <div key={qNum} className="space-y-0.5">
             <div className="flex items-center gap-1">
-              <span className="text-[8px] font-semibold text-muted-foreground/50">{qNum}.</span>
-              <div className="h-1.5 flex-1 rounded-sm bg-muted/50" />
+              <span className="text-[8px] font-semibold text-neutral-400">{qNum}.</span>
+              <div className="h-1.5 flex-1 rounded-sm bg-neutral-200" />
             </div>
             <div className="flex items-center gap-2 pl-3">
               {["A", "B", "C", "D"].map((opt) => (
-                <span key={opt} className="inline-flex items-center gap-0.5 text-[7px] text-muted-foreground/45">
-                  <span className="h-1.5 w-1.5 rounded-full border border-border/45" />
+                <span key={opt} className="inline-flex items-center gap-0.5 text-[7px] text-neutral-400">
+                  <span className="h-1.5 w-1.5 rounded-full border border-neutral-300" />
                   {opt}
                 </span>
               ))}

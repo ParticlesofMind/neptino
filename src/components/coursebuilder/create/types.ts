@@ -52,7 +52,7 @@ export function cardRenderMode(type: CardType): CardRenderMode {
 }
 
 // ─── Task area kinds ─────────────────────────────────────────────────────────
-export type TaskAreaKind = "instruction" | "student" | "teacher"
+export type TaskAreaKind = "instruction" | "practice" | "feedback"
 
 // ─── Dropped card ────────────────────────────────────────────────────────────
 export interface DroppedCard {

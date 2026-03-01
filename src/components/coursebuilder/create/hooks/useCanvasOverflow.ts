@@ -4,8 +4,13 @@
  * useCanvasOverflow
  *
  * Monitors the body content area of a single canvas page with a ResizeObserver.
- * When `scrollHeight > clientHeight`, the canvas is overflowing — the caller
- * should append a new canvas page to the session via the course store.
+ * When `scrollHeight > clientHeight` the canvas is overflowing — the amber
+ * ring indicator is shown and the caller receives `true`.
+ *
+ * Automatic page-append is intentionally disabled until ContentBlock supports
+ * a range prop for slice-based pagination (rendering task[n..m] per page).
+ * Without that, every continuation page renders all tasks, triggering another
+ * overflow and creating an infinite append chain.
  *
  * The hook is debounced (100 ms) to avoid thrashing during rapid layout changes.
  */
@@ -13,7 +18,6 @@
 import { useEffect, useRef, useCallback } from "react"
 import type { CanvasId, SessionId } from "../types"
 import { useCanvasStore } from "../store/canvasStore"
-import { useCourseStore } from "../store/courseStore"
 
 interface UseCanvasOverflowOptions {
   canvasId:   CanvasId
@@ -28,22 +32,15 @@ interface UseCanvasOverflowOptions {
 
 export function useCanvasOverflow({
   canvasId,
-  sessionId,
+  sessionId: _sessionId,
   bodyRef,
   contentRef,
   enabled = true,
 }: UseCanvasOverflowOptions) {
   const markCanvasOverflow = useCanvasStore((s) => s.markCanvasOverflow)
-  const appendCanvasPage   = useCourseStore((s) => s.appendCanvasPage)
   const overflowingIds     = useCanvasStore((s) => s.overflowingCanvasIds)
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const appendedRef = useRef(false)
-
-  // Reset appended guard when canvasId changes (new page was added)
-  useEffect(() => {
-    appendedRef.current = false
-  }, [canvasId])
 
   const check = useCallback(() => {
     const body    = bodyRef.current
@@ -53,11 +50,14 @@ export function useCanvasOverflow({
     const overflowing = content.scrollHeight - body.clientHeight > 1
     markCanvasOverflow(canvasId, overflowing)
 
-    if (overflowing && !appendedRef.current) {
-      appendedRef.current = true
-      appendCanvasPage(sessionId)
-    }
-  }, [bodyRef, contentRef, enabled, canvasId, sessionId, markCanvasOverflow, appendCanvasPage])
+    // NOTE: automatic page-append is intentionally disabled.
+    // ContentBlock renders all tasks on every page it appears on, so appending
+    // a continuation page with the same blockKeys always overflows again —
+    // creating an infinite append chain (observed as 100+ pages).
+    // The amber ring overflow indicator is the current signal; proper
+    // slice-based pagination (rendering task[n..m] per page) will re-enable
+    // this once content blocks support a range prop.
+  }, [bodyRef, contentRef, enabled, canvasId, markCanvasOverflow])
 
   useEffect(() => {
     const content = contentRef.current

@@ -69,10 +69,11 @@ export function ProgramBlock({ sessionId, fieldValues, data }: BlockRenderProps)
   }
 
   return (
-    <section className="px-4 py-2">
-      <h2 className="text-[9px] font-semibold uppercase tracking-wider text-neutral-400 mb-1.5">
-        Program
-      </h2>
+    <section className="overflow-hidden rounded-lg border border-neutral-200">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-1">
+        <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400">Program</h2>
+      </div>
+      <div className="overflow-x-auto bg-white">
       <table className="w-full border-collapse">
         <thead>
           <tr>
@@ -105,6 +106,7 @@ export function ProgramBlock({ sessionId, fieldValues, data }: BlockRenderProps)
           ))}
         </tbody>
       </table>
+      </div>
     </section>
   )
 }

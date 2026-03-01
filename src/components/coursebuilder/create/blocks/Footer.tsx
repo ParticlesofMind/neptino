@@ -24,7 +24,7 @@ export function FooterBlock({ fieldValues, templateType = "lesson", fieldEnabled
     .join(" ")
 
   return (
-    <footer className="flex items-center justify-between px-4 py-2 border-t border-neutral-200 text-[10px] text-neutral-400">
+    <footer className="flex h-full items-center justify-between px-4 border-t border-neutral-200 text-[10px] text-neutral-400">
       <span>{leftText}</span>
       <span>{rightText}</span>
     </footer>

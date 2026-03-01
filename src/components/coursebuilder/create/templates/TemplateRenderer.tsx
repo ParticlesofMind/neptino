@@ -64,7 +64,7 @@ export function TemplateRenderer({
   })
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full gap-2 px-1 py-2">
       {/* Body blocks — header/footer live in the page margin bands (owned by CanvasPage) */}
       {blocksToRender.map((key) => {
         const BlockComponent = resolvedRegistry[key]

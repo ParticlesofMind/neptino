@@ -13,7 +13,7 @@ export interface TemplateAreaMediaItem {
   url: string
 }
 
-export type TaskAreaKind = "instruction" | "student" | "teacher"
+export type TaskAreaKind = "instruction" | "practice" | "feedback"
 
 function toAreaKeyToken(value: string): string {
   return value
@@ -68,9 +68,9 @@ export interface TemplateBlueprintData {
         tasks: Array<{
           task: string
           stableTaskKey?: string
-          instructionArea: string
-          studentArea: string
-          teacherArea: string
+          instruction: string
+          practice: string
+          feedback: string
         }>
       }>
     }>
@@ -84,9 +84,9 @@ export interface TemplateBlueprintData {
         tasks: Array<{
           task: string
           stableTaskKey?: string
-          instructionArea: string
-          studentArea: string
-          teacherArea: string
+          instruction: string
+          practice: string
+          feedback: string
         }>
       }>
     }>

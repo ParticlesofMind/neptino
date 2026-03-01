@@ -9,7 +9,7 @@ export function HeaderBlock({ fieldValues, templateType = "lesson", fieldEnabled
   if (!blueprint) {
     // No blueprint for this type — bare fallback
     return (
-      <header className="flex items-center border-b border-neutral-200 bg-white" style={{ minHeight: 36 }}>
+      <header className="flex h-full items-center border-b border-neutral-200 bg-white">
         <span className="px-3 py-2 text-xs italic text-neutral-400">Untitled Session</span>
       </header>
     )
@@ -21,7 +21,7 @@ export function HeaderBlock({ fieldValues, templateType = "lesson", fieldEnabled
   const visibleRight = blueprint.header.right.filter((f) => !enabledMap || enabledMap[f.key] === true)
 
   return (
-    <header className="flex items-center justify-between border-b border-neutral-200 bg-white" style={{ minHeight: 36 }}>
+    <header className="flex h-full items-center justify-between border-b border-neutral-200 bg-white">
       <div className="flex items-center overflow-x-hidden divide-x divide-neutral-200">
         {visibleLeft.map((field, idx) => (
           <span

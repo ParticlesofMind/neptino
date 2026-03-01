@@ -62,13 +62,13 @@ export function CanvasPage({
 
   const scale = zoomLevel / 100
 
-  // Overflow → append logic (disabled for all but the last page)
+  // Overflow detection — visual indicator only (amber ring).
+  // Page-append is disabled; see useCanvasOverflow for rationale.
   const isOverflowing = useCanvasOverflow({
     canvasId:   page.id,
     sessionId:  page.sessionId,
     bodyRef:    bodyRef    as React.RefObject<HTMLElement | null>,
     contentRef: contentRef as React.RefObject<HTMLElement | null>,
-    enabled:    isLastPage,
   })
 
   const isActive = activeCanvasId === page.id
