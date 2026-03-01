@@ -2,7 +2,7 @@
 // Types, context, and utility functions shared across template-blueprint modules.
 
 import React from "react"
-import type { BlockId } from "@/components/coursebuilder/sections/templates-section"
+import type { BlockId, TemplateFieldState } from "@/components/coursebuilder/sections/templates-section"
 
 export interface TemplateAreaMediaItem {
   id: string
@@ -138,6 +138,8 @@ export const SCALE_CONFIG = {
 
 export interface TemplateBlueprintContextValue {
   enabled: Record<BlockId, boolean>
+  /** Per-block field visibility — used by MarginBand to filter header/footer fields. */
+  fieldEnabled?: TemplateFieldState
   data?: TemplateBlueprintData
   droppedMediaByArea?: Record<string, TemplateAreaMediaItem[]>
   mediaDragActive: boolean

@@ -80,8 +80,9 @@ function makeFieldValues(
     schedule_date:  session.scheduleDate ?? "",
 
     // Footer fields
-    institution:    session.institution ?? "",
-    copyright:      session.institution
+    institution:      session.institution ?? "",
+    institution_name: session.institution ?? "",
+    copyright:        session.institution
       ? `\u00a9 ${year} ${session.institution}`
       : `\u00a9 ${year}`,
 

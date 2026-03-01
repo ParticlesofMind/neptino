@@ -59,7 +59,7 @@ export function asTemplateType(value: unknown): TemplateType {
   }
 }
 
-export function normalizeTemplateSettings(raw: unknown): NormalizedTemplateConfig[] {
+export function parseRawTemplateConfigs(raw: unknown): NormalizedTemplateConfig[] {
   if (!raw) return []
 
   const templates = Array.isArray(raw)

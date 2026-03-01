@@ -144,8 +144,9 @@ const COMMON_HEADER_RIGHT: FieldRef[] = [
 ]
 
 const COMMON_FOOTER_LEFT: FieldRef[] = [
-  { key: "copyright",       label: "Copyright" },
+  { key: "copyright",        label: "Copyright" },
   { key: "institution_name", label: "Institution" },
+  { key: "teacher_name",     label: "Teacher" },
 ]
 
 const COMMON_FOOTER_RIGHT: FieldRef[] = [

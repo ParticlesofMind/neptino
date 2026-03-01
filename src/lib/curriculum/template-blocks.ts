@@ -8,6 +8,15 @@ import { TEMPLATE_BLUEPRINTS, slotToBlockId } from "@/lib/curriculum/template-js
 
 export type TemplateType = "lesson" | "quiz" | "exam" | "assessment" | "certificate" | "project" | "lab" | "workshop" | "discussion" | "reflection" | "survey" | "table_of_contents"
 
+/**
+ * All template type identifiers as a stable ordered array (suitable for UI iteration).
+ */
+export const TEMPLATE_TYPES = [
+  "lesson", "quiz", "assessment", "exam", "certificate",
+  "project", "lab", "workshop", "discussion", "reflection",
+  "survey", "table_of_contents",
+] as const
+
 export type TemplateBlockType = "header" | "program" | "resources" | "content" | "assignment" | "scoring" | "footer"
 
 export interface TemplateBlockConfig {

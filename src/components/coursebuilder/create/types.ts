@@ -8,9 +8,10 @@
  */
 
 import type { TemplateType } from "@/lib/curriculum/template-blocks"
+import type { TemplateFieldState } from "@/components/coursebuilder/sections/template-section-data"
 
 // ─── Re-exports for convenience ──────────────────────────────────────────────
-export type { TemplateType }
+export type { TemplateType, TemplateFieldState }
 
 // ─── Branded ID types ────────────────────────────────────────────────────────
 export type CourseId      = string & { readonly __brand: "CourseId" }
@@ -133,6 +134,11 @@ export interface CourseSession {
   pedagogy?: string
   scheduleDate?: string
   teacherName?: string
+  /**
+   * Per-field visibility from the applied template (from template setup's fieldEnabled).
+   * When present, Header/Footer blocks filter their fields accordingly.
+   */
+  fieldEnabled?: TemplateFieldState
 }
 
 // ─── Page config ─────────────────────────────────────────────────────────────
@@ -185,6 +191,10 @@ export interface BlockRenderProps {
   fieldValues: Record<string, string>
   /** Body data for complex blocks (program table rows, resource rows, topic tree) */
   data?: Record<string, unknown>
+  /** Template type — used by Header/Footer to look up the blueprint field list */
+  templateType?: TemplateType
+  /** Per-field visibility from the applied template — used to filter header/footer fields */
+  fieldEnabled?: TemplateFieldState
 }
 
 // ─── Draft persistence ────────────────────────────────────────────────────────

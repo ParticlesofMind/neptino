@@ -159,6 +159,7 @@ export function TemplateBlueprint({
   const contextValue = React.useMemo<TemplateBlueprintContextValue>(
     () => ({
       enabled,
+      fieldEnabled,
       data,
       droppedMediaByArea,
       mediaDragActive,
@@ -168,7 +169,7 @@ export function TemplateBlueprint({
     }),
     // orderedTaskAreas is a derived array computed above — stable reference not guaranteed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [enabled, data, droppedMediaByArea, mediaDragActive, onRemoveAreaMedia, taskAreaOrder, densityAreaHeightClass],
+    [enabled, fieldEnabled, data, droppedMediaByArea, mediaDragActive, onRemoveAreaMedia, taskAreaOrder, densityAreaHeightClass],
   )
 
   // Canvas mode: TemplateSurface owns the page chrome (margins, header band, footer band).

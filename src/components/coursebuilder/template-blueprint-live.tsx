@@ -284,37 +284,54 @@ export function MarginBand({
   right: Array<{ key: string; label: string }>
   fieldValues?: Record<string, string>
 }) {
-  return (
-    <div
-      className={`flex items-center justify-between gap-2 bg-muted/[0.13] px-2 py-1 ${
-        side === "top" ? "border-b" : "border-t"
-      } border-border/40`}
-    >
-      <div className="flex min-w-0 flex-wrap items-center gap-1">
-        {left.map((field, idx) => (
-          <React.Fragment key={field.key}>
-            {idx > 0 && <span className="text-[8px] text-muted-foreground/30">·</span>}
-            <span className="rounded border border-border/40 bg-background/70 px-1.5 py-0.5 text-[8px] text-muted-foreground/65">
+  const { fieldEnabled } = useTemplateBlueprintContext()
+  const blockId = side === "top" ? "header" : "footer"
+  const enabledMap = fieldEnabled?.[blockId as "header" | "footer"]
+
+  // If fieldEnabled is present, hide fields toggled off; otherwise show all
+  const visibleLeft  = enabledMap ? left.filter((f)  => enabledMap[f.key]  === true) : left
+  const visibleRight = enabledMap ? right.filter((f) => enabledMap[f.key] === true) : right
+
+  if (side === "top") {
+    return (
+      <header className="flex items-center justify-between border-b border-neutral-200 bg-white" style={{ minHeight: 36 }}>
+        <div className="flex items-center overflow-x-hidden divide-x divide-neutral-200">
+          {visibleLeft.map((field, idx) => (
+            <span
+              key={field.key}
+              className={`px-3 py-2 text-xs whitespace-nowrap ${
+                idx === 0 ? "font-semibold text-neutral-800" : "text-neutral-500"
+              }`}
+            >
               {fieldValues?.[field.key] ?? field.label}
             </span>
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-1">
-        {right.map((field) => (
-          <span
-            key={field.key}
-            className={`rounded border px-1.5 py-0.5 text-[8px] ${
-              field.key === "page_number"
-                ? "border-border/45 bg-background font-semibold text-foreground/55"
-                : "border-border/40 bg-background/70 text-muted-foreground/65"
-            }`}
-          >
-            {fieldValues?.[field.key] ?? (field.key === "page_number" ? "1" : field.label)}
-          </span>
-        ))}
-      </div>
-    </div>
+          ))}
+          {visibleLeft.length === 0 && (
+            <span className="px-3 py-2 text-xs italic text-neutral-400">Header</span>
+          )}
+        </div>
+        <div className="shrink-0 flex items-center divide-x divide-neutral-200">
+          {visibleRight.map((field) => (
+            <span key={field.key} className="px-3 py-2 text-[11px] text-neutral-400 whitespace-nowrap">
+              {fieldValues?.[field.key] ?? field.label}
+            </span>
+          ))}
+        </div>
+      </header>
+    )
+  }
+
+  // Footer
+  const leftText  = visibleLeft.map((f) => fieldValues?.[f.key] ?? f.label).filter(Boolean).join(" · ")
+  const rightText = visibleRight
+    .map((f) => f.key === "page_number" ? (fieldValues?.[f.key] ?? "1") : (fieldValues?.[f.key] ?? f.label))
+    .filter(Boolean).join(" ")
+
+  return (
+    <footer className="flex items-center justify-between px-4 py-2 border-t border-neutral-200 bg-white text-[10px] text-neutral-400">
+      <span>{leftText}</span>
+      <span>{rightText}</span>
+    </footer>
   )
 }
 

@@ -104,6 +104,8 @@ export function CanvasPage({
         <HeaderBlock
           sessionId={session.id as SessionId}
           fieldValues={fieldValues}
+          templateType={session.templateType}
+          fieldEnabled={session.fieldEnabled}
         />
       </div>
 
@@ -143,6 +145,8 @@ export function CanvasPage({
         <FooterBlock
           sessionId={session.id as SessionId}
           fieldValues={fieldValues}
+          templateType={session.templateType}
+          fieldEnabled={session.fieldEnabled}
         />
       </div>
 

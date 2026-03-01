@@ -1,11 +1,11 @@
 // Pure data: block/field configuration, types, and normalization helpers for TemplatesSection.
 // No JSX — icons and React-rendered metadata live in templates-section.tsx.
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
+import { TEMPLATE_TYPES, ALL_TEMPLATE_BLOCKS, type TemplateType, type TemplateBlockType } from "@/lib/curriculum/template-blocks"
 import type { TemplateVisualDensity } from "@/lib/curriculum/template-source-of-truth"
 
-export const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] as const
-
-export type BlockId = "header" | "program" | "resources" | "content" | "assignment" | "scoring" | "footer"
+export { TEMPLATE_TYPES }
+// BlockId is the same union as TemplateBlockType — aliased here for clarity in UI code.
+export type BlockId = TemplateBlockType
 
 export interface TemplateBlockConfig {
   id: BlockId
@@ -37,15 +37,19 @@ export type TemplateSettingsPayload = {
   ui?: TemplateUiState
 }
 
-export const ALL_BLOCKS: TemplateBlockConfig[] = [
-  { id: "header", label: "Header", description: "Title, date, student name", mandatory: true, previewH: 40, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
-  { id: "program", label: "Program", description: "Objectives & lesson overview", mandatory: true, previewH: 52, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
-  { id: "resources", label: "Resources", description: "Reference materials & links", mandatory: true, previewH: 44, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
-  { id: "content", label: "Content", description: "Main body — topics, notes, media", mandatory: true, previewH: 80, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
-  { id: "assignment", label: "Assignment", description: "Tasks & exercises for students", mandatory: true, previewH: 60, forTypes: ["lesson", "quiz", "lab", "workshop"] },
-  { id: "scoring", label: "Scoring", description: "Rubric & grading criteria", mandatory: true, previewH: 56, forTypes: ["assessment", "exam", "quiz", "project", "lab"] },
-  { id: "footer", label: "Footer", description: "Signatures, branding, page number", mandatory: true, previewH: 32, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey", "table_of_contents"] },
-]
+// Preview heights (px) for each block in the configurator mini-preview.
+const BLOCK_PREVIEW_HEIGHTS: Record<BlockId, number> = {
+  header: 40, program: 52, resources: 44, content: 80, assignment: 60, scoring: 56, footer: 32,
+}
+
+export const ALL_BLOCKS: TemplateBlockConfig[] = ALL_TEMPLATE_BLOCKS.map((block) => ({
+  id: block.id,
+  label: block.label,
+  description: block.description,
+  mandatory: block.mandatory,
+  previewH: BLOCK_PREVIEW_HEIGHTS[block.id],
+  forTypes: block.forTypes,
+}))
 
 export interface LocalTemplate {
   id: string

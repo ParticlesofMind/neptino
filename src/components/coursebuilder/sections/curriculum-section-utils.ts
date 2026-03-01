@@ -10,7 +10,7 @@ import {
   MIN_TASKS_PER_OBJECTIVE,
   normalizeContentLoadConfig,
 } from "@/lib/curriculum/content-load-service"
-import { normalizeTemplateSettings } from "@/lib/curriculum/template-source-of-truth"
+import { parseRawTemplateConfigs } from "@/lib/curriculum/template-source-of-truth"
 import type { CourseType } from "@/components/coursebuilder/sections/curriculum-derived"
 
 export interface ScheduleGeneratedEntry {
@@ -55,7 +55,7 @@ export const COURSE_TYPE_TEMPLATE_FILTERS: Record<CourseType, string[]> = {
 }
 
 export function extractSavedTemplates(raw: unknown): SavedTemplateSummary[] {
-  return normalizeTemplateSettings(raw).map((template) => ({
+  return parseRawTemplateConfigs(raw).map((template) => ({
     id: template.id,
     name: template.name,
     type: template.type,
