@@ -42,15 +42,15 @@ function CourseBuilderPageInner() {
 
       <div className="flex flex-1 overflow-hidden">
         {view === "setup" ? (
-          <div className="flex flex-1 overflow-hidden p-2 bg-muted/10">
-            <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border shadow-sm md:flex-row">
-              <CourseBuilderSidebarNav
-                activeSection={activeSection}
-                setActiveSection={setActiveSection}
-                completedSetupSections={completedSetupSections}
-                flashSectionId={flashSectionId}
-              />
+          <div className="flex flex-1 overflow-hidden p-3 bg-muted/10 gap-3">
+            <CourseBuilderSidebarNav
+              activeSection={activeSection}
+              setActiveSection={setActiveSection}
+              completedSetupSections={completedSetupSections}
+              flashSectionId={flashSectionId}
+            />
 
+            <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border shadow-sm">
               <main className="flex-1 overflow-hidden bg-background px-6 pt-5 pb-5 md:px-10 md:pb-8">
                 <div className="mx-auto flex h-full min-h-0 flex-col">
                   {loadingCourse ? (

@@ -1,140 +1,37 @@
 /**
  * Template JSON Blueprints
  *
- * Each template type is described by a canonical JSON blueprint that defines
- * its exact visual structure: a Header region (top margin), one or more Body
- * slots (content area), and a Footer region (bottom margin).
+ * Canonical JSON blueprints that define the visual structure of each template
+ * type: Header (top margin), Body slots (content area), Footer (bottom margin).
  *
- * This is the single source of truth for both the configurator preview and
- * the actual canvas rendering. Every type follows the same tri-region layout:
- *
- *   ┌──────────────────────────────────────────┐
- *   │  HEADER  — lives in the top page margin  │
- *   ├──────────────────────────────────────────┤
- *   │                                          │
- *   │  BODY  — one or more content blocks      │
- *   │                                          │
- *   ├──────────────────────────────────────────┤
- *   │  FOOTER  — lives in the bottom margin    │
- *   └──────────────────────────────────────────┘
- *
- * The height of the header/footer bands is determined by the page-margin
- * settings configured in Page Setup. The body fills the remaining space.
+ * Types are defined in template-blueprint-types.ts and re-exported here for
+ * backward compat.
  */
 
-// ─── Primitives ──────────────────────────────────────────────────────────────
-
-/** A reference to a document field (its storage key and its display label). */
-export interface FieldRef {
-  key: string
-  label: string
-}
-
-/**
- * Header region — rendered inside the top page margin.
- * A single horizontal row split into a left group and a right group.
- */
-export interface HeaderRegion {
-  left: FieldRef[]
-  right: FieldRef[]
-}
-
-/**
- * Footer region — rendered inside the bottom page margin.
- * A single horizontal row split into a left group and a right group.
- */
-export interface FooterRegion {
-  left: FieldRef[]
-  right: FieldRef[]
-}
-
-// ─── Body Slot Kinds ─────────────────────────────────────────────────────────
-
-/** Structured lesson-planning table (Program block). */
-export interface ProgramTableSlot {
-  kind: "program_table"
-  /** Ordered list of columns shown in the table. */
-  columns: FieldRef[]
-}
-
-/** Reference-material table (Resources block). */
-export interface ResourcesTableSlot {
-  kind: "resources_table"
-  columns: FieldRef[]
-}
-
-/** Nested instructional hierarchy: Topic → Objective → Task → task areas. */
-export interface ContentNestedSlot {
-  kind: "content_nested"
-  /** Which task-area sub-zones to include. */
-  areas: ("instruction" | "practice" | "feedback")[]
-}
-
-/** Same nested hierarchy framed as an exercise/homework assignment. */
-export interface AssignmentNestedSlot {
-  kind: "assignment_nested"
-  areas: ("instruction" | "practice" | "feedback")[]
-}
-
-/** Scoring rubric table: criterion / weight / max points / feedback. */
-export interface ScoringRubricSlot {
-  kind: "scoring_rubric"
-  columns: FieldRef[]
-}
-
-/**
- * Table of contents: hierarchical list of modules → lessons → page numbers.
- * Used exclusively by the `table_of_contents` template type.
- */
-export interface TocListSlot {
-  kind: "toc_list"
-  levels: ("module" | "lesson" | "page")[]
-}
-
-/** Certificate completion statement, decorative rule, and signature lines. */
-export interface CertificateBodySlot {
-  kind: "certificate_body"
-}
-
-/** Discussion prompt area and structured response zone. */
-export interface DiscussionPromptSlot {
-  kind: "discussion_prompt"
-}
-
-/** Reflection journal: guided prompts with ruled response lines. */
-export interface ReflectionJournalSlot {
-  kind: "reflection_journal"
-}
-
-/** Survey form: question rows with answer/response fields. */
-export interface SurveyFormSlot {
-  kind: "survey_form"
-}
-
-export type BodySlot =
-  | ProgramTableSlot
-  | ResourcesTableSlot
-  | ContentNestedSlot
-  | AssignmentNestedSlot
-  | ScoringRubricSlot
-  | TocListSlot
-  | CertificateBodySlot
-  | DiscussionPromptSlot
-  | ReflectionJournalSlot
-  | SurveyFormSlot
-
-// ─── Full Blueprint ───────────────────────────────────────────────────────────
-
-export interface TemplateBlueprintJson {
-  /** Must match one of the TemplateType values. */
-  type: string
-  /** Header region — rendered in the top margin band. */
-  header: HeaderRegion
-  /** Ordered list of body slots rendered in the content area. */
-  body: BodySlot[]
-  /** Footer region — rendered in the bottom margin band. */
-  footer: FooterRegion
-}
+export type {
+  FieldRef,
+  HeaderRegion,
+  FooterRegion,
+  ProgramTableSlot,
+  ResourcesTableSlot,
+  ContentNestedSlot,
+  AssignmentNestedSlot,
+  ScoringRubricSlot,
+  TocListSlot,
+  CertificateBodySlot,
+  DiscussionPromptSlot,
+  ReflectionJournalSlot,
+  SurveyFormSlot,
+  BodySlot,
+  TemplateBlueprintJson,
+} from "./template-blueprint-types"
+import type {
+  FieldRef,
+  HeaderRegion,
+  FooterRegion,
+  BodySlot,
+  TemplateBlueprintJson,
+} from "./template-blueprint-types"
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
 

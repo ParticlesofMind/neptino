@@ -2,11 +2,30 @@
 
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { PublicShell } from '@/components/layout/public-shell'
-import { AuthErrorBanner, AuthInput, AuthSelect, AuthSubmitButton } from '@/components/ui/auth-primitives'
+import { AuthErrorBanner, AuthInput, AuthSubmitButton } from '@/components/ui/auth-primitives'
 
 type Role = 'student' | 'teacher' | 'administrator'
+
+const ROLES: { value: Role; label: string; description: string }[] = [
+  {
+    value: 'student',
+    label: 'Student',
+    description: 'Enroll in courses and track your progress',
+  },
+  {
+    value: 'teacher',
+    label: 'Teacher',
+    description: 'Build courses and manage your students',
+  },
+  {
+    value: 'administrator',
+    label: 'Admin',
+    description: 'Oversee users and institution settings',
+  },
+]
 
 const PersonIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2"
@@ -24,16 +43,6 @@ const EmailIcon = (
   </svg>
 )
 
-const GroupIcon = (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2"
-    stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-)
-
 const LockIcon = (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2"
     stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
@@ -43,16 +52,35 @@ const LockIcon = (
   </svg>
 )
 
+const EyeIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2"
+    stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+
+const EyeOffIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2"
+    stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+)
+
 export default function SignupPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<Role>('student')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const supabase = createClient()
+  const router = useRouter()
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,23 +93,36 @@ export default function SignupPage() {
 
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          user_role: role,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            user_role: role,
+          },
         },
-      },
-    })
+      })
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      setSuccess(true)
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+      } else if (data.session) {
+        // Email confirmation is disabled — user is immediately signed in, redirect to their dashboard
+        const roleRoutes: Record<Role, string> = {
+          student: '/student',
+          teacher: '/teacher',
+          administrator: '/admin',
+        }
+        router.push(roleRoutes[role])
+      } else {
+        setSuccess(true)
+        setLoading(false)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.')
       setLoading(false)
     }
   }
@@ -129,7 +170,7 @@ export default function SignupPage() {
         className="flex min-h-[calc(100vh-3.75rem-56px)] items-center justify-center px-4 py-16"
         style={{ background: "linear-gradient(180deg,#f3f4f8 0%,#ffffff 60%)" }}
       >
-        <div className="w-full max-w-[24rem]">
+        <div className="w-full max-w-[27rem]">
           <div className="rounded-2xl border border-[#e5e5e5] bg-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
             {/* Header */}
             <div className="px-8 pt-8 pb-6 border-b border-[#f5f5f5]">
@@ -140,30 +181,52 @@ export default function SignupPage() {
             <form onSubmit={handleSignup} className="px-8 py-6 space-y-3.5">
               {error && <AuthErrorBanner message={error} />}
 
-              {/* Name row */}
-              <div className="grid grid-cols-2 gap-3">
-                <AuthInput
-                  type="text"
-                  icon={PersonIcon}
-                  paddingLeft="pl-9"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="First name"
-                  required
-                  disabled={loading}
-                  autoComplete="given-name"
-                />
-                <AuthInput
-                  type="text"
-                  icon={PersonIcon}
-                  paddingLeft="pl-9"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Last name"
-                  disabled={loading}
-                  autoComplete="family-name"
-                />
+              {/* Role picker */}
+              <div>
+                <p className="mb-2 text-xs font-medium text-[#737373] uppercase tracking-wide">I am a</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {ROLES.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setRole(value)}
+                      disabled={loading}
+                      className={`rounded-xl border px-3 py-2 text-center text-sm font-medium transition-all duration-150 disabled:opacity-50 ${
+                        role === value
+                          ? 'border-[#4a94ff] bg-[#f0f7ff] text-[#4a94ff] ring-2 ring-[#4a94ff]/15'
+                          : 'border-[#d4d4d4] bg-[#fafafa] text-[#171717] hover:border-[#a3a3a3] hover:bg-white'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-[#737373] leading-snug min-h-[1rem]">
+                  {ROLES.find(r => r.value === role)?.description}
+                </p>
               </div>
+
+              <AuthInput
+                type="text"
+                icon={PersonIcon}
+                paddingLeft="pl-9"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First name"
+                required
+                disabled={loading}
+                autoComplete="given-name"
+              />
+              <AuthInput
+                type="text"
+                icon={PersonIcon}
+                paddingLeft="pl-9"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last name (optional)"
+                disabled={loading}
+                autoComplete="family-name"
+              />
 
               <AuthInput
                 type="email"
@@ -176,32 +239,45 @@ export default function SignupPage() {
                 autoComplete="email"
               />
 
-              <AuthSelect
-                icon={GroupIcon}
-                value={role}
-                onChange={(e) => setRole(e.target.value as Role)}
-                required
-                disabled={loading}
-              >
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="administrator">Administrator</option>
-              </AuthSelect>
+              {/* Password with show/hide and generator */}
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]">
+                  {LockIcon}
+                </span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create a password"
+                  required
+                  disabled={loading}
+                  autoComplete="new-password"
+                  className="w-full rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 pl-10 pr-10 text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    disabled={loading}
+                    className="flex items-center justify-center rounded-lg p-1.5 text-[#a3a3a3] hover:text-[#737373] transition-colors duration-150"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? EyeOffIcon : EyeIcon}
+                  </button>
 
-              <AuthInput
-                type="password"
-                icon={LockIcon}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create a password"
-                required
-                disabled={loading}
-                autoComplete="new-password"
-              />
+                </div>
+              </div>
 
               <AuthSubmitButton loading={loading} loadingLabel="Creating account…">
                 Create Account
               </AuthSubmitButton>
+
+              <p className="text-[11px] text-[#a3a3a3] leading-relaxed text-center">
+                By clicking Create Account, you are creating a Neptino account and you agree to Neptino&apos;s{' '}
+                <a href="/terms" className="text-[#4a94ff] hover:text-[#2f7de0] transition-colors duration-150">Terms of Use</a>
+                {' '}and{' '}
+                <a href="/privacy" className="text-[#4a94ff] hover:text-[#2f7de0] transition-colors duration-150">Privacy Policy</a>.
+              </p>
             </form>
 
             <div className="px-8 pb-7 text-center">

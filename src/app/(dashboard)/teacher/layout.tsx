@@ -23,6 +23,7 @@ export default async function TeacherLayout({
         { href: "/teacher/marketplace", label: "Marketplace" },
         { href: "/teacher/tutorials", label: "Tutorials" },
         { href: "/teacher/atlas", label: "Atlas" },
+        { href: "/teacher/style-guide", label: "Style Guide" },
       ]}
       actions={<SignOutButton />}
     >

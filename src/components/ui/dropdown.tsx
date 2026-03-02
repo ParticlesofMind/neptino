@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from "react"
+import { ChevronDownIcon, CheckIcon, SearchIcon } from "./dropdown-icons"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,62 +40,6 @@ type DropdownProps<V extends string = string> = {
 
 // ─── Search threshold ────────────────────────────────────────────────────────
 const SEARCH_THRESHOLD = 15
-
-// ─── Chevron icon ─────────────────────────────────────────────────────────────
-function ChevronDown({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`shrink-0 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  )
-}
-
-// ─── Check icon ───────────────────────────────────────────────────────────────
-function Check() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  )
-}
-
-// ─── Search icon ──────────────────────────────────────────────────────────────
-function SearchIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  )
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -265,7 +210,7 @@ export function Dropdown<V extends string = string>({
 
         {/* Chevron */}
         <span className="text-[var(--muted-foreground,#a3a3a3)]">
-          <ChevronDown open={open} />
+          <ChevronDownIcon open={open} />
         </span>
       </button>
 
@@ -394,7 +339,7 @@ export function Dropdown<V extends string = string>({
                         : "opacity-0"
                     }`}
                   >
-                    <Check />
+                    <CheckIcon />
                   </span>
                 </li>
               )

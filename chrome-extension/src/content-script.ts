@@ -1,35 +1,5 @@
 import './content-script.css';
-
-// Inline settings to avoid code splitting issues with IIFE format
-interface Settings {
-  hotkey: 'Alt' | 'Ctrl' | 'Meta' | 'Shift';
-  highlightColor: string;
-  displayFormat: 'class' | 'selector' | 'full';
-  copyFormat: 'class' | 'selector' | 'full';
-}
-
-const DEFAULT_SETTINGS: Settings = {
-  hotkey: 'Alt',
-  highlightColor: '#3b82f6',
-  displayFormat: 'class',
-  copyFormat: 'class',
-};
-
-function getSettings(): Promise<Settings> {
-  return new Promise((resolve) => {
-    chrome.storage.sync.get(DEFAULT_SETTINGS, (items) => {
-      resolve(items as Settings);
-    });
-  });
-}
-
-interface ElementInfo {
-  tag: string;
-  classes: string[];
-  id: string | null;
-  selector: string;
-  fullPath: string;
-}
+import { Settings, DEFAULT_SETTINGS, getSettings, ElementInfo, getElementInfo } from './inspector-helpers';
 
 class SelectorInspector {
   private isActive = false;
@@ -310,57 +280,7 @@ class SelectorInspector {
   }
 
   private getElementInfo(element: HTMLElement): ElementInfo {
-    const tag = element.tagName.toLowerCase();
-    const classes = Array.from(element.classList);
-    const id = element.id || null;
-
-    // Generate selector
-    let selector = tag;
-    if (id) {
-      selector = `#${id}`;
-    } else if (classes.length > 0) {
-      selector = `.${classes[0]}`;
-    }
-
-    // Generate full path
-    const path: string[] = [];
-    let current: HTMLElement | null = element;
-
-    while (current && current !== document.body) {
-      let selector = current.tagName.toLowerCase();
-      
-      if (current.id) {
-        selector += `#${current.id}`;
-        path.unshift(selector);
-        break; // ID is unique, no need to go further
-      } else if (current.className && typeof current.className === 'string') {
-        const classes = Array.from(current.classList).filter(c => c.trim());
-        if (classes.length > 0) {
-          selector += `.${classes[0]}`;
-        }
-      }
-
-      // Add nth-child if needed for uniqueness
-      const parent = current.parentElement;
-      if (parent) {
-        const siblings = Array.from(parent.children);
-        const index = siblings.indexOf(current);
-        if (siblings.length > 1) {
-          selector += `:nth-child(${index + 1})`;
-        }
-      }
-
-      path.unshift(selector);
-      current = current.parentElement;
-    }
-
-    return {
-      tag,
-      classes,
-      id,
-      selector,
-      fullPath: path.join(' > '),
-    };
+    return getElementInfo(element);
   }
 
   private async copyElementHTML(element: HTMLElement) {

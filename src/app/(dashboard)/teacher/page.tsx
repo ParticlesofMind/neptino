@@ -1,12 +1,17 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { TeacherSection, TeacherSidebar } from "@/components/layout/teacher-sidebar"
 import Link from "next/link"
 import { BookOpen, CalendarClock, CircleCheckBig, GraduationCap, MessageSquareText, PlusCircle, Sparkles, Users } from "lucide-react"
+import { CoursesView } from "./courses-view"
+import { ClassesView } from "./classes-view"
+import { MessagesView } from "./messages-view"
+import { SettingsView } from "./settings-view"
 
 export default function TeacherHomePage() {
   const [activeSection, setActiveSection] = useState<TeacherSection>("home")
+
 
   const metrics = [
     {
@@ -63,120 +68,113 @@ export default function TeacherHomePage() {
     { text: "2 student questions", context: "Module: Data Models", time: "Yesterday" },
   ]
 
-  const panelTitle = useMemo(() => {
-    switch (activeSection) {
-      case "courses":
-        return { title: "Courses", subtitle: "Manage your catalog, content lifecycle, and publishing." }
-      case "classes":
-        return { title: "Classes", subtitle: "Track classroom operations, sessions, and attendance flow." }
-      case "messages":
-        return { title: "Messages", subtitle: "Monitor learner conversations and pending replies." }
-      case "settings":
-        return { title: "Settings", subtitle: "Update profile, preferences, and communication defaults." }
-      default:
-        return { title: "Home", subtitle: "Overview of your teaching workspace, learner activity, and pending actions." }
-    }
-  }, [activeSection])
+  const placeholder = (title: string, subtitle: string) => (
+    <div className="rounded-2xl border border-border bg-background overflow-hidden">
+      <div className="border-b border-border px-6 py-5">
+        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
+      </div>
+      <div className="flex items-center justify-center px-6 py-20">
+        <p className="text-sm text-muted-foreground">This section is under development.</p>
+      </div>
+    </div>
+  )
 
   const HomeView = () => (
-    <div className="space-y-7 pb-4">
-      <section className="rounded-2xl border border-border bg-background p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Home</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Overview of your teaching workspace, learner activity, and pending actions.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link
-              href="/teacher/coursebuilder"
-              className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3.5 py-2 text-sm font-medium text-primary hover:bg-primary/15 transition-colors"
-            >
-              <PlusCircle className="h-4 w-4" />
-              New Course
-            </Link>
-            <Link
-              href="/teacher/courses"
-              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3.5 py-2 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
-            >
-              <CalendarClock className="h-4 w-4" />
-              View Schedule
-            </Link>
-          </div>
+    <div className="rounded-2xl border border-border bg-background overflow-hidden">
+      {/* Header */}
+      <div className="flex flex-col gap-4 border-b border-border px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Home</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Overview of your teaching workspace, learner activity, and pending actions.</p>
         </div>
-      </section>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link
+            href="/teacher/coursebuilder"
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3.5 py-2 text-sm font-medium text-primary hover:bg-primary/15 transition-colors"
+          >
+            <PlusCircle className="h-4 w-4" />
+            New Course
+          </Link>
+          <Link
+            href="/teacher/courses"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3.5 py-2 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <CalendarClock className="h-4 w-4" />
+            View Schedule
+          </Link>
+        </div>
+      </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Metrics bar */}
+      <div className="grid grid-cols-2 divide-x divide-border border-b border-border xl:grid-cols-4">
         {metrics.map((metric) => {
           const MetricIcon = metric.icon
           return (
-            <article key={metric.label} className="rounded-xl border border-border bg-background p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{metric.label}</p>
-                  <p className="mt-2 text-3xl font-semibold leading-none text-foreground">{metric.value}</p>
-                </div>
-                <div className="rounded-lg border border-primary/20 bg-primary/10 p-2 text-primary">
-                  <MetricIcon className="h-4 w-4" />
-                </div>
+            <div key={metric.label} className="px-5 py-4">
+              <div className="flex items-center gap-2">
+                <MetricIcon className="h-3.5 w-3.5 text-primary" />
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{metric.label}</p>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">{metric.detail}</p>
-            </article>
+              <p className="mt-2 text-2xl font-semibold leading-none text-foreground">{metric.value}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground">{metric.detail}</p>
+            </div>
           )
         })}
-      </section>
+      </div>
 
-      <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-        <div className="rounded-2xl border border-border bg-background">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Courses</h2>
+      {/* Courses + Quick Actions */}
+      <div className="grid border-b border-border xl:grid-cols-[1.5fr_1fr] xl:divide-x xl:divide-border">
+        <div>
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Courses</h2>
             <button type="button" onClick={() => setActiveSection("courses")} className="text-xs font-medium text-primary hover:underline">
               View all
             </button>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="divide-y divide-border">
             {courses.map((course) => (
               <Link
                 key={course.title}
                 href="/teacher/courses"
-                className="group block rounded-xl border border-border bg-background px-4 py-3.5 transition hover:border-primary/25 hover:bg-muted/40"
+                className="group flex items-start justify-between gap-3 px-5 py-4 transition hover:bg-muted/30"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">{course.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{course.meta}</p>
-                  </div>
-                  <span className={course.status === "Live" ? "rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700" : "rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700"}>
-                    {course.status}
-                  </span>
+                <div>
+                  <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{course.title}</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{course.meta}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{course.updated}</p>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">{course.updated}</p>
+                <span className={course.status === "Live" ? "mt-0.5 shrink-0 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700" : "mt-0.5 shrink-0 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700"}>
+                  {course.status}
+                </span>
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-background p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Quick Actions</h2>
-          <div className="mt-4 space-y-2.5">
-            <Link href="/teacher/coursebuilder" className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground hover:bg-muted/50 transition-colors">
+        <div className="px-5 py-4">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick Actions</h2>
+          <div className="mt-3 space-y-2">
+            <Link href="/teacher/coursebuilder" className="flex items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-sm text-foreground hover:bg-muted/40 hover:border-primary/30 transition-colors">
               <Sparkles className="h-4 w-4 text-primary" />
               Create new course content
             </Link>
-            <button type="button" onClick={() => setActiveSection("messages")} className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-left text-sm text-foreground hover:bg-muted/50 transition-colors">
+            <button type="button" onClick={() => setActiveSection("messages")} className="flex w-full items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-left text-sm text-foreground hover:bg-muted/40 hover:border-primary/30 transition-colors">
               <MessageSquareText className="h-4 w-4 text-primary" />
               Reply to learner messages
             </button>
-            <button type="button" onClick={() => setActiveSection("classes")} className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-left text-sm text-foreground hover:bg-muted/50 transition-colors">
+            <button type="button" onClick={() => setActiveSection("classes")} className="flex w-full items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-left text-sm text-foreground hover:bg-muted/40 hover:border-primary/30 transition-colors">
               <GraduationCap className="h-4 w-4 text-primary" />
               Review submissions
             </button>
           </div>
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-2xl border border-border bg-background">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Recent Activity</h2>
+      {/* Recent Activity */}
+      <div>
+        <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent Activity</h2>
           <button type="button" onClick={() => setActiveSection("messages")} className="text-xs font-medium text-primary hover:underline">
             Open inbox
           </button>
@@ -192,85 +190,31 @@ export default function TeacherHomePage() {
             </div>
           ))}
         </div>
-      </section>
-    </div>
-  )
-
-  const GenericView = ({
-    title,
-    subtitle,
-    cards,
-  }: {
-    title: string
-    subtitle: string
-    cards: { title: string; body: string }[]
-  }) => (
-    <div className="space-y-7 pb-4">
-      <section className="rounded-2xl border border-border bg-background p-6">
-        <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {cards.map((card) => (
-          <article key={card.title} className="rounded-xl border border-border bg-background p-5 shadow-sm">
-            <h2 className="text-base font-semibold text-foreground">{card.title}</h2>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{card.body}</p>
-          </article>
-        ))}
-      </section>
+      </div>
     </div>
   )
 
   const sectionContent = (() => {
     switch (activeSection) {
-      case "courses":
-        return GenericView({
-          title: "Courses",
-          subtitle: panelTitle.subtitle,
-          cards: [
-            { title: "Course Catalog", body: "Browse active and draft courses, and keep content updates centralized." },
-            { title: "Publishing Pipeline", body: "Control draft, review, and publish states for each course." },
-            { title: "Curriculum Health", body: "Identify missing modules and lesson gaps before publishing." },
-          ],
-        })
-      case "classes":
-        return GenericView({
-          title: "Classes",
-          subtitle: panelTitle.subtitle,
-          cards: [
-            { title: "Session Roster", body: "Track attendance and learner status across all scheduled sessions." },
-            { title: "Upcoming Sessions", body: "Keep your weekly teaching cadence visible and easy to manage." },
-            { title: "Submission Queue", body: "Review learner work and provide feedback from one place." },
-          ],
-        })
-      case "messages":
-        return GenericView({
-          title: "Messages",
-          subtitle: panelTitle.subtitle,
-          cards: [
-            { title: "Priority Inbox", body: "See unanswered learner messages and respond quickly." },
-            { title: "Class Channels", body: "Keep class-level communication organized by topic and cohort." },
-            { title: "Recent Threads", body: "Continue recent conversations without context switching." },
-          ],
-        })
-      case "settings":
-        return GenericView({
-          title: "Settings",
-          subtitle: panelTitle.subtitle,
-          cards: [
-            { title: "Profile", body: "Update your teaching profile details and public info." },
-            { title: "Notifications", body: "Tune message, enrollment, and assignment alerts." },
-            { title: "Class Defaults", body: "Set default preferences for sessions and course behavior." },
-          ],
-        })
-      default:
-        return HomeView()
+      case "courses":       return <CoursesView />
+      case "classes":       return <ClassesView />
+      case "messages":      return <MessagesView />
+      case "settings":      return <SettingsView />
+      case "analytics":     return placeholder("Analytics",     "Insights into learner performance and course engagement.")
+      case "calendar":      return placeholder("Calendar",      "Your upcoming sessions and scheduled events.")
+      case "lessons":       return placeholder("Lessons",       "Browse and manage individual lesson content.")
+      case "templates":     return placeholder("Templates",     "Reusable course blueprints and layout presets.")
+      case "resources":     return placeholder("Resources",     "Supplementary materials, reading lists, and files.")
+      case "students":      return placeholder("Students",      "Directory of enrolled learners across all courses.")
+      case "submissions":   return placeholder("Submissions",   "Review and grade submitted work from learners.")
+      case "announcements": return placeholder("Announcements", "Broadcast updates and notices to your classes.")
+      case "earnings":      return placeholder("Earnings",      "Track revenue, payouts, and enrollment payments.")
+      default:              return <HomeView />
     }
   })()
 
   return (
-    <div className="flex h-[calc(100vh-7.5rem)] gap-8 overflow-hidden">
+    <div className="flex h-[calc(100vh-6rem)] gap-5 overflow-hidden">
       <TeacherSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="no-scrollbar h-full overflow-y-auto">{sectionContent}</div>

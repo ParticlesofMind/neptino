@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { TAXONOMY, CATEGORY_KEYS, layerToCat, type CatKey } from "./atlas-taxonomy"
+import { DRILLDOWN_STYLES } from "./sort-drilldown-styles"
+import { DrilldownActiveSummary } from "./sort-drilldown-active-summary"
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -129,63 +131,7 @@ export function SortContentDrilldown() {
 
   return (
     <>
-      <style>{`
-        .scd-top-item {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 8px 14px; cursor: pointer;
-          border-left: 2px solid transparent;
-          transition: background 0.1s;
-        }
-        .scd-top-item:hover, .scd-top-item.scd-hov {
-          background: var(--atlas-bg-elevated);
-        }
-        .scd-sub-item {
-          display: flex; align-items: center; gap: 8px;
-          padding: 7px 14px; cursor: pointer;
-          transition: background 0.1s;
-        }
-        .scd-sub-item:hover {
-          background: var(--atlas-bg-elevated);
-        }
-        .scd-chip-x {
-          background: transparent; border: none; cursor: pointer;
-          color: inherit; opacity: 0.45; font-size: 13px; line-height: 1;
-          padding: 0; transition: opacity 0.12s;
-        }
-        .scd-chip-x:hover { opacity: 1; }
-        .scd-cat-pill {
-          display: flex; align-items: center; gap: 5px;
-          padding: 5px 11px; border-radius: 4px;
-          border: 1px solid var(--atlas-border);
-          cursor: pointer; transition: all 0.12s;
-          background: transparent; white-space: nowrap;
-          font-family: 'JetBrains Mono', ui-monospace, monospace;
-        }
-        .scd-cat-pill:hover {
-          border-color: var(--atlas-border-hover);
-          background: var(--atlas-bg-elevated);
-        }
-        .scd-cat-pill.scd-active {
-          background: var(--atlas-bg-elevated);
-        }
-        .scd-panel {
-          position: absolute; top: calc(100% + 1px); left: 0;
-          background: var(--atlas-bg-elevated);
-          border: 1px solid var(--atlas-border);
-          border-top: none;
-          border-radius: 0 0 8px 8px;
-          overflow: hidden;
-          box-shadow: 0 16px 48px rgba(0,0,0,0.12);
-          z-index: 100; width: 100%;
-          animation: scdIn 0.14s ease;
-        }
-        @keyframes scdIn {
-          from { opacity: 0; transform: translateY(-4px); }
-          to   { opacity: 1; transform: none; }
-        }
-        .scd-panel::-webkit-scrollbar { width: 3px; }
-        .scd-panel::-webkit-scrollbar-thumb { background: var(--atlas-border); border-radius: 2px; }
-      `}</style>
+      <style>{DRILLDOWN_STYLES}</style>
 
       <div style={{ position: "relative" }} ref={containerRef}>
 
@@ -424,115 +370,15 @@ export function SortContentDrilldown() {
                 )}
               </div>
 
-              {/* Col 3 — active summary */}
-              <div style={{
-                flex: 1, background: "var(--atlas-bg)",
-                overflowY: "auto", maxHeight: 300,
-              }}>
-                <div style={{
-                  padding: "6px 14px 5px",
-                  borderBottom: `1px solid var(--atlas-border)`,
-                  position: "sticky", top: 0,
-                  background: "var(--atlas-bg)",
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                }}>
-                  <span style={{
-                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-                    fontSize: 8, color: "var(--atlas-text-dim)",
-                    letterSpacing: "0.1em", textTransform: "uppercase",
-                  }}>
-                    Active
-                  </span>
-                  {hasFilters && (
-                    <button
-                      type="button"
-                      onClick={clearAll}
-                      style={{
-                        background: "transparent", border: "none",
-                        color: "var(--atlas-text-dim)", cursor: "pointer",
-                        fontSize: 8,
-                        fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-                      }}
-                    >
-                      clear all
-                    </button>
-                  )}
-                </div>
-                {!hasFilters ? (
-                  <div style={{
-                    padding: "14px", fontSize: 11,
-                    color: "var(--atlas-text-dim)", opacity: 0.35,
-                    fontStyle: "italic", fontFamily: "Georgia, serif",
-                  }}>
-                    none selected
-                  </div>
-                ) : (
-                  <>
-                    {layer && (
-                      <div style={{
-                        padding: "7px 14px", display: "flex", alignItems: "center", gap: 6,
-                        borderBottom: `1px solid var(--atlas-border)`,
-                      }}>
-                        <div style={{ width: 4, height: 4, borderRadius: "50%", background: cat.color, flexShrink: 0 }} />
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-                          fontSize: 9, color: "var(--atlas-text-dim)", flex: 1,
-                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}>
-                          {cat.label}
-                        </span>
-                        <button
-                          type="button"
-                          className="scd-chip-x"
-                          onClick={() => navigate({ layer: null, type: null, subtype: null })}
-                          style={{ color: "var(--atlas-text-dim)" }}
-                        >×</button>
-                      </div>
-                    )}
-                    {typeParam && (
-                      <div style={{
-                        padding: "7px 14px", display: "flex", alignItems: "center", gap: 6,
-                        borderBottom: `1px solid var(--atlas-border)`,
-                      }}>
-                        <div style={{ width: 4, height: 4, borderRadius: "50%", background: cat.color, flexShrink: 0 }} />
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-                          fontSize: 9, color: "var(--atlas-text-dim)", flex: 1,
-                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}>
-                          {typeParam}
-                        </span>
-                        <button
-                          type="button"
-                          className="scd-chip-x"
-                          onClick={() => navigate({ type: null, subtype: null })}
-                          style={{ color: "var(--atlas-text-dim)" }}
-                        >×</button>
-                      </div>
-                    )}
-                    {subtype && (
-                      <div style={{
-                        padding: "7px 14px", display: "flex", alignItems: "center", gap: 6,
-                      }}>
-                        <div style={{ width: 4, height: 4, borderRadius: "50%", background: cat.color, opacity: 0.6, flexShrink: 0 }} />
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-                          fontSize: 9, color: "var(--atlas-text-dim)", flex: 1,
-                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}>
-                          {subtype}
-                        </span>
-                        <button
-                          type="button"
-                          className="scd-chip-x"
-                          onClick={() => navigate({ subtype: null })}
-                          style={{ color: "var(--atlas-text-dim)" }}
-                        >×</button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+              <DrilldownActiveSummary
+                cat={cat}
+                layer={layer}
+                typeParam={typeParam}
+                subtype={subtype}
+                hasFilters={hasFilters}
+                clearAll={clearAll}
+                navigate={navigate}
+              />
             </div>
           </div>
         )}

@@ -11,8 +11,8 @@ import {
   SetupPanelLayout,
   SetupColumn,
 } from "@/components/coursebuilder"
-import { OverlineLabel } from "@/components/ui/overline-label"
 import { computePageConfig } from "@/lib/page-config"
+import { PageSetupPrintOptions, PrintOptions, DEFAULT_PRINT_OPTIONS } from "./page-setup-print-options"
 import type { CanvasPageConfig } from "@/lib/page-config"
 
 const PAGE_DIMS = {
@@ -50,15 +50,14 @@ export function PageSetupSection({
   })
 
   // ── Print options ──
-  const [colorMode, setColorMode]         = useState<"color" | "grayscale" | "bw">("color")
-  const [headerFooter]                    = useState({ pageNumbers: true, courseTitle: false, date: false, studentName: false })
-  const [inkSaver, setInkSaver]           = useState(false)
-  const [bleed, setBleed]                 = useState(0)
-  const [cropMarks, setCropMarks]         = useState(false)
-  const [pageScaling, setPageScaling]     = useState<"fit" | "actual" | "custom">("fit")
-  const [customScale, setCustomScale]     = useState(100)
-  const [duplex, setDuplex]               = useState<"none" | "long" | "short">("none")
-  const [exportQuality, setExportQuality] = useState<"screen" | "print" | "high">("print")
+  const [printOptions, setPrintOptions] = useState<PrintOptions>(DEFAULT_PRINT_OPTIONS)
+  const headerFooter = { pageNumbers: true, courseTitle: false, date: false, studentName: false }
+
+  const handlePrintChange = useCallback(
+    <K extends keyof PrintOptions>(key: K, val: PrintOptions[K]) =>
+      setPrintOptions((prev) => ({ ...prev, [key]: val })),
+    []
+  )
 
   const updateMargin = (side: keyof typeof margins, val: string) =>
     setMargins((prev) => ({ ...prev, [side]: parseFloat(val) || 0 }))
@@ -81,15 +80,15 @@ export function PageSetupSection({
       page_count:       pageCount,
       margins_mm:       marginsMm,
       print_options: {
-        color_mode:     colorMode,
+        color_mode:     printOptions.colorMode,
         header_footer:  headerFooter,
-        ink_saver:      inkSaver,
-        bleed_mm:       bleed,
-        crop_marks:     cropMarks,
-        page_scaling:   pageScaling,
-        custom_scale:   pageScaling === "custom" ? customScale : null,
-        duplex,
-        export_quality: exportQuality,
+        ink_saver:      printOptions.inkSaver,
+        bleed_mm:       printOptions.bleed,
+        crop_marks:     printOptions.cropMarks,
+        page_scaling:   printOptions.pageScaling,
+        custom_scale:   printOptions.pageScaling === "custom" ? printOptions.customScale : null,
+        duplex:         printOptions.duplex,
+        export_quality: printOptions.exportQuality,
       },
     }
 
@@ -101,7 +100,7 @@ export function PageSetupSection({
     if (!error) {
       onSaved?.(cfg)
     }
-  }, [courseId, units, margins, size, orientation, pageCount, onSaved, colorMode, headerFooter, inkSaver, bleed, cropMarks, pageScaling, customScale, duplex, exportQuality])
+  }, [courseId, units, margins, size, orientation, pageCount, onSaved, printOptions, headerFooter])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
 
@@ -201,164 +200,7 @@ export function PageSetupSection({
             </div>
           </div>
 
-          {/* ── Print Options ── */}
-          <div className="border-t border-border pt-6">
-            <OverlineLabel className="mb-4">Print Options</OverlineLabel>
-
-            {/* Color mode */}
-            <div className="mb-5">
-              <FieldLabel>Color Mode</FieldLabel>
-              <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
-                {(["color", "grayscale", "bw"] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setColorMode(m)}
-                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
-                      colorMode === m
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {m === "color" ? "Full Color" : m === "grayscale" ? "Grayscale" : "B & W"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Ink saver */}
-            <div className="mb-5">
-              <label className="flex cursor-pointer items-center justify-between rounded-md border border-border px-3 py-2.5">
-                <div>
-                  <span className="text-xs font-medium text-foreground">Ink Saver Mode</span>
-                  <p className="text-[11px] text-muted-foreground">Reduces backgrounds &amp; color saturation</p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={inkSaver}
-                  onClick={() => setInkSaver((v) => !v)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
-                    inkSaver ? "bg-primary" : "bg-muted"
-                  }`}
-                >
-                  <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition ${
-                    inkSaver ? "translate-x-[18px]" : "translate-x-[2px]"
-                  }`} />
-                </button>
-              </label>
-            </div>
-
-            {/* Bleed & Crop marks */}
-            <div className="mb-5 grid grid-cols-2 gap-3">
-              <div>
-                <FieldLabel>Bleed (mm)</FieldLabel>
-                <TextInput
-                  type="number"
-                  step={0.5}
-                  min={0}
-                  max={10}
-                  value={bleed}
-                  onChange={(e) => setBleed(parseFloat(e.target.value) || 0)}
-                />
-              </div>
-              <div>
-                <FieldLabel>Crop Marks</FieldLabel>
-                <label className="flex cursor-pointer items-center justify-between rounded-md border border-border px-3 py-2">
-                  <span className="text-xs text-foreground">{cropMarks ? "Enabled" : "Disabled"}</span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={cropMarks}
-                    onClick={() => setCropMarks((v) => !v)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
-                      cropMarks ? "bg-primary" : "bg-muted"
-                    }`}
-                  >
-                    <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition ${
-                      cropMarks ? "translate-x-[18px]" : "translate-x-[2px]"
-                    }`} />
-                  </button>
-                </label>
-              </div>
-            </div>
-
-            {/* Page scaling */}
-            <div className="mb-5">
-              <FieldLabel>Page Scaling</FieldLabel>
-              <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
-                {(["fit", "actual", "custom"] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setPageScaling(s)}
-                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium capitalize transition ${
-                      pageScaling === s
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {s === "fit" ? "Fit to Page" : s === "actual" ? "Actual Size" : "Custom"}
-                  </button>
-                ))}
-              </div>
-              {pageScaling === "custom" && (
-                <div className="mt-2 flex items-center gap-2">
-                  <TextInput
-                    type="number"
-                    min={25}
-                    max={400}
-                    step={5}
-                    value={customScale}
-                    onChange={(e) => setCustomScale(Math.max(25, Math.min(400, parseInt(e.target.value) || 100)))}
-                  />
-                  <span className="text-xs text-muted-foreground">%</span>
-                </div>
-              )}
-            </div>
-
-            {/* Duplex */}
-            <div className="mb-5">
-              <FieldLabel>Duplex Binding</FieldLabel>
-              <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
-                {(["none", "long", "short"] as const).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDuplex(d)}
-                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
-                      duplex === d
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {d === "none" ? "Single-Sided" : d === "long" ? "Long Edge" : "Short Edge"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Export quality */}
-            <div>
-              <FieldLabel>Export Quality</FieldLabel>
-              <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
-                {(["screen", "print", "high"] as const).map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => setExportQuality(q)}
-                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
-                      exportQuality === q
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {q === "screen" ? "Screen (150 DPI)" : q === "print" ? "Print (300 DPI)" : "High (600 DPI)"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <PageSetupPrintOptions value={printOptions} onChange={handlePrintChange} />
         </SetupColumn>
 
         {/* Visual preview */}
@@ -369,19 +211,19 @@ export function PageSetupSection({
               style={{ width: previewW, height: previewH }}
             >
               {/* Bleed area */}
-              {bleed > 0 && (
+              {printOptions.bleed > 0 && (
                 <div
                   className="absolute rounded-sm border border-dotted border-orange-400/50 bg-orange-400/5"
                   style={{
-                    top:    `-${(bleed / 10 / physH) * 100}%`,
-                    bottom: `-${(bleed / 10 / physH) * 100}%`,
-                    left:   `-${(bleed / 10 / physW) * 100}%`,
-                    right:  `-${(bleed / 10 / physW) * 100}%`,
+                    top:    `-${(printOptions.bleed / 10 / physH) * 100}%`,
+                    bottom: `-${(printOptions.bleed / 10 / physH) * 100}%`,
+                    left:   `-${(printOptions.bleed / 10 / physW) * 100}%`,
+                    right:  `-${(printOptions.bleed / 10 / physW) * 100}%`,
                   }}
                 />
               )}
               {/* Crop marks */}
-              {cropMarks && (
+              {printOptions.cropMarks && (
                 <>
                   <div className="absolute -top-3 left-0 h-3 w-px bg-foreground/40" />
                   <div className="absolute top-0 -left-3 h-px w-3 bg-foreground/40" />
@@ -416,16 +258,16 @@ export function PageSetupSection({
                   <div
                     key={i}
                     className={`h-[3px] rounded-full ${
-                      colorMode === "bw" ? "bg-black/60" : colorMode === "grayscale" ? "bg-gray-400/60" : "bg-muted-foreground/60"
+                      printOptions.colorMode === "bw" ? "bg-black/60" : printOptions.colorMode === "grayscale" ? "bg-gray-400/60" : "bg-muted-foreground/60"
                     }`}
                     style={{ width: `${70 + (i % 3) * 10}%` }}
                   />
                 ))}
               </div>
               {/* Grayscale/BW overlay */}
-              {colorMode !== "color" && (
+              {printOptions.colorMode !== "color" && (
                 <div className={`pointer-events-none absolute inset-0 rounded-sm ${
-                  colorMode === "bw" ? "mix-blend-saturation bg-white" : "mix-blend-saturation bg-gray-200/40"
+                  printOptions.colorMode === "bw" ? "mix-blend-saturation bg-white" : "mix-blend-saturation bg-gray-200/40"
                 }`} />
               )}
             </div>

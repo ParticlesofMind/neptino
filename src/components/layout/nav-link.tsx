@@ -31,7 +31,11 @@ export function NavLink({ href, label, icon, variant }: NavLinkProps) {
     return (
       <Link
         href={href}
-        className={active ? "text-primary" : "text-muted-foreground hover:text-primary"}
+        className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+          active
+            ? "text-foreground bg-muted/60"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+        }`}
       >
         {label}
       </Link>
