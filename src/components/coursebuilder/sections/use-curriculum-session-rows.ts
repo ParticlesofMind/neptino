@@ -28,12 +28,11 @@ export function useCurriculumSessionRows(params: {
   } = params
 
   const resolveTemplateTypeForSession = useCallback(
-    (row: Partial<CurriculumSessionRow> | undefined, index: number): TemplateType => {
-      if (row?.template_type) return row.template_type
-      if (certificateLessonIndexes.has(index)) return "certificate"
+    (row: Partial<CurriculumSessionRow> | undefined, _index: number): TemplateType => {
+      if (row?.template_type) return row.template_type as TemplateType
       return templateDefaultType
     },
-    [certificateLessonIndexes, templateDefaultType],
+    [templateDefaultType],
   )
 
   useEffect(() => {

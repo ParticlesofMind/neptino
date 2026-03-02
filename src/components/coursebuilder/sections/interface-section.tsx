@@ -2,19 +2,25 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import {
-  DEFAULT_TEMPLATE_VISUAL_DENSITY,
-  DEFAULT_TEMPLATE_BODY_BLOCK_GAP,
-  type TemplateVisualDensity,
-  normalizeTemplateUiSettings,
-} from "@/lib/curriculum/template-source-of-truth"
-import { TemplateBlueprint } from "@/components/coursebuilder/template-blueprint"
 import { SetupColumn, SetupSection, SaveStatusBar } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 
+// ─── Local types / defaults (formerly in template-source-of-truth) ────────────
+
+type VisualDensity = "compact" | "balanced" | "comfortable"
+
+const DEFAULT_VISUAL_DENSITY: VisualDensity = "balanced"
+const DEFAULT_BODY_BLOCK_GAP = 8
+
+function normalizeUiSettings(layout: Record<string, unknown>): { visualDensity: VisualDensity; bodyBlockGap: number } {
+  const density = (layout.visualDensity as VisualDensity) ?? DEFAULT_VISUAL_DENSITY
+  const gap     = typeof layout.bodyBlockGap === "number" ? layout.bodyBlockGap : DEFAULT_BODY_BLOCK_GAP
+  return { visualDensity: density, bodyBlockGap: gap }
+}
+
 export function InterfaceSection({ courseId }: { courseId: string | null }) {
-  const [visualDensity, setVisualDensity] = useState<TemplateVisualDensity>(DEFAULT_TEMPLATE_VISUAL_DENSITY)
-  const [bodyBlockGap, setBodyBlockGap] = useState(DEFAULT_TEMPLATE_BODY_BLOCK_GAP)
+  const [visualDensity, setVisualDensity] = useState<VisualDensity>(DEFAULT_VISUAL_DENSITY)
+  const [bodyBlockGap, setBodyBlockGap] = useState(DEFAULT_BODY_BLOCK_GAP)
   const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
@@ -28,7 +34,7 @@ export function InterfaceSection({ courseId }: { courseId: string | null }) {
       .single()
       .then(({ data, error }) => {
         if (!error && data?.course_layout) {
-          const settings = normalizeTemplateUiSettings(data.course_layout)
+          const settings = normalizeUiSettings(data.course_layout)
           setVisualDensity(settings.visualDensity)
           setBodyBlockGap(settings.bodyBlockGap)
         }
@@ -82,16 +88,14 @@ export function InterfaceSection({ courseId }: { courseId: string | null }) {
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
 
   return (
-    <SetupSection title="Interface" description="Configure visual density and spacing for lesson templates.">
-      <div className="flex flex-1 min-h-0 flex-col gap-4 lg:flex-row lg:gap-2">
-        {/* Config */}
-        <div className="flex-1 min-h-0">
-          <SetupColumn className="space-y-6">
+    <SetupSection title="Interface" description="Configure visual density and spacing for course canvas pages.">
+      <div className="flex-1 min-h-0">
+        <SetupColumn className="space-y-6">
             {/* Visual Density */}
             <div>
               <div className="mb-2">
                 <p className="text-sm font-medium text-foreground">Visual Density</p>
-                <p className="text-xs text-muted-foreground">Controls spacing and content compactness in templates.</p>
+                <p className="text-xs text-muted-foreground">Controls spacing and content compactness in the canvas editor.</p>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {(
@@ -152,52 +156,6 @@ export function InterfaceSection({ courseId }: { courseId: string | null }) {
             </div>
           </SetupColumn>
         </div>
-
-        {/* Preview */}
-        <div className="flex-1 min-h-0">
-          <SetupColumn className="!p-0">
-            <TemplateBlueprint
-              type="lesson"
-              enabled={{
-                header: true,
-                program: true,
-                resources: true,
-                content: true,
-                assignment: true,
-                scoring: false,
-                footer: true,
-              }}
-              fieldEnabled={{
-                header: {},
-                program: {},
-                resources: {},
-                content: {},
-                assignment: {},
-                scoring: {},
-                footer: {},
-              }}
-              name="Interface Preview"
-              scale="md"
-              scrollable={true}
-              density={visualDensity}
-              bodyBlockGap={bodyBlockGap}
-              data={{
-                programRows: [{ competence: "Competence 1", topic: "Sample Topic" }],
-                resourceRows: [{ task: "Resource 1", type: "Document", origin: "Curriculum", state: "Ready", quality: "Aligned" }],
-                contentItems: {
-                  topics: ["Sample Topic"],
-                  objectives: ["Sample Objective"],
-                  tasks: ["Sample Task"],
-                },
-                assignmentItems: {
-                  tasks: ["Sample Assignment"],
-                },
-                scoringItems: [],
-              }}
-            />
-          </SetupColumn>
-        </div>
-      </div>
     </SetupSection>
   )
 }

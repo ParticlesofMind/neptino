@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { ReactNode, ElementType } from "react"
 
 /**
  * Eyebrow / overline label — the `text-xs font-semibold uppercase tracking-widest
@@ -13,7 +13,7 @@ export function OverlineLabel({
 }: {
   children: ReactNode
   className?: string
-  as?: keyof JSX.IntrinsicElements
+  as?: ElementType
 }) {
   return (
     <Tag className={`text-xs font-semibold uppercase tracking-widest text-muted-foreground ${className}`}>

@@ -17,15 +17,7 @@ import type {
   Objective,
   Task,
   CanvasPage,
-  BlockKey,
-} from "../create/types"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
-import {
-  defaultEnabled,
-  defaultFieldEnabled,
-  type LocalTemplate,
-  type BlockId,
-} from "@/components/coursebuilder/sections/template-section-data"
+} from "../types"
 
 // ─── Raw DB shape (subset of CurriculumSessionRow) ────────────────────────────
 
@@ -75,36 +67,6 @@ export interface LoaderState {
   error:   string | null
 }
 
-// ─── Template helpers ─────────────────────────────────────────────────────────
-
-/** Find the best-matching LocalTemplate for a given session row. */
-export function findTemplate(
-  templateId: string | undefined,
-  templateType: TemplateType,
-  templates: LocalTemplate[],
-): LocalTemplate | null {
-  if (templateId) {
-    const byId = templates.find((t) => t.id === templateId)
-    if (byId) return byId
-  }
-  return templates.find((t) => t.type === templateType) ?? null
-}
-
-/** Convert LocalTemplate.enabled → visibleBlocks array. */
-export function templateToVisibleBlocks(template: LocalTemplate): BlockKey[] {
-  return (Object.entries(template.enabled) as [BlockId, boolean][])
-    .filter(([, on]) => on)
-    .map(([k]) => k as BlockKey)
-}
-
-/** Convert LocalTemplate blockOrder + enabled → ordered body-block keys. */
-export function templateToBlockOrder(template: LocalTemplate): BlockKey[] {
-  const base = (template.blockOrder ?? (Object.keys(template.enabled) as BlockId[]))
-  return base
-    .filter((k) => k !== "header" && k !== "footer" && (template.enabled[k] ?? false))
-    .map((k) => k as BlockKey)
-}
-
 // ─── Session mapper ───────────────────────────────────────────────────────────
 
 function resolveModuleName(index: number, total: number, moduleNames: string[]): string {
@@ -122,7 +84,6 @@ export function mapRowToSession(
   meta: CourseMeta,
 ): CourseSession {
   const sessionId = ((rawRow.id ?? `session-${index}`) as SessionId)
-  const templateType = (rawRow.template_type ?? "lesson") as TemplateType
 
   const topicCount         = rawRow.topics     ?? meta.topicsPerLesson
   const objectivesPerTopic = rawRow.objectives ?? meta.objectivesPerTopic
@@ -181,7 +142,6 @@ export function mapRowToSession(
     courseId:        courseId as CourseId,
     order:           rawRow.session_number ?? index + 1,
     title:           rawRow.title ?? `Session ${index + 1}`,
-    templateType,
     canvases,
     topics,
     durationMinutes: rawRow.duration_minutes,
@@ -191,7 +151,6 @@ export function mapRowToSession(
     pedagogy:        meta.pedagogy,
     moduleName:      resolveModuleName(index, meta.totalSessions, meta.moduleNames),
     scheduleDate:    rawRow.schedule_date ?? "",
-    fieldEnabled:    defaultFieldEnabled(templateType, defaultEnabled()),
   }
 }
 
@@ -230,9 +189,22 @@ export function mergeSavedLesson(
   const savedTopics   = Array.isArray(p.topics)   ? (p.topics   as Topic[])      : null
   const savedCanvases = Array.isArray(p.canvases) ? (p.canvases as CanvasPage[]) : null
 
+  // Re-anchor every canvas ID and sessionId to the *derived* session.
+  // Saved payloads are matched by lesson_number, so an old payload can contain
+  // IDs that embed a previous session's UUID.  If two sessions end up with the
+  // same canvas ID (e.g. both "<old-uuid>-canvas-1"), the virtualizer receives
+  // duplicate React keys and canvasStore lookups bleed across sessions.
+  const anchoredCanvases = savedCanvases
+    ? savedCanvases.map((c, i) => ({
+        ...c,
+        id:        `${derived.id}-canvas-${i + 1}` as CanvasId,
+        sessionId: derived.id as SessionId,
+      }))
+    : null
+
   return {
     ...derived,
-    ...(savedTopics   ? { topics:   overlayDroppedCards(derived.topics, savedTopics) } : {}),
-    ...(savedCanvases ? { canvases: savedCanvases } : {}),
+    ...(savedTopics      ? { topics:   overlayDroppedCards(derived.topics, savedTopics) } : {}),
+    ...(anchoredCanvases ? { canvases: anchoredCanvases }                                 : {}),
   }
 }

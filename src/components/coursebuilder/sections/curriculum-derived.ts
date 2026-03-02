@@ -37,14 +37,12 @@ export function deriveTemplateOptions(args: {
     new Set(
       filteredTemplates
         .map((template) => template.type)
-        .filter((type): type is TemplateType => ["lesson", "quiz", "exam", "assessment", "certificate"].includes(type)),
+        .filter((type): type is TemplateType => type === "lesson"),
     ),
   )
 
   const defaultTemplateOptions: TemplateType[] = availableTemplateTypes.length > 0 ? availableTemplateTypes : ["lesson"]
-  const sessionTemplateOptions: TemplateType[] = defaultTemplateOptions.includes("certificate") || certificateMode === "never"
-    ? defaultTemplateOptions
-    : [...defaultTemplateOptions, "certificate"]
+  const sessionTemplateOptions: TemplateType[] = defaultTemplateOptions
 
   return {
     filteredTemplates,

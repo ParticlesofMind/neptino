@@ -15,7 +15,7 @@
 
 import { useCallback } from "react"
 import type { DragEndEvent } from "@dnd-kit/core"
-import type { SessionId, TaskId, TaskAreaKind, CardType, DroppedCardId, CardId } from "../types"
+import type { SessionId, TaskId, TaskAreaKind, CardType, DroppedCardId, CardId, BlockKey } from "../types"
 import { useCourseStore } from "../store/courseStore"
 
 // ─── Data shapes ──────────────────────────────────────────────────────────────
@@ -32,6 +32,8 @@ export interface DropTargetData {
   sessionId: SessionId
   taskId:    TaskId
   areaKind:  TaskAreaKind
+  /** Block key of the drop zone's parent block */
+  blockKey?: BlockKey
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────

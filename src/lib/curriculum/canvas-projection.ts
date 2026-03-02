@@ -1,5 +1,5 @@
 import { getDefaultBlocksForType, type TemplateBlockType, type TemplateDesignConfig, type TemplateType } from "@/lib/curriculum/template-blocks"
-import { BLOCK_FIELDS, type BlockId, type TemplateFieldState } from "@/components/coursebuilder/sections/templates-section"
+import { BLOCK_FIELDS, type BlockId, type TemplateFieldState } from "@/components/coursebuilder/sections/template-section-data"
 import { resolveTemplateSelection, type NormalizedTemplateConfig } from "@/lib/curriculum/template-source-of-truth"
 
 export interface RawCurriculumSessionRow {

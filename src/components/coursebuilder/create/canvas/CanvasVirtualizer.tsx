@@ -112,13 +112,21 @@ export function CanvasVirtualizer({
     [dims.heightPx, scale],
   )
 
-  // Build flat virtual rows: session-label header + canvases per session
+  // Build flat virtual rows: session-label header + canvases per session.
+  // Duplicate canvas IDs are filtered within each session as a defensive guard
+  // against corrupted saved payloads slipping through the store deduplication.
   const allRows = useMemo<VirtualRow[]>(() => {
     const rows: VirtualRow[] = []
     for (const session of sessions) {
       rows.push({ kind: "session-label", session })
-      const total = session.canvases.length
-      session.canvases.forEach((page, idx) => {
+      const seenCanvasIds = new Set<string>()
+      const uniqueCanvases = session.canvases.filter((c) => {
+        if (seenCanvasIds.has(c.id)) return false
+        seenCanvasIds.add(c.id)
+        return true
+      })
+      const total = uniqueCanvases.length
+      uniqueCanvases.forEach((page, idx) => {
         rows.push({
           kind:        "canvas",
           page,
@@ -141,6 +149,13 @@ export function CanvasVirtualizer({
       return row?.kind === "session-label" ? SESSION_LABEL_HEIGHT : rowHeight
     },
     overscan: OVERSCAN,
+    // Disable flushSync: TanStack Virtual calls flushSync(rerender) inside
+    // instance.setOptions() which runs during React's own render pass. In
+    // React 18/19 concurrent mode this creates a nested synchronous re-render
+    // that causes the reconciler to encounter the same children array twice,
+    // surfacing a spurious duplicate-key warning.  Setting this to false makes
+    // the virtualizer schedule a normal async re-render instead.
+    useFlushSync: false,
   })
 
   // Re-measure rows when zoom changes
@@ -203,9 +218,11 @@ export function CanvasVirtualizer({
               }
 
               // Canvas page row
+              // Prefix with virtual index so that if two canvas pages somehow
+              // share an id (bad source data), React still gets a unique key.
               return (
                 <div
-                  key={row.page.id}
+                  key={`${virtualRow.index}:${row.page.id}`}
                   data-index={virtualRow.index}
                   ref={virtualizer.measureElement}
                   style={{

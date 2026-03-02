@@ -3,58 +3,46 @@
 /**
  * Card Renderer
  *
- * Single switch between DOM-rendered card components and canvas-backed
- * components. The decision is driven by `cardRenderMode(card.cardType)`.
+ * Resolves the correct component for a card via the CardRegistry.
+ * Adding a new card type:
+ *   1. Create the component in ./card-types/
+ *   2. Add an entry in CardRegistry.ts
+ *   3. Nothing else — this file never needs to change.
  *
- * Adding a new DOM card type → add a case in the DOM branch below.
- * Adding a new canvas card type → add to CANVAS_BACKED_CARD_TYPES in types.ts
- *   and wire up the engine inside RichCard.
+ * mode="editor"  (default) — shown in the coursebuilder canvas
+ * mode="preview"           — shown in the student-facing published view
  */
 
 import type { DroppedCard } from "../types"
-import { cardRenderMode } from "../types"
-
-import { TextCard }  from "./card-types/TextCard"
-import { ImageCard } from "./card-types/ImageCard"
-import { VideoCard } from "./card-types/VideoCard"
-import { RichCard }  from "./card-types/RichCard"
+import { DEFAULT_CARD_REGISTRY, resolveCardRenderer } from "./CardRegistry"
+import type { CardRenderProps } from "./CardRegistry"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface CardRendererProps {
   card: DroppedCard
   onRemove?: () => void
+  /** Render mode — defaults to "editor" */
+  mode?: "editor" | "preview"
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function CardRenderer({ card, onRemove }: CardRendererProps) {
-  const mode = cardRenderMode(card.cardType)
+export function CardRenderer({ card, onRemove, mode = "editor" }: CardRendererProps) {
+  const Component = resolveCardRenderer(DEFAULT_CARD_REGISTRY, card.cardType, mode)
 
-  // ── Canvas-backed path ─────────────────────────────────────────────────────
-  if (mode === "canvas") {
-    return <RichCard card={card} onRemove={onRemove} />
+  if (Component) {
+    return <Component card={card} onRemove={onRemove} />
   }
 
-  // ── DOM path ───────────────────────────────────────────────────────────────
-  switch (card.cardType) {
-    case "text":
-      return <TextCard  card={card} onRemove={onRemove} />
-    case "image":
-      return <ImageCard card={card} onRemove={onRemove} />
-    case "video":
-      return <VideoCard card={card} onRemove={onRemove} />
-    case "audio":
-    case "document":
-    case "table":
-    default:
-      return <GenericDomCard card={card} onRemove={onRemove} />
-  }
+  // No registered renderer — use the generic fallback
+  return <GenericDomCard card={card} onRemove={onRemove} />
 }
 
 // ─── Generic DOM fallback ─────────────────────────────────────────────────────
+// Used for card types not yet in the registry (audio, document, table, etc.)
 
-function GenericDomCard({ card, onRemove }: CardRendererProps) {
+function GenericDomCard({ card, onRemove }: CardRenderProps) {
   const title = typeof card.content["title"] === "string" ? card.content["title"] : card.cardType
 
   return (

@@ -66,10 +66,6 @@ export type PreviewMode = "modules" | "sessions" | "topics" | "objectives" | "ta
 
 export const TEMPLATE_TYPE_OPTIONS: Array<{ value: TemplateType; label: string }> = [
   { value: "lesson", label: "Lesson" },
-  { value: "quiz", label: "Quiz" },
-  { value: "exam", label: "Exam" },
-  { value: "assessment", label: "Assessment" },
-  { value: "certificate", label: "Certificate" },
 ]
 
 export const CONTENT_VOLUME_DURATION_MAP: Record<string, number> = {

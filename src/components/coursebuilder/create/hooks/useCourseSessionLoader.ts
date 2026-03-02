@@ -3,7 +3,7 @@
  *
  * Loads the full canvas-editor state for a course from Supabase and hydrates
  * the Zustand stores. Two queries run in parallel:
- *   1. courses row  — curriculum structure, schedule, template settings.
+ *   1. courses row  — curriculum structure, schedule, layout.
  *   2. lessons rows — previously-saved CourseSession snapshots.
  *
  * See course-session-mapper.ts for the pure helper functions and types.
@@ -12,30 +12,18 @@
 import { useEffect, useState } from "react"
 import { selectCourseById, selectLessonsByCourseId } from "@/components/coursebuilder/course-queries"
 import { useCourseStore } from "../store/courseStore"
-import { useTemplateStore } from "../store/templateStore"
-import {
-  normalizeTemplate,
-  normalizeTemplateSettings,
-  defaultEnabled,
-  defaultFieldEnabled,
-  type LocalTemplate,
-} from "@/components/coursebuilder/sections/template-section-data"
-import type { SessionId } from "../types"
+import type { } from "../types"
 import {
   type RawSessionRow,
   type RawScheduleEntry,
   type CourseMeta,
   type LoaderState,
-  findTemplate,
-  templateToVisibleBlocks,
-  templateToBlockOrder,
   mapRowToSession,
   mergeSavedLesson,
 } from "./course-session-mapper"
 
 export function useCourseSessionLoader(courseId: string | null): LoaderState {
   const hydrateSessions = useCourseStore((s) => s.hydrateSessions)
-  const initSession     = useTemplateStore((s) => s.initSession)
   const [state, setState] = useState<LoaderState>({ loading: Boolean(courseId), error: null })
 
   useEffect(() => {
@@ -51,7 +39,7 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
       const [courseResult, lessonsResult] = await Promise.all([
         selectCourseById<Record<string, unknown>>(
           courseId,
-          "course_name, institution, generation_settings, course_layout, curriculum_data, schedule_settings, template_settings",
+          "course_name, institution, generation_settings, course_layout, curriculum_data, schedule_settings",
         ),
         selectLessonsByCourseId(courseId),
       ])
@@ -69,9 +57,6 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
       const courseLayout    = (data.course_layout         as Record<string, unknown> | null) ?? {}
       const scheduleSettings = (data.schedule_settings   as Record<string, unknown> | null) ?? {}
 
-      // ── Parse template settings ──────────────────────────────────────────
-      const templateSettings = normalizeTemplateSettings(data.template_settings)
-      const templates: LocalTemplate[] = templateSettings.templates.map(normalizeTemplate)
 
       // ── Build lessons map (lesson_number → saved row) ──────────────────
       const lessonsMap = new Map<number, (typeof lessonsResult.data)[number]>()
@@ -93,6 +78,17 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
           schedule_date:  entry.date ?? "",
         }))
       }
+
+      // Deduplicate rows by session ID — duplicate IDs in the source data
+      // produce sessions with identical canvas IDs (e.g. two `${id}-canvas-1`
+      // entries), causing React duplicate-key warnings in the virtualizer.
+      const seenSessionIds = new Set<string>()
+      rowsRaw = rowsRaw.filter((row) => {
+        const id = row.id ?? ""
+        if (seenSessionIds.has(id)) return false
+        seenSessionIds.add(id)
+        return true
+      })
 
       const moduleNames: string[] = Array.isArray(curriculum.module_names)
         ? (curriculum.module_names as unknown[]).map((n) => String(n ?? "")).filter(Boolean)
@@ -122,52 +118,15 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
         const derived    = mapRowToSession(row, i, courseId, meta)
         const sessionNum = derived.order
         const saved      = lessonsMap.get(sessionNum)
-        const merged     = saved ? mergeSavedLesson(derived, saved) : derived
-
-        const tpl = findTemplate(
-          (row as RawSessionRow & { template_id?: string }).template_id,
-          derived.templateType,
-          templates,
-        )
-        if (tpl?.fieldEnabled) {
-          return { ...merged, fieldEnabled: tpl.fieldEnabled }
-        }
-        return {
-          ...merged,
-          fieldEnabled: defaultFieldEnabled(derived.templateType, defaultEnabled()),
-        }
+        return saved ? mergeSavedLesson(derived, saved) : derived
       })
 
       hydrateSessions(sessions)
-
-      // ── Apply template config to templateStore ───────────────────────────
-      for (const session of sessions) {
-        const row = rowsRaw[sessions.indexOf(session)]
-        const tpl = findTemplate(
-          (row as RawSessionRow & { template_id?: string })?.template_id,
-          session.templateType,
-          templates,
-        )
-
-        if (tpl) {
-          initSession(
-            session.id as SessionId,
-            {
-              templateType:  session.templateType,
-              visibleBlocks: templateToVisibleBlocks(tpl),
-              blockOrder:    templateToBlockOrder(tpl),
-            },
-            true,
-          )
-        } else {
-          initSession(session.id as SessionId, { templateType: session.templateType })
-        }
-      }
 
       setState({ loading: false, error: null })
     })()
 
     return () => { cancelled = true }
-  }, [courseId, hydrateSessions, initSession])
+  }, [courseId, hydrateSessions])
 
   return state}

@@ -1,0 +1,75 @@
+/**
+ * Card Registry
+ *
+ * Maps every CardType to its renderer pair (Editor + optional Preview).
+ * Adding a new card type means:
+ *   1. Create the component in ./card-types/
+ *   2. Add an entry here
+ *   3. Nothing else — CardRenderer picks it up automatically.
+ *
+ * Editor:  shown in the coursebuilder canvas (may include edit affordances)
+ * Preview: shown in the student-facing published view (read-only).
+ *           Defaults to Editor when no separate Preview component is provided.
+ */
+
+import type { ComponentType } from "react"
+import type { DroppedCard, CardType } from "../types"
+
+import { TextCard }  from "./card-types/TextCard"
+import { ImageCard } from "./card-types/ImageCard"
+import { VideoCard } from "./card-types/VideoCard"
+import { RichCard }  from "./card-types/RichCard"
+
+// ─── Shared prop contract ─────────────────────────────────────────────────────
+
+export interface CardRenderProps {
+  card: DroppedCard
+  /** Optional remove handler — present in editor mode, absent in preview */
+  onRemove?: () => void
+}
+
+// ─── Registry shape ───────────────────────────────────────────────────────────
+
+/**
+ * Each card type registers:
+ *  - Editor   — the component the teacher sees while building the course
+ *  - Preview  — the read-only component the student sees (omit to reuse Editor)
+ */
+export interface CardRenderers {
+  Editor:   ComponentType<CardRenderProps>
+  Preview?: ComponentType<CardRenderProps>
+}
+
+export type CardRegistry = Partial<Record<CardType, CardRenderers>>
+
+// ─── Default registry ─────────────────────────────────────────────────────────
+
+export const DEFAULT_CARD_REGISTRY: CardRegistry = {
+  // ── DOM-rendered types ─────────────────────────────────────────────────────
+  text:       { Editor: TextCard  },
+  image:      { Editor: ImageCard },
+  video:      { Editor: VideoCard },
+  // audio / document / table use the generic fallback in CardRenderer
+
+  // ── Canvas-backed types ────────────────────────────────────────────────────
+  // All three share RichCard as the host; the scene engine is resolved inside it
+  "rich-sim":   { Editor: RichCard },
+  "village-3d": { Editor: RichCard },
+  interactive:  { Editor: RichCard },
+}
+
+// ─── Lookup helper ────────────────────────────────────────────────────────────
+
+/**
+ * Resolve the correct component for a given card type and render mode.
+ * Returns `null` when no renderer is registered (caller should use a fallback).
+ */
+export function resolveCardRenderer(
+  registry: CardRegistry,
+  cardType: CardType,
+  mode: "editor" | "preview" = "editor",
+): ComponentType<CardRenderProps> | null {
+  const renderers = registry[cardType]
+  if (!renderers) return null
+  return mode === "preview" ? (renderers.Preview ?? renderers.Editor) : renderers.Editor
+}

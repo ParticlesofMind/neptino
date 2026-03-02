@@ -114,6 +114,37 @@ CREATE INDEX IF NOT EXISTS idx_encyclopedia_media_layer_type
   ON encyclopedia_media(layer, media_type);
 
 -- ───────────────────────────────────────────────────────────────────────
+-- Step 4b: Catch-all — map any remaining non-Atlas knowledge_type values
+-- to the closest valid Atlas Entity Type so the constraint below never
+-- fails on rows that the ILIKE patterns above didn't cover.
+-- ───────────────────────────────────────────────────────────────────────
+
+-- Values that look like organisations / groups → Institution
+UPDATE encyclopedia_items
+SET knowledge_type = 'Institution'
+WHERE knowledge_type ILIKE '%Organisation%'
+   OR knowledge_type ILIKE '%Organization%'
+   OR knowledge_type ILIKE '%Group%'
+   OR knowledge_type ILIKE '%Institution%';
+
+-- Values about works (books, films, art, etc.) → Work
+UPDATE encyclopedia_items
+SET knowledge_type = 'Work'
+WHERE knowledge_type ILIKE '%Work%'
+   OR knowledge_type ILIKE '%Book%'
+   OR knowledge_type ILIKE '%Film%'
+   OR knowledge_type ILIKE '%Art%';
+
+-- Anything still not in the valid set → Instance (catch-all for concrete
+-- entities that do not fit a more specific category)
+UPDATE encyclopedia_items
+SET knowledge_type = 'Instance'
+WHERE knowledge_type NOT IN (
+  'Concept', 'Process', 'Instance', 'Person', 'State',
+  'Time', 'Environment', 'Work', 'Technology', 'Institution', 'Movement'
+);
+
+-- ───────────────────────────────────────────────────────────────────────
 -- Step 5: Add constraints to ensure valid Atlas taxonomy
 -- ───────────────────────────────────────────────────────────────────────
 
@@ -125,7 +156,7 @@ DO $$ BEGIN
     'Concept', 'Process', 'Instance', 'Person', 'State', 
     'Time', 'Environment', 'Work', 'Technology', 'Institution', 'Movement'
   ));
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- Valid Media Types (Layer 2)

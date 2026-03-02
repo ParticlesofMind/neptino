@@ -20,9 +20,7 @@ import type {
   ObjectiveId,
   TaskId,
   BlockKey,
-  TemplateType,
 } from "../types"
-import { getTemplateDefinition } from "../templates/definitions"
 
 // ─── Shape ────────────────────────────────────────────────────────────────────
 
@@ -117,7 +115,18 @@ export const useCourseStore = create<CourseState>()(
             : [...state.sessions, session],
         })),
 
-      hydrateSessions: (sessions) => set({ sessions }),
+      hydrateSessions: (sessions) => {
+        // Deduplicate by session id — guards against stale localStorage entries
+        // written before source-data deduplication was added to the loader.
+        const seen = new Set<string>()
+        set({
+          sessions: sessions.filter((s) => {
+            if (seen.has(s.id)) return false
+            seen.add(s.id)
+            return true
+          }),
+        })
+      },
 
       addDroppedCard: (sessionId, taskId, card) =>
         set((state) => {
@@ -214,23 +223,22 @@ export const useCourseStore = create<CourseState>()(
             // once on page 1 and must never repeat on continuation pages.
             const SESSION_ONCE_BLOCKS = new Set<BlockKey>(["program", "resources"])
 
+            // Default body blocks for continuation pages (excludes header/footer/program/resources)
+            const DEFAULT_CONTINUATION_BLOCKS: BlockKey[] = ["content", "assignment", "scoring", "project"]
+
             let continuationBlockKeys: BlockKey[] | undefined
             if (lastCanvas?.blockKeys === undefined) {
-              const def = getTemplateDefinition(session.templateType as TemplateType)
-              const contKeys = def.blocks
-                .map((b) => b.key as BlockKey)
-                .filter((k) => !SESSION_ONCE_BLOCKS.has(k) && k !== "header" && k !== "footer")
-              continuationBlockKeys = contKeys.length > 0 ? contKeys : undefined
+              continuationBlockKeys = DEFAULT_CONTINUATION_BLOCKS.length > 0
+                ? DEFAULT_CONTINUATION_BLOCKS
+                : undefined
             } else {
               const filtered = lastCanvas.blockKeys.filter((k) => !SESSION_ONCE_BLOCKS.has(k))
               if (filtered.length > 0) {
                 continuationBlockKeys = filtered
               } else {
-                const def = getTemplateDefinition(session.templateType as TemplateType)
-                const contKeys = def.blocks
-                  .map((b) => b.key as BlockKey)
-                  .filter((k) => !SESSION_ONCE_BLOCKS.has(k) && k !== "header" && k !== "footer")
-                continuationBlockKeys = contKeys.length > 0 ? contKeys : undefined
+                continuationBlockKeys = DEFAULT_CONTINUATION_BLOCKS.length > 0
+                  ? DEFAULT_CONTINUATION_BLOCKS
+                  : undefined
               }
             }
 
@@ -295,11 +303,25 @@ export const useCourseStore = create<CourseState>()(
     }),
     {
       name: "neptino-course-store",
+      // Bump version to evict any stale localStorage entries that contained a
+      // `sessions` array (written before partialize was restricted to
+      // activeSessionId only). Zustand discards stored state on version mismatch.
+      version: 1,
       // Sessions are always authoritative from Supabase — do NOT persist them
       // to localStorage. Persisting session.canvases causes stale blockKeys to
       // outlive code changes and triggers the overflow-append loop on every load.
       partialize: (state) => ({
         activeSessionId: state.activeSessionId,
+      }),
+      // Explicitly ignore any `sessions` that may be present in old localStorage
+      // entries (written before `partialize` was restricted to activeSessionId).
+      // Without this, Zustand's default merge would overlay stale sessions onto
+      // the initial empty array before `hydrateSessions` fires, causing duplicate
+      // canvas-ID keys in the virtualizer when two sessions shared the same UUID.
+      merge: (persisted, current) => ({
+        ...current,
+        activeSessionId:
+          (persisted as Partial<CourseState>).activeSessionId ?? current.activeSessionId,
       }),
     },
   ),

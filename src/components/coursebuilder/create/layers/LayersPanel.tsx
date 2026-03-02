@@ -7,16 +7,12 @@
  *   - "Layers" / "Navigation" tab row
  *   - Session meta header (module · session title · dropped asset count)
  *   - Block-level layer rows with drag-handle, eye toggle, protect icon
- *
- * Layers are derived from the active template's block list, expanded so the
- * Content block's three task areas appear as separate entries.
  */
 
 import { useState } from "react"
 import { Eye, EyeOff, Lock, GripVertical, Map } from "lucide-react"
-import type { CourseSession } from "../types"
+import type { CourseSession, BlockKey } from "../types"
 import { useCanvasStore }         from "../store/canvasStore"
-import { TEMPLATE_DEFINITIONS }  from "../templates/definitions/index"
 
 // ─── Block → layer label map ──────────────────────────────────────────────────
 
@@ -26,42 +22,35 @@ interface LayerEntry {
   indent: number
 }
 
-function deriveLayerEntries(session: CourseSession): LayerEntry[] {
-  const def = TEMPLATE_DEFINITIONS[session.templateType]
-  if (!def) return []
+const BLOCK_LAYER_LABELS: Partial<Record<BlockKey, Array<{ suffix: string; label: string }>>> = {
+  header:     [{ suffix: "header",      label: "Session Meta"     }],
+  program:    [{ suffix: "program",     label: "Program"          }],
+  resources:  [{ suffix: "resources",   label: "Resources"        }],
+  content:    [
+    { suffix: "instruction", label: "Instruction Area" },
+    { suffix: "student",     label: "Student Area"     },
+    { suffix: "teacher",     label: "Teacher Area"     },
+  ],
+  assignment: [{ suffix: "assignment",  label: "Assignment"       }],
+  scoring:    [{ suffix: "scoring",     label: "Scoring"          }],
+  project:    [{ suffix: "project",     label: "Project"          }],
+  footer:     [{ suffix: "footer",      label: "Footer Meta"      }],
+}
 
-  const entries: LayerEntry[] = []
-  for (const block of def.blocks) {
-    switch (block.key) {
-      case "header":
-        entries.push({ id: `${session.id}-header`,      label: "Session Meta",      indent: 0 })
-        break
-      case "program":
-        entries.push({ id: `${session.id}-program`,     label: "Program",           indent: 0 })
-        break
-      case "resources":
-        entries.push({ id: `${session.id}-resources`,   label: "Resources",         indent: 0 })
-        break
-      case "content":
-        entries.push({ id: `${session.id}-instruction`, label: "Instruction Area",  indent: 0 })
-        entries.push({ id: `${session.id}-student`,     label: "Student Area",      indent: 0 })
-        entries.push({ id: `${session.id}-teacher`,     label: "Teacher Area",      indent: 0 })
-        break
-      case "assignment":
-        entries.push({ id: `${session.id}-assignment`,  label: "Assignment",        indent: 0 })
-        break
-      case "scoring":
-        entries.push({ id: `${session.id}-scoring`,     label: "Scoring",           indent: 0 })
-        break
-      case "project":
-        entries.push({ id: `${session.id}-project`,     label: "Project",           indent: 0 })
-        break
-      case "footer":
-        entries.push({ id: `${session.id}-footer`,      label: "Footer Meta",       indent: 0 })
-        break
-    }
-  }
-  return entries
+const DEFAULT_BLOCKS: BlockKey[] = [
+  "header", "program", "resources", "content", "assignment", "scoring", "project", "footer",
+]
+
+function deriveLayerEntries(session: CourseSession): LayerEntry[] {
+  // Use page blockKeys if set, else show all default blocks.
+  const keys = (session.canvases[0]?.blockKeys ?? DEFAULT_BLOCKS) as BlockKey[]
+  return keys.flatMap((key) =>
+    (BLOCK_LAYER_LABELS[key] ?? []).map(({ suffix, label }) => ({
+      id:     `${session.id}-${suffix}`,
+      label,
+      indent: 0,
+    })),
+  )
 }
 
 // ─── Layer row ────────────────────────────────────────────────────────────────
@@ -208,7 +197,7 @@ export function LayersPanel({ session }: LayersPanelProps) {
               {session.title}
             </p>
             <p className="text-[10px] text-neutral-400 mt-0.5 truncate">
-              Session {session.order} &middot; {session.templateType}
+              Session {session.order}
             </p>
             <p className="text-[10px] text-neutral-400">
               Dropped assets: {droppedAssetCount}

@@ -4,14 +4,7 @@
  * Separation of concerns:
  *   types.ts → data shape (this file)
  *   store/   → runtime state
- *   templates/ → rendering rules
  */
-
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
-import type { TemplateFieldState } from "@/components/coursebuilder/sections/template-section-data"
-
-// ─── Re-exports for convenience ──────────────────────────────────────────────
-export type { TemplateType, TemplateFieldState }
 
 // ─── Branded ID types ────────────────────────────────────────────────────────
 export type CourseId      = string & { readonly __brand: "CourseId" }
@@ -109,8 +102,8 @@ export interface CanvasPage {
   pageNumber: number
   /**
    * Which body block keys to render on this canvas page.
-   * When set, the TemplateRenderer only mounts these blocks.
-   * undefined = render all blocks in template order (non-lesson fallback).
+   * When set, the BlockRenderer only mounts these blocks.
+   * undefined = render all blocks.
    */
   blockKeys?: BlockKey[]
   /**
@@ -138,7 +131,6 @@ export interface CourseSession {
   courseId: CourseId
   order: number
   title: string
-  templateType: TemplateType
   canvases: CanvasPage[]
   topics: Topic[]
   durationMinutes?: number
@@ -149,11 +141,6 @@ export interface CourseSession {
   pedagogy?: string
   scheduleDate?: string
   teacherName?: string
-  /**
-   * Per-field visibility from the applied template (from template setup's fieldEnabled).
-   * When present, Header/Footer blocks filter their fields accordingly.
-   */
-  fieldEnabled?: TemplateFieldState
 }
 
 // ─── Page config ─────────────────────────────────────────────────────────────
@@ -185,40 +172,24 @@ export type BlockKey =
   | "scoring"
   | "project"
 
-// ─── Template definition ──────────────────────────────────────────────────────
-export interface BlockDefinition {
-  key: BlockKey
-  required: boolean
-  defaultVisible: boolean
-  config?: Record<string, unknown>
-}
-
-export interface TemplateDefinition {
-  type: TemplateType
-  label: string
-  blocks: BlockDefinition[]
-}
-
 // ─── Block render props ───────────────────────────────────────────────────────
 export interface BlockRenderProps {
   sessionId: SessionId
   /** The canvas page this block is being rendered on — used by ContentBlock for topic-range slicing */
   canvasId?: CanvasId
+  /** The block key for this rendered block — forwarded to drop zones so useCardDrop can validate accepts */
+  blockKey?: BlockKey
   /** Field values sourced from the course/session metadata */
   fieldValues: Record<string, string>
   /** Body data for complex blocks (program table rows, resource rows, topic tree) */
   data?: Record<string, unknown>
-  /** Template type — used by Header/Footer to look up the blueprint field list */
-  templateType?: TemplateType
-  /** Per-field visibility from the applied template — used to filter header/footer fields */
-  fieldEnabled?: TemplateFieldState
 }
 
 // ─── Draft persistence ────────────────────────────────────────────────────────
 /**
  * During editing, the full session state is written as a JSON blob (one row per
- * session in the `course_drafts` table) for speed. On publish the normalized
- * tables are populated.
+ * session in the `lessons` table via `useCanvasPersistence`). On publish the
+ * normalized tables are populated.
  */
 export interface CourseSessionDraft {
   sessionId: SessionId

@@ -17,10 +17,9 @@ import type {
   CourseSession,
   PageDimensions,
   SessionId,
-  TemplateType,
 } from "../types"
 import { DEFAULT_PAGE_DIMENSIONS } from "../types"
-import { TemplateRenderer } from "../templates/TemplateRenderer"
+import { BlockRenderer } from "../renderer/BlockRenderer"
 import { HeaderBlock } from "../blocks/Header"
 import { FooterBlock } from "../blocks/Footer"
 import { useCanvasOverflow } from "../hooks/useCanvasOverflow"
@@ -103,8 +102,6 @@ export function CanvasPage({
         <HeaderBlock
           sessionId={session.id as SessionId}
           fieldValues={fieldValues}
-          templateType={session.templateType}
-          fieldEnabled={session.fieldEnabled}
         />
       </div>
 
@@ -121,14 +118,12 @@ export function CanvasPage({
         }}
       >
         <div ref={contentRef} className="w-full">
-          <TemplateRenderer
+          <BlockRenderer
             sessionId={session.id as SessionId}
             canvasId={page.id}
-            templateType={session.templateType as TemplateType}
             fieldValues={fieldValues}
             data={bodyData}
-            fieldEnabled={session.fieldEnabled}
-            allowedBlocks={page.blockKeys}
+            blockKeys={page.blockKeys}
           />
         </div>
       </div>
@@ -141,8 +136,6 @@ export function CanvasPage({
         <FooterBlock
           sessionId={session.id as SessionId}
           fieldValues={fieldValues}
-          templateType={session.templateType}
-          fieldEnabled={session.fieldEnabled}
         />
       </div>
 

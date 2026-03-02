@@ -19,7 +19,7 @@
  */
 
 import { useDroppable } from "@dnd-kit/core"
-import type { BlockRenderProps, CanvasId, TaskAreaKind, SessionId, TaskId, Topic } from "../types"
+import type { BlockRenderProps, BlockKey, CanvasId, TaskAreaKind, SessionId, TaskId, Topic } from "../types"
 import { useCourseStore } from "../store/courseStore"
 import { CardRenderer } from "../cards/CardRenderer"
 
@@ -29,15 +29,17 @@ interface TaskAreaProps {
   sessionId: SessionId
   taskId: TaskId
   areaKind: TaskAreaKind
+  /** Block key forwarded to the droppable data so useCardDrop can validate accepts */
+  blockKey?: BlockKey
   label: string
   children?: React.ReactNode
 }
 
-function TaskAreaDropZone({ sessionId, taskId, areaKind, label, children }: TaskAreaProps) {
+function TaskAreaDropZone({ sessionId, taskId, areaKind, blockKey, label, children }: TaskAreaProps) {
   const dropId = `${sessionId}:${taskId}:${areaKind}`
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
-    data: { sessionId, taskId, areaKind },
+    data: { sessionId, taskId, areaKind, blockKey },
   })
 
   const hasCards = !!children && (Array.isArray(children) ? children.length > 0 : true)
@@ -110,7 +112,7 @@ function isBootstrappedTopic(topic: Topic): boolean {
   )
 }
 
-export function ContentBlock({ sessionId, canvasId, data, fieldEnabled }: BlockRenderProps) {
+export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRenderProps) {
   // Full topic list for this session (drives the visible slice below)
   const topics = useCourseStore(
     (s) => s.sessions.find((sess) => sess.id === sessionId)?.topics ?? [],
@@ -149,17 +151,10 @@ export function ContentBlock({ sessionId, canvasId, data, fieldEnabled }: BlockR
 
   const visibleTopics = topics.slice(topicStart, topicEnd)
 
-  // Derive visible task-area phases from the template's fieldEnabled config.
-  // Falls back to data.visibleAreas (legacy), then shows all three phases.
+  // Show all task-area phases by default; can be overridden via data.visibleAreas.
   const ALL_AREAS: TaskAreaKind[] = ["instruction", "practice", "feedback"]
-  const visibleAreas: TaskAreaKind[] = (() => {
-    const fe = fieldEnabled?.content
-    if (fe) {
-      const filtered = ALL_AREAS.filter((k) => fe[k] !== false)
-      return filtered.length > 0 ? filtered : ALL_AREAS
-    }
-    return (data?.["visibleAreas"] as TaskAreaKind[] | undefined) ?? ALL_AREAS
-  })()
+  const visibleAreas: TaskAreaKind[] =
+    (data?.["visibleAreas"] as TaskAreaKind[] | undefined) ?? ALL_AREAS
 
   const isContinuation = topicStart > 0 || objStart > 0
   const noTopicsAtAll  = topics.length === 0
@@ -197,6 +192,7 @@ export function ContentBlock({ sessionId, canvasId, data, fieldEnabled }: BlockR
                   sessionId={sessionId}
                   taskId={`${sessionId}${DEFAULT_TASK_SUFFIX}` as TaskId}
                   areaKind={kind}
+                  blockKey={blockKey}
                   label={AREA_LABELS[kind]}
                 />
               ))}
@@ -311,6 +307,7 @@ export function ContentBlock({ sessionId, canvasId, data, fieldEnabled }: BlockR
                                       sessionId={sessionId}
                                       taskId={task.id}
                                       areaKind={kind}
+                                      blockKey={blockKey}
                                       label={AREA_LABELS[kind]}
                                     >
                                       {cards.map((card) => (
