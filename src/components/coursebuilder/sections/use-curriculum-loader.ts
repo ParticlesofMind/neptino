@@ -12,13 +12,10 @@ import type {
   NamingRules,
   StudentsContext,
 } from "@/lib/curriculum/ai-generation-service"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import {
   extractExistingSessionRows,
-  extractSavedTemplates,
   syncSessionRowsToSchedule,
   type CurriculumSessionRow,
-  type SavedTemplateSummary,
   type ScheduleGeneratedEntry,
   type PreviewMode,
 } from "./curriculum-section-utils"
@@ -45,7 +42,6 @@ export interface CurriculumLoaderSetters {
   setCourseType: (v: string) => void
   setSequencingMode: (v: string) => void
   setNamingRules: (v: NamingRules) => void
-  setTemplateDefaultType: (v: TemplateType) => void
   setCertificateMode: (v: CertificateMode) => void
   setSessionCount: (v: number) => void
   setModuleCount: (v: number) => void
@@ -55,7 +51,6 @@ export interface CurriculumLoaderSetters {
   setModuleNames: (v: string[]) => void
   setScheduleEntries: (v: ScheduleGeneratedEntry[]) => void
   setSessionRows: (v: CurriculumSessionRow[]) => void
-  setSavedTemplates: (v: SavedTemplateSummary[]) => void
   setReadinessIssues: (v: string[]) => void
   setMissing: (v: { essentials: boolean; schedule: boolean; curriculum: boolean }) => void
   generationSettingsRef: MutableRefObject<Record<string, unknown> | null>
@@ -72,7 +67,7 @@ export function useCurriculumLoader(courseId: string | null, setters: Curriculum
 async function loadCourse(courseId: string, s: CurriculumLoaderSetters) {
   const { data, error } = await selectCourseById<Record<string, unknown>>(
     courseId,
-    "course_name, course_description, course_language, curriculum_data, schedule_settings, generation_settings, template_settings, classification_data, course_layout, students_overview",
+    "course_name, course_description, course_language, curriculum_data, schedule_settings, generation_settings, classification_data, course_layout, students_overview",
   )
   if (error || !data) return
 
@@ -171,7 +166,6 @@ async function loadCourse(courseId: string, s: CurriculumLoaderSetters) {
     })
   }
 
-  s.setTemplateDefaultType((c.template_default_type as TemplateType) ?? "lesson")
   s.setCertificateMode((c.certificate_mode as CertificateMode) ?? "never")
   s.setSessionCount(loadedScheduleEntries.length > 0 ? loadedScheduleEntries.length : ((c.session_count as number) ?? (c.lesson_count as number) ?? 8))
   s.setModuleCount((c.module_count as number) ?? 3)
@@ -188,7 +182,6 @@ async function loadCourse(courseId: string, s: CurriculumLoaderSetters) {
   s.setModuleNames(Array.isArray(c.module_names) ? (c.module_names as string[]) : [])
   s.setScheduleEntries(loadedScheduleEntries)
   s.setSessionRows(syncedRows)
-  s.setSavedTemplates(extractSavedTemplates(data.template_settings))
 
   const issues: string[] = []
   const essentialsReady =

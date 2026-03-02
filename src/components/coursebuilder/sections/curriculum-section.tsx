@@ -1,25 +1,19 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { SetupPanelLayout, SetupSection } from "@/components/coursebuilder"
 import { buildDefaultResourcePreferences, type ResourcePreference } from "@/lib/curriculum/resources"
 import { getObjectiveCapForDuration, listDurationPresets, normalizeContentLoadConfig } from "@/lib/curriculum/content-load-service"
 import type { GenerationAction, ClassificationContext, PedagogyContext, NamingRules, StudentsContext } from "@/lib/curriculum/ai-generation-service"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import {
   buildCertificateLessonIndexes,
   buildModulesForPreview,
-  deriveTemplateOptions,
   type CertificateMode,
-  type CourseType,
 } from "./curriculum-derived"
 import {
   CONTENT_VOLUME_DURATION_MAP,
-  COURSE_TYPE_TEMPLATE_FILTERS,
-  TEMPLATE_TYPE_OPTIONS,
   type CurriculumSessionRow,
   type PreviewMode,
-  type SavedTemplateSummary,
   type ScheduleGeneratedEntry,
 } from "./curriculum-section-utils"
 import { useCurriculumLoader } from "./use-curriculum-loader"
@@ -41,8 +35,6 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   const [moduleNames, setModuleNames] = useState<string[]>([])
   const [scheduleEntries, setScheduleEntries] = useState<ScheduleGeneratedEntry[]>([])
   const [sessionRows, setSessionRows] = useState<CurriculumSessionRow[]>([])
-  const [savedTemplates, setSavedTemplates] = useState<SavedTemplateSummary[]>([])
-  const [templateDefaultType, setTemplateDefaultType] = useState<TemplateType>("lesson")
   const [certificateMode, setCertificateMode] = useState<CertificateMode>("never")
   const [courseInfo, setCourseInfo] = useState<{ name: string; description?: string; goals?: string } | null>(null)
   const [sequencingMode, setSequencingMode] = useState("linear")
@@ -71,9 +63,9 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     setPriorKnowledge, setApplicationContext, setPedagogyData, setStudentsData,
     setOptCtx, setPreviewMode, setLastAction,
     setModuleOrg, setContentVolume, setCourseType, setSequencingMode, setNamingRules,
-    setTemplateDefaultType, setCertificateMode, setSessionCount, setModuleCount,
+    setCertificateMode, setSessionCount, setModuleCount,
     setTopics, setObjectives, setTasks, setModuleNames, setScheduleEntries,
-    setSessionRows, setSavedTemplates, setReadinessIssues, setMissing,
+    setSessionRows, setReadinessIssues, setMissing,
     generationSettingsRef,
   })
 
@@ -99,23 +91,10 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
   const hasGeneratedSchedule = scheduleEntries.length > 0
   const effectiveSessionCount = hasGeneratedSchedule ? scheduleEntries.length : sessionCount
-  const selectedCourseType = courseType as CourseType
-
   const objectiveInputMax = useMemo(
     () => getObjectiveCapForDuration(CONTENT_VOLUME_DURATION_MAP[contentVolume] ?? null),
     [contentVolume],
   )
-
-  const { filteredTemplates, defaultTemplateOptions, sessionTemplateOptions } = useMemo(
-    () => deriveTemplateOptions({ savedTemplates, selectedCourseType, certificateMode, courseTypeTemplateFilters: COURSE_TYPE_TEMPLATE_FILTERS }),
-    [savedTemplates, selectedCourseType, certificateMode],
-  )
-
-  useEffect(() => {
-    if (!defaultTemplateOptions.includes(templateDefaultType)) {
-      setTemplateDefaultType(defaultTemplateOptions.includes("lesson") ? "lesson" : defaultTemplateOptions[0])
-    }
-  }, [defaultTemplateOptions, templateDefaultType])
 
   const certificateLessonIndexes = useMemo(
     () => buildCertificateLessonIndexes({ certificateMode, effectiveSessionCount, moduleOrg, moduleCount }),
@@ -127,29 +106,16 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     [moduleOrg, moduleCount, moduleNames, effectiveSessionCount],
   )
 
-  const templateTypeLabel = useCallback(
-    (type: TemplateType) =>
-      TEMPLATE_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? `${type.charAt(0).toUpperCase()}${type.slice(1)}`,
-    [],
-  )
 
-  const templateCountByCourseType = useCallback(
-    (type: CourseType) => {
-      const allowed = COURSE_TYPE_TEMPLATE_FILTERS[type]
-      return allowed.length === 0 ? savedTemplates.length : savedTemplates.filter((t) => allowed.includes(t.type)).length
-    },
-    [savedTemplates],
-  )
-
-  const { resolveTemplateTypeForSession, sessionRowsForPreview, upsertSessionRow } = useCurriculumSessionRows({
+  const { sessionRowsForPreview, upsertSessionRow } = useCurriculumSessionRows({
     sessionRows, setSessionRows, effectiveSessionCount, scheduleEntries,
-    topics, objectives, tasks, certificateLessonIndexes, templateDefaultType,
+    topics, objectives, tasks, certificateLessonIndexes,
   })
 
   useCurriculumPersistence({
-    courseId, moduleOrg, contentVolume, courseType, templateDefaultType, certificateMode,
+    courseId, moduleOrg, contentVolume, courseType, certificateMode,
     effectiveSessionCount, moduleCount, moduleNames, topics, objectives, tasks,
-    sequencingMode, namingRules, sessionRows, scheduleEntries, resolveTemplateTypeForSession,
+    sequencingMode, namingRules, sessionRows, scheduleEntries,
     optCtx, previewMode, lastAction, generationSettingsRef,
   })
 
@@ -179,11 +145,8 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           objectiveInputMax={objectiveInputMax} tasks={tasks} setTasks={setTasks}
           sequencingMode={sequencingMode} setSequencingMode={setSequencingMode}
           courseType={courseType} setCourseType={setCourseType}
-          filteredTemplates={filteredTemplates} templateDefaultType={templateDefaultType}
-          setTemplateDefaultType={setTemplateDefaultType} defaultTemplateOptions={defaultTemplateOptions}
-          templateTypeLabel={templateTypeLabel} certificateMode={certificateMode} setCertificateMode={setCertificateMode}
+          certificateMode={certificateMode} setCertificateMode={setCertificateMode}
           namingRules={namingRules} setNamingRules={setNamingRules}
-          templateCountByCourseType={templateCountByCourseType}
           ollamaHealthy={generation.ollamaHealthy} runningModels={generation.runningModels}
           highLoadModelActive={generation.highLoadModelActive}
           isGenerationReady={readinessIssues.length === 0} readinessIssues={readinessIssues} missing={missing}
@@ -198,8 +161,6 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           previewMode={previewMode} setPreviewMode={setPreviewMode}
           modulesForPreview={modulesForPreview} sessionRowsForPreview={sessionRowsForPreview}
           scheduleEntries={scheduleEntries} moduleNames={moduleNames} setModuleNames={setModuleNames}
-          filteredTemplates={filteredTemplates} templateDefaultType={templateDefaultType}
-          sessionTemplateOptions={sessionTemplateOptions} templateTypeLabel={templateTypeLabel}
           topics={topics} objectives={objectives} tasks={tasks}
           upsertSessionRow={upsertSessionRow} setSessionRows={setSessionRows} lastAction={lastAction}
         />

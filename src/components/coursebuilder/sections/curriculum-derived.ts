@@ -1,55 +1,11 @@
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
-
 export type CourseType = "minimalist" | "essential" | "complete" | "custom"
 export type CertificateMode = "end-module" | "end-course" | "never"
-
-export interface SavedTemplateLike {
-  id: string
-  name: string
-  type: string
-}
 
 export interface ModulePreviewItem {
   title: string
   sessionStart: number
   sessionEnd: number
   index: number
-}
-
-export function deriveTemplateOptions(args: {
-  savedTemplates: SavedTemplateLike[]
-  selectedCourseType: CourseType
-  certificateMode: CertificateMode
-  courseTypeTemplateFilters: Record<CourseType, string[]>
-}): {
-  filteredTemplates: SavedTemplateLike[]
-  availableTemplateTypes: TemplateType[]
-  defaultTemplateOptions: TemplateType[]
-  sessionTemplateOptions: TemplateType[]
-} {
-  const { savedTemplates, selectedCourseType, certificateMode, courseTypeTemplateFilters } = args
-  const filteredTemplates = savedTemplates.filter((template) => {
-    const allowed = courseTypeTemplateFilters[selectedCourseType]
-    return allowed.length === 0 || allowed.includes(template.type)
-  })
-
-  const availableTemplateTypes = Array.from(
-    new Set(
-      filteredTemplates
-        .map((template) => template.type)
-        .filter((type): type is TemplateType => type === "lesson"),
-    ),
-  )
-
-  const defaultTemplateOptions: TemplateType[] = availableTemplateTypes.length > 0 ? availableTemplateTypes : ["lesson"]
-  const sessionTemplateOptions: TemplateType[] = defaultTemplateOptions
-
-  return {
-    filteredTemplates,
-    availableTemplateTypes,
-    defaultTemplateOptions,
-    sessionTemplateOptions,
-  }
 }
 
 export function buildCertificateLessonIndexes(args: {

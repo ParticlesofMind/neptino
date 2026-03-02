@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo } from "react"
 import type React from "react"
 import { calculateSessionDuration, normalizeContentLoadConfig } from "@/lib/curriculum/content-load-service"
-import { createDefaultTemplateDesign } from "@/lib/curriculum/template-blocks"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import {
   createRowId,
   type CurriculumSessionRow,
@@ -20,20 +18,11 @@ export function useCurriculumSessionRows(params: {
   objectives: number
   tasks: number
   certificateLessonIndexes: Set<number>
-  templateDefaultType: TemplateType
 }) {
   const {
     sessionRows, setSessionRows, effectiveSessionCount, scheduleEntries,
-    topics, objectives, tasks, certificateLessonIndexes, templateDefaultType,
+    topics, objectives, tasks, certificateLessonIndexes,
   } = params
-
-  const resolveTemplateTypeForSession = useCallback(
-    (row: Partial<CurriculumSessionRow> | undefined, _index: number): TemplateType => {
-      if (row?.template_type) return row.template_type as TemplateType
-      return templateDefaultType
-    },
-    [templateDefaultType],
-  )
 
   useEffect(() => {
     setSessionRows((prev) => {
@@ -43,7 +32,6 @@ export function useCurriculumSessionRows(params: {
       const next = Array.from({ length: targetCount }, (_, index) => {
         const existing = prev[index]
         const schedule = scheduleEntries[index]
-        const resolvedType = resolveTemplateTypeForSession(existing, index)
         const scheduleDuration = calculateSessionDuration(schedule?.start_time, schedule?.end_time)
         const durationForCaps = existing?.duration_minutes ?? scheduleDuration ?? null
         const norm = normalizeContentLoadConfig(
@@ -57,8 +45,6 @@ export function useCurriculumSessionRows(params: {
           session_number: index + 1,
           title: existing?.title ?? `Session ${index + 1}`,
           notes: existing?.notes ?? "",
-          template_id: existing?.template_id,
-          template_type: resolvedType,
           duration_minutes: existing?.duration_minutes ?? scheduleDuration ?? undefined,
           topics: norm.topicsPerLesson,
           objectives: norm.objectivesPerTopic,
@@ -67,7 +53,6 @@ export function useCurriculumSessionRows(params: {
           objective_names: Array.from({ length: norm.objectivesPerTopic }, (_, i) => existing?.objective_names?.[i] ?? ""),
           task_names: Array.from({ length: norm.tasksPerObjective }, (_, i) => existing?.task_names?.[i] ?? ""),
           competencies: existing?.competencies,
-          template_design: existing?.template_design ?? createDefaultTemplateDesign(resolvedType),
         }
 
         if (!existing) { changed = true; return nextRow }
@@ -88,7 +73,7 @@ export function useCurriculumSessionRows(params: {
 
       return changed ? next : prev
     })
-  }, [effectiveSessionCount, scheduleEntries, topics, objectives, tasks, resolveTemplateTypeForSession, setSessionRows])
+  }, [effectiveSessionCount, scheduleEntries, topics, objectives, tasks, setSessionRows])
 
   const sessionRowsForPreview = useMemo(
     () =>
@@ -107,8 +92,6 @@ export function useCurriculumSessionRows(params: {
           id: row?.id ?? `session-${index + 1}`,
           session_number: row?.session_number ?? index + 1,
           title: row?.title?.trim() || `Session ${index + 1}`,
-          template_id: row?.template_id,
-          template_type: resolveTemplateTypeForSession(row, index),
           topics: norm.topicsPerLesson,
           objectives: norm.objectivesPerTopic,
           tasks: norm.tasksPerObjective,
@@ -117,7 +100,7 @@ export function useCurriculumSessionRows(params: {
           task_names: Array.from({ length: norm.tasksPerObjective }, (_, i) => row?.task_names?.[i] || ""),
         }
       }),
-    [effectiveSessionCount, sessionRows, topics, objectives, tasks, resolveTemplateTypeForSession],
+    [effectiveSessionCount, sessionRows, topics, objectives, tasks],
   )
 
   const upsertSessionRow = useCallback(
@@ -133,7 +116,6 @@ export function useCurriculumSessionRows(params: {
           session_number: preview.session_number ?? index + 1,
           title: preview.title,
           notes: preview.notes ?? "",
-          template_type: preview.template_type,
           duration_minutes: preview.duration_minutes,
           topics: preview.topics,
           objectives: preview.objectives,
@@ -142,7 +124,6 @@ export function useCurriculumSessionRows(params: {
           objective_names: preview.objective_names,
           task_names: preview.task_names,
           competencies: preview.competencies,
-          template_design: preview.template_design,
         }
 
         next[index] = { ...existing, ...updates }
@@ -152,5 +133,5 @@ export function useCurriculumSessionRows(params: {
     [setSessionRows, sessionRowsForPreview],
   )
 
-  return { resolveTemplateTypeForSession, sessionRowsForPreview, upsertSessionRow }
+  return { sessionRowsForPreview, upsertSessionRow }
 }

@@ -2,17 +2,12 @@
 // No JSX — safe to import from non-React contexts.
 import type { GenerationAction } from "@/lib/curriculum/ai-generation-service"
 import type { CurriculumCompetency } from "@/lib/curriculum/competency-types"
-import type { TemplateDesignConfig, TemplateType } from "@/lib/curriculum/template-blocks"
-import { createDefaultTemplateDesign } from "@/lib/curriculum/template-blocks"
 import {
   calculateSessionDuration,
   getContentLoadConfig,
   MIN_TASKS_PER_OBJECTIVE,
   normalizeContentLoadConfig,
 } from "@/lib/curriculum/content-load-service"
-import { parseRawTemplateConfigs } from "@/lib/curriculum/template-source-of-truth"
-import type { CourseType } from "@/components/coursebuilder/sections/curriculum-derived"
-
 export interface ScheduleGeneratedEntry {
   id: string
   day: string
@@ -28,8 +23,6 @@ export interface CurriculumSessionRow {
   session_number: number
   title: string
   notes: string
-  template_id?: string
-  template_type?: TemplateType
   duration_minutes?: number
   topics?: number
   objectives?: number
@@ -38,35 +31,9 @@ export interface CurriculumSessionRow {
   objective_names?: string[]
   task_names?: string[]
   competencies?: CurriculumCompetency[]
-  template_design?: TemplateDesignConfig
-}
-
-export interface SavedTemplateSummary {
-  id: string
-  name: string
-  type: string
-}
-
-export const COURSE_TYPE_TEMPLATE_FILTERS: Record<CourseType, string[]> = {
-  minimalist: ["lesson"],
-  essential: ["lesson", "quiz", "assessment", "exam", "certificate"],
-  complete: [],
-  custom: [],
-}
-
-export function extractSavedTemplates(raw: unknown): SavedTemplateSummary[] {
-  return parseRawTemplateConfigs(raw).map((template) => ({
-    id: template.id,
-    name: template.name,
-    type: template.type,
-  }))
 }
 
 export type PreviewMode = "modules" | "sessions" | "topics" | "objectives" | "tasks" | "all"
-
-export const TEMPLATE_TYPE_OPTIONS: Array<{ value: TemplateType; label: string }> = [
-  { value: "lesson", label: "Lesson" },
-]
 
 export const CONTENT_VOLUME_DURATION_MAP: Record<string, number> = {
   mini: 30,
@@ -89,7 +56,6 @@ export function extractExistingSessionRows(curriculumData: Record<string, unknow
   if (Array.isArray(sessionRows)) {
     return sessionRows.map((row, index) => {
       const r = row as Record<string, unknown>
-      const templateType = ((r.template_type as string) || "lesson") as TemplateType
       const durationMinutes = (r.duration_minutes as number) || undefined
       const normalizedCounts = normalizeContentLoadConfig(
         {
@@ -108,8 +74,6 @@ export function extractExistingSessionRows(curriculumData: Record<string, unknow
         session_number: (r.session_number as number) || index + 1,
         title: (r.title as string) || `Session ${index + 1}`,
         notes: (r.notes as string) || "",
-        template_id: (r.template_id as string) || undefined,
-        template_type: templateType,
         duration_minutes: durationMinutes,
         topics: topicCount,
         objectives: objectiveCount,
@@ -118,7 +82,6 @@ export function extractExistingSessionRows(curriculumData: Record<string, unknow
         objective_names: Array.isArray(r.objective_names) ? (r.objective_names as string[]) : Array.from({ length: objectiveCount }, (_, i) => `Objective ${i + 1}`),
         task_names: Array.isArray(r.task_names) ? (r.task_names as string[]) : Array.from({ length: taskCount }, (_, i) => `Task ${i + 1}`),
         competencies: (r.competencies as CurriculumCompetency[]) || undefined,
-        template_design: (r.template_design as TemplateDesignConfig) || createDefaultTemplateDesign(templateType),
       }
     })
   }
@@ -167,22 +130,17 @@ export function syncSessionRowsToSchedule(
       durationMinutes,
     )
 
-    const templateType = (base?.template_type || "lesson") as TemplateType
-
     return {
       id: base?.id || createRowId(),
       schedule_entry_id: entry.id,
       session_number: index + 1,
       title: base?.title || `Session ${index + 1}`,
       notes: base?.notes || "",
-      template_id: base?.template_id,
-      template_type: templateType,
       duration_minutes: base?.duration_minutes ?? durationMinutes ?? undefined,
       topics: normalizedCounts.topicsPerLesson,
       objectives: normalizedCounts.objectivesPerTopic,
       tasks: normalizedCounts.tasksPerObjective,
       competencies: base?.competencies,
-      template_design: base?.template_design || createDefaultTemplateDesign(templateType),
     }
   })
 }

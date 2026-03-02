@@ -8,12 +8,10 @@ import {
   SetupColumn,
 } from "@/components/coursebuilder"
 import { MIN_TASKS_PER_OBJECTIVE } from "@/lib/curriculum/content-load-service"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import type { GenerationAction, NamingRules } from "@/lib/curriculum/ai-generation-service"
-import { type CourseType, type CertificateMode } from "./curriculum-derived"
+import { type CertificateMode } from "./curriculum-derived"
 import {
   GENERATION_ACTION_CONFIG,
-  type SavedTemplateSummary,
 } from "./curriculum-section-utils"
 import { Divider, RadioCard } from "./curriculum-primitives"
 
@@ -39,16 +37,10 @@ export interface CurriculumStructurePanelProps {
   setSequencingMode: (v: string) => void
   courseType: string
   setCourseType: (v: string) => void
-  filteredTemplates: SavedTemplateSummary[]
-  templateDefaultType: TemplateType
-  setTemplateDefaultType: (v: TemplateType) => void
-  defaultTemplateOptions: TemplateType[]
-  templateTypeLabel: (type: TemplateType) => string
   certificateMode: CertificateMode
   setCertificateMode: (v: CertificateMode) => void
   namingRules: NamingRules
   setNamingRules: (v: NamingRules) => void
-  templateCountByCourseType: (type: CourseType) => number
   ollamaHealthy: boolean | null
   runningModels: string[]
   highLoadModelActive: boolean
@@ -155,44 +147,18 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
           { value: "custom", title: "Custom", description: "Manually select any combination." },
         ].map((opt) => (
           <RadioCard key={opt.value} name="course-type" value={opt.value} title={opt.title} description={opt.description}
-            meta={`${props.templateCountByCourseType(opt.value as CourseType)} templates`}
             checked={props.courseType === opt.value} onChange={props.setCourseType} compact
           />
         ))}
       </div>
-      <div className="rounded-md border border-border bg-background p-3">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Templates in {props.courseType}
-        </p>
-        {props.filteredTemplates.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No matching templates created yet.</p>
-        ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {props.filteredTemplates.map((t) => (
-              <span key={t.id} className="rounded border border-border bg-muted/30 px-2 py-0.5 text-xs text-foreground">{t.name}</span>
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <FieldLabel>Select as default</FieldLabel>
-          <select value={props.templateDefaultType} onChange={(e) => props.setTemplateDefaultType(e.target.value as TemplateType)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary">
-            {props.defaultTemplateOptions.map((type) => (
-              <option key={type} value={type}>{props.templateTypeLabel(type)}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <FieldLabel>Include certificate</FieldLabel>
-          <select value={props.certificateMode} onChange={(e) => props.setCertificateMode(e.target.value as CertificateMode)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary">
-            <option value="end-module">At the end of each module</option>
-            <option value="end-course">At the end of the course</option>
-            <option value="never">Never</option>
-          </select>
-        </div>
+      <div>
+        <FieldLabel>Include certificate</FieldLabel>
+        <select value={props.certificateMode} onChange={(e) => props.setCertificateMode(e.target.value as CertificateMode)}
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary">
+          <option value="end-module">At the end of each module</option>
+          <option value="end-course">At the end of the course</option>
+          <option value="never">Never</option>
+        </select>
       </div>
 
       <Divider label="Naming Conventions" />
@@ -222,7 +188,7 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
       <Divider label="Generation" />
       <p className="-mt-2 text-sm text-muted-foreground">
         Generation uses your full setup data (essentials, classification, pedagogy, students,
-        schedule, templates, and curriculum structure).
+        schedule, and curriculum structure).
       </p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className={`rounded-md border px-2 py-1 text-[11px] font-medium ${

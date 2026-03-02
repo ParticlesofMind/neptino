@@ -2,9 +2,8 @@
 
 import type React from "react"
 import { SetupColumn } from "@/components/coursebuilder"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import type { GenerationAction } from "@/lib/curriculum/ai-generation-service"
-import { GENERATION_ACTION_CONFIG, type CurriculumSessionRow, type PreviewMode, type SavedTemplateSummary, type ScheduleGeneratedEntry } from "./curriculum-section-utils"
+import { GENERATION_ACTION_CONFIG, type CurriculumSessionRow, type PreviewMode, type ScheduleGeneratedEntry } from "./curriculum-section-utils"
 import type { ModulePreviewItem } from "./curriculum-derived"
 import { CurriculumPreviewAllView } from "./curriculum-preview-all-view"
 
@@ -21,14 +20,10 @@ export interface CurriculumPreviewPanelProps {
   previewMode: PreviewMode
   setPreviewMode: (v: PreviewMode) => void
   modulesForPreview: ModulePreviewItem[]
-  sessionRowsForPreview: Array<CurriculumSessionRow & { id: string; session_number: number; title: string; template_type: TemplateType; topics: number; objectives: number; tasks: number; topic_names: string[]; objective_names: string[]; task_names: string[] }>
+  sessionRowsForPreview: Array<CurriculumSessionRow & { id: string; session_number: number; title: string; topics: number; objectives: number; tasks: number; topic_names: string[]; objective_names: string[]; task_names: string[] }>
   scheduleEntries: ScheduleGeneratedEntry[]
   moduleNames: string[]
   setModuleNames: React.Dispatch<React.SetStateAction<string[]>>
-  filteredTemplates: SavedTemplateSummary[]
-  templateDefaultType: TemplateType
-  sessionTemplateOptions: TemplateType[]
-  templateTypeLabel: (type: TemplateType) => string
   topics: number
   objectives: number
   tasks: number
@@ -92,23 +87,6 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                     <label className="text-xs font-semibold text-muted-foreground">
                       Session {index + 1}{schedule && ` · ${schedule.day}`}
                     </label>
-                    <div className="grid w-[360px] grid-cols-2 gap-2">
-                      <select value={row.template_type ?? props.templateDefaultType}
-                        onChange={(e) => { const t = e.target.value as TemplateType; const first = props.filteredTemplates.find((f) => f.type === t); props.upsertSessionRow(index, { template_type: t, template_id: first?.id }) }}
-                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary">
-                        {props.sessionTemplateOptions.map((type) => (
-                          <option key={`${row.id}-${type}`} value={type}>{props.templateTypeLabel(type)}</option>
-                        ))}
-                      </select>
-                      <select value={row.template_id ?? ""}
-                        onChange={(e) => { const tid = e.target.value || undefined; const matched = props.filteredTemplates.find((f) => f.id === tid); props.upsertSessionRow(index, { template_id: tid, template_type: (matched?.type as TemplateType | undefined) ?? row.template_type }) }}
-                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary">
-                        <option value="">Template auto</option>
-                        {props.filteredTemplates.filter((t) => t.type === (row.template_type ?? props.templateDefaultType)).map((t) => (
-                          <option key={`${row.id}-${t.id}`} value={t.id}>{t.name}</option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                   <input type="text" value={row.title} onChange={(e) => props.upsertSessionRow(index, { title: e.target.value })}
                     className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"

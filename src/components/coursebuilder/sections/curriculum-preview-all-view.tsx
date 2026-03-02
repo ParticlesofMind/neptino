@@ -1,13 +1,12 @@
 "use client"
 
 import type React from "react"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import type { CurriculumSessionRow } from "./curriculum-section-utils"
 import type { ModulePreviewItem } from "./curriculum-derived"
 
 interface PreviewAllViewProps {
   modulesForPreview: ModulePreviewItem[]
-  sessionRowsForPreview: Array<CurriculumSessionRow & { id: string; session_number: number; title: string; template_type: TemplateType; topics: number; objectives: number; tasks: number; topic_names: string[]; objective_names: string[]; task_names: string[] }>
+  sessionRowsForPreview: Array<CurriculumSessionRow & { id: string; session_number: number; title: string; topics: number; objectives: number; tasks: number; topic_names: string[]; objective_names: string[]; task_names: string[] }>
   topics: number
   objectives: number
   tasks: number

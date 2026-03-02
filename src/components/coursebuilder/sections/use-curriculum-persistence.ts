@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef } from "react"
 import { updateCourseById } from "@/components/coursebuilder"
 import type { GenerationAction, NamingRules } from "@/lib/curriculum/ai-generation-service"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import type { CertificateMode } from "./curriculum-derived"
 import type { CurriculumSessionRow, ScheduleGeneratedEntry, PreviewMode } from "./curriculum-section-utils"
 import type { MutableRefObject } from "react"
@@ -13,7 +12,6 @@ export interface CurriculumPersistenceParams {
   moduleOrg: string
   contentVolume: string
   courseType: string
-  templateDefaultType: TemplateType
   certificateMode: CertificateMode
   effectiveSessionCount: number
   moduleCount: number
@@ -25,7 +23,6 @@ export interface CurriculumPersistenceParams {
   namingRules: NamingRules
   sessionRows: CurriculumSessionRow[]
   scheduleEntries: ScheduleGeneratedEntry[]
-  resolveTemplateTypeForSession: (row: Partial<CurriculumSessionRow> | undefined, index: number) => TemplateType
   optCtx: { schedule: boolean; structure: boolean; existing: boolean }
   previewMode: PreviewMode
   lastAction: GenerationAction | null
@@ -47,8 +44,6 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
       session_number: i + 1,
       title: row.title,
       notes: row.notes,
-      template_id: row.template_id,
-      template_type: p.resolveTemplateTypeForSession(row, i),
       duration_minutes: row.duration_minutes,
       topics: row.topics,
       objectives: row.objectives,
@@ -57,7 +52,6 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
       objective_names: row.objective_names,
       task_names: row.task_names,
       competencies: row.competencies,
-      template_design: row.template_design,
     }))
 
     const sessions = p.sessionRows.map((row, i) => {
@@ -78,7 +72,6 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
         module_org: p.moduleOrg,
         content_volume: p.contentVolume,
         course_type: p.courseType,
-        template_default_type: p.templateDefaultType,
         certificate_mode: p.certificateMode,
         session_count: p.effectiveSessionCount,
         module_count: p.moduleCount,
@@ -151,7 +144,7 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
   // the 800 ms debounce fires handleSave with fresh data from paramsRef.
 
   const sessionRowsFingerprint = params.sessionRows
-    .map((r) => `${r.id}:${r.title}:${r.template_type ?? ""}:${r.topics ?? ""}:${r.objectives ?? ""}:${r.tasks ?? ""}`)
+    .map((r) => `${r.id}:${r.title}:${r.topics ?? ""}:${r.objectives ?? ""}:${r.tasks ?? ""}`)
     .join("|")
   const moduleNamesFingerprint = params.moduleNames.join(",")
   const namingRulesFingerprint = `${params.namingRules.lessonTitleRule}:${params.namingRules.topicRule}:${params.namingRules.objectiveRule}:${params.namingRules.taskRule}`
@@ -171,7 +164,6 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
     params.moduleOrg,
     params.contentVolume,
     params.courseType,
-    params.templateDefaultType,
     params.certificateMode,
     params.effectiveSessionCount,
     params.moduleCount,

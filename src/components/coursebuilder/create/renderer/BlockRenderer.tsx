@@ -7,8 +7,8 @@
  * Header and footer are not rendered here — they live in the page margin bands
  * and are mounted directly by CanvasPage.
  *
- * Pass `blockKeys` to restrict which blocks appear on a given page.
- * Omit it to show a sensible default body block set.
+ * `blockKeys` drives which blocks appear — always resolved from the session's template type.
+ * No hardcoded default exists; a canvas with no `blockKeys` renders empty.
  */
 
 import type { ComponentType } from "react"
@@ -36,14 +36,6 @@ export const BLOCK_REGISTRY: BlockRegistry = {
   project:    ProjectBlock,
 }
 
-/** Default order for body blocks (header/footer rendered by CanvasPage). */
-const DEFAULT_BODY_BLOCKS: BlockKey[] = [
-  "program",
-  "resources",
-  "content",
-  "project",
-]
-
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface BlockRendererProps {
@@ -51,10 +43,7 @@ interface BlockRendererProps {
   canvasId?:    CanvasId
   fieldValues:  Record<string, string>
   data?:        Record<string, Record<string, unknown>>
-  /**
-   * Which body blocks to render on this page (restricts and orders).
-   * When omitted, DEFAULT_BODY_BLOCKS is used.
-   */
+  /** Which body blocks to render on this page, ordered. Resolved from the session template type. Renders empty when unset — no hardcoded default. */
   blockKeys?:   BlockKey[]
   /** Override the registry (useful for testing). */
   registry?:    Partial<BlockRegistry>
@@ -71,9 +60,7 @@ export function BlockRenderer({
   registry,
 }: BlockRendererProps) {
   const resolvedRegistry: BlockRegistry = { ...BLOCK_REGISTRY, ...registry }
-  const keys = (blockKeys ?? DEFAULT_BODY_BLOCKS).filter(
-    (k) => k !== "header" && k !== "footer",
-  )
+  const keys = (blockKeys ?? []).filter((k) => k !== "header" && k !== "footer")
 
   return (
     <div className="flex flex-col w-full gap-2 px-1 py-2">
