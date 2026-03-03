@@ -12,30 +12,28 @@
 
 import { useState } from "react"
 import { useDraggable } from "@dnd-kit/core"
-import { GripVertical } from "lucide-react"
 import type { CardType, CardId } from "../types"
 import type { DragSourceData } from "../hooks/useCardDrop"
 import { CardTypePreview } from "../cards/CardTypePreview"
+import { CARD_TYPE_META } from "../cards/CardTypePreview"
 import {
   CARD_SPECS,
   GROUPS,
-  SAMPLE_CONTENT,
-  type CardSpec,
 } from "./make-panel-data"
 
-// ─── Draggable ghost strip ────────────────────────────────────────────────────
+function DraggablePreviewCard({ cardType }: { cardType: CardType }) {
+  const meta = CARD_TYPE_META[cardType]
 
-function DraggableGhostStrip({ spec }: { spec: CardSpec }) {
   const dragData: DragSourceData = {
     type:     "card",
-    cardId:   `new-${spec.cardType}` as CardId,
-    cardType: spec.cardType,
-    title:    spec.label,
-    content:  { title: spec.label },
+    cardId:   `new-${cardType}` as CardId,
+    cardType,
+    title:    "",
+    content:  {},
   }
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id:   `make-ghost-${spec.cardType}`,
+    id:   `make-preview-${cardType}`,
     data: dragData,
   })
 
@@ -45,14 +43,19 @@ function DraggableGhostStrip({ spec }: { spec: CardSpec }) {
       {...listeners}
       {...attributes}
       className={[
-        "flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-dashed border-neutral-200",
-        "cursor-grab select-none transition-colors",
-        isDragging ? "opacity-40 border-neutral-400 bg-neutral-50" : "hover:border-neutral-400 hover:bg-neutral-50",
+        "mb-5 flex min-h-0 flex-col rounded-2xl border border-border bg-background p-5 overflow-hidden",
+        "cursor-grab select-none transition-opacity",
+        isDragging ? "opacity-40" : "",
       ].join(" ")}
     >
-      <GripVertical size={14} className="text-neutral-300 shrink-0" />
-      <spec.Icon size={16} className="text-neutral-400 shrink-0" />
-      <span className="text-[12px] font-medium text-neutral-600">Drag to canvas to place a {spec.label} card</span>
+      <div className="mb-5 shrink-0 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="text-xl font-semibold text-foreground">{meta.label}</h3>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <CardTypePreview cardType={cardType} content={{}} />
+      </div>
     </div>
   )
 }
@@ -63,8 +66,6 @@ export function MakePanel() {
   const [search, setSearch]         = useState("")
   const [selected, setSelected]     = useState<CardType>("text")
   const [activeGroup, setActiveGroup] = useState<"all" | "media" | "data">("all")
-
-  const selectedSpec = CARD_SPECS.find((s) => s.cardType === selected)!
 
   const filtered = CARD_SPECS.filter((spec) => {
     const matchesGroup  = activeGroup === "all" || spec.group === activeGroup
@@ -164,35 +165,7 @@ export function MakePanel() {
       {/* Main detail area */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto px-8 py-8 max-w-2xl">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100 shrink-0">
-              <selectedSpec.Icon size={20} className="text-neutral-700" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-neutral-900 leading-tight">{selectedSpec.label}</h2>
-              <p className="text-[11px] text-neutral-400 mt-0.5 capitalize">{selectedSpec.group === "data" ? "Data & Visuals" : selectedSpec.group}</p>
-            </div>
-          </div>
-
-          {/* Description */}
-          <p className="text-[12px] text-neutral-500 leading-relaxed mb-5">{selectedSpec.description}</p>
-
-          {/* Card preview */}
-          <div className="mb-5 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-3">Preview</p>
-            <CardTypePreview
-              cardType={selected}
-              content={SAMPLE_CONTENT[selected] ?? {}}
-            />
-          </div>
-
-          {/* Drag zone */}
-          <DraggableGhostStrip spec={selectedSpec} />
-
-          <p className="mt-3 text-[10px] text-neutral-400">
-            Drag the card above onto the canvas, or switch to Curate to arrange your lesson.
-          </p>
+          <DraggablePreviewCard cardType={selected} />
         </div>
       </div>
     </div>

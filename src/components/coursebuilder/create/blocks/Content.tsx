@@ -1,81 +1,17 @@
 "use client"
 
 import { useDroppable } from "@dnd-kit/core"
-import type { BlockRenderProps, BlockKey, CanvasId, TaskAreaKind, SessionId, TaskId } from "../types"
+import type { BlockRenderProps, CanvasId, TaskAreaKind, SessionId, TaskId } from "../types"
 import { useCourseStore } from "../store/courseStore"
 import { useCanvasStore } from "../store/canvasStore"
-import { CardRenderer } from "../cards/CardRenderer"
 import type { DropTargetData } from "../hooks/useCardDrop"
+import { TaskAreaDropZone } from "./content-task-area-drop-zone"
 import {
   AREA_LABELS,
   DEFAULT_TASK_SUFFIX,
   findFirstVisibleTaskId,
   isBootstrappedTopic,
 } from "./contentBlockUtils"
-
-interface TaskAreaProps {
-  sessionId: SessionId
-  canvasId?: CanvasId
-  taskId: TaskId
-  areaKind: TaskAreaKind
-  /** Block key forwarded to the droppable data so useCardDrop can validate accepts */
-  blockKey?: BlockKey
-  label: string
-  children?: React.ReactNode
-}
-
-function TaskAreaDropZone({ sessionId, canvasId, taskId, areaKind, blockKey, label, children }: TaskAreaProps) {
-  const dropId = `${sessionId}:${taskId}:${areaKind}`
-  const { isOver, setNodeRef } = useDroppable({
-    id: dropId,
-    data: { sessionId, canvasId, taskId, areaKind, blockKey },
-  })
-
-  const hasCards = !!children && (Array.isArray(children) ? children.length > 0 : true)
-  const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
-
-  return (
-    <div className="space-y-0.5">
-      <div className="text-[9px] font-semibold uppercase tracking-wider text-neutral-500 px-1">
-        {label}
-      </div>
-      <div
-        ref={setNodeRef}
-        className={[
-          "rounded-lg border border-neutral-200 bg-white px-2 py-1.5 transition-colors",
-          mediaDragActive ? "min-h-[2.5rem]" : "min-h-[2rem]",
-          isOver ? "border-blue-300 bg-blue-50" : "",
-        ].join(" ")}
-      >
-        <div className="px-2 py-1.5 space-y-1">
-          {children}
-          {isOver && (
-            <div
-              className={[
-                "rounded border-2 border-dashed border-blue-300 bg-blue-50/60",
-                "flex items-center justify-center",
-                hasCards ? "h-6" : "h-8",
-              ].join(" ")}
-            >
-              <span className="text-[9px] text-blue-400">
-                {hasCards ? "Add here" : "Drop here"}
-              </span>
-            </div>
-          )}
-          {!hasCards && !isOver && (
-            <div className={`flex items-center px-1 ${mediaDragActive ? "h-10" : "h-6"}`}>
-              <span className={`text-[9px] italic ${mediaDragActive ? "text-blue-300" : "text-neutral-300"}`}>
-                {mediaDragActive ? "Drop here" : "Empty"}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Content block ────────────────────────────────────────────────────────────
 
 export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRenderProps) {
   // Full topic list for this session (drives the visible slice below)
@@ -193,6 +129,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
                   areaKind={kind}
                   blockKey={blockKey}
                   label={AREA_LABELS[kind]}
+                  onRemoveCard={() => {}}
                 />
               ))}
             </div>
@@ -309,17 +246,11 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
                                       areaKind={kind}
                                       blockKey={blockKey}
                                       label={AREA_LABELS[kind]}
-                                    >
-                                      {cards.map((card) => (
-                                        <CardRenderer
-                                          key={card.id}
-                                          card={card}
-                                          onRemove={() =>
-                                            removeDroppedCard(sessionId, task.id, card.id)
-                                          }
-                                        />
-                                      ))}
-                                    </TaskAreaDropZone>
+                                      cards={cards}
+                                      onRemoveCard={(cardId) =>
+                                        removeDroppedCard(sessionId, task.id, cardId)
+                                      }
+                                    />
                                   )
                                 })}
                               </div>

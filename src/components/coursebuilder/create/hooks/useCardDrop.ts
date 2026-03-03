@@ -27,7 +27,6 @@ import type {
   CourseSession,
 } from "../types"
 import { useCourseStore } from "../store/courseStore"
-import { useCanvasStore } from "../store/canvasStore"
 
 // ─── Data shapes ──────────────────────────────────────────────────────────────
 
@@ -44,6 +43,12 @@ export interface DropTargetData {
   canvasId?: CanvasId
   taskId:    TaskId
   areaKind:  TaskAreaKind
+  /** Order hint from insertion-line drop targets. */
+  prevOrder?: number
+  /** Order hint from insertion-line drop targets. */
+  nextOrder?: number
+  /** Optional placement hint inside the canvas (0..1 percentages). */
+  dropPosition?: { x: number; y: number }
   /** Block key of the drop zone's parent block */
   blockKey?: BlockKey
 }
@@ -65,7 +70,7 @@ function parseSpecificDropId(rawId: string): DropTargetData | null {
 }
 
 function resolveDropTarget(event: DragEndEvent): DropTargetData | null {
-  const candidates = [event.over?.id, ...(event.collisions?.map((c) => c.id) ?? [])]
+  const candidates = [...(event.collisions?.map((c) => c.id) ?? []), event.over?.id]
 
   for (const candidate of candidates) {
     if (candidate == null) continue
@@ -73,9 +78,12 @@ function resolveDropTarget(event: DragEndEvent): DropTargetData | null {
     if (parsed) return parsed
   }
 
-  const target = event.over?.data.current as DropTargetData | undefined
-  if (!target?.sessionId || !target?.taskId || !target?.areaKind) return null
-  return target
+  const directTarget = event.over?.data.current as DropTargetData | undefined
+  if (directTarget?.sessionId && directTarget?.taskId && directTarget?.areaKind) {
+    return directTarget
+  }
+
+  return null
 }
 
 function findVisibleTaskIdsForCanvas(session: CourseSession, canvasId: CanvasId | null): TaskId[] {
@@ -149,12 +157,23 @@ function computeDropOrder(
   return Date.now()
 }
 
+function computeDropOrderFromHints(target: DropTargetData): number | null {
+  const prev = typeof target.prevOrder === "number" ? target.prevOrder : null
+  const next = typeof target.nextOrder === "number" ? target.nextOrder : null
+
+  if (prev !== null && next !== null && next > prev) {
+    return prev + (next - prev) / 2
+  }
+  if (prev !== null) return prev + 1
+  if (next !== null) return next - 1
+  return null
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useCardDrop() {
   const addDroppedCard = useCourseStore((s) => s.addDroppedCard)
   const sessions = useCourseStore((s) => s.sessions)
-  const activeCanvasId = useCanvasStore((s) => s.activeCanvasId)
 
   const onDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -167,11 +186,12 @@ export function useCardDrop() {
       if (!target) return
 
       const targetSession = sessions.find((session) => session.id === target.sessionId)
-      const targetCanvasId = target.canvasId ?? activeCanvasId
+      const targetCanvasId = target.canvasId ?? null
       const visibleTaskIds = targetSession
         ? findVisibleTaskIdsForCanvas(targetSession, targetCanvasId)
         : []
-      const dropOrder = computeDropOrder(targetSession, targetCanvasId)
+      const dropOrder =
+        computeDropOrderFromHints(target) ?? computeDropOrder(targetSession, targetCanvasId)
 
       const resolvedTaskId =
         visibleTaskIds.length > 0 && !visibleTaskIds.includes(target.taskId)
@@ -184,13 +204,13 @@ export function useCardDrop() {
         cardType:   source.cardType,
         taskId:     resolvedTaskId,
         areaKind:   target.areaKind,
-        position:   { x: 0, y: 0 },
+        position:   target.dropPosition ?? { x: 0, y: 0 },
         dimensions: { width: 0, height: 0 },
         content:    source.content ?? { title: source.title ?? "" },
         order:      dropOrder,
-      })
+      }, targetCanvasId)
     },
-    [activeCanvasId, addDroppedCard, sessions],
+    [addDroppedCard, sessions],
   )
 
   return { onDragEnd }

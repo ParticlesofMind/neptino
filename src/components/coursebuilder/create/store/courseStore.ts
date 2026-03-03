@@ -13,78 +13,52 @@ import type {
   ObjectiveId,
   TaskId,
 } from "../types"
+import {
+  expandCanvasCardRangesForInsertion,
+  normalizeCanvasCardRanges,
+} from "./cardRangeUtils"
 
 // ─── Shape ────────────────────────────────────────────────────────────────────
 
 interface CourseState {
-  /** All sessions loaded for the current course edit */
   sessions: CourseSession[]
-  /** The session currently in view */
   activeSessionId: SessionId | null
-
-  // ── Setters ────────────────────────────────────────────────────────────────
 
   setActiveSession: (id: SessionId) => void
 
-  /** Insert or replace a session (matched by id) */
   upsertSession: (session: CourseSession) => void
-
-  /** Replace the full sessions list (used on initial load from Supabase) */
   hydrateSessions: (sessions: CourseSession[]) => void
 
-  // ── Dropped-card mutations ─────────────────────────────────────────────────
-
-  addDroppedCard: (sessionId: SessionId, taskId: TaskId, card: DroppedCard) => void
+  addDroppedCard: (
+    sessionId: SessionId,
+    taskId: TaskId,
+    card: DroppedCard,
+    canvasId?: CanvasId | null,
+  ) => void
   removeDroppedCard: (sessionId: SessionId, taskId: TaskId, cardId: string) => void
 
-  // ── Canvas-page mutations ──────────────────────────────────────────────────
-
-  /**
-   * Append a new blank canvas page to a session.
-   * `contentTopicStart` — if provided, the new page’s ContentBlock starts
-   * rendering from this absolute topic index (for overflow continuation).
-   * `options.topicEnd` — upper bound for the topic range on the new page.
-   * `options.objectiveStart` — if provided, the new page starts at this absolute
-   *   flat objective index (used for within-topic objective-level splits).
-   */
   appendCanvasPage: (
     sessionId: SessionId,
     contentTopicStart?: number,
     options?: { topicEnd?: number; objectiveStart?: number; cardStart?: number; cardEnd?: number },
   ) => void
 
-  /**
-   * Set (or update) the contentTopicRange on a specific canvas page.
-   * Used by the overflow hook to constrain how many topics appear on a page.
-   */
   setCanvasTopicRange: (
     canvasId: CanvasId,
     range: { start: number; end?: number },
   ) => void
 
-  /**
-   * Set (or update) the contentObjectiveRange on a specific canvas page.
-   * Used by the overflow hook as a fallback when only one topic is present
-   * and a topic-boundary split cannot be performed.
-   */
   setCanvasObjectiveRange: (
     canvasId: CanvasId,
     range: { start: number; end?: number },
   ) => void
 
-  /**
-   * Set (or update) the contentCardRange on a specific canvas page.
-   * Used by template-free canvas overflow handling.
-   */
   setCanvasCardRange: (
     canvasId: CanvasId,
     range: { start: number; end?: number },
   ) => void
 
-  /** Update the measured content height of a specific canvas page */
   setCanvasMeasuredHeight: (canvasId: CanvasId, heightPx: number) => void
-
-  // ── Derived helpers ────────────────────────────────────────────────────────
 
   getActiveSession: () => CourseSession | undefined
 }
@@ -117,8 +91,6 @@ export const useCourseStore = create<CourseState>()(
         })),
 
       hydrateSessions: (sessions) => {
-        // Deduplicate by session id — guards against stale localStorage entries
-        // written before source-data deduplication was added to the loader.
         const seen = new Set<string>()
         set({
           sessions: sessions.filter((s) => {
@@ -129,7 +101,7 @@ export const useCourseStore = create<CourseState>()(
         })
       },
 
-      addDroppedCard: (sessionId, taskId, card) =>
+      addDroppedCard: (sessionId, taskId, card, canvasId) =>
         set((state) => {
           const session = state.sessions.find((s) => s.id === sessionId)
           if (!session) return state
@@ -139,20 +111,31 @@ export const useCourseStore = create<CourseState>()(
             t.objectives.some((o) => o.tasks.some((ta) => ta.id === taskId)),
           )
           if (taskExists) {
+            const nextTopics = session.topics.map((topic) => ({
+              ...topic,
+              objectives: topic.objectives.map((obj) => ({
+                ...obj,
+                tasks: obj.tasks.map((task) =>
+                  task.id === taskId
+                    ? { ...task, droppedCards: [...task.droppedCards, card] }
+                    : task,
+                ),
+              })),
+            }))
+
+            const totalCards = nextTopics
+              .flatMap((topic) => topic.objectives)
+              .flatMap((objective) => objective.tasks)
+              .reduce((sum, task) => sum + task.droppedCards.length, 0)
+
             return {
               sessions: mapSession(state.sessions, sessionId, (s) => ({
                 ...s,
-                topics: s.topics.map((topic) => ({
-                  ...topic,
-                  objectives: topic.objectives.map((obj) => ({
-                    ...obj,
-                    tasks: obj.tasks.map((task) =>
-                      task.id === taskId
-                        ? { ...task, droppedCards: [...task.droppedCards, card] }
-                        : task,
-                    ),
-                  })),
-                })),
+                topics: nextTopics,
+                canvases: normalizeCanvasCardRanges(
+                  expandCanvasCardRangesForInsertion(s.canvases, canvasId ?? null),
+                  totalCards,
+                ),
               })),
             }
           }
@@ -221,9 +204,8 @@ export const useCourseStore = create<CourseState>()(
 
       removeDroppedCard: (sessionId, taskId, cardId) =>
         set((state) => ({
-          sessions: mapSession(state.sessions, sessionId, (session) => ({
-            ...session,
-            topics: session.topics.map((topic) => ({
+          sessions: mapSession(state.sessions, sessionId, (session) => {
+            const nextTopics = session.topics.map((topic) => ({
               ...topic,
               objectives: topic.objectives.map((obj) => ({
                 ...obj,
@@ -236,8 +218,19 @@ export const useCourseStore = create<CourseState>()(
                     : task,
                 ),
               })),
-            })),
-          })),
+            }))
+
+            const totalCards = nextTopics
+              .flatMap((topic) => topic.objectives)
+              .flatMap((objective) => objective.tasks)
+              .reduce((sum, task) => sum + task.droppedCards.length, 0)
+
+            return {
+              ...session,
+              topics: nextTopics,
+              canvases: normalizeCanvasCardRanges(session.canvases, totalCards),
+            }
+          }),
         })),
 
       appendCanvasPage: (sessionId, contentTopicStart, options) =>
@@ -322,21 +315,10 @@ export const useCourseStore = create<CourseState>()(
     }),
     {
       name: "neptino-course-store",
-      // Bump version to evict any stale localStorage entries that contained a
-      // `sessions` array (written before partialize was restricted to
-      // activeSessionId only). Zustand discards stored state on version mismatch.
       version: 1,
-      // Sessions are always authoritative from Supabase — do NOT persist them
-      // to localStorage. Persisting session.canvases causes stale blockKeys to
-      // outlive code changes and triggers the overflow-append loop on every load.
       partialize: (state) => ({
         activeSessionId: state.activeSessionId,
       }),
-      // Explicitly ignore any `sessions` that may be present in old localStorage
-      // entries (written before `partialize` was restricted to activeSessionId).
-      // Without this, Zustand's default merge would overlay stale sessions onto
-      // the initial empty array before `hydrateSessions` fires, causing duplicate
-      // canvas-ID keys in the virtualizer when two sessions shared the same UUID.
       merge: (persisted, current) => ({
         ...current,
         activeSessionId:

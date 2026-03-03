@@ -171,10 +171,62 @@ function overlayDroppedCards(derived: Topic[], saved: Topic[]): Topic[] {
       ...obj,
       tasks: obj.tasks.map((task, ki) => {
         const savedCards = saved[ti]?.objectives[oi]?.tasks[ki]?.droppedCards
-        return savedCards?.length ? { ...task, droppedCards: savedCards } : task
+        if (!savedCards?.length) return task
+        return {
+          ...task,
+          droppedCards: savedCards.map((card) => ({
+            ...card,
+            taskId: task.id,
+          })),
+        }
       }),
     })),
   }))
+}
+
+function normaliseNonOverlappingRanges(canvases: CanvasPage[]): CanvasPage[] {
+  let topicCursor = 0
+  let objectiveCursor = 0
+  let cardCursor = 0
+
+  return canvases.map((canvas, idx) => {
+    const next: CanvasPage = {
+      ...canvas,
+      pageNumber: idx + 1,
+    }
+
+    if (next.contentTopicRange) {
+      const start = Math.max(topicCursor, next.contentTopicRange.start ?? topicCursor)
+      const end =
+        typeof next.contentTopicRange.end === "number"
+          ? Math.max(start, next.contentTopicRange.end)
+          : undefined
+      next.contentTopicRange = { start, ...(end !== undefined ? { end } : {}) }
+      topicCursor = end ?? start
+    }
+
+    if (next.contentObjectiveRange) {
+      const start = Math.max(objectiveCursor, next.contentObjectiveRange.start ?? objectiveCursor)
+      const end =
+        typeof next.contentObjectiveRange.end === "number"
+          ? Math.max(start, next.contentObjectiveRange.end)
+          : undefined
+      next.contentObjectiveRange = { start, ...(end !== undefined ? { end } : {}) }
+      objectiveCursor = end ?? start
+    }
+
+    if (next.contentCardRange) {
+      const start = Math.max(cardCursor, next.contentCardRange.start ?? cardCursor)
+      const end =
+        typeof next.contentCardRange.end === "number"
+          ? Math.max(start, next.contentCardRange.end)
+          : undefined
+      next.contentCardRange = { start, ...(end !== undefined ? { end } : {}) }
+      cardCursor = end ?? start
+    }
+
+    return next
+  })
 }
 
 import type { LessonRow } from "@/components/coursebuilder/course-queries"
@@ -207,9 +259,26 @@ export function mergeSavedLesson(
       }))
     : null
 
+  const normalisedCanvases = anchoredCanvases
+    ? anchoredCanvases.map((c) => {
+        if (anchoredCanvases.length > 1) return c
+        const {
+          contentTopicRange: _topicRange,
+          contentObjectiveRange: _objectiveRange,
+          contentCardRange: _cardRange,
+          ...rest
+        } = c
+        return rest
+      })
+    : null
+
+  const safeCanvases = normalisedCanvases
+    ? normaliseNonOverlappingRanges(normalisedCanvases)
+    : null
+
   return {
     ...derived,
     ...(savedTopics      ? { topics:   overlayDroppedCards(derived.topics, savedTopics) } : {}),
-    ...(anchoredCanvases ? { canvases: anchoredCanvases }                                 : {}),
+    ...(safeCanvases ? { canvases: safeCanvases }                                         : {}),
   }
 }

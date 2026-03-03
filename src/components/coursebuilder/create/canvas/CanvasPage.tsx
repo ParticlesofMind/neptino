@@ -57,6 +57,60 @@ function findFirstVisibleTaskId(session: CourseSession, page: CanvasPageModel): 
   return (`${session.id}-default-task` as TaskId)
 }
 
+function findOwnerTaskIdForCard(session: CourseSession, cardId: string): TaskId | null {
+  for (const topic of session.topics) {
+    for (const objective of topic.objectives) {
+      for (const task of objective.tasks) {
+        if (task.droppedCards.some((card) => card.id === cardId)) {
+          return task.id
+        }
+      }
+    }
+  }
+  return null
+}
+
+function InsertionLineSlot({
+  id,
+  sessionId,
+  canvasId,
+  taskId,
+  prevOrder,
+  nextOrder,
+}: {
+  id: string
+  sessionId: SessionId
+  canvasId: string
+  taskId: TaskId
+  prevOrder?: number
+  nextOrder?: number
+}) {
+  const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
+  const { isOver, setNodeRef } = useDroppable({
+    id,
+    data: {
+      sessionId,
+      canvasId,
+      taskId,
+      areaKind: "instruction",
+      prevOrder,
+      nextOrder,
+    },
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      data-testid="canvas-drop-insertion-line"
+      className="relative h-2"
+    >
+      {(mediaDragActive || isOver) && (
+        <div className={`absolute inset-x-0 top-1/2 -translate-y-1/2 border-t ${isOver ? "border-blue-400" : "border-blue-200"}`} />
+      )}
+    </div>
+  )
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface CanvasNewPageProps {
@@ -112,8 +166,9 @@ export function CanvasPage({
     .flatMap((task) => task.droppedCards)
     .sort((a, b) => a.order - b.order)
 
-  const cardStart = page.contentCardRange?.start ?? 0
-  const cardEnd = page.contentCardRange?.end ?? flatDroppedCards.length
+  const useCardRange = session.canvases.length > 1
+  const cardStart = useCardRange ? (page.contentCardRange?.start ?? 0) : 0
+  const cardEnd = useCardRange ? (page.contentCardRange?.end ?? flatDroppedCards.length) : flatDroppedCards.length
   const visibleDroppedCards = flatDroppedCards.slice(cardStart, cardEnd)
 
   // Body-level droppable: covers the full canvas body area so cards can be
@@ -182,21 +237,48 @@ export function CanvasPage({
           {isTemplateFreeCanvas ? (
             <section className="h-full min-h-[240px] w-full rounded-lg border border-dashed border-neutral-300 bg-white p-3">
               {visibleDroppedCards.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-xs text-neutral-400">
-                  Drop cards here
+                <div className="px-1">
+                  <InsertionLineSlot
+                    id={`${session.id as SessionId}:body:${page.id}:slot:0`}
+                    sessionId={session.id as SessionId}
+                    canvasId={page.id}
+                    taskId={bodyDropTaskId}
+                  />
+                  <div className="flex h-full min-h-[200px] items-center justify-center text-xs text-neutral-400">
+                    Drop cards here
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {visibleDroppedCards.map((card, idx) => (
-                    <div key={card.id} data-card-idx={cardStart + idx}>
-                      <CardRenderer
-                        card={card}
-                        onRemove={() =>
-                          removeDroppedCard(session.id as SessionId, card.taskId, card.id)
-                        }
-                      />
-                    </div>
-                  ))}
+                  {visibleDroppedCards.map((card, idx) => {
+                    const prevOrder = idx > 0 ? visibleDroppedCards[idx - 1]?.order : undefined
+                    return (
+                      <div key={card.id} data-card-idx={cardStart + idx}>
+                        <InsertionLineSlot
+                          id={`${session.id as SessionId}:body:${page.id}:slot:${idx}`}
+                          sessionId={session.id as SessionId}
+                          canvasId={page.id}
+                          taskId={bodyDropTaskId}
+                          prevOrder={prevOrder}
+                          nextOrder={card.order}
+                        />
+                        <CardRenderer
+                          card={card}
+                          onRemove={() => {
+                            const ownerTaskId = findOwnerTaskIdForCard(session, card.id) ?? card.taskId
+                            removeDroppedCard(session.id as SessionId, ownerTaskId, card.id)
+                          }}
+                        />
+                      </div>
+                    )
+                  })}
+                  <InsertionLineSlot
+                    id={`${session.id as SessionId}:body:${page.id}:slot:${visibleDroppedCards.length}`}
+                    sessionId={session.id as SessionId}
+                    canvasId={page.id}
+                    taskId={bodyDropTaskId}
+                    prevOrder={visibleDroppedCards[visibleDroppedCards.length - 1]?.order}
+                  />
                 </div>
               )}
             </section>

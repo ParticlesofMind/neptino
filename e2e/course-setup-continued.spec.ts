@@ -280,6 +280,90 @@ test.describe("Course Setup Continued", () => {
       expect(finalTotalPages).toBeGreaterThanOrEqual(initialTotalPages)
     }
   })
+
+  test("15. create view insertion line places card at exact slot", async () => {
+    test.skip(!courseId, "Requires a created course id from earlier flow tests.")
+    const page = sharedPage
+
+    const admin = createAdminClient()
+    const existing = await fetchCourse(courseId)
+    const existingRecord = (existing ?? {}) as Record<string, unknown>
+    const existingCurriculum = (existingRecord.curriculum_data as Record<string, unknown> | null) ?? {}
+    const existingSchedule = (existingRecord.schedule_settings as Record<string, unknown> | null) ?? {}
+
+    const seededCurriculum = {
+      ...existingCurriculum,
+      module_org: existingCurriculum.module_org ?? "linear",
+      module_count: 1,
+      module_names: ["Module 1"],
+      session_rows: [
+        {
+          id: "e2e-precision-session-1",
+          session_number: 1,
+          title: "Precision Drop Lesson",
+          duration_minutes: 60,
+          topics: 1,
+          objectives: 1,
+          tasks: 1,
+          template_type: "lesson",
+          topic_names: ["Topic 1"],
+          objective_names: ["Objective 1"],
+          task_names: ["Task 1"],
+        },
+      ],
+    }
+
+    const seededSchedule = {
+      ...existingSchedule,
+      generated_entries: [
+        { id: "e2e-precision-entry-1", session: 1, day: "Mon", date: "01.01.2026", start_time: "09:00", end_time: "10:00" },
+      ],
+    }
+
+    const { error: seedError } = await admin
+      .from("courses")
+      .update({ curriculum_data: seededCurriculum, schedule_settings: seededSchedule })
+      .eq("id", courseId)
+
+    expect(seedError).toBeNull()
+
+    await page.goto(`/teacher/coursebuilder?id=${courseId}&view=create`)
+    await page.waitForTimeout(1_500)
+
+    const firstInstructionArea = page.getByTestId("task-area-instruction").first()
+    await expect(firstInstructionArea).toBeVisible({ timeout: 10_000 })
+
+    const firstCardSource = page.getByRole("button", {
+      name: /United Nations: Organizational Profile/i,
+    }).first()
+    await firstCardSource.dragTo(firstInstructionArea)
+
+    await page.waitForTimeout(500)
+
+    const secondCardSource = page.getByRole("button", {
+      name: /Amazon Rainforest Species Dataset/i,
+    }).first()
+
+    const topInsertionLine = firstInstructionArea
+      .getByTestId("drop-insertion-line")
+      .filter({ has: page.locator('[data-slot-index="0"]') })
+      .first()
+
+    await secondCardSource.dragTo(topInsertionLine)
+    await page.waitForTimeout(600)
+
+    const topCard = firstInstructionArea.getByText("Amazon Rainforest Species Dataset", { exact: false }).first()
+    const bottomCard = firstInstructionArea.getByText("United Nations: Organizational Profile", { exact: false }).first()
+
+    await expect(topCard).toBeVisible({ timeout: 8_000 })
+    await expect(bottomCard).toBeVisible({ timeout: 8_000 })
+
+    const topBox = await topCard.boundingBox()
+    const bottomBox = await bottomCard.boundingBox()
+    expect(topBox).not.toBeNull()
+    expect(bottomBox).not.toBeNull()
+    expect((topBox?.y ?? 0)).toBeLessThan(bottomBox?.y ?? 0)
+  })
 })
 
 // ─── Standalone: column-level regression tests ───────────────────────────────
