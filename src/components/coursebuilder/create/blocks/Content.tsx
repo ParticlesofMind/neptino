@@ -1,32 +1,21 @@
 "use client"
 
-/**
- * Content Block
- *
- * Renders the topic \u2192 objective \u2192 task tree for a canvas page, with three
- * drag-and-drop task areas per task (instruction / practice / feedback).
- *
- * PAGINATION: each CanvasPage may render only a *slice* of the session\u2019s topic
- * list, controlled by `contentTopicRange` on the CanvasPage model.  The block
- * reads that range directly from the course store via canvasId and renders only
- * the relevant topics.
- *
- * Each topic container receives `data-topic-idx` (absolute 0-based index) so
- * that `useCanvasOverflow` can locate topic boundaries via DOM queries and
- * compute where to split the page.
- *
- * A "Continued" badge is shown on pages where topicStart > 0.
- */
-
 import { useDroppable } from "@dnd-kit/core"
-import type { BlockRenderProps, BlockKey, CanvasId, TaskAreaKind, SessionId, TaskId, Topic } from "../types"
+import type { BlockRenderProps, BlockKey, CanvasId, TaskAreaKind, SessionId, TaskId } from "../types"
 import { useCourseStore } from "../store/courseStore"
+import { useCanvasStore } from "../store/canvasStore"
 import { CardRenderer } from "../cards/CardRenderer"
-
-// ─── Task area drop zone ──────────────────────────────────────────────────────
+import type { DropTargetData } from "../hooks/useCardDrop"
+import {
+  AREA_LABELS,
+  DEFAULT_TASK_SUFFIX,
+  findFirstVisibleTaskId,
+  isBootstrappedTopic,
+} from "./contentBlockUtils"
 
 interface TaskAreaProps {
   sessionId: SessionId
+  canvasId?: CanvasId
   taskId: TaskId
   areaKind: TaskAreaKind
   /** Block key forwarded to the droppable data so useCardDrop can validate accepts */
@@ -35,30 +24,27 @@ interface TaskAreaProps {
   children?: React.ReactNode
 }
 
-function TaskAreaDropZone({ sessionId, taskId, areaKind, blockKey, label, children }: TaskAreaProps) {
+function TaskAreaDropZone({ sessionId, canvasId, taskId, areaKind, blockKey, label, children }: TaskAreaProps) {
   const dropId = `${sessionId}:${taskId}:${areaKind}`
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
-    data: { sessionId, taskId, areaKind, blockKey },
+    data: { sessionId, canvasId, taskId, areaKind, blockKey },
   })
 
   const hasCards = !!children && (Array.isArray(children) ? children.length > 0 : true)
+  const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
 
   return (
     <div className="space-y-0.5">
-      {/* Phase label */}
       <div className="text-[9px] font-semibold uppercase tracking-wider text-neutral-500 px-1">
         {label}
       </div>
       <div
         ref={setNodeRef}
         className={[
-          "rounded border transition-colors",
-          isOver
-            ? "border-blue-400 bg-blue-50"
-            : hasCards
-              ? "border-neutral-200 bg-white"
-              : "border-dashed border-neutral-300 bg-neutral-50",
+          "rounded-lg border border-neutral-200 bg-white px-2 py-1.5 transition-colors",
+          mediaDragActive ? "min-h-[2.5rem]" : "min-h-[2rem]",
+          isOver ? "border-blue-300 bg-blue-50" : "",
         ].join(" ")}
       >
         <div className="px-2 py-1.5 space-y-1">
@@ -76,10 +62,11 @@ function TaskAreaDropZone({ sessionId, taskId, areaKind, blockKey, label, childr
               </span>
             </div>
           )}
-          {/* Always-visible empty state when no cards and not dragging over */}
           {!hasCards && !isOver && (
-            <div className="h-6 flex items-center px-1">
-              <span className="text-[9px] text-neutral-300 italic">Empty</span>
+            <div className={`flex items-center px-1 ${mediaDragActive ? "h-10" : "h-6"}`}>
+              <span className={`text-[9px] italic ${mediaDragActive ? "text-blue-300" : "text-neutral-300"}`}>
+                {mediaDragActive ? "Drop here" : "Empty"}
+              </span>
             </div>
           )}
         </div>
@@ -90,28 +77,6 @@ function TaskAreaDropZone({ sessionId, taskId, areaKind, blockKey, label, childr
 
 // ─── Content block ────────────────────────────────────────────────────────────
 
-const AREA_LABELS: Record<TaskAreaKind, string> = {
-  instruction: "Instruction",
-  practice:    "Practice",
-  feedback:    "Feedback",
-}
-
-// Synthetic task ID suffix used by the no-topics placeholder drop zones.
-const DEFAULT_TASK_SUFFIX = "-default-task"
-
-/**
- * Returns true when the topic (and its children) was auto-bootstrapped from a
- * fresh drop \u2014 blank labels.  In this case the nesting chrome is hidden so the
- * layout stays clean when there\u2019s no real curriculum structure yet.
- */
-function isBootstrappedTopic(topic: Topic): boolean {
-  return (
-    topic.label === "" &&
-    topic.objectives.length === 1 &&
-    (topic.objectives[0]?.label ?? "") === ""
-  )
-}
-
 export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRenderProps) {
   // Full topic list for this session (drives the visible slice below)
   const topics = useCourseStore(
@@ -120,6 +85,9 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
 
   // Card removal action
   const removeDroppedCard = useCourseStore((s) => s.removeDroppedCard)
+
+  // Whether a media drag is in progress — used to expand drop targets
+  const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
 
   // Resolve this page\u2019s topic slice from the course store.
   // Falls back to "show all" when no range has been set (page not yet split).
@@ -149,6 +117,24 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
   const objStart: number        = contentObjectiveRange?.start ?? 0
   const objEnd:   number | undefined = contentObjectiveRange?.end
 
+  // Catch-all droppable for the entire content block.
+  // Routes drops to the first visible task on this page slice.
+  const catchAllTaskId = (
+    findFirstVisibleTaskId(topics, topicStart, topicEnd, objStart, objEnd)
+    ?? `${sessionId}${DEFAULT_TASK_SUFFIX}`
+  ) as TaskId
+  const catchAllDropData: DropTargetData = {
+    sessionId,
+    canvasId,
+    taskId: catchAllTaskId,
+    areaKind: "instruction",
+    blockKey,
+  }
+  const { isOver: isCatchAllOver, setNodeRef: setCatchAllRef } = useDroppable({
+    id: `${sessionId}:catchall`,
+    data: catchAllDropData,
+  })
+
   const visibleTopics = topics.slice(topicStart, topicEnd)
 
   // Show all task-area phases by default; can be overridden via data.visibleAreas.
@@ -160,7 +146,19 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
   const noTopicsAtAll  = topics.length === 0
 
   return (
-    <section className="rounded-lg border border-neutral-200">
+    <section ref={setCatchAllRef} className="rounded-lg border border-neutral-200 relative">
+      {/* Drag-active visual hint — shows the whole block as a drop target */}
+      {mediaDragActive && (
+        <div
+          aria-hidden
+          className={[
+            "absolute inset-0 z-10 rounded-lg border-2 border-dashed pointer-events-none transition-colors",
+            isCatchAllOver
+              ? "border-blue-400 bg-blue-50/40"
+              : "border-blue-200",
+          ].join(" ")}
+        />
+      )}
       {/* Block header */}
       <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-1 flex items-center gap-2">
         <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400 flex-1">
@@ -190,6 +188,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
                 <TaskAreaDropZone
                   key={kind}
                   sessionId={sessionId}
+                  canvasId={canvasId}
                   taskId={`${sessionId}${DEFAULT_TASK_SUFFIX}` as TaskId}
                   areaKind={kind}
                   blockKey={blockKey}
@@ -305,6 +304,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
                                     <TaskAreaDropZone
                                       key={kind}
                                       sessionId={sessionId}
+                                      canvasId={canvasId}
                                       taskId={task.id}
                                       areaKind={kind}
                                       blockKey={blockKey}
@@ -337,4 +337,5 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
       </div>
     </section>
   )
+
 }

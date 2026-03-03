@@ -1,10 +1,3 @@
-/**
- * Course Store — full session/canvas/content tree
- *
- * Persisted to `localStorage` as a draft snapshot. On publish, the app
- * writes the normalized Supabase tables instead.
- */
-
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type {
@@ -19,7 +12,6 @@ import type {
   TopicId,
   ObjectiveId,
   TaskId,
-  BlockKey,
 } from "../types"
 
 // ─── Shape ────────────────────────────────────────────────────────────────────
@@ -58,7 +50,7 @@ interface CourseState {
   appendCanvasPage: (
     sessionId: SessionId,
     contentTopicStart?: number,
-    options?: { topicEnd?: number; objectiveStart?: number },
+    options?: { topicEnd?: number; objectiveStart?: number; cardStart?: number; cardEnd?: number },
   ) => void
 
   /**
@@ -76,6 +68,15 @@ interface CourseState {
    * and a topic-boundary split cannot be performed.
    */
   setCanvasObjectiveRange: (
+    canvasId: CanvasId,
+    range: { start: number; end?: number },
+  ) => void
+
+  /**
+   * Set (or update) the contentCardRange on a specific canvas page.
+   * Used by template-free canvas overflow handling.
+   */
+  setCanvasCardRange: (
     canvasId: CanvasId,
     range: { start: number; end?: number },
   ) => void
@@ -156,9 +157,35 @@ export const useCourseStore = create<CourseState>()(
             }
           }
 
-          // Fallback path: task not found (drop zone shown before any topics were
-          // loaded).  Bootstrap a minimal topic \u2192 objective \u2192 task chain so the
-          // card is immediately visible and subsequent drops have a real target.
+          // Fallback path: task not found.
+          //
+          // Case A — session already has topics: the taskId came from a stale
+          // or catch-all drop zone. Route the card to the first task of the
+          // first objective of the first topic rather than destroying the
+          // existing topic structure.
+          if (session.topics.length > 0) {
+            return {
+              sessions: mapSession(state.sessions, sessionId, (s) => ({
+                ...s,
+                topics: s.topics.map((topic, ti) =>
+                  ti !== 0 ? topic : {
+                    ...topic,
+                    objectives: topic.objectives.map((obj, oi) =>
+                      oi !== 0 ? obj : {
+                        ...obj,
+                        tasks: obj.tasks.map((task, ki) =>
+                          ki !== 0 ? task : { ...task, droppedCards: [...task.droppedCards, card] }
+                        ),
+                      }
+                    ),
+                  }
+                ),
+              })),
+            }
+          }
+
+          // Case B — no topics yet: bootstrap a minimal topic → objective → task
+          // chain so the card is immediately visible.
           const topicId   = `${sessionId}-default-topic`   as TopicId
           const objId     = `${sessionId}-default-obj`     as ObjectiveId
 
@@ -217,36 +244,10 @@ export const useCourseStore = create<CourseState>()(
         set((state) => ({
           sessions: mapSession(state.sessions, sessionId, (session) => {
             const nextPage = session.canvases.length + 1
-            const lastCanvas = session.canvases[session.canvases.length - 1]
-
-            // program and resources are session-level summary blocks — shown only
-            // once on page 1 and must never repeat on continuation pages.
-            const SESSION_ONCE_BLOCKS = new Set<BlockKey>(["program", "resources"])
-
-            // Default body blocks for continuation pages (excludes header/footer/program/resources)
-            const DEFAULT_CONTINUATION_BLOCKS: BlockKey[] = ["content", "assignment", "scoring", "project"]
-
-            let continuationBlockKeys: BlockKey[] | undefined
-            if (lastCanvas?.blockKeys === undefined) {
-              continuationBlockKeys = DEFAULT_CONTINUATION_BLOCKS.length > 0
-                ? DEFAULT_CONTINUATION_BLOCKS
-                : undefined
-            } else {
-              const filtered = lastCanvas.blockKeys.filter((k) => !SESSION_ONCE_BLOCKS.has(k))
-              if (filtered.length > 0) {
-                continuationBlockKeys = filtered
-              } else {
-                continuationBlockKeys = DEFAULT_CONTINUATION_BLOCKS.length > 0
-                  ? DEFAULT_CONTINUATION_BLOCKS
-                  : undefined
-              }
-            }
-
             const newCanvas: CanvasPage = {
               id: crypto.randomUUID() as CanvasId,
               sessionId,
               pageNumber: nextPage,
-              blockKeys: continuationBlockKeys,
               // If the caller supplies a topic start index this page continues from
               // that point in the flat topic list (overflow-driven pagination).
               ...(contentTopicStart !== undefined
@@ -260,6 +261,14 @@ export const useCourseStore = create<CourseState>()(
               // Objective-level split: restrict which objectives are shown on this page.
               ...(options?.objectiveStart !== undefined
                 ? { contentObjectiveRange: { start: options.objectiveStart } }
+                : {}),
+              ...(options?.cardStart !== undefined
+                ? {
+                    contentCardRange: {
+                      start: options.cardStart,
+                      ...(options?.cardEnd !== undefined ? { end: options.cardEnd } : {}),
+                    },
+                  }
                 : {}),
             }
             return { ...session, canvases: [...session.canvases, newCanvas] }
@@ -282,6 +291,16 @@ export const useCourseStore = create<CourseState>()(
             ...session,
             canvases: session.canvases.map((c) =>
               c.id === canvasId ? { ...c, contentObjectiveRange: range } : c,
+            ),
+          })),
+        })),
+
+      setCanvasCardRange: (canvasId, range) =>
+        set((state) => ({
+          sessions: state.sessions.map((session) => ({
+            ...session,
+            canvases: session.canvases.map((c) =>
+              c.id === canvasId ? { ...c, contentCardRange: range } : c,
             ),
           })),
         })),

@@ -36,12 +36,13 @@ export function VideoCard({ card, onRemove }: VideoCardProps) {
           />
         </div>
       ) : url ? (
-        <video
-          src={url}
-          controls
-          className="w-full block"
-          style={{ maxHeight: 200 }}
-        />
+        <div className="relative" style={{ paddingTop: "56.25%" /* 16:9 */ }}>
+          <video
+            src={url}
+            controls
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </div>
       ) : (
         <div className="flex h-20 items-center justify-center bg-neutral-100 text-xs italic text-neutral-400">
           No video

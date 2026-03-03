@@ -21,7 +21,7 @@ export function CanvasControlsStrip() {
   const setActiveTool  = useCanvasStore((s) => s.setActiveTool)
 
   return (
-    <div className="flex flex-col items-center gap-1 w-14 shrink-0 bg-white border-r border-neutral-200 py-3 overflow-y-auto">
+    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white border-r border-neutral-200 py-3 overflow-y-auto">
       {/* Zoom % */}
       <button
         onClick={() => setZoom(100)}

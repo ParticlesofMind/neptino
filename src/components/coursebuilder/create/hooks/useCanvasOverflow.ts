@@ -51,6 +51,7 @@ export function useCanvasOverflow({
   const overflowingIds          = useCanvasStore((s) => s.overflowingCanvasIds)
   const setCanvasTopicRange     = useCourseStore((s) => s.setCanvasTopicRange)
   const setCanvasObjectiveRange = useCourseStore((s) => s.setCanvasObjectiveRange)
+  const setCanvasCardRange      = useCourseStore((s) => s.setCanvasCardRange)
   const appendCanvasPage        = useCourseStore((s) => s.appendCanvasPage)
 
   // Read the current contentTopicRange for this canvas from the store snapshot.
@@ -69,6 +70,13 @@ export function useCanvasOverflow({
     const session = sessions.find((s) => s.id === sessionId)
     const canvas  = session?.canvases.find((c) => c.id === canvasId)
     return canvas?.contentObjectiveRange?.start ?? 0
+  }, [canvasId, sessionId])
+
+  const getCardRangeStart = useCallback((): number => {
+    const sessions = useCourseStore.getState().sessions
+    const session = sessions.find((s) => s.id === sessionId)
+    const canvas  = session?.canvases.find((c) => c.id === canvasId)
+    return canvas?.contentCardRange?.start ?? 0
   }, [canvasId, sessionId])
 
   const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -106,7 +114,54 @@ export function useCanvasOverflow({
       ).sort((a, b) => Number(a.dataset.objectiveIdx) - Number(b.dataset.objectiveIdx))
 
       // Need at least 2 visible objectives to perform a split.
-      if (objEls.length < 2) return
+      if (objEls.length < 2) {
+        const cardEls = Array.from(
+          content.querySelectorAll<HTMLElement>("[data-card-idx]"),
+        ).sort((a, b) => Number(a.dataset.cardIdx) - Number(b.dataset.cardIdx))
+
+        // Template-free fallback: split at card boundaries.
+        if (cardEls.length < 2) return
+
+        let splitAtCardIdx: number | null = null
+        for (let i = cardEls.length - 1; i >= 0; i--) {
+          const el = cardEls[i]
+          if (!el) continue
+          const elBottom = el.offsetTop + el.offsetHeight
+          if (elBottom <= available) {
+            splitAtCardIdx = Number(el.dataset.cardIdx) + 1
+            break
+          }
+        }
+
+        if (splitAtCardIdx === null || splitAtCardIdx <= 0) return
+
+        const currentCardStart = getCardRangeStart()
+        if (splitAtCardIdx <= currentCardStart) return
+
+        const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
+        const canvasSnap  = sessionSnap?.canvases.find((c) => c.id === canvasId)
+        const currentCardEnd = canvasSnap?.contentCardRange?.end
+
+        const continuationCardExists = sessionSnap?.canvases.some(
+          (c) => c.id !== canvasId && c.contentCardRange?.start === splitAtCardIdx,
+        )
+
+        if (currentCardEnd === splitAtCardIdx && continuationCardExists) return
+
+        splitGuard.current = true
+
+        setCanvasCardRange(canvasId, { start: currentCardStart, end: splitAtCardIdx })
+
+        if (!continuationCardExists) {
+          appendCanvasPage(sessionId, undefined, {
+            cardStart: splitAtCardIdx,
+            cardEnd: currentCardEnd,
+          })
+        }
+
+        setTimeout(() => { splitGuard.current = false }, 600)
+        return
+      }
 
       let splitAtObjIdx: number | null = null
       for (let i = objEls.length - 1; i >= 0; i--) {
@@ -231,9 +286,11 @@ export function useCanvasOverflow({
     markCanvasOverflow,
     setCanvasTopicRange,
     setCanvasObjectiveRange,
+    setCanvasCardRange,
     appendCanvasPage,
     getTopicRangeStart,
     getObjectiveRangeStart,
+    getCardRangeStart,
   ])
 
   useEffect(() => {

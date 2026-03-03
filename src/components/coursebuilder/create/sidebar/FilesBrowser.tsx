@@ -1,25 +1,28 @@
 "use client"
 
 /**
- * Files Browser (sidebar)
+ * Files Browser (sidebar — Curate mode)
  *
- * Two-column layout matching the original coursebuilder design:
+ * Two-column layout:
  *   - Narrow icon rail on the left for category switching
- *   - Content list on the right (search + draggable items)
+ *   - Search + draggable library items on the right
+ *
+ * Only rendered when the editor is in Curate mode.
+ * Make and Fix modes have their own full-width panels.
  */
 
 import { useState } from "react"
 import { useDraggable } from "@dnd-kit/core"
 import {
-  FolderOpen,
-  ImageIcon,
-  Video,
-  Music,
-  Type,
-  Puzzle,
-  Link2,
-  Gamepad2,
   BarChart2,
+  FolderOpen,
+  Gamepad2,
+  ImageIcon,
+  Link2,
+  Music,
+  Puzzle,
+  Type,
+  Video,
 } from "lucide-react"
 import type { CardType, CardId } from "../types"
 import type { DragSourceData } from "../hooks/useCardDrop"
@@ -80,7 +83,7 @@ const MOCK_ITEMS: LibraryItem[] = [
   { id: "c-table-1"      as CardId, cardType: "table",      label: "Data Table",            title: "Climate Data 1850–2024"                  },
 ]
 
-// ─── Draggable card item ──────────────────────────────────────────────────────
+// ─── Draggable item ───────────────────────────────────────────────────────────
 
 function DraggableItem({ item }: { item: LibraryItem }) {
   const dragData: DragSourceData = {
@@ -102,7 +105,7 @@ function DraggableItem({ item }: { item: LibraryItem }) {
       {...listeners}
       {...attributes}
       className={[
-        "px-3 py-2 cursor-grab select-none rounded-sm",
+        "px-3 py-1.5 cursor-grab select-none rounded-sm",
         "hover:bg-neutral-100 transition-colors",
         isDragging ? "opacity-40 bg-neutral-100" : "",
       ]
@@ -133,7 +136,7 @@ function RailButton({
       onClick={onClick}
       title={cat.label}
       className={[
-        "flex flex-col items-center gap-1 w-full py-3 transition-colors border-l-2",
+        "flex flex-col items-center gap-1 w-full py-2 transition-colors border-l-2",
         isActive
           ? "border-neutral-900 bg-neutral-100 text-neutral-900"
           : "border-transparent text-neutral-400 hover:text-neutral-700 hover:bg-neutral-50",
@@ -153,7 +156,7 @@ export function FilesBrowser() {
 
   const cat     = CATEGORIES.find((c) => c.id === activeCategory)!
   const visible = MOCK_ITEMS.filter((item) => {
-    const matchesType = cat.types === "all" || (cat.types as CardType[]).includes(item.cardType)
+    const matchesType   = cat.types === "all" || (cat.types as CardType[]).includes(item.cardType)
     const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase())
     return matchesType && matchesSearch
   })
@@ -172,13 +175,13 @@ export function FilesBrowser() {
         ))}
       </div>
 
-      {/* Content list */}
+      {/* Content column */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Search */}
-        <div className="px-2 py-2 border-b border-neutral-100">
+        <div className="px-2 py-1.5 border-b border-neutral-100 shrink-0">
           <input
             type="search"
-            placeholder="Search..."
+            placeholder="Search…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] outline-none focus:border-neutral-400 placeholder:text-neutral-400"

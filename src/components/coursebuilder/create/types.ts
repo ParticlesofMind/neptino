@@ -17,32 +17,23 @@ export type CardId        = string & { readonly __brand: "CardId" }
 export type DroppedCardId = string & { readonly __brand: "DroppedCardId" }
 
 // ─── Card types ───────────────────────────────────────────────────────────────
-/**
- * DOM-rendered card types use standard React components.
- * Canvas-backed types (village-3d, rich-sim) get a PixiJS/Three.js renderer.
- */
-export type CardRenderMode = "dom" | "canvas"
-
 export type CardType =
   | "text"
   | "image"
-  | "video"
   | "audio"
+  | "video"
+  | "animation"
+  | "dataset"
+  | "model-3d"
+  | "map"
+  | "chart"
+  | "diagram"
+  | "media"
   | "document"
   | "table"
   | "rich-sim"    // interactive simulation — canvas-backed
   | "village-3d"  // 3D exploration card — canvas-backed
   | "interactive" // generic interactive — canvas-backed
-
-export const CANVAS_BACKED_CARD_TYPES: ReadonlySet<CardType> = new Set<CardType>([
-  "rich-sim",
-  "village-3d",
-  "interactive",
-])
-
-export function cardRenderMode(type: CardType): CardRenderMode {
-  return CANVAS_BACKED_CARD_TYPES.has(type) ? "canvas" : "dom"
-}
 
 // ─── Task area kinds ─────────────────────────────────────────────────────────
 export type TaskAreaKind = "instruction" | "practice" | "feedback"
@@ -121,6 +112,12 @@ export interface CanvasPage {
    * Used as a fallback when a single large topic cannot be split at topic boundaries.
    */
   contentObjectiveRange?: { start: number; end?: number }
+  /**
+   * Card-level split for template-free canvases.
+   * Bounds are absolute card indices (0-based, inclusive start, exclusive end)
+   * across the session's flattened dropped-card list sorted by `order`.
+   */
+  contentCardRange?: { start: number; end?: number }
   /** Ephemeral — set by useCanvasOverflow, not persisted */
   measuredContentHeightPx?: number
 }

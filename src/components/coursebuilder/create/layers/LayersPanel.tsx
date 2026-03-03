@@ -37,13 +37,9 @@ const BLOCK_LAYER_LABELS: Partial<Record<BlockKey, Array<{ suffix: string; label
   footer:     [{ suffix: "footer",      label: "Footer Meta"      }],
 }
 
-const DEFAULT_BLOCKS: BlockKey[] = [
-  "header", "program", "resources", "content", "assignment", "scoring", "project", "footer",
-]
-
 function deriveLayerEntries(session: CourseSession): LayerEntry[] {
-  // Use page blockKeys if set, else show all default blocks.
-  const keys = (session.canvases[0]?.blockKeys ?? DEFAULT_BLOCKS) as BlockKey[]
+  // Show only explicitly configured block keys.
+  const keys = (session.canvases[0]?.blockKeys ?? []) as BlockKey[]
   return keys.flatMap((key) =>
     (BLOCK_LAYER_LABELS[key] ?? []).map(({ suffix, label }) => ({
       id:     `${session.id}-${suffix}`,

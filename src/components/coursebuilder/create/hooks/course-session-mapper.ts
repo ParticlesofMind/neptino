@@ -134,7 +134,11 @@ export function mapRowToSession(
   })
 
   const canvases: CanvasPage[] = [
-    { id: `${sessionId}-canvas-1` as CanvasId, sessionId, pageNumber: 1 },
+    {
+      id:        `${sessionId}-canvas-1` as CanvasId,
+      sessionId,
+      pageNumber: 1,
+    },
   ]
 
   return {
@@ -199,6 +203,7 @@ export function mergeSavedLesson(
         ...c,
         id:        `${derived.id}-canvas-${i + 1}` as CanvasId,
         sessionId: derived.id as SessionId,
+        blockKeys: undefined,
       }))
     : null
 

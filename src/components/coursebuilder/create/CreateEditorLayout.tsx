@@ -3,34 +3,48 @@
 /**
  * CreateEditorLayout
  *
- * The full canvas editor — toolbar, file browser, canvas viewport, layers panel —
- * composed as a pure prop-based component so it can be embedded inside the
- * teacher/coursebuilder wizard (view === "create") OR accessed directly via
- * the /teacher/coursebuilder/create route.
+ * Top-level editor shell. Controls the active editing mode:
+ *
+ *   Curate — compose the lesson canvas (file browser + canvas + layers + toolbar)
+ *   Make   — create new cards from scratch (card-type gallery)
+ *   Fix    — review and repair cards (coming soon)
  *
  * Props
  *   courseId  — UUID string or null (Zustand store handles the null case gracefully)
  *   className — optional extra Tailwind classes applied to the root div
  */
 
-import { useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
+  type CollisionDetection,
   DndContext,
+  DragOverlay,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
+import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core"
+import { Wrench } from "lucide-react"
 
 import { ToolBar }           from "@/components/coursebuilder/create/toolbar/ToolBar"
 import { FilesBrowser }      from "@/components/coursebuilder/create/sidebar/FilesBrowser"
+import { MakePanel }         from "@/components/coursebuilder/create/sidebar/MakePanel"
 import { LayersPanel }       from "@/components/coursebuilder/create/layers/LayersPanel"
 import { CanvasVirtualizer } from "@/components/coursebuilder/create/canvas/CanvasVirtualizer"
 import { useCardDrop }             from "@/components/coursebuilder/create/hooks/useCardDrop"
 import { useCourseSessionLoader }  from "@/components/coursebuilder/create/hooks/useCourseSessionLoader"
 import { useCanvasPersistence }    from "@/components/coursebuilder/create/hooks/useCanvasPersistence"
 import { useCourseStore }          from "@/components/coursebuilder/create/store/courseStore"
+import { useCanvasStore }          from "@/components/coursebuilder/create/store/canvasStore"
 import { DEFAULT_PAGE_DIMENSIONS } from "@/components/coursebuilder/create/types"
 import type { CourseId, SessionId } from "@/components/coursebuilder/create/types"
+import type { DragSourceData } from "@/components/coursebuilder/create/hooks/useCardDrop"
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type EditorMode = "curate" | "make" | "fix"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -40,10 +54,89 @@ interface CreateEditorLayoutProps {
   className?: string
 }
 
+// ─── Mode bar ─────────────────────────────────────────────────────────────────
+
+function ModeBar({
+  mode,
+  onChange,
+}: {
+  mode:     EditorMode
+  onChange: (m: EditorMode) => void
+}) {
+  return (
+    <div className="flex items-center shrink-0 h-9 px-3 border-b border-neutral-200 bg-white gap-1">
+      {(["curate", "make", "fix"] as EditorMode[]).map((m) => (
+        <button
+          key={m}
+          onClick={() => onChange(m)}
+          className={[
+            "px-3 py-1 rounded text-[11px] font-semibold capitalize transition-colors",
+            mode === m
+              ? "bg-neutral-900 text-white"
+              : "text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100",
+          ].join(" ")}
+        >
+          {m}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ─── Fix placeholder ──────────────────────────────────────────────────────────
+
+function FixView() {
+  return (
+    <div className="flex flex-col items-center justify-center flex-1 gap-3 text-neutral-400">
+      <Wrench size={24} strokeWidth={1.5} />
+      <p className="text-sm font-medium text-neutral-500">Fix mode</p>
+      <p className="text-xs max-w-xs text-center leading-relaxed">
+        Review and repair cards on the canvas. Coming soon.
+      </p>
+    </div>
+  )
+}
+
+// ─── Drag overlay card ───────────────────────────────────────────────────────
+
+function DragOverlayCard({ data }: { data: DragSourceData }) {
+  const title = data.title ?? (data.cardType as string)
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded border border-neutral-200 bg-white shadow-lg text-xs cursor-grabbing">
+      <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-500 uppercase font-semibold tracking-wide">
+        {data.cardType}
+      </span>
+      <span className="text-neutral-700 truncate max-w-[200px]">{title}</span>
+    </div>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function CreateEditorLayout({ courseId, className }: CreateEditorLayoutProps) {
   const typedCourseId    = (courseId ?? "") as CourseId
+
+  const [mode, setMode] = useState<EditorMode>("curate")
+
+  // Resizable file-browser sidebar
+  const [sidebarWidth, setSidebarWidth] = useState(288)
+  const sidebarWidthRef = useRef(sidebarWidth)
+  sidebarWidthRef.current = sidebarWidth
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const startX     = e.clientX
+    const startWidth = sidebarWidthRef.current
+    const onMove = (ev: MouseEvent) => {
+      setSidebarWidth(Math.max(160, Math.min(520, startWidth + ev.clientX - startX)))
+    }
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+    }
+    document.addEventListener("mousemove", onMove)
+    document.addEventListener("mouseup", onUp)
+  }, [])
 
   // Load sessions from Supabase whenever courseId changes
   const { loading } = useCourseSessionLoader(courseId)
@@ -68,14 +161,49 @@ export function CreateEditorLayout({ courseId, className }: CreateEditorLayoutPr
     }
   }, [activeSessionId, sessions, setActiveSession])
 
+  // Canvas store — needed to toggle mediaDragActive during drags
+  const setMediaDragActive = useCanvasStore((s) => s.setMediaDragActive)
+
+  // Track the active drag item for the DragOverlay
+  const [activeDragData, setActiveDragData] = useState<DragSourceData | null>(null)
+
   // dnd-kit sensors
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   )
 
-  const { onDragEnd } = useCardDrop()
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    const pointerHits = pointerWithin(args)
+    if (pointerHits.length > 0) return pointerHits
+    return rectIntersection(args)
+  }, [])
 
-  // Field values are now computed per-session inside CanvasVirtualizer
+  const { onDragEnd: onCardDrop } = useCardDrop()
+
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const source = event.active.data.current as DragSourceData | undefined
+      if (source?.type === "card") {
+        setActiveDragData(source)
+        setMediaDragActive(true)
+      }
+    },
+    [setMediaDragActive],
+  )
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setActiveDragData(null)
+      setMediaDragActive(false)
+      onCardDrop(event)
+    },
+    [onCardDrop, setMediaDragActive],
+  )
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragData(null)
+    setMediaDragActive(false)
+  }, [setMediaDragActive])
 
   if (loading) {
     return (
@@ -86,41 +214,74 @@ export function CreateEditorLayout({ courseId, className }: CreateEditorLayoutPr
   }
 
   return (
-    <DndContext id="course-editor-dnd" sensors={sensors} onDragEnd={onDragEnd}>
+    <DndContext
+      id="course-editor-dnd"
+      sensors={sensors}
+      collisionDetection={collisionDetection}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
       <div className={`flex flex-col w-full h-full overflow-hidden bg-neutral-100 ${className ?? ""}`}>
-        {/* Three-column layout — toolbar is now at the bottom of the canvas column */}
-        <div className="flex flex-1 min-h-0">
-          {/* Left sidebar — file browser */}
-          <div className="w-64 shrink-0 flex flex-col overflow-hidden">
-            <FilesBrowser />
+        {/* Top mode bar */}
+        <ModeBar mode={mode} onChange={setMode} />
+
+        {/* Mode bodies */}
+        {mode === "curate" && (
+          <div className="flex flex-1 min-h-0">
+            {/* Left sidebar — file browser (resizable) */}
+            <div style={{ width: sidebarWidth }} className="shrink-0 flex flex-col overflow-hidden">
+              <FilesBrowser />
+            </div>
+
+            {/* Resize handle */}
+            <div
+              className="w-1 bg-neutral-200 cursor-col-resize hover:bg-neutral-400 transition-colors shrink-0"
+              onMouseDown={handleResizeStart}
+            />
+
+            {/* Center — canvas viewport */}
+            <div className="flex-1 min-w-0 flex flex-col overflow-hidden bg-neutral-200">
+              {sessions.length > 0 ? (
+                <CanvasVirtualizer
+                  sessions={sessions}
+                  dims={DEFAULT_PAGE_DIMENSIONS}
+                />
+              ) : (
+                <EmptyState courseId={typedCourseId} />
+              )}
+            </div>
+
+            {/* Resize handle */}
+            <div className="w-px bg-neutral-200 cursor-col-resize hover:bg-neutral-400 transition-colors" />
+
+            {/* Right panel — layers */}
+            <div className="w-48 shrink-0 flex flex-col overflow-hidden">
+              <LayersPanel session={activeSession ?? undefined} />
+            </div>
           </div>
+        )}
 
-          {/* Resize handle */}
-          <div className="w-px bg-neutral-200 cursor-col-resize hover:bg-neutral-400 transition-colors" />
-
-          {/* Center — canvas viewport + bottom toolbar */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden bg-neutral-200">
-            {sessions.length > 0 ? (
-              <CanvasVirtualizer
-                sessions={sessions}
-                dims={DEFAULT_PAGE_DIMENSIONS}
-              />
-            ) : (
-              <EmptyState courseId={typedCourseId} />
-            )}
-            {/* Bottom toolbar */}
+        {mode === "make" && (
+          <div className="flex flex-1 min-h-0 flex-col">
+            <div className="flex flex-1 min-h-0">
+              <MakePanel />
+            </div>
             <ToolBar />
           </div>
+        )}
 
-          {/* Resize handle */}
-          <div className="w-px bg-neutral-200 cursor-col-resize hover:bg-neutral-400 transition-colors" />
-
-          {/* Right panel — layers */}
-          <div className="w-48 shrink-0 flex flex-col overflow-hidden">
-            <LayersPanel session={activeSession ?? undefined} />
+        {mode === "fix" && (
+          <div className="flex flex-1 min-h-0">
+            <FixView />
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Drag overlay — rendered on top of everything during a drag */}
+      <DragOverlay dropAnimation={null}>
+        {activeDragData && <DragOverlayCard data={activeDragData} />}
+      </DragOverlay>
     </DndContext>
   )
 }

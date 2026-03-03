@@ -37,13 +37,27 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError(error.message)
       setLoading(false)
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', authData.user.id)
+      .single()
+
+    const role = profile?.role ?? 'student'
+    if (role === 'teacher') {
+      router.push('/teacher')
+    } else if (role === 'admin') {
+      router.push('/admin')
     } else {
-      router.refresh()
+      router.push('/student')
     }
   }
 

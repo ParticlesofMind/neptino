@@ -31,7 +31,7 @@ export function PageNavStrip({ sessions }: { sessions: CourseSession[] }) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-1 w-14 shrink-0 bg-white border-l border-neutral-200 py-3">
+    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white border-l border-neutral-200 py-3">
       <NavBtn title="First page"    onClick={() => goTo(0)}>
         <ChevronsUp   size={13} strokeWidth={1.5} />
         <span className="text-[7px]">First</span>
