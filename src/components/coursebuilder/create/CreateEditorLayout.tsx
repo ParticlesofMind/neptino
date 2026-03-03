@@ -28,7 +28,6 @@ import {
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core"
 import { Wrench } from "lucide-react"
 
-import { ToolBar }           from "@/components/coursebuilder/create/toolbar/ToolBar"
 import { FilesBrowser }      from "@/components/coursebuilder/create/sidebar/FilesBrowser"
 import { MakePanel }         from "@/components/coursebuilder/create/sidebar/MakePanel"
 import { LayersPanel }       from "@/components/coursebuilder/create/layers/LayersPanel"
@@ -267,7 +266,6 @@ export function CreateEditorLayout({ courseId, className }: CreateEditorLayoutPr
             <div className="flex flex-1 min-h-0">
               <MakePanel />
             </div>
-            <ToolBar />
           </div>
         )}
 

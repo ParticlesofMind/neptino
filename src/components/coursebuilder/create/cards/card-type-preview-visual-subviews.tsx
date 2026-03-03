@@ -1,6 +1,64 @@
-import { Sparkles } from "lucide-react"
+"use client"
 
-export function AnimationPreview({ format, duration, fps }: { format: string; duration: string; fps: number }) {
+import dynamic from "next/dynamic"
+import { Sparkles } from "lucide-react"
+import {
+  LineChart, Line, BarChart, Bar, AreaChart, Area,
+  ScatterChart, Scatter, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer,
+} from "recharts"
+
+// Lottie player — SSR-safe
+const LottiePlayer = dynamic(() => import("lottie-react").then((m) => m.default), {
+  ssr: false,
+  loading: () => <div className="flex h-28 items-center justify-center bg-neutral-50 text-[11px] text-neutral-400">Loading…</div>,
+})
+
+// ─── Animation Preview ─────────────────────────────────────────────────────────
+
+interface AnimationPreviewProps {
+  format: string
+  duration: string
+  fps: number
+  url?: string
+  lottieData?: object
+}
+
+export function AnimationPreview({ format, duration, fps, url, lottieData }: AnimationPreviewProps) {
+  // If we have real Lottie data, render it
+  if (lottieData) {
+    return (
+      <div>
+        <div className="flex items-center justify-center bg-white border border-border overflow-hidden" style={{ height: 160 }}>
+          <LottiePlayer animationData={lottieData} loop autoplay style={{ height: 150, width: "100%" }} />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {format && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{format}</span>}
+          {duration && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{duration}</span>}
+          {fps > 0 && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{fps} fps</span>}
+        </div>
+      </div>
+    )
+  }
+
+  // If URL is a GIF
+  if (url && (format === "gif" || url.endsWith(".gif"))) {
+    return (
+      <div>
+        <div className="flex items-center justify-center border border-border overflow-hidden" style={{ height: 160 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt="Animation" className="max-h-full max-w-full object-contain" />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">GIF</span>
+          {duration && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{duration}</span>}
+        </div>
+      </div>
+    )
+  }
+
+  // Fallback: SVG blob visualization (original)
   const blobs = [
     { cx: 80, cy: 80, r: 38, delay: "0s", op: 0.22, dur: "2.8s" },
     { cx: 170, cy: 55, r: 28, delay: "0.4s", op: 0.38, dur: "2.8s" },
@@ -44,6 +102,8 @@ export function AnimationPreview({ format, duration, fps }: { format: string; du
   )
 }
 
+// ─── Map Preview ───────────────────────────────────────────────────────────────
+
 export function MapPreview({ lat, lng, zoom, layers }: { lat: number; lng: number; zoom: number; layers: string[] }) {
   const W = 380
   const H = 200
@@ -72,36 +132,147 @@ export function MapPreview({ lat, lng, zoom, layers }: { lat: number; lng: numbe
   )
 }
 
-export function ChartPreview({ chartType, xLabel, yLabel, source }: { chartType: string; xLabel: string; yLabel: string; source: string }) {
-  const vals = [-0.16, -0.08, -0.11, -0.17, -0.28, -0.33, -0.14, 0.02, 0.19, 0.32, 0.54, 0.62, 0.98, 1.02]
-  const W = 380
-  const H = 168
-  const pX = 36
-  const pY = 16
-  const iW = W - pX * 2
-  const iH = H - pY * 2 - 14
-  const minV = -0.5
-  const maxV = 1.25
-  const px = (i: number) => pX + (i / (vals.length - 1)) * iW
-  const py = (v: number) => pY + iH - ((v - minV) / (maxV - minV)) * iH
-  const linePath = vals.map((v, i) => `${i === 0 ? "M" : "L"}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(" ")
-  const areaPath = `${linePath} L${px(vals.length - 1).toFixed(1)},${(pY + iH).toFixed(1)} L${px(0).toFixed(1)},${(pY + iH).toFixed(1)}Z`
-  const zeroY = py(0)
+// ─── Chart Preview ─────────────────────────────────────────────────────────────
+
+type ChartData = Record<string, unknown>[]
+
+const CHART_COLORS = ["#3b82f6", "#8b5cf6", "#14b8a6", "#f59e0b", "#ef4444"]
+
+function parseChartData(content: { columns?: unknown; rows?: unknown; chartData?: unknown }): { data: ChartData; keys: string[]; labelKey: string } {
+  // If recharts-format chartData is provided
+  if (Array.isArray(content.chartData)) {
+    const sample = content.chartData[0] ?? {}
+    const keys = Object.keys(sample).filter((k) => typeof (sample as Record<string, unknown>)[k] === "number")
+    const labelKey = Object.keys(sample).find((k) => typeof (sample as Record<string, unknown>)[k] === "string") ?? keys[0]
+    return { data: content.chartData as ChartData, keys, labelKey }
+  }
+
+  // Convert columns + rows format
+  if (Array.isArray(content.columns) && Array.isArray(content.rows)) {
+    const columns = content.columns as string[]
+    const rows = content.rows as string[][]
+    const data: ChartData = rows.map((row) => {
+      const obj: Record<string, unknown> = {}
+      columns.forEach((col, i) => {
+        const val = row[i] ?? ""
+        obj[col] = i === 0 ? val : (isNaN(Number(val)) ? 0 : Number(val))
+      })
+      return obj
+    })
+    const keys = columns.slice(1)
+    const labelKey = columns[0]
+    return { data, keys, labelKey }
+  }
+
+  // Hardcoded fallback temperature data
+  const fallback = [-0.16, -0.08, -0.11, -0.17, -0.28, -0.33, -0.14, 0.02, 0.19, 0.32, 0.54, 0.62, 0.98, 1.02]
+  const data = fallback.map((v, i) => ({ Year: 1880 + i * 10, Value: v }))
+  return { data, keys: ["Value"], labelKey: "Year" }
+}
+
+export function ChartPreview({
+  chartType,
+  xLabel,
+  yLabel,
+  source,
+  columns,
+  rows,
+  chartData: rawChartData,
+  colorScheme,
+}: {
+  chartType: string
+  xLabel: string
+  yLabel: string
+  source: string
+  columns?: unknown
+  rows?: unknown
+  chartData?: unknown
+  colorScheme?: string
+}) {
+  const { data, keys, labelKey } = parseChartData({ columns, rows, chartData: rawChartData })
+
+  const colors = colorScheme === "Purple" ? ["#8b5cf6", "#a78bfa", "#c4b5fd"] :
+                 colorScheme === "Teal"   ? ["#14b8a6", "#2dd4bf", "#5eead4"] :
+                 colorScheme === "Warm"   ? ["#f59e0b", "#fbbf24", "#fcd34d"] :
+                 colorScheme === "Mono"   ? ["#1f2937", "#374151", "#4b5563"] :
+                 CHART_COLORS
+
+  const commonProps = {
+    data,
+    margin: { top: 4, right: 8, left: -16, bottom: 0 },
+  }
+
+  const renderChart = () => {
+    switch (chartType) {
+      case "bar":
+        return (
+          <BarChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+            <XAxis dataKey={labelKey} tick={{ fontSize: 9 }} />
+            <YAxis tick={{ fontSize: 9 }} />
+            <Tooltip contentStyle={{ fontSize: 10 }} />
+            {keys.map((k, i) => <Bar key={k} dataKey={k} fill={colors[i % colors.length]} />)}
+          </BarChart>
+        )
+      case "area":
+        return (
+          <AreaChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+            <XAxis dataKey={labelKey} tick={{ fontSize: 9 }} />
+            <YAxis tick={{ fontSize: 9 }} />
+            <Tooltip contentStyle={{ fontSize: 10 }} />
+            {keys.map((k, i) => (
+              <Area key={k} type="monotone" dataKey={k} stroke={colors[i % colors.length]} fill={colors[i % colors.length] + "22"} />
+            ))}
+          </AreaChart>
+        )
+      case "scatter":
+        return (
+          <ScatterChart margin={commonProps.margin}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+            <XAxis dataKey={labelKey} tick={{ fontSize: 9 }} />
+            <YAxis dataKey={keys[0]} tick={{ fontSize: 9 }} />
+            <Tooltip contentStyle={{ fontSize: 10 }} />
+            <Scatter data={data} fill={colors[0]} />
+          </ScatterChart>
+        )
+      case "pie":
+        return (
+          <PieChart>
+            <Pie
+              data={data.map((d) => ({ name: String(d[labelKey] ?? ""), value: Number(d[keys[0]] ?? 0) }))}
+              cx="50%" cy="50%" outerRadius={60} dataKey="value"
+              label={({ percent }: { percent?: number }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
+              labelLine={false}
+            >
+              {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+            </Pie>
+            <Tooltip contentStyle={{ fontSize: 10 }} />
+          </PieChart>
+        )
+      default: // line
+        return (
+          <LineChart {...commonProps}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+            <XAxis dataKey={labelKey} tick={{ fontSize: 9 }} />
+            <YAxis tick={{ fontSize: 9 }} />
+            <Tooltip contentStyle={{ fontSize: 10 }} />
+            {keys.map((k, i) => (
+              <Line key={k} type="monotone" dataKey={k} stroke={colors[i % colors.length]} dot={false} strokeWidth={2} />
+            ))}
+          </LineChart>
+        )
+    }
+  }
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }} className="select-none">
-        <line x1={pX} y1={zeroY} x2={W - pX} y2={zeroY} stroke="hsl(var(--border))" strokeWidth={1} strokeDasharray="4 3" />
-        {[-0.4, 0, 0.4, 0.8, 1.2].map((v) => (
-          <g key={v}>
-            <line x1={pX - 4} y1={py(v)} x2={pX} y2={py(v)} stroke="hsl(var(--border))" strokeWidth={0.8} />
-            <text x={pX - 6} y={py(v) + 4} textAnchor="end" fontSize={9} fill="hsl(var(--muted-foreground)/0.7)">{v > 0 ? `+${v}` : v}</text>
-          </g>
-        ))}
-        <path d={areaPath} fill="hsl(var(--primary)/0.08)" />
-        <path d={linePath} fill="none" stroke="hsl(var(--primary))" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        {vals.map((v, i) => <circle key={i} cx={px(i)} cy={py(v)} r={2.5} fill="hsl(var(--primary))" />)}
-      </svg>
+      <div style={{ height: 150 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {renderChart() as any}
+        </ResponsiveContainer>
+      </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground capitalize">{chartType}</span>
         {xLabel && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">x: {xLabel}</span>}
@@ -112,9 +283,84 @@ export function ChartPreview({ chartType, xLabel, yLabel, source }: { chartType:
   )
 }
 
-export function DiagramPreview({ diagramType, nodes, edges }: { diagramType: string; nodes: number; edges: number }) {
+// ─── Diagram Preview ───────────────────────────────────────────────────────────
+
+interface DiagramNode {
+  id: string
+  label: string
+  x: number
+  y: number
+  shape?: string
+}
+
+interface DiagramEdge {
+  from: string
+  to: string
+}
+
+export function DiagramPreview({
+  diagramType,
+  nodes: nodesRaw,
+  edges: edgesRaw,
+}: {
+  diagramType: string
+  nodes?: unknown
+  edges?: unknown
+}) {
   const W = 380
   const H = 228
+
+  // Try to use live node/edge data
+  const livNodes = Array.isArray(nodesRaw) ? nodesRaw as DiagramNode[] : null
+  const livEdges = Array.isArray(edgesRaw) ? edgesRaw as DiagramEdge[] : null
+
+  if (livNodes && livNodes.length > 0) {
+    const byId = (id: string) => livNodes.find((n) => n.id === id)
+    const NODE_W = 90
+    const NODE_H = 32
+
+    return (
+      <div>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 180 }} className="select-none">
+          <defs>
+            <marker id="dg-arrow-prev" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L7,3 Z" fill="hsl(var(--muted-foreground)/0.45)" />
+            </marker>
+          </defs>
+          {(livEdges ?? []).map((edge, i) => {
+            const a = byId(edge.from)
+            const b = byId(edge.to)
+            if (!a || !b) return null
+            return (
+              <line
+                key={i}
+                x1={a.x + NODE_W / 2} y1={a.y + NODE_H / 2}
+                x2={b.x + NODE_W / 2} y2={b.y + NODE_H / 2}
+                stroke="hsl(var(--muted-foreground)/0.35)"
+                strokeWidth={1.4}
+                markerEnd="url(#dg-arrow-prev)"
+              />
+            )
+          })}
+          {livNodes.map((n) => (
+            <g key={n.id}>
+              <rect x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={6} fill="hsl(var(--background))" stroke="hsl(var(--border))" strokeWidth={1.2} />
+              <text x={n.x + NODE_W / 2} y={n.y + NODE_H / 2 + 4} textAnchor="middle" fontSize={9.5} fill="hsl(var(--foreground)/0.85)">
+                {n.label.length > 12 ? n.label.slice(0, 11) + "…" : n.label}
+              </text>
+            </g>
+          ))}
+        </svg>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground capitalize">{diagramType}</span>
+          <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{livNodes.length} nodes</span>
+          {livEdges && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{livEdges.length} edges</span>}
+        </div>
+      </div>
+    )
+  }
+
+  // Fallback: hardcoded Krebs cycle
   const nodeData = [
     { id: "a", label: "Acetyl CoA", x: 190, y: 28, w: 94, h: 26 },
     { id: "b", label: "Citrate", x: 320, y: 80, w: 72, h: 26 },
@@ -125,7 +371,7 @@ export function DiagramPreview({ diagramType, nodes, edges }: { diagramType: str
     { id: "g", label: "Oxaloacetate", x: 56, y: 80, w: 96, h: 26 },
   ]
   const edgePairs: [string, string][] = [["g", "a"], ["a", "b"], ["b", "c"], ["c", "d"], ["d", "e"], ["e", "f"], ["f", "g"]]
-  const byId = (id: string) => nodeData.find((n) => n.id === id)!
+  const byId2 = (id: string) => nodeData.find((n) => n.id === id)!
 
   return (
     <div>
@@ -136,8 +382,8 @@ export function DiagramPreview({ diagramType, nodes, edges }: { diagramType: str
           </marker>
         </defs>
         {edgePairs.map(([from, to], i) => {
-          const a = byId(from)
-          const b = byId(to)
+          const a = byId2(from)
+          const b = byId2(to)
           return <line key={i} x1={a.x} y1={a.y + a.h / 2} x2={b.x} y2={b.y + b.h / 2} stroke="hsl(var(--muted-foreground)/0.35)" strokeWidth={1.4} markerEnd="url(#dg-arrow)" />
         })}
         {nodeData.map((n) => (
@@ -149,12 +395,12 @@ export function DiagramPreview({ diagramType, nodes, edges }: { diagramType: str
       </svg>
       <div className="mt-3 flex flex-wrap gap-2">
         <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground capitalize">{diagramType}</span>
-        {nodes > 0 && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{nodes} nodes</span>}
-        {edges > 0 && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{edges} edges</span>}
       </div>
     </div>
   )
 }
+
+// ─── Rich Sim Placeholder ──────────────────────────────────────────────────────
 
 export function RichSimPlaceholder() {
   return (

@@ -118,7 +118,8 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
       const format   = typeof content["format"]   === "string" ? content["format"]   : ""
       const duration = typeof content["duration"] === "string" ? content["duration"] : ""
       const fps      = typeof content["fps"]      === "number" ? content["fps"]      : 0
-      return <AnimationPreview format={format} duration={duration} fps={fps} />
+      const animUrl  = typeof content["url"]      === "string" ? content["url"]      : undefined
+      return <AnimationPreview format={format} duration={duration} fps={fps} url={animUrl} />
     }
     case "map": {
       const lat    = typeof content["lat"]    === "number" ? content["lat"]    : 20
@@ -128,17 +129,33 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
       return <MapPreview lat={lat} lng={lng} zoom={zoom} layers={layers} />
     }
     case "chart": {
-      const chartType = typeof content["chartType"] === "string" ? content["chartType"] : "line"
-      const xLabel    = typeof content["xLabel"]    === "string" ? content["xLabel"]    : ""
-      const yLabel    = typeof content["yLabel"]    === "string" ? content["yLabel"]    : ""
-      const source    = typeof content["source"]    === "string" ? content["source"]    : ""
-      return <ChartPreview chartType={chartType} xLabel={xLabel} yLabel={yLabel} source={source} />
+      const chartType   = typeof content["chartType"]   === "string" ? content["chartType"]   : "line"
+      const xLabel      = typeof content["xLabel"]      === "string" ? content["xLabel"]      : ""
+      const yLabel      = typeof content["yLabel"]      === "string" ? content["yLabel"]      : ""
+      const source      = typeof content["source"]      === "string" ? content["source"]      : ""
+      const colorScheme = typeof content["colorScheme"] === "string" ? content["colorScheme"] : undefined
+      return (
+        <ChartPreview
+          chartType={chartType}
+          xLabel={xLabel}
+          yLabel={yLabel}
+          source={source}
+          columns={content["columns"]}
+          rows={content["rows"]}
+          chartData={content["chartData"]}
+          colorScheme={colorScheme}
+        />
+      )
     }
     case "diagram": {
       const diagramType = typeof content["diagramType"] === "string" ? content["diagramType"] : "flowchart"
-      const nodes       = typeof content["nodes"]       === "number" ? content["nodes"]       : 7
-      const edges       = typeof content["edges"]       === "number" ? content["edges"]       : 7
-      return <DiagramPreview diagramType={diagramType} nodes={nodes} edges={edges} />
+      return (
+        <DiagramPreview
+          diagramType={diagramType}
+          nodes={content["nodes"]}
+          edges={content["edges"]}
+        />
+      )
     }
     case "model-3d":
       return <Model3DViewer />

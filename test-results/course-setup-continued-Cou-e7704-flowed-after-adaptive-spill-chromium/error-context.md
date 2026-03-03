@@ -146,43 +146,43 @@
                 - generic [ref=e189]:
                   - generic [ref=e191]: Independent
                   - generic [ref=e193]: bjlaubacher
-                - generic [ref=e197]: Drop cards here
-                - generic [ref=e200]: "1"
-            - generic [ref=e201]:
-              - button "First" [ref=e202]:
-                - img [ref=e203]
-                - generic [ref=e206]: First
-              - button "Prev" [ref=e207]:
-                - img [ref=e208]
-                - generic [ref=e210]: Prev
-              - generic [ref=e211]:
-                - generic [ref=e212]: "1"
-                - generic [ref=e213]: / 1
-              - button "Next" [ref=e214]:
-                - img [ref=e215]
-                - generic [ref=e217]: Next
-              - button "Last" [ref=e218]:
-                - img [ref=e219]
-                - generic [ref=e222]: Last
-          - complementary [ref=e225]:
-            - generic [ref=e226]:
-              - button "Layers" [ref=e227]:
-                - img [ref=e228]
+                - generic [ref=e199]: Drop cards here
+                - generic [ref=e202]: "1"
+            - generic [ref=e203]:
+              - button "First" [ref=e204]:
+                - img [ref=e205]
+                - generic [ref=e208]: First
+              - button "Prev" [ref=e209]:
+                - img [ref=e210]
+                - generic [ref=e212]: Prev
+              - generic [ref=e213]:
+                - generic [ref=e214]: "1"
+                - generic [ref=e215]: / 1
+              - button "Next" [ref=e216]:
+                - img [ref=e217]
+                - generic [ref=e219]: Next
+              - button "Last" [ref=e220]:
+                - img [ref=e221]
+                - generic [ref=e224]: Last
+          - complementary [ref=e227]:
+            - generic [ref=e228]:
+              - button "Layers" [ref=e229]:
+                - img [ref=e230]
                 - text: Layers
-              - button "Navigation" [ref=e235]:
-                - img [ref=e236]
+              - button "Navigation" [ref=e237]:
+                - img [ref=e238]
                 - text: Navigation
-            - generic [ref=e238]:
-              - paragraph [ref=e239]: Overflow Validation Lesson
-              - paragraph [ref=e240]: Session 1
-              - paragraph [ref=e241]: "Dropped assets: 0"
-            - paragraph [ref=e243]: No blocks defined.
-      - status [ref=e244]
-  - generic [ref=e245]:
-    - img [ref=e247]
-    - button "Open Tanstack query devtools" [ref=e295] [cursor=pointer]:
-      - img [ref=e296]
-  - button "Open Next.js Dev Tools" [ref=e349] [cursor=pointer]:
-    - img [ref=e350]
-  - alert [ref=e353]
+            - generic [ref=e240]:
+              - paragraph [ref=e241]: Overflow Validation Lesson
+              - paragraph [ref=e242]: Session 1
+              - paragraph [ref=e243]: "Dropped assets: 0"
+            - paragraph [ref=e245]: No blocks defined.
+      - status [ref=e246]
+  - generic [ref=e247]:
+    - img [ref=e249]
+    - button "Open Tanstack query devtools" [ref=e297] [cursor=pointer]:
+      - img [ref=e298]
+  - button "Open Next.js Dev Tools" [ref=e351] [cursor=pointer]:
+    - img [ref=e352]
+  - alert [ref=e355]
 ```
