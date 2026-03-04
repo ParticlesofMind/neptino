@@ -39,7 +39,7 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
       const [courseResult, lessonsResult] = await Promise.all([
         selectCourseById<Record<string, unknown>>(
           courseId,
-          "course_name, institution, generation_settings, course_layout, curriculum_data, schedule_settings",
+          "course_name, institution, generation_settings, course_layout, curriculum_data, schedule_settings, template_settings",
         ),
         selectLessonsByCourseId(courseId),
       ])

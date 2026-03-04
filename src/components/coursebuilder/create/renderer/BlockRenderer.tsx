@@ -45,6 +45,11 @@ interface BlockRendererProps {
   data?:        Record<string, Record<string, unknown>>
   /** Which body blocks to render on this page, ordered. Resolved from the session template type. Renders empty when unset — no hardcoded default. */
   blockKeys?:   BlockKey[]
+  /**
+   * Per-block field visibility flags sourced from the active template's fieldState.
+   * Forwarded verbatim to each block component via BlockRenderProps.fieldEnabled.
+   */
+  fieldEnabled?: Partial<Record<string, Record<string, boolean>>>
   /** Override the registry (useful for testing). */
   registry?:    Partial<BlockRegistry>
 }
@@ -57,6 +62,7 @@ export function BlockRenderer({
   fieldValues,
   data = {},
   blockKeys,
+  fieldEnabled,
   registry,
 }: BlockRendererProps) {
   const resolvedRegistry: BlockRegistry = { ...BLOCK_REGISTRY, ...registry }
@@ -72,7 +78,8 @@ export function BlockRenderer({
           canvasId,
           blockKey: key,
           fieldValues,
-          data:     data[key],
+          data:        data[key],
+          fieldEnabled,
         }
         return <BlockComponent key={key} {...props} />
       })}

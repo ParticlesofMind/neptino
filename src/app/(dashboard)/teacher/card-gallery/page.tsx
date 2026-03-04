@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import type { LucideIcon } from "lucide-react"
-import { AudioLines, Box, Database, FileText, Film, Image as ImageIcon, Layers, LineChart, Map as MapIcon, Maximize2, Network, Pause, Play, PlayCircle, Sparkles, Table2, Volume2, VolumeX } from "lucide-react"
+import { AudioLines, Bot, Box, Database, FileText, Film, Gamepad2, Image as ImageIcon, Layers, LineChart, Map as MapIcon, Maximize2, Network, Pause, Play, PlayCircle, Sparkles, Table2, Volume2, VolumeX } from "lucide-react"
 
 const Model3DViewer = dynamic(
   () => import("@/components/coursebuilder/model-3d-viewer").then((m) => m.Model3DViewer),
@@ -48,6 +48,8 @@ const CARD_TYPE_META: Record<CardType, CardTypeMeta> = {
   "rich-sim":   { label: "Simulation",  icon: Sparkles   },
   "village-3d": { label: "3D Scene",   icon: Box        },
   interactive:  { label: "Interactive", icon: Sparkles   },
+  games:        { label: "Game",        icon: Gamepad2   },
+  chat:         { label: "AI Chat",     icon: Bot        },
 }
 
 const BAR_COUNT = 36

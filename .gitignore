@@ -47,3 +47,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+supabase/migrations/20260304000000_add_name_to_templates.sql
+supabase/migrations/20260304000001_enable_rls_templates.sql

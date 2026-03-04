@@ -4,21 +4,23 @@
  * Make Panel — redesigned
  *
  * Three-column layout:
- *   Left nav  (w-56) — grouped card type list with search
+ *   Left nav  (w-60) — grouped card type list with search + filters
  *   Editor    (flex-1) — per-type rich editor (EditorShell)
- *   Preview   (w-80) — live CardTypePreview + quick metadata
+ *   Preview   (w-80, collapsible) — live CardTypePreview
  *
  * Motion toolbar strip rendered at bottom for animation-capable types.
  */
 
 import { useEffect, useState } from "react"
+import { PanelRightClose, PanelRight, Plus } from "lucide-react"
 import type { CardType } from "../types"
-import { CardTypePreview } from "../cards/CardTypePreview"
-import { CARD_TYPE_META } from "../cards/CardTypePreview"
+import { CardTypePreview, CARD_TYPE_META } from "../cards/CardTypePreview"
 import { MakeMotionToolbar } from "./make-motion-toolbar"
 import { buildStudioCardContent, getStudioDefaults } from "./make-studio-tools"
 import { EditorShell } from "./editors/EditorShell"
 import { CARD_SPECS, GROUPS, SAMPLE_CONTENT } from "./make-panel-data"
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 function isMotionCard(cardType: CardType): boolean {
   return cardType === "animation" || cardType === "video" || cardType === "rich-sim"
@@ -31,20 +33,21 @@ function easingToCss(easing: string): string {
 
 function presetToKeyframes(preset: string): string {
   const map: Record<string, string> = {
-    "fade-up": "makeFadeUp",
-    "fade-down": "makeFadeDown",
-    "fade-left": "makeFadeLeft",
-    "fade-right": "makeFadeRight",
-    "zoom-in": "makeZoomIn",
-    "zoom-out": "makeZoomOut",
-    "flip-x": "makeFlipX",
-    "flip-y": "makeFlipY",
-    bounce: "makeBounce",
-    pulse: "makePulse",
-    shake: "makeShake",
-    rotate: "makeRotate",
+    "fade-up": "makeFadeUp", "fade-down": "makeFadeDown",
+    "fade-left": "makeFadeLeft", "fade-right": "makeFadeRight",
+    "zoom-in": "makeZoomIn", "zoom-out": "makeZoomOut",
+    "flip-x": "makeFlipX", "flip-y": "makeFlipY",
+    bounce: "makeBounce", pulse: "makePulse", shake: "makeShake", rotate: "makeRotate",
   }
   return map[preset] ?? "makeFadeUp"
+}
+
+// ─── Group accent colours ─────────────────────────────────────────────────────
+
+const GROUP_ACCENT: Record<string, { icon: string; pill: string; pillActive: string; border: string }> = {
+  media:       { icon: "text-[#4a94ff]", pill: "text-[#4a94ff]", pillActive: "bg-[#4a94ff] text-white", border: "border-[#4a94ff]/20 bg-[#4a94ff]/5" },
+  data:        { icon: "text-[#00ccb3]", pill: "text-[#00ccb3]", pillActive: "bg-[#00ccb3] text-white", border: "border-[#00ccb3]/20 bg-[#00ccb3]/5" },
+  interactive: { icon: "text-violet-500", pill: "text-violet-600", pillActive: "bg-violet-500 text-white", border: "border-violet-200 bg-violet-50" },
 }
 
 // ─── Preview Panel ─────────────────────────────────────────────────────────────
@@ -52,23 +55,26 @@ function presetToKeyframes(preset: string): string {
 function PreviewPanel({
   cardType,
   content,
+  onClose,
 }: {
   cardType: CardType
   content: Record<string, unknown>
+  onClose: () => void
 }) {
   const meta = CARD_TYPE_META[cardType]
+  const spec = CARD_SPECS.find((s) => s.cardType === cardType)
   const cardContent = buildStudioCardContent(cardType, content)
   const [playbackToken, setPlaybackToken] = useState(0)
 
-  const autoplay = typeof cardContent.autoplay === "boolean" ? cardContent.autoplay : true
-  const loop = typeof cardContent.loop === "boolean" ? cardContent.loop : true
-  const preset = typeof cardContent.animationPreset === "string" ? cardContent.animationPreset : "fade-up"
-  const easing = typeof cardContent.animationEasing === "string" ? cardContent.animationEasing : "ease-in-out"
+  const autoplay  = typeof cardContent.autoplay  === "boolean" ? cardContent.autoplay  : true
+  const loop      = typeof cardContent.loop       === "boolean" ? cardContent.loop      : true
+  const preset    = typeof cardContent.animationPreset    === "string" ? cardContent.animationPreset    : "fade-up"
+  const easing    = typeof cardContent.animationEasing    === "string" ? cardContent.animationEasing    : "ease-in-out"
   const durationMs = typeof cardContent.animationDurationMs === "number" ? cardContent.animationDurationMs : 1200
-  const delayMs = typeof cardContent.animationDelayMs === "number" ? cardContent.animationDelayMs : 0
-  const animationNonce = typeof cardContent.animationNonce === "number" ? cardContent.animationNonce : 0
+  const delayMs   = typeof cardContent.animationDelayMs   === "number" ? cardContent.animationDelayMs   : 0
+  const animationNonce    = typeof cardContent.animationNonce    === "number" ? cardContent.animationNonce    : 0
   const scrubEnabled = typeof cardContent.animationScrubEnabled === "boolean" ? cardContent.animationScrubEnabled : false
-  const scrubMs = typeof cardContent.animationScrubMs === "number" ? cardContent.animationScrubMs : 0
+  const scrubMs   = typeof cardContent.animationScrubMs   === "number" ? cardContent.animationScrubMs   : 0
 
   useEffect(() => {
     if (!isMotionCard(cardType)) return
@@ -98,12 +104,29 @@ function PreviewPanel({
       }
     : undefined
 
+  const accent = GROUP_ACCENT[spec?.group ?? "media"]
+
   return (
     <aside className="flex w-80 shrink-0 flex-col overflow-hidden border-l border-neutral-200 bg-white">
       {/* Preview header */}
-      <div className="shrink-0 border-b border-neutral-100 px-4 py-2.5">
-        <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Live preview</p>
-        <p className="mt-0.5 text-[12px] font-semibold text-neutral-800">{meta.label}</p>
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-neutral-100 px-4 py-2.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={["flex h-6 w-6 shrink-0 items-center justify-center rounded-md", accent.border].join(" ")}>
+            <meta.icon size={12} className={accent.icon} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Live preview</p>
+            <p className="text-[12px] font-semibold text-neutral-800 truncate">{meta.label}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          title="Hide preview"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+        >
+          <PanelRightClose size={15} />
+        </button>
       </div>
 
       {/* Preview body */}
@@ -113,33 +136,36 @@ function PreviewPanel({
         </div>
       </div>
 
-      {/* Quick info */}
-      <div className="shrink-0 border-t border-neutral-100 bg-neutral-50 px-4 py-3 space-y-2">
-        <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Card info</p>
+      {/* Card info footer */}
+      <div className="shrink-0 border-t border-neutral-100 bg-neutral-50/80 px-4 py-3">
+        <p className="mb-2 text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Card info</p>
         <div className="space-y-1">
           {Boolean(content.title) && (
             <div className="flex gap-2 text-[11px]">
-              <span className="shrink-0 text-neutral-400 w-16">Title</span>
+              <span className="shrink-0 w-16 text-neutral-400">Title</span>
               <span className="text-neutral-700 truncate">{String(content.title)}</span>
             </div>
           )}
           {Boolean(content.readingLevel) && (
             <div className="flex gap-2 text-[11px]">
-              <span className="shrink-0 text-neutral-400 w-16">Level</span>
+              <span className="shrink-0 w-16 text-neutral-400">Level</span>
               <span className="text-neutral-700">{String(content.readingLevel)}</span>
             </div>
           )}
           {Number(content.durationMinutes) > 0 && (
             <div className="flex gap-2 text-[11px]">
-              <span className="shrink-0 text-neutral-400 w-16">Duration</span>
+              <span className="shrink-0 w-16 text-neutral-400">Duration</span>
               <span className="text-neutral-700">{Number(content.durationMinutes)} min</span>
             </div>
           )}
           {Boolean(content.attribution) && (
             <div className="flex gap-2 text-[11px]">
-              <span className="shrink-0 text-neutral-400 w-16">Source</span>
+              <span className="shrink-0 w-16 text-neutral-400">Source</span>
               <span className="text-neutral-700 truncate">{String(content.attribution)}</span>
             </div>
+          )}
+          {!content.title && !content.readingLevel && !content.durationMinutes && !content.attribution && (
+            <p className="text-[11px] italic text-neutral-400">Fill in the editor to populate card info.</p>
           )}
         </div>
       </div>
@@ -169,6 +195,7 @@ export function MakePanel() {
   const [selected, setSelected] = useState<CardType>("text")
   const [activeGroup, setActiveGroup] = useState<"all" | "media" | "data" | "interactive">("all")
   const [contentByType, setContentByType] = useState<Partial<Record<CardType, Record<string, unknown>>>>({})
+  const [showPreview, setShowPreview] = useState(true)
 
   // Seed defaults + sample content on first select
   useEffect(() => {
@@ -191,7 +218,6 @@ export function MakePanel() {
     }))
   }
 
-  // Filtered card specs
   const filtered = CARD_SPECS.filter((spec) => {
     const matchesGroup = activeGroup === "all" || spec.group === activeGroup
     const q = search.toLowerCase()
@@ -205,104 +231,163 @@ export function MakePanel() {
   })).filter((g) => g.items.length > 0)
 
   const meta = CARD_TYPE_META[selected]
+  const selectedSpec = CARD_SPECS.find((s) => s.cardType === selected)
+  const accent = GROUP_ACCENT[selectedSpec?.group ?? "media"]
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-neutral-50">
+
       {/* ── Left nav ─────────────────────────────────────────────────────────── */}
-      <div className="flex w-56 shrink-0 flex-col overflow-hidden border-r border-neutral-200 bg-white">
-        {/* Search + filters */}
-        <div className="shrink-0 space-y-2 border-b border-neutral-100 px-3 pt-3 pb-2">
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Card types</p>
+      <div className="flex w-60 shrink-0 flex-col overflow-hidden border-r border-neutral-200 bg-white">
+
+        {/* Nav header */}
+        <div className="shrink-0 px-4 pt-4 pb-3 border-b border-neutral-100">
+          <p className="text-[11px] font-bold tracking-tight text-neutral-900">Card library</p>
+          <p className="text-[10px] text-neutral-400 mt-0.5">Choose a type to configure</p>
+        </div>
+
+        {/* Search */}
+        <div className="shrink-0 px-3 pt-2.5 pb-2">
           <input
             type="search"
-            placeholder="Search…"
+            placeholder="Search card types…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] outline-none focus:border-neutral-400 placeholder:text-neutral-400"
+            className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-[12px] text-neutral-700 outline-none transition-colors focus:border-[#4a94ff]/50 focus:bg-white focus:ring-1 focus:ring-[#4a94ff]/10 placeholder:text-neutral-400"
           />
         </div>
 
-        {/* Group pills */}
-        <div className="flex shrink-0 flex-wrap gap-1 border-b border-neutral-100 px-3 py-2">
-          {(["all", "media", "data", "interactive"] as const).map((g) => (
-            <button
-              key={g}
-              onClick={() => setActiveGroup(g)}
-              className={[
-                "px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
-                activeGroup === g
-                  ? "bg-neutral-900 text-white"
-                  : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200",
-              ].join(" ")}
-            >
-              {g === "all" ? "All" : g === "data" ? "Data" : g === "interactive" ? "Interactive" : "Media"}
-            </button>
-          ))}
+        {/* Group filter pills */}
+        <div className="shrink-0 flex gap-1 px-3 pb-2.5">
+          {(["all", "media", "data", "interactive"] as const).map((g) => {
+            const isActive = activeGroup === g
+            const groupAccent = g !== "all" ? GROUP_ACCENT[g] : null
+            return (
+              <button
+                key={g}
+                onClick={() => setActiveGroup(g)}
+                className={[
+                  "flex-1 rounded-md py-1 text-[9px] font-bold uppercase tracking-wider transition-all",
+                  isActive
+                    ? groupAccent ? groupAccent.pillActive : "bg-neutral-900 text-white"
+                    : groupAccent ? `bg-neutral-100 ${groupAccent.pill} hover:opacity-80` : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200",
+                ].join(" ")}
+              >
+                {g === "all" ? "All" : g === "data" ? "Data" : g === "interactive" ? "Live" : "Media"}
+              </button>
+            )
+          })}
         </div>
 
         {/* Card type list */}
         <div className="flex-1 overflow-y-auto">
-          {grouped.map((group) => (
-            <div key={group.id}>
-              <p className="px-3 pb-1 pt-3 text-[9px] font-semibold uppercase tracking-widest text-neutral-400">
-                {group.label}
-              </p>
-              {group.items.map((spec) => {
-                const isActive = spec.cardType === selected
-                return (
-                  <button
-                    key={spec.cardType}
-                    onClick={() => setSelected(spec.cardType)}
-                    className={[
-                      "flex w-full items-start gap-2 border-l-2 px-3 py-2 text-left transition-colors",
-                      isActive
-                        ? "border-neutral-900 bg-neutral-100"
-                        : "border-transparent hover:bg-neutral-50",
-                    ].join(" ")}
-                  >
-                    <spec.Icon
-                      size={13}
-                      className={isActive ? "mt-0.5 shrink-0 text-neutral-900" : "mt-0.5 shrink-0 text-neutral-400"}
-                    />
-                    <div className="min-w-0">
-                      <p className={[
-                        "text-[12px] font-medium leading-tight",
-                        isActive ? "text-neutral-900" : "text-neutral-700",
+          {grouped.map((group) => {
+            const ga = GROUP_ACCENT[group.id]
+            return (
+              <div key={group.id}>
+                {/* Group header */}
+                <div className="flex items-center gap-1.5 px-4 pb-1 pt-3">
+                  <div className={["h-1.5 w-1.5 rounded-full", group.id === "media" ? "bg-[#4a94ff]" : group.id === "data" ? "bg-[#00ccb3]" : "bg-violet-400"].join(" ")} />
+                  <p className={["text-[9px] font-bold uppercase tracking-widest", ga.pill].join(" ")}>
+                    {group.label}
+                  </p>
+                </div>
+
+                {/* Items */}
+                {group.items.map((spec) => {
+                  const isActive = spec.cardType === selected
+                  return (
+                    <button
+                      key={spec.cardType}
+                      onClick={() => setSelected(spec.cardType)}
+                      className={[
+                        "flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all mx-auto",
+                        isActive
+                          ? ""
+                          : "hover:bg-neutral-50",
+                      ].join(" ")}
+                    >
+                      {/* Active indicator */}
+                      <div className={[
+                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-all",
+                        isActive ? [ga.border, "shadow-sm"].join(" ") : "bg-neutral-100",
                       ].join(" ")}>
-                        {spec.label}
-                      </p>
-                      <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-neutral-400">
-                        {spec.description}
-                      </p>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          ))}
+                        <spec.Icon
+                          size={12}
+                          className={isActive ? ga.icon : "text-neutral-400"}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={[
+                          "text-[12px] font-semibold leading-tight",
+                          isActive ? "text-neutral-900" : "text-neutral-600",
+                        ].join(" ")}>
+                          {spec.label}
+                        </p>
+                        <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-neutral-400">
+                          {spec.description}
+                        </p>
+                      </div>
+                      {isActive && (
+                        <div className={["mt-1 h-1.5 w-1.5 shrink-0 rounded-full", group.id === "media" ? "bg-[#4a94ff]" : group.id === "data" ? "bg-[#00ccb3]" : "bg-violet-400"].join(" ")} />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          })}
+
           {grouped.length === 0 && (
-            <p className="px-3 py-4 text-[11px] italic text-neutral-400">No results.</p>
+            <div className="px-4 py-8 text-center">
+              <p className="text-[12px] text-neutral-400">No card types match your search.</p>
+            </div>
           )}
         </div>
       </div>
 
       {/* ── Main area ─────────────────────────────────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+
         {/* Editor header */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 bg-white px-4 py-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
-            <meta.icon size={15} className="shrink-0 text-neutral-500" />
+            {/* Icon badge */}
+            <div className={["flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", accent.border].join(" ")}>
+              <meta.icon size={16} className={accent.icon} />
+            </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-neutral-900 truncate">{meta.label} editor</p>
+              <p className="text-[13px] font-bold text-neutral-900 truncate">{meta.label}</p>
+              <p className="text-[10px] text-neutral-400 capitalize">{selectedSpec?.group ?? "media"} card</p>
             </div>
           </div>
-          <button
-            type="button"
-            title="Add to canvas — drag from the Curate panel, or wire up drop action here"
-            className="shrink-0 border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:opacity-90"
-          >
-            Add to canvas
-          </button>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Preview toggle */}
+            <button
+              type="button"
+              onClick={() => setShowPreview((v) => !v)}
+              title={showPreview ? "Hide preview" : "Show preview"}
+              className={[
+                "flex h-8 w-8 items-center justify-center rounded-lg border transition-all",
+                showPreview
+                  ? "border-neutral-200 bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                  : "border-[#4a94ff]/30 bg-[#4a94ff]/5 text-[#4a94ff] hover:bg-[#4a94ff]/10",
+              ].join(" ")}
+            >
+              {showPreview ? <PanelRightClose size={15} /> : <PanelRight size={15} />}
+            </button>
+
+            {/* Add to canvas */}
+            <button
+              type="button"
+              title="Add to canvas"
+              className="flex items-center gap-1.5 rounded-lg bg-[#4a94ff] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-all hover:bg-[#3d7de0] active:scale-[0.98]"
+            >
+              <Plus size={13} />
+              Add to canvas
+            </button>
+          </div>
         </div>
 
         {/* Editor body + preview */}
@@ -316,8 +401,14 @@ export function MakePanel() {
             />
           </div>
 
-          {/* Live preview */}
-          <PreviewPanel cardType={selected} content={selectedContent} />
+          {/* Live preview — collapsible */}
+          {showPreview && (
+            <PreviewPanel
+              cardType={selected}
+              content={selectedContent}
+              onClose={() => setShowPreview(false)}
+            />
+          )}
         </div>
 
         {/* Motion toolbar */}

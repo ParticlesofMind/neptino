@@ -414,6 +414,37 @@ const STUDIO_PROFILES: Partial<Record<CardType, StudioProfile>> = {
   interactive: INTERACTIVE_PROFILE,
   "rich-sim": INTERACTIVE_PROFILE,
   "village-3d": INTERACTIVE_PROFILE,
+  games: {
+    mediaType: "Game",
+    productType: "Learning Game",
+    defaults: {
+      title: "",
+      gameType: "word-match",
+      instructions: "",
+      pairs: [{ term: "", match: "" }],
+      fillText: "",
+      items: ["", ""],
+      timeLimit: 120,
+      showHints: true,
+    },
+    sections: [] as StudioSection[],
+  },
+  chat: {
+    mediaType: "AI Chat",
+    productType: "AI Conversation",
+    defaults: {
+      title: "",
+      chatMode: "qa",
+      topic: "",
+      aiPersona: "",
+      openingMessage: "",
+      learningObjectives: "",
+      conversationStarters: [] as string[],
+      maxTurns: 20,
+      difficulty: "intermediate",
+    },
+    sections: [] as StudioSection[],
+  },
 }
 
 export function getStudioProfile(cardType: CardType): StudioProfile {

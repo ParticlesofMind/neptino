@@ -33,7 +33,9 @@ export type CardType =
   | "table"
   | "rich-sim"    // interactive simulation — canvas-backed
   | "village-3d"  // 3D exploration card — canvas-backed
-  | "interactive" // generic interactive — canvas-backed
+  | "interactive" // quiz / interactive — canvas-backed
+  | "games"       // game-based learning card
+  | "chat"        // AI-powered student chat card
 
 // ─── Task area kinds ─────────────────────────────────────────────────────────
 export type TaskAreaKind = "instruction" | "practice" | "feedback"
@@ -180,6 +182,13 @@ export interface BlockRenderProps {
   fieldValues: Record<string, string>
   /** Body data for complex blocks (program table rows, resource rows, topic tree) */
   data?: Record<string, unknown>
+  /**
+   * Per-block field visibility flags sourced from the active template's fieldState.
+   * Shape: { [blockKey]: { [fieldKey]: boolean } }
+   * Blocks use this to show/hide optional columns or task-area zones.
+   * When absent, blocks default all fields to visible.
+   */
+  fieldEnabled?: Partial<Record<string, Record<string, boolean>>>
 }
 
 // ─── Draft persistence ────────────────────────────────────────────────────────

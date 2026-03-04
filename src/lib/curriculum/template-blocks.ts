@@ -21,8 +21,9 @@ export interface TemplateDesignConfig {
 const DEFAULT_BLOCKS: TemplateBlockType[] = [
   "header",
   "program",
+  "resources",
   "content",
-  "scoring",
+  "assignment",
   "footer",
 ]
 

@@ -15,6 +15,8 @@ import { DocumentEditor } from "./DocumentEditor"
 import { InteractiveEditor } from "./InteractiveEditor"
 import { DatasetEditor } from "./DatasetEditor"
 import { RichSimEditor } from "./RichSimEditor"
+import { GamesEditor } from "./GamesEditor"
+import { ChatEditor } from "./ChatEditor"
 
 export interface EditorShellProps {
   cardType: CardType
@@ -75,6 +77,12 @@ export function EditorShell({ cardType, content, onChange }: EditorShellProps) {
 
     case "village-3d":
       return <RichSimEditor content={content} onChange={onChange} variant="village-3d" />
+
+    case "games":
+      return <GamesEditor content={content} onChange={onChange} />
+
+    case "chat":
+      return <ChatEditor content={content} onChange={onChange} />
 
     default:
       return (
