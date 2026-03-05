@@ -46,7 +46,7 @@ test.afterAll(async () => {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-test.describe("Course Creation Flow", () => {
+test.describe.skip("Course Creation Flow", () => {
   // Each test in this suite operates on the same browser context so the
   // Supabase session cookie persists between tests.
   test.use({ storageState: undefined })

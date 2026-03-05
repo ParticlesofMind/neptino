@@ -31,6 +31,7 @@ export interface CurriculumSessionRow {
   objective_names?: string[]
   task_names?: string[]
   competencies?: CurriculumCompetency[]
+  template_type?: string
 }
 
 export type PreviewMode = "modules" | "sessions" | "topics" | "objectives" | "tasks" | "all"
@@ -82,6 +83,7 @@ export function extractExistingSessionRows(curriculumData: Record<string, unknow
         objective_names: Array.isArray(r.objective_names) ? (r.objective_names as string[]) : Array.from({ length: objectiveCount }, (_, i) => `Objective ${i + 1}`),
         task_names: Array.isArray(r.task_names) ? (r.task_names as string[]) : Array.from({ length: taskCount }, (_, i) => `Task ${i + 1}`),
         competencies: (r.competencies as CurriculumCompetency[]) || undefined,
+        template_type: (r.template_type as string) || "lesson",
       }
     })
   }
@@ -141,6 +143,7 @@ export function syncSessionRowsToSchedule(
       objectives: normalizedCounts.objectivesPerTopic,
       tasks: normalizedCounts.tasksPerObjective,
       competencies: base?.competencies,
+      template_type: base?.template_type ?? "lesson",
     }
   })
 }

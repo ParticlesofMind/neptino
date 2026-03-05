@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import type { CardType, CardId } from "../types"
 import type { DragSourceData } from "../hooks/useCardDrop"
+import { getSampleCardContent } from "../utils/cardDefaults"
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ function DraggableItem({ item }: { item: LibraryItem }) {
     cardId:   item.id,
     cardType: item.cardType,
     title:    item.title,
-    content:  { title: item.title },
+    content:  getSampleCardContent(item.cardType, item.title),
   }
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({

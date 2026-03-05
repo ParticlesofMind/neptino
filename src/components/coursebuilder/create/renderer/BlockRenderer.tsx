@@ -66,7 +66,10 @@ export function BlockRenderer({
   registry,
 }: BlockRendererProps) {
   const resolvedRegistry: BlockRegistry = { ...BLOCK_REGISTRY, ...registry }
-  const keys = (blockKeys ?? []).filter((k) => k !== "header" && k !== "footer")
+  const rawKeys = (blockKeys ?? []).filter((k) => k !== "header" && k !== "footer")
+  // Defensive de-duplication: malformed persisted payloads can contain
+  // repeated block keys, which would render duplicated sections.
+  const keys = rawKeys.filter((key, idx) => rawKeys.indexOf(key) === idx)
 
   return (
     <div className="flex flex-col w-full gap-2 px-1 py-2">

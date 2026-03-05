@@ -29,6 +29,56 @@ import type { CanvasId, SessionId } from "../types"
 import { useCanvasStore } from "../store/canvasStore"
 import { useCourseStore } from "../store/courseStore"
 
+/**
+ * Returns the element's top position in CSS pixels relative to `ancestor` by
+ * walking up the offsetParent chain.  This is necessary because intermediate
+ * `position: relative` elements (e.g. ContentBlock's root <section class="...relative">)
+ * become offsetParents, so a bare `el.offsetTop` only gives the distance to
+ * the nearest positioned ancestor — not to the body container we measure against.
+ *
+ * NOTE: Do NOT replace this with getBoundingClientRect — that returns
+ * viewport-pixel values affected by `transform: scale()` on the canvas wrapper,
+ * which produces incorrect split points at zoom levels other than 100 %.
+ */
+function offsetTopRelativeTo(el: HTMLElement, ancestor: HTMLElement): number {
+  let top = 0
+  let cur: HTMLElement | null = el
+  while (cur && cur !== ancestor) {
+    top += cur.offsetTop
+    cur = cur.offsetParent as HTMLElement | null
+    if (!cur) break
+  }
+  return top
+}
+
+/**
+ * Scan ``content`` for card elements and return the first index (0-based)
+ * where starting a new page would make the remaining cards fit within
+ * ``available`` height inside ``body``.  Returns ``null`` if no sensible
+ * split point was found.  This is a pure DOM helper used by both the
+ * overflow hook and its test suite.
+ */
+export function findCardSplitPoint(
+  body: HTMLElement,
+  content: HTMLElement,
+  available: number,
+): number | null {
+  const cardEls = Array.from(
+    content.querySelectorAll<HTMLElement>("[data-card-idx]"),
+  ).sort((a, b) => Number(a.dataset.cardIdx) - Number(b.dataset.cardIdx))
+
+  if (cardEls.length < 2) return null
+  for (let i = cardEls.length - 1; i >= 0; i--) {
+    const el = cardEls[i]
+    if (!el) continue
+    const elBottom = offsetTopRelativeTo(el, body) + el.offsetHeight
+    if (elBottom <= available) {
+      return Number(el.dataset.cardIdx) + 1
+    }
+  }
+  return null
+}
+
 interface UseCanvasOverflowOptions {
   canvasId:   CanvasId
   sessionId:  SessionId
@@ -105,108 +155,123 @@ export function useCanvasOverflow({
       content.querySelectorAll<HTMLElement>("[data-topic-idx]"),
     ).sort((a, b) => Number(a.dataset.topicIdx) - Number(b.dataset.topicIdx))
 
-    // Need at least 2 topics to be able to split at topic boundaries.
-    // With only 1 topic, fall back to objective-level splitting so that a
-    // large single-topic page is still paginated rather than silently clipped.
-    if (topicEls.length < 2) {
-      const objEls = Array.from(
-        content.querySelectorAll<HTMLElement>("[data-objective-idx]"),
-      ).sort((a, b) => Number(a.dataset.objectiveIdx) - Number(b.dataset.objectiveIdx))
+    // Try to split the overflowing page by progressively finer-grained
+    // units of structure.  We always attempt topic boundaries first, then
+    // objective boundaries, and finally card boundaries.  Previously the card
+    // step acted only as a "template-free" fallback; now it runs regardless
+    // of how many topics/objectives are present so that dropped cards can be
+    // paginated away instead of permanently overflowing.
 
-      // Need at least 2 visible objectives to perform a split.
-      if (objEls.length < 2) {
-        const cardEls = Array.from(
-          content.querySelectorAll<HTMLElement>("[data-card-idx]"),
-        ).sort((a, b) => Number(a.dataset.cardIdx) - Number(b.dataset.cardIdx))
-
-        // Template-free fallback: split at card boundaries.
-        if (cardEls.length < 2) return
-
-        let splitAtCardIdx: number | null = null
-        for (let i = cardEls.length - 1; i >= 0; i--) {
-          const el = cardEls[i]
+    // helper that attempts to split the current canvas and return `true` if
+    // a split was dispatched (in which case the check can return early).
+    const trySplit = (): boolean => {
+      // a) topic-level split
+      if (topicEls.length >= 2) {
+        for (let i = topicEls.length - 1; i >= 0; i--) {
+          const el = topicEls[i]
           if (!el) continue
-          const elBottom = el.offsetTop + el.offsetHeight
+          const elBottom = offsetTopRelativeTo(el, body) + el.offsetHeight
           if (elBottom <= available) {
-            splitAtCardIdx = Number(el.dataset.cardIdx) + 1
+            const absIdx = Number(el.dataset.topicIdx)
+            const splitAt = absIdx + 1
+            const currentStart = getTopicRangeStart()
+            if (splitAt > currentStart) {
+              const sessions = useCourseStore.getState().sessions
+              const sessionSnap = sessions.find((s) => s.id === sessionId)
+              const canvasSnap = sessionSnap?.canvases.find((c) => c.id === canvasId)
+              const currentEnd = canvasSnap?.contentTopicRange?.end
+              const continuationAlreadyExists = sessionSnap?.canvases.some(
+                (c) => c.id !== canvasId && c.contentTopicRange?.start === splitAt,
+              )
+              if (!(currentEnd === splitAt && continuationAlreadyExists)) {
+                splitGuard.current = true
+                setCanvasTopicRange(canvasId, { start: currentStart, end: splitAt })
+                if (!continuationAlreadyExists) {
+                  appendCanvasPage(sessionId, splitAt)
+                }
+                setTimeout(() => { splitGuard.current = false }, 600)
+                return true
+              }
+            }
             break
           }
         }
+      }
 
-        if (splitAtCardIdx === null || splitAtCardIdx <= 0) return
+      // b) objective-level split
+      const objEls = Array.from(
+        content.querySelectorAll<HTMLElement>("[data-objective-idx]"),
+      ).sort((a, b) => Number(a.dataset.objectiveIdx) - Number(b.dataset.objectiveIdx))
+      if (objEls.length >= 2) {
+        for (let i = objEls.length - 1; i >= 0; i--) {
+          const el = objEls[i]
+          if (!el) continue
+          const elBottom = offsetTopRelativeTo(el, body) + el.offsetHeight
+          if (elBottom <= available) {
+            const splitAtObjIdx = Number(el.dataset.objectiveIdx) + 1
+            const currentObjStart = getObjectiveRangeStart()
+            if (splitAtObjIdx > currentObjStart) {
+              const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
+              const canvasSnap  = sessionSnap?.canvases.find((c) => c.id === canvasId)
+              const currentObjEnd   = canvasSnap?.contentObjectiveRange?.end
+              const currentTopicStart = canvasSnap?.contentTopicRange?.start ?? 0
+              const currentTopicEnd   = canvasSnap?.contentTopicRange?.end
 
+              const continuationObjExists = sessionSnap?.canvases.some(
+                (c) => c.id !== canvasId && c.contentObjectiveRange?.start === splitAtObjIdx,
+              )
+
+              if (!(currentObjEnd === splitAtObjIdx && continuationObjExists)) {
+                splitGuard.current = true
+                setCanvasObjectiveRange(canvasId, { start: currentObjStart, end: splitAtObjIdx })
+                if (!continuationObjExists) {
+                  appendCanvasPage(sessionId, currentTopicStart, {
+                    topicEnd: currentTopicEnd,
+                    objectiveStart: splitAtObjIdx,
+                  })
+                }
+                setTimeout(() => { splitGuard.current = false }, 600)
+                return true
+              }
+            }
+            break
+          }
+        }
+      }
+
+      // c) card-level split (always allowed)
+      const splitAtCardIdx = findCardSplitPoint(body, content, available)
+      if (splitAtCardIdx !== null) {
         const currentCardStart = getCardRangeStart()
-        if (splitAtCardIdx <= currentCardStart) return
+        if (splitAtCardIdx > currentCardStart) {
+          const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
+          const canvasSnap  = sessionSnap?.canvases.find((c) => c.id === canvasId)
+          const currentCardEnd = canvasSnap?.contentCardRange?.end
 
-        const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
-        const canvasSnap  = sessionSnap?.canvases.find((c) => c.id === canvasId)
-        const currentCardEnd = canvasSnap?.contentCardRange?.end
+          const continuationCardExists = sessionSnap?.canvases.some(
+            (c) => c.id !== canvasId && c.contentCardRange?.start === splitAtCardIdx,
+          )
 
-        const continuationCardExists = sessionSnap?.canvases.some(
-          (c) => c.id !== canvasId && c.contentCardRange?.start === splitAtCardIdx,
-        )
-
-        if (currentCardEnd === splitAtCardIdx && continuationCardExists) return
-
-        splitGuard.current = true
-
-        setCanvasCardRange(canvasId, { start: currentCardStart, end: splitAtCardIdx })
-
-        if (!continuationCardExists) {
-          appendCanvasPage(sessionId, undefined, {
-            cardStart: splitAtCardIdx,
-            cardEnd: currentCardEnd,
-          })
-        }
-
-        setTimeout(() => { splitGuard.current = false }, 600)
-        return
-      }
-
-      let splitAtObjIdx: number | null = null
-      for (let i = objEls.length - 1; i >= 0; i--) {
-        const el = objEls[i]
-        if (!el) continue
-        const elBottom = el.offsetTop + el.offsetHeight
-        if (elBottom <= available) {
-          splitAtObjIdx = Number(el.dataset.objectiveIdx) + 1
-          break
+          if (!(currentCardEnd === splitAtCardIdx && continuationCardExists)) {
+            splitGuard.current = true
+            setCanvasCardRange(canvasId, { start: currentCardStart, end: splitAtCardIdx })
+            if (!continuationCardExists) {
+              appendCanvasPage(sessionId, undefined, {
+                cardStart: splitAtCardIdx,
+                cardEnd: currentCardEnd,
+              })
+            }
+            setTimeout(() => { splitGuard.current = false }, 600)
+            return true
+          }
         }
       }
 
-      if (splitAtObjIdx === null || splitAtObjIdx <= 0) return
-
-      const currentObjStart = getObjectiveRangeStart()
-      if (splitAtObjIdx <= currentObjStart) return
-
-      const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
-      const canvasSnap  = sessionSnap?.canvases.find((c) => c.id === canvasId)
-      const currentObjEnd   = canvasSnap?.contentObjectiveRange?.end
-      const currentTopicStart = canvasSnap?.contentTopicRange?.start ?? 0
-      const currentTopicEnd   = canvasSnap?.contentTopicRange?.end
-
-      const continuationObjExists = sessionSnap?.canvases.some(
-        (c) => c.id !== canvasId && c.contentObjectiveRange?.start === splitAtObjIdx,
-      )
-
-      if (currentObjEnd === splitAtObjIdx && continuationObjExists) return
-
-      splitGuard.current = true
-
-      // Narrow this page's objective range to [currentObjStart, splitAtObjIdx).
-      setCanvasObjectiveRange(canvasId, { start: currentObjStart, end: splitAtObjIdx })
-
-      // Append a continuation page with the same topic range + new objective start.
-      if (!continuationObjExists) {
-        appendCanvasPage(sessionId, currentTopicStart, {
-          topicEnd: currentTopicEnd,
-          objectiveStart: splitAtObjIdx,
-        })
-      }
-
-      setTimeout(() => { splitGuard.current = false }, 600)
-      return
+      return false
     }
+
+    // call the helper; if it handled a split we stop
+    if (trySplit()) return
 
     // Find the last topic whose bottom fits inside the available height.
     //
@@ -225,7 +290,7 @@ export function useCanvasOverflow({
     for (let i = topicEls.length - 1; i >= 0; i--) {
       const el       = topicEls[i]
       if (!el) continue
-      const elBottom = el.offsetTop + el.offsetHeight // CSS px from bodyRef top
+      const elBottom = offsetTopRelativeTo(el, body) + el.offsetHeight // CSS px from bodyRef top
 
       // The first element from the end that fits defines the split boundary.
       // splitAtAbsoluteIdx is the index of the FIRST topic that should appear

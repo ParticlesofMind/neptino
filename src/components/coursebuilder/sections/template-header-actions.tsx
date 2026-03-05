@@ -1,10 +1,54 @@
 "use client"
 
 import {
+  Award,
+  BookOpen,
+  ClipboardCheck,
+  GraduationCap,
+  HelpCircle,
+} from "lucide-react"
+import {
   PRIMARY_ACTION_BUTTON_CLASS,
   SECONDARY_ACTION_BUTTON_CLASS,
 } from "@/components/coursebuilder"
 import type { SetupTemplateType } from "./templates-section"
+
+// ─── Per-type metadata ────────────────────────────────────────────────────────
+
+const TYPE_META: Record<
+  SetupTemplateType,
+  {
+    Icon: React.ComponentType<{ className?: string }>
+    label: string
+    description: string
+  }
+> = {
+  lesson: {
+    Icon: BookOpen,
+    label: "Lesson",
+    description: "Structured teaching session with program, resources, and content blocks.",
+  },
+  certificate: {
+    Icon: Award,
+    label: "Certificate",
+    description: "Completion certificate with header, branding, and footer.",
+  },
+  quiz: {
+    Icon: HelpCircle,
+    label: "Quiz",
+    description: "Short knowledge check with scored questions and feedback.",
+  },
+  assessment: {
+    Icon: ClipboardCheck,
+    label: "Assessment",
+    description: "Formal evaluation with scoring criteria and weighting.",
+  },
+  exam: {
+    Icon: GraduationCap,
+    label: "Exam",
+    description: "High-stakes summative test with pass mark and weighted scoring.",
+  },
+}
 
 interface SavedTemplate {
   id: string
@@ -24,6 +68,7 @@ export function TemplateHeaderActions({
   createDescription,
   selectedLoadTemplateId,
   savedTemplates,
+  activeTemplateId,
   onOpenCreate,
   onOpenLoad,
   onCloseCreate,
@@ -34,6 +79,8 @@ export function TemplateHeaderActions({
   onChangeSelectedLoadTemplate,
   onCreate,
   onLoad,
+  onActivateTemplate,
+  onDeleteTemplate,
 }: {
   canCreate: boolean
   canLoad: boolean
@@ -45,6 +92,7 @@ export function TemplateHeaderActions({
   createDescription: string
   selectedLoadTemplateId: string
   savedTemplates: SavedTemplate[]
+  activeTemplateId: string | null
   onOpenCreate: () => void
   onOpenLoad: () => void
   onCloseCreate: () => void
@@ -55,10 +103,12 @@ export function TemplateHeaderActions({
   onChangeSelectedLoadTemplate: (id: string) => void
   onCreate: () => void
   onLoad: () => void
+  onActivateTemplate: (id: string) => void
+  onDeleteTemplate: (id: string) => void
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="relative">
+    <>
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={onOpenCreate}
@@ -67,52 +117,6 @@ export function TemplateHeaderActions({
         >
           Create Template
         </button>
-        {showCreatePopup && (
-          <div className="absolute right-0 z-30 mt-2 w-80 rounded-lg border border-border bg-background p-3 shadow-lg">
-            <p className="text-xs font-semibold text-foreground">Create template</p>
-            <div className="mt-2 space-y-2.5">
-              <label className="block text-xs text-muted-foreground">
-                Template type
-                <select
-                  value={createType}
-                  onChange={(e) => onChangeCreateType(e.target.value as SetupTemplateType)}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
-                >
-                  {templateTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-xs text-muted-foreground">
-                Template name
-                <input
-                  type="text"
-                  value={createName}
-                  onChange={(e) => onChangeCreateName(e.target.value)}
-                  placeholder="Lesson"
-                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
-                />
-              </label>
-              <label className="block text-xs text-muted-foreground">
-                Description (optional)
-                <textarea
-                  rows={3}
-                  value={createDescription}
-                  onChange={(e) => onChangeCreateDescription(e.target.value)}
-                  placeholder="Short description"
-                  className="mt-1 w-full resize-none rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
-                />
-              </label>
-              <div className="flex justify-end gap-2">
-                <button type="button" className="rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground" onClick={onCloseCreate}>Cancel</button>
-                <button type="button" className="rounded-md border border-[#93C5FD]/70 bg-[#BFDBFE]/70 px-2.5 py-1.5 text-xs font-medium text-[#1E3A8A]" onClick={onCreate}>Create</button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="relative">
         <button
           type="button"
           onClick={onOpenLoad}
@@ -121,34 +125,212 @@ export function TemplateHeaderActions({
         >
           Load Template
         </button>
-        {showLoadPopup && (
-          <div className="absolute right-0 z-30 mt-2 w-80 rounded-lg border border-border bg-background p-3 shadow-lg">
-            <p className="text-xs font-semibold text-foreground">Load template</p>
-            <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
-              {savedTemplates.map((template) => (
-                <label key={template.id} className="flex cursor-pointer items-start gap-2 rounded border border-border p-2 text-xs">
-                  <input
-                    type="radio"
-                    name="load-template"
-                    checked={selectedLoadTemplateId === template.id}
-                    onChange={() => onChangeSelectedLoadTemplate(template.id)}
-                    className="mt-0.5"
-                  />
-                  <span>
-                    <span className="block font-medium text-foreground">{template.label}</span>
-                    <span className="block text-muted-foreground capitalize">{template.type}</span>
-                    {template.description && <span className="block text-muted-foreground">{template.description}</span>}
-                  </span>
-                </label>
-              ))}
+      </div>
+
+      {/* ── Create Template modal ─────────────────────────────────────── */}
+      {showCreatePopup && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={onCloseCreate} />
+          <div className="relative z-50 w-full max-w-lg rounded-xl border border-border bg-background shadow-xl">
+            {/* Header */}
+            <div className="border-b border-border px-5 py-4">
+              <p className="text-sm font-semibold text-foreground">Create template</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Choose a type, then give your template a name.</p>
             </div>
-            <div className="mt-3 flex justify-end gap-2">
-              <button type="button" className="rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground" onClick={onCloseLoad}>Cancel</button>
-              <button type="button" className="rounded-md border border-[#86EFAC]/70 bg-[#BBF7D0]/70 px-2.5 py-1.5 text-xs font-medium text-[#166534]" onClick={onLoad}>Load</button>
+
+            <div className="p-5 space-y-4">
+              {/* Type picker grid */}
+              <div>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Template type</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {templateTypes.map((type) => {
+                    const meta = TYPE_META[type]
+                    const isSelected = createType === type
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          onChangeCreateType(type)
+                          onChangeCreateName(meta.label)
+                        }}
+                        className={[
+                          "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-center transition focus:outline-none focus:ring-2 focus:ring-ring/50",
+                          isSelected
+                            ? "border-foreground bg-accent shadow-sm"
+                            : "border-border bg-background hover:border-foreground/30 hover:bg-accent/30",
+                        ].join(" ")}
+                      >
+                        <meta.Icon
+                          className={[
+                            "h-5 w-5",
+                            isSelected ? "text-foreground" : "text-muted-foreground",
+                          ].join(" ")}
+                        />
+                        <span
+                          className={[
+                            "text-[11px] font-medium leading-tight",
+                            isSelected ? "text-foreground" : "text-muted-foreground",
+                          ].join(" ")}
+                        >
+                          {meta.label}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* Selected type description */}
+                <p className="mt-2 text-[11px] text-muted-foreground min-h-[1.5rem]">
+                  {TYPE_META[createType].description}
+                </p>
+              </div>
+
+              {/* Name & description */}
+              <div className="space-y-3">
+                <label className="block text-xs text-muted-foreground">
+                  Template name
+                  <input
+                    type="text"
+                    value={createName}
+                    onChange={(e) => onChangeCreateName(e.target.value)}
+                    placeholder="My template"
+                    className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+                  />
+                </label>
+                <label className="block text-xs text-muted-foreground">
+                  Description
+                  <span className="ml-1 text-[10px] text-muted-foreground/60">(optional)</span>
+                  <textarea
+                    rows={2}
+                    value={createDescription}
+                    onChange={(e) => onChangeCreateDescription(e.target.value)}
+                    placeholder="Short description"
+                    className="mt-1 w-full resize-none rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+              <button
+                type="button"
+                className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
+                onClick={onCloseCreate}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-md border border-foreground/20 bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
+                onClick={onCreate}
+              >
+                Create
+              </button>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+
+      {/* ── Load Template modal ───────────────────────────────────────── */}
+      {showLoadPopup && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={onCloseLoad} />
+          <div className="relative z-50 w-full max-w-md rounded-xl border border-border bg-background shadow-xl">
+            {/* Header */}
+            <div className="border-b border-border px-5 py-4">
+              <p className="text-sm font-semibold text-foreground">Load template</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Select a saved template to apply to this course.</p>
+            </div>
+
+            <div className="max-h-72 overflow-y-auto p-3 space-y-1.5">
+              {savedTemplates.map((template) => {
+                const meta = TYPE_META[template.type]
+                const isActive = template.id === activeTemplateId
+                const isSelected = selectedLoadTemplateId === template.id
+                return (
+                  <div
+                    key={template.id}
+                    onClick={() => onChangeSelectedLoadTemplate(template.id)}
+                    className={[
+                      "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition",
+                      isSelected
+                        ? "border-foreground bg-accent"
+                        : "border-border bg-background hover:border-foreground/30 hover:bg-accent/20",
+                    ].join(" ")}
+                  >
+                    {/* Type icon */}
+                    <div
+                      className={[
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
+                        isSelected ? "border-foreground/40 bg-background" : "border-border bg-background",
+                      ].join(" ")}
+                    >
+                      <meta.Icon className={["h-4 w-4", isSelected ? "text-foreground" : "text-muted-foreground"].join(" ")} />
+                    </div>
+
+                    {/* Label + meta */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-medium text-foreground truncate">{template.label}</span>
+                        <span className="shrink-0 rounded border border-border bg-background/70 px-1.5 py-0.5 text-[10px] text-muted-foreground capitalize">
+                          {meta.label}
+                        </span>
+                        {isActive && (
+                          <span className="shrink-0 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                            active
+                          </span>
+                        )}
+                      </div>
+                      {template.description && (
+                        <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{template.description}</p>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex shrink-0 items-center gap-1">
+                      {!isActive && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onActivateTemplate(template.id) }}
+                          className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-foreground transition hover:border-primary/40 hover:text-primary"
+                        >
+                          Edit
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onDeleteTemplate(template.id) }}
+                        className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+              <button
+                type="button"
+                className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
+                onClick={onCloseLoad}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-md border border-foreground/20 bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
+                onClick={onLoad}
+              >
+                Load
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

@@ -12,10 +12,11 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
   const prevView = getPrevView(view)
   const nextView = getNextView(view)
 
+  // single-row top-level navigation; create sub-modes render in the editor body
   return (
     <div className="flex h-12 items-center justify-between border-b border-border px-4 shrink-0 gap-4">
-      {/* Left: back / previous step */}
-      <div className="flex items-center min-w-[110px]">
+      {/* Left: back/previous */}
+      <div className="flex items-center gap-4 min-w-[110px]">
         {prevView === null ? (
           <Link
             href="/teacher/courses"

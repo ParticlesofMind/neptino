@@ -20,6 +20,7 @@ import { useCurriculumLoader } from "./use-curriculum-loader"
 import { useCurriculumSessionRows } from "./use-curriculum-session-rows"
 import { useCurriculumPersistence } from "./use-curriculum-persistence"
 import { useCurriculumGeneration } from "./use-curriculum-generation"
+import { ALL_TEMPLATE_TYPES } from "@/lib/curriculum/template-blocks"
 import { CurriculumStructurePanel } from "./curriculum-structure-panel"
 import { CurriculumPreviewPanel } from "./curriculum-preview-panel"
 
@@ -163,6 +164,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           scheduleEntries={scheduleEntries} moduleNames={moduleNames} setModuleNames={setModuleNames}
           topics={topics} objectives={objectives} tasks={tasks}
           upsertSessionRow={upsertSessionRow} setSessionRows={setSessionRows} lastAction={lastAction}
+          availableTemplateTypes={ALL_TEMPLATE_TYPES}
         />
       </SetupPanelLayout>
     </SetupSection>

@@ -2,11 +2,20 @@
 
 import type { BlockRenderProps } from "../types"
 
-export function HeaderBlock({ fieldValues }: BlockRenderProps) {
-  const title       = fieldValues.course_name   || fieldValues.session_title || ""
-  const institution = fieldValues.institution   || ""
-  const date        = fieldValues.schedule_date || ""
-  const teacher     = fieldValues.teacher_name  || ""
+export function HeaderBlock({ fieldValues, fieldEnabled }: BlockRenderProps) {
+  const fe = fieldEnabled?.header
+
+  // Required fields are always shown; optional fields respect fieldEnabled.
+  // Default to visible when no fieldEnabled config is present.
+  const showCourseName  = fe ? (fe["course_name"]   ?? true)  : true
+  const showTeacher     = fe ? (fe["teacher_name"]   ?? true)  : true
+  const showInstitution = fe ? (fe["institution"]    ?? false) : true
+  const showDate        = fe ? (fe["schedule_date"]  ?? false) : true
+
+  const title       = showCourseName ? (fieldValues.course_name || fieldValues.session_title || "") : (fieldValues.session_title || "")
+  const institution = showInstitution ? (fieldValues.institution || "") : ""
+  const date        = showDate        ? (fieldValues.schedule_date || "") : ""
+  const teacher     = showTeacher     ? (fieldValues.teacher_name || "") : ""
 
   return (
     <header className="flex h-full items-center justify-between border-b border-neutral-200 bg-white">

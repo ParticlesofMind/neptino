@@ -28,7 +28,7 @@ function InsertionLineSlot({
 }: InsertionLineSlotProps) {
   const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
   const { isOver, setNodeRef } = useDroppable({
-    id: `${sessionId}:${taskId}:${areaKind}:slot:${slotIndex}`,
+    id: `${sessionId}:${taskId}:${areaKind}:${blockKey ?? "content"}:slot:${slotIndex}`,
     data: { sessionId, canvasId, taskId, areaKind, blockKey, prevOrder, nextOrder },
   })
 
@@ -68,12 +68,11 @@ export function TaskAreaDropZone({
   cards = [],
   onRemoveCard,
 }: TaskAreaDropZoneProps) {
-  const dropId = `${sessionId}:${taskId}:${areaKind}`
+  const dropId = `${sessionId}:${taskId}:${areaKind}:${blockKey ?? "content"}`
   const hasCards = cards.length > 0
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
     data: { sessionId, canvasId, taskId, areaKind, blockKey },
-    disabled: hasCards,
   })
 
   const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
@@ -85,6 +84,7 @@ export function TaskAreaDropZone({
       </div>
       <div
         ref={setNodeRef}
+        data-testid={`task-area-droppable-${areaKind}`}
         className={[
           "rounded-lg border border-neutral-200 bg-white px-2 py-1.5 transition-colors",
           mediaDragActive ? "min-h-[2.5rem]" : "min-h-[2rem]",

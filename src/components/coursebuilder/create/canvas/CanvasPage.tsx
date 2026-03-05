@@ -7,8 +7,9 @@
  * TemplateRenderer. The CanvasVirtualizer mounts/unmounts instances based
  * on scroll position — only the 2-3 visible pages are in the DOM at any time.
  *
- * Overflow detection is handled via the `useCanvasOverflow` hook; when the body
- * content exceeds the available height a new canvas page is appended.
+ * Pagination is computed by the layout engine (useLayoutEngine / computePageAssignments)
+ * and written into the store before render. This component does not observe
+ * DOM overflow — it only renders what the store tells it to.
  */
 
 import { useRef } from "react"
@@ -24,7 +25,6 @@ import { DEFAULT_PAGE_DIMENSIONS } from "../types"
 import { BlockRenderer } from "../renderer/BlockRenderer"
 import { HeaderBlock } from "../blocks/Header"
 import { FooterBlock } from "../blocks/Footer"
-import { useCanvasOverflow } from "../hooks/useCanvasOverflow"
 import { useCanvasStore } from "../store/canvasStore"
 import { useCourseStore } from "../store/courseStore"
 import { CardRenderer } from "../cards/CardRenderer"
@@ -124,6 +124,8 @@ interface CanvasNewPageProps {
   bodyData?:    Record<string, Record<string, unknown>>
   /** 0-based virtual index — used only for aria labels */
   virtualIndex: number
+  /** If true, disable automatic overflow detection (currently unused in this component) */
+  disableOverflow?: boolean
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -136,24 +138,14 @@ export function CanvasPage({
   fieldValues,
   bodyData = {},
   virtualIndex,
+  disableOverflow = false,
 }: CanvasNewPageProps) {
   const bodyRef    = useRef<HTMLDivElement>(null)
-  const contentRef  = useRef<HTMLDivElement>(null)
   const zoomLevel   = useCanvasStore((s) => s.zoomLevel)
   const activeCanvasId = useCanvasStore((s) => s.activeCanvasId)
   const setActiveCanvas = useCanvasStore((s) => s.setActiveCanvas)
 
   const scale = zoomLevel / 100
-
-  // Overflow detection: detects when body content exceeds the available height
-  // and automatically splits the topic list, trimming this page and appending
-  // a continuation canvas page for the remaining topics.
-  const isOverflowing = useCanvasOverflow({
-    canvasId:   page.id,
-    sessionId:  page.sessionId,
-    bodyRef:    bodyRef    as React.RefObject<HTMLElement | null>,
-    contentRef: contentRef as React.RefObject<HTMLElement | null>,
-  })
 
   const isActive = activeCanvasId === page.id
   const bodyDropTaskId = findFirstVisibleTaskId(session, page)
@@ -171,11 +163,15 @@ export function CanvasPage({
   const cardEnd = useCardRange ? (page.contentCardRange?.end ?? flatDroppedCards.length) : flatDroppedCards.length
   const visibleDroppedCards = flatDroppedCards.slice(cardStart, cardEnd)
 
-  // Body-level droppable: covers the full canvas body area so cards can be
-  // dropped anywhere on the page, not just on the ContentBlock section.
-  // The store routes this to the session's first task (or bootstraps one).
+  // Body-level droppable: covers the full canvas body area for template-free canvases.
+  // Disabled on template canvases — ContentBlock's task-area droppables handle all drops
+  // there, and a competing body droppable with no blockKey would previously cause cards
+  // to be stored without a blockKey (and therefore render in both content + assignment).
+  // The drop handler now prefers any collision that carries a blockKey, so even if the
+  // body target is erroneously detected the card will still be routed correctly.
   const { setNodeRef: setBodyDropRef } = useDroppable({
-    id:   `${session.id as SessionId}:body`,
+    id:       `${session.id as SessionId}:body`,
+    disabled: !isTemplateFreeCanvas,
     data: {
       sessionId: session.id  as SessionId,
       canvasId: page.id,
@@ -190,118 +186,112 @@ export function CanvasPage({
       aria-label={`Page ${virtualIndex + 1}`}
       onClick={() => setActiveCanvas(page.id)}
       style={{
-        width:     dims.widthPx,
-        height:    dims.heightPx,
-        overflow:  "hidden",
-        transform: `scale(${scale})`,
-        transformOrigin: "top center",
+        width:            dims.widthPx,
+        height:           dims.heightPx,
+        overflow:         "hidden",
+        // Zones baked in as grid rows: header | body | footer
+        display:          "grid",
+        gridTemplateRows: `${dims.margins.top}px 1fr ${dims.margins.bottom}px`,
+        transform:        `scale(${scale})`,
+        transformOrigin:  "top center",
         // Compensate margin collapse under scale so the virtualizer rows stay accurate
-        marginBottom: dims.heightPx * (scale - 1),
+        marginBottom:     dims.heightPx * (scale - 1),
       }}
       className={[
-        "relative bg-white shadow-md select-none",
+        "bg-white shadow-md select-none",
         "ring-1",
         isActive ? "ring-blue-400" : "ring-neutral-200",
-        isOverflowing ? "ring-amber-400" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      {/* Top margin band — Header metadata */}
-      <div
-        style={{ height: dims.margins.top }}
-        className="absolute inset-x-0 top-0 overflow-hidden"
-      >
+      {/* Header zone — top margin row, baked into grid */}
+      <div className="overflow-hidden bg-white">
         <HeaderBlock
           sessionId={session.id as SessionId}
           fieldValues={fieldValues}
+          fieldEnabled={session.fieldEnabled}
         />
       </div>
 
-      {/* Body — content area between margins */}
+      {/* Body zone — middle row (1fr), padded by left/right margins */}
       <div
         ref={(el) => {
           bodyRef.current = el
           setBodyDropRef(el)
         }}
         style={{
-          position: "absolute",
-          top:    dims.margins.top,
-          right:  dims.margins.right,
-          bottom: dims.margins.bottom,
-          left:   dims.margins.left,
-          overflow: "hidden",
+          overflow:     "hidden",
+          paddingLeft:  dims.margins.left,
+          paddingRight: dims.margins.right,
         }}
       >
-        <div ref={contentRef} className="w-full">
-          {isTemplateFreeCanvas ? (
-            <section className="h-full min-h-[240px] w-full rounded-lg border border-dashed border-neutral-300 bg-white p-3">
-              {visibleDroppedCards.length === 0 ? (
-                <div className="px-1">
-                  <InsertionLineSlot
-                    id={`${session.id as SessionId}:body:${page.id}:slot:0`}
-                    sessionId={session.id as SessionId}
-                    canvasId={page.id}
-                    taskId={bodyDropTaskId}
-                  />
-                  <div className="flex h-full min-h-[200px] items-center justify-center text-xs text-neutral-400">
-                    Drop cards here
-                  </div>
+        {isTemplateFreeCanvas ? (
+          <section className="h-full min-h-[240px] w-full rounded-lg border border-dashed border-neutral-300 bg-white p-3">
+            {visibleDroppedCards.length === 0 ? (
+              <div className="px-1">
+                <InsertionLineSlot
+                  id={`${session.id as SessionId}:body:${page.id}:slot:0`}
+                  sessionId={session.id as SessionId}
+                  canvasId={page.id}
+                  taskId={bodyDropTaskId}
+                />
+                <div className="flex h-full min-h-[200px] items-center justify-center text-xs text-neutral-400">
+                  Drop cards here
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {visibleDroppedCards.map((card, idx) => {
-                    const prevOrder = idx > 0 ? visibleDroppedCards[idx - 1]?.order : undefined
-                    return (
-                      <div key={card.id} data-card-idx={cardStart + idx}>
-                        <InsertionLineSlot
-                          id={`${session.id as SessionId}:body:${page.id}:slot:${idx}`}
-                          sessionId={session.id as SessionId}
-                          canvasId={page.id}
-                          taskId={bodyDropTaskId}
-                          prevOrder={prevOrder}
-                          nextOrder={card.order}
-                        />
-                        <CardRenderer
-                          card={card}
-                          onRemove={() => {
-                            const ownerTaskId = findOwnerTaskIdForCard(session, card.id) ?? card.taskId
-                            removeDroppedCard(session.id as SessionId, ownerTaskId, card.id)
-                          }}
-                        />
-                      </div>
-                    )
-                  })}
-                  <InsertionLineSlot
-                    id={`${session.id as SessionId}:body:${page.id}:slot:${visibleDroppedCards.length}`}
-                    sessionId={session.id as SessionId}
-                    canvasId={page.id}
-                    taskId={bodyDropTaskId}
-                    prevOrder={visibleDroppedCards[visibleDroppedCards.length - 1]?.order}
-                  />
-                </div>
-              )}
-            </section>
-          ) : (
-            <BlockRenderer
-              sessionId={session.id as SessionId}
-              canvasId={page.id}
-              fieldValues={fieldValues}
-              data={bodyData}
-              blockKeys={page.blockKeys}
-            />
-          )}
-        </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {visibleDroppedCards.map((card, idx) => {
+                  const prevOrder = idx > 0 ? visibleDroppedCards[idx - 1]?.order : undefined
+                  return (
+                    <div key={card.id} data-card-idx={cardStart + idx}>
+                      <InsertionLineSlot
+                        id={`${session.id as SessionId}:body:${page.id}:slot:${idx}`}
+                        sessionId={session.id as SessionId}
+                        canvasId={page.id}
+                        taskId={bodyDropTaskId}
+                        prevOrder={prevOrder}
+                        nextOrder={card.order}
+                      />
+                      <CardRenderer
+                        card={card}
+                        onRemove={() => {
+                          const ownerTaskId = findOwnerTaskIdForCard(session, card.id) ?? card.taskId
+                          removeDroppedCard(session.id as SessionId, ownerTaskId, card.id)
+                        }}
+                      />
+                    </div>
+                  )
+                })}
+                <InsertionLineSlot
+                  id={`${session.id as SessionId}:body:${page.id}:slot:${visibleDroppedCards.length}`}
+                  sessionId={session.id as SessionId}
+                  canvasId={page.id}
+                  taskId={bodyDropTaskId}
+                  prevOrder={visibleDroppedCards[visibleDroppedCards.length - 1]?.order}
+                />
+              </div>
+            )}
+          </section>
+        ) : (
+          <BlockRenderer
+            sessionId={session.id as SessionId}
+            canvasId={page.id}
+            fieldValues={fieldValues}
+            data={bodyData}
+            blockKeys={page.blockKeys}
+            fieldEnabled={session.fieldEnabled}
+          />
+        )}
       </div>
 
-      {/* Bottom margin band — Footer metadata */}
-      <div
-        style={{ height: dims.margins.bottom }}
-        className="absolute inset-x-0 bottom-0 overflow-hidden"
-      >
+      {/* Footer zone — bottom margin row, baked into grid */}
+      <div className="overflow-hidden bg-white">
         <FooterBlock
           sessionId={session.id as SessionId}
           fieldValues={fieldValues}
+          fieldEnabled={session.fieldEnabled}
         />
       </div>
 

@@ -44,7 +44,7 @@ export function PageNavStrip({ sessions }: { sessions: CourseSession[] }) {
       {/* Page indicator */}
       <div className="flex flex-col items-center py-1">
         <span className="text-[12px] font-semibold text-neutral-800 leading-tight">{currentPage}</span>
-        <span className="text-[9px] text-neutral-400">/ {total}</span>
+        <span data-testid="canvas-page-total" className="text-[9px] text-neutral-400">/ {total}</span>
       </div>
 
       <NavBtn title="Next page"     onClick={() => goTo(currentIndex + 1)}>

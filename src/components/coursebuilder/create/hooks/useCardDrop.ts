@@ -27,6 +27,7 @@ import type {
   CourseSession,
 } from "../types"
 import { useCourseStore } from "../store/courseStore"
+import { getDefaultCardDimensions } from "../utils/cardDefaults"
 
 // ─── Data shapes ──────────────────────────────────────────────────────────────
 
@@ -48,35 +49,139 @@ export interface DropTargetData {
   /** Order hint from insertion-line drop targets. */
   nextOrder?: number
   /** Optional placement hint inside the canvas (0..1 percentages). */
-  dropPosition?: { x: number; y: number }
+  dropPosition?: { x: number; y: number; absolute?: boolean }
   /** Block key of the drop zone's parent block */
   blockKey?: BlockKey
+  /** Infinite canvas mode - use absolute positioning */
+  infiniteMode?: boolean
 }
 
-const AREA_KINDS: ReadonlySet<string> = new Set(["instruction", "practice", "feedback"])
 
-function parseSpecificDropId(rawId: string): DropTargetData | null {
-  const parts = rawId.split(":")
-  if (parts.length !== 3) return null
+type CollisionWithData = {
+  id: string | number
+  data?: { droppableContainer?: { data?: { current?: unknown } } }
+}
 
-  const [sessionIdRaw, taskIdRaw, areaKindRaw] = parts
-  if (!sessionIdRaw || !taskIdRaw || !AREA_KINDS.has(areaKindRaw)) return null
+function collisionTargetData(collision: CollisionWithData): DropTargetData | undefined {
+  return (collision as CollisionWithData).data?.droppableContainer?.data?.current as DropTargetData | undefined
+}
+
+function isTaskAreaKind(value: string): value is TaskAreaKind {
+  return value === "instruction" || value === "practice" || value === "feedback"
+}
+
+function parseDropTargetFromCollisionId(collisionId: string | number): DropTargetData | undefined {
+  const id = String(collisionId)
+  const parts = id.split(":")
+
+  // task-area IDs are shaped like:
+  //   sessionId:taskId:areaKind
+  //   sessionId:taskId:areaKind:blockKey
+  //   sessionId:taskId:areaKind:blockKey:slot:n
+  if (parts.length < 3) return undefined
+
+  const [, taskId, areaKind, blockKey] = parts
+  if (!taskId || !areaKind || !isTaskAreaKind(areaKind)) return undefined
 
   return {
-    sessionId: sessionIdRaw as SessionId,
-    taskId: taskIdRaw as TaskId,
-    areaKind: areaKindRaw as TaskAreaKind,
+    sessionId: parts[0] as SessionId,
+    taskId: taskId as TaskId,
+    areaKind,
+    blockKey: blockKey && blockKey !== "slot" ? (blockKey as BlockKey) : undefined,
   }
+}
+
+function getCollisionTarget(collision: CollisionWithData): DropTargetData | undefined {
+  return collisionTargetData(collision) ?? parseDropTargetFromCollisionId(collision.id)
+}
+
+function findPreferredCollisionTarget(
+  collisions: CollisionWithData[],
+  overId: string | null,
+  predicate: (collision: CollisionWithData, target: DropTargetData) => boolean,
+): DropTargetData | null {
+  if (overId) {
+    const overCollision = collisions.find((collision) => String(collision.id) === overId)
+    if (overCollision) {
+      const overTarget = getCollisionTarget(overCollision)
+      if (overTarget && predicate(overCollision, overTarget)) {
+        return overTarget
+      }
+    }
+  }
+
+  for (const collision of collisions) {
+    const target = getCollisionTarget(collision)
+    if (target && predicate(collision, target)) {
+      return target
+    }
+  }
+
+  return null
 }
 
 function resolveDropTarget(event: DragEndEvent): DropTargetData | null {
-  const candidates = [...(event.collisions?.map((c) => c.id) ?? []), event.over?.id]
+  const collisions = (event.collisions ?? []) as CollisionWithData[]
+  const overId = event.over ? String(event.over.id) : null
 
-  for (const candidate of candidates) {
-    if (candidate == null) continue
-    const parsed = parseSpecificDropId(String(candidate))
-    if (parsed) return parsed
-  }
+  // dnd-kit's pointerWithin returns droppables in DOM registration order (outer
+  // containers before inner ones) because all collision values are 0 and the
+  // sort is stable.  We must therefore explicitly prefer the most-specific
+  // droppable rather than just taking the first one.
+  //
+  // Priority order:
+  //   1. Insertion-line slots  (:slot: in ID) — carry order hints
+  //   2. Task-area droppables  (ID is NOT a catchall, body, or slot)
+  //   3. Block catch-alls      (have blockKey, ID ends with :catchall)
+  //   4. Anything else with the required fields (fallback for edge cases)
+
+  // 1. Slots
+  const slotTarget = findPreferredCollisionTarget(
+    collisions,
+    overId,
+    (collision, target) =>
+      String(collision.id).includes(":slot:") && !!target.sessionId && !!target.taskId && !!target.areaKind,
+  )
+  if (slotTarget) return slotTarget
+
+  // 2. Specific task-area droppables (not catch-all, not slot, not body)
+  const specificTaskAreaTarget = findPreferredCollisionTarget(
+    collisions,
+    overId,
+    (collision, target) => {
+      const id = String(collision.id)
+      return (
+        !id.includes(":catchall") &&
+        !id.includes(":slot:") &&
+        !id.includes(":body") &&
+        !!target.sessionId &&
+        !!target.taskId &&
+        !!target.areaKind
+      )
+    },
+  )
+  if (specificTaskAreaTarget) return specificTaskAreaTarget
+
+  // 3. Block catch-all droppables (correct blockKey, but routes to first visible task)
+  const catchAllTarget = findPreferredCollisionTarget(
+    collisions,
+    overId,
+    (collision, target) =>
+      String(collision.id).includes(":catchall") &&
+      !!target.sessionId &&
+      !!target.taskId &&
+      !!target.areaKind &&
+      !!target.blockKey,
+  )
+  if (catchAllTarget) return catchAllTarget
+
+  // 4. Fallback: any collision or event.over with the required fields
+  const genericTarget = findPreferredCollisionTarget(
+    collisions,
+    overId,
+    (_, target) => !!target.sessionId && !!target.taskId && !!target.areaKind,
+  )
+  if (genericTarget) return genericTarget
 
   const directTarget = event.over?.data.current as DropTargetData | undefined
   if (directTarget?.sessionId && directTarget?.taskId && directTarget?.areaKind) {
@@ -85,6 +190,41 @@ function resolveDropTarget(event: DragEndEvent): DropTargetData | null {
 
   return null
 }
+
+// After we resolve a target we still want to ensure it includes a blockKey if
+// one is available in the collision list.  The body-level droppable has no
+// blockKey and was previously being chosen in scenarios where a more specific
+// content/assignment collision was also present, leading to cards being stored
+// with an undefined blockKey and thus rendering in *both* blocks.  The fix is
+// simple: if the selected target lacks a blockKey, look through the original
+// collisions for one that does and prefer that instead.
+function resolveDropTargetWithBlockKey(event: DragEndEvent): DropTargetData | null {
+  const candidate = resolveDropTarget(event)
+  if (candidate && !candidate.blockKey) {
+    const collisions = (event.collisions ?? []) as CollisionWithData[]
+    // try to pick the collision that the pointer was directly over first
+    const overId = event.over ? String(event.over.id) : null
+    for (const collision of collisions) {
+      const d = collisionTargetData(collision)
+      if (d?.blockKey && d.sessionId && d.taskId && d.areaKind) {
+        if (overId && String(collision.id) === overId) {
+          return d
+        }
+      }
+    }
+    // otherwise fall back to any collision that carries a blockKey
+    for (const collision of collisions) {
+      const d = collisionTargetData(collision)
+      if (d?.blockKey && d.sessionId && d.taskId && d.areaKind) {
+        return d
+      }
+    }
+  }
+  return candidate
+}
+
+// replace the original call site to use the helper above
+
 
 function findVisibleTaskIdsForCanvas(session: CourseSession, canvasId: CanvasId | null): TaskId[] {
   if (!canvasId) {
@@ -180,7 +320,7 @@ export function useCardDrop() {
       const { active } = event
 
       const source = active.data.current as DragSourceData | undefined
-      const target = resolveDropTarget(event)
+      const target = resolveDropTargetWithBlockKey(event)
 
       if (!source || source.type !== "card") return
       if (!target) return
@@ -198,14 +338,23 @@ export function useCardDrop() {
           ? visibleTaskIds[0]
           : target.taskId
 
+      // For infinite canvas mode, use the actual drop coordinates
+      const dropPosition = target.infiniteMode && event.delta
+        ? {
+            x: event.delta.x,
+            y: event.delta.y,
+          }
+        : target.dropPosition ?? { x: 0, y: 0 }
+
       addDroppedCard(target.sessionId, resolvedTaskId, {
         id:         crypto.randomUUID() as DroppedCardId,
         cardId:     source.cardId,
         cardType:   source.cardType,
         taskId:     resolvedTaskId,
         areaKind:   target.areaKind,
-        position:   target.dropPosition ?? { x: 0, y: 0 },
-        dimensions: { width: 0, height: 0 },
+        blockKey:   target.blockKey,
+        position:   dropPosition,
+        dimensions: getDefaultCardDimensions(source.cardType),
         content:    source.content ?? { title: source.title ?? "" },
         order:      dropOrder,
       }, targetCanvasId)

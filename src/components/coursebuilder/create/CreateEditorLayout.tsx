@@ -19,6 +19,7 @@ import {
   type CollisionDetection,
   DndContext,
   DragOverlay,
+  MeasuringStrategy,
   PointerSensor,
   pointerWithin,
   rectIntersection,
@@ -43,7 +44,7 @@ import type { DragSourceData } from "@/components/coursebuilder/create/hooks/use
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type EditorMode = "curate" | "make" | "fix"
+import { useCreateModeStore } from "./store/createModeStore"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -51,36 +52,18 @@ interface CreateEditorLayoutProps {
   /** Course UUID — may be null when the wizard hasn't yet persisted a course. */
   courseId:   string | null
   className?: string
+  /** If false, the mode bar will not be rendered. Parent components (eg the
+   * wizard header) may render the bar separately when appropriate. */
+  showModeBar?: boolean
 }
 
 // ─── Mode bar ─────────────────────────────────────────────────────────────────
 
-function ModeBar({
-  mode,
-  onChange,
-}: {
-  mode:     EditorMode
-  onChange: (m: EditorMode) => void
-}) {
-  return (
-    <div className="flex items-center shrink-0 h-9 px-3 border-b border-neutral-200 bg-white gap-1">
-      {(["curate", "make", "fix"] as EditorMode[]).map((m) => (
-        <button
-          key={m}
-          onClick={() => onChange(m)}
-          className={[
-            "px-3 py-1 rounded text-[11px] font-semibold capitalize transition-colors",
-            mode === m
-              ? "bg-neutral-900 text-white"
-              : "text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100",
-          ].join(" ")}
-        >
-          {m}
-        </button>
-      ))}
-    </div>
-  )
-}
+// ModeBar is now a standalone component that reads from a shared store.
+// A separate file exports it so it can be rendered in the page header.
+import { ModeBar } from "./ModeBar"
+
+// (the previous ModeBar implementation was moved to ModeBar.tsx)
 
 // ─── Fix placeholder ──────────────────────────────────────────────────────────
 
@@ -112,10 +95,11 @@ function DragOverlayCard({ data }: { data: DragSourceData }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function CreateEditorLayout({ courseId, className }: CreateEditorLayoutProps) {
+export function CreateEditorLayout({ courseId, className, showModeBar = true }: CreateEditorLayoutProps) {
   const typedCourseId    = (courseId ?? "") as CourseId
 
-  const [mode, setMode] = useState<EditorMode>("curate")
+  // editor mode state lives in a global store so that the header can read it
+  const mode = useCreateModeStore((s) => s.mode)
 
   // Resizable file-browser sidebar
   const [sidebarWidth, setSidebarWidth] = useState(288)
@@ -217,13 +201,14 @@ export function CreateEditorLayout({ courseId, className }: CreateEditorLayoutPr
       id="course-editor-dnd"
       sensors={sensors}
       collisionDetection={collisionDetection}
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
       <div className={`flex flex-col w-full h-full overflow-hidden bg-neutral-100 ${className ?? ""}`}>
         {/* Top mode bar */}
-        <ModeBar mode={mode} onChange={setMode} />
+        {showModeBar !== false && <ModeBar />}
 
         {/* Mode bodies */}
         {mode === "curate" && (

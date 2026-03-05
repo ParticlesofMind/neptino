@@ -56,6 +56,24 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
       const generationSettings = (data.generation_settings as Record<string, unknown> | null) ?? {}
       const courseLayout    = (data.course_layout         as Record<string, unknown> | null) ?? {}
       const scheduleSettings = (data.schedule_settings   as Record<string, unknown> | null) ?? {}
+      const templateSettingsRaw = (data.template_settings as Record<string, unknown> | null) ?? {}
+
+      // Build a fieldState lookup keyed by template type so that each session
+      // can receive the correct per-block field visibility from the saved template.
+      // Use the FIRST template per type to match the setup page's .find() behaviour —
+      // iterating without a guard would cause the last template of each type to win,
+      // which diverges from what the user sees and configures in setup.
+      const fieldStateByType: Record<string, Partial<Record<string, Record<string, boolean>>>> = {}
+      const templateList = Array.isArray(templateSettingsRaw.templates)
+        ? (templateSettingsRaw.templates as Array<Record<string, unknown>>)
+        : []
+      for (const tpl of templateList) {
+        const type = typeof tpl.type === "string" ? tpl.type : null
+        const fieldState = tpl.fieldState as Partial<Record<string, Record<string, boolean>>> | undefined
+        if (type && fieldState && typeof fieldState === "object" && !(type in fieldStateByType)) {
+          fieldStateByType[type] = fieldState
+        }
+      }
 
 
       // ── Build lessons map (lesson_number → saved row) ──────────────────
@@ -69,8 +87,29 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
         ? (curriculum.session_rows as RawSessionRow[])
         : []
 
-      if (rowsRaw.length === 0 && Array.isArray(scheduleSettings.generated_entries)) {
-        rowsRaw = (scheduleSettings.generated_entries as RawScheduleEntry[]).map((entry, i) => ({
+      // Merge schedule dates from generated entries into session rows.
+      // curriculum_data.session_rows does not store schedule dates directly;
+      // the authoritative date values live in schedule_settings.generated_entries.
+      // Without this merge, schedule_date is always empty on the canvas even
+      // when the template has the Date field enabled.
+      const generatedEntries: RawScheduleEntry[] = Array.isArray(scheduleSettings.generated_entries)
+        ? (scheduleSettings.generated_entries as RawScheduleEntry[])
+        : []
+
+      if (rowsRaw.length > 0 && generatedEntries.length > 0) {
+        rowsRaw = rowsRaw.map((row, idx) => {
+          if (row.schedule_date) return row
+          const sessionNum = row.session_number ?? idx + 1
+          // Match by session number first, fall back to positional index.
+          const entry =
+            generatedEntries.find((e) => (e.session ?? 0) === sessionNum) ??
+            generatedEntries[idx]
+          return entry?.date ? { ...row, schedule_date: entry.date } : row
+        })
+      }
+
+      if (rowsRaw.length === 0 && generatedEntries.length > 0) {
+        rowsRaw = generatedEntries.map((entry, i) => ({
           id:             entry.id ?? `session-${i}`,
           session_number: entry.session ?? i + 1,
           title:          `Session ${i + 1}`,
@@ -111,6 +150,7 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
         topicsPerLesson:    Number(curriculum.topics     ?? 1),
         objectivesPerTopic: Number(curriculum.objectives ?? 2),
         tasksPerObjective:  Number(curriculum.tasks      ?? 2),
+        fieldStateByType,
       }
 
       // ── Build + merge sessions ───────────────────────────────────────────

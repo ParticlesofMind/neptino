@@ -48,6 +48,8 @@ export interface DroppedCard {
   cardType: CardType
   taskId: TaskId
   areaKind: TaskAreaKind
+  /** Which block this card was dropped into — scopes rendering to the originating block */
+  blockKey?: BlockKey
   position: { x: number; y: number }
   dimensions: { width: number; height: number }
   /** Card-type-specific payload */
@@ -115,6 +117,15 @@ export interface CanvasPage {
    */
   contentObjectiveRange?: { start: number; end?: number }
   /**
+   * Task-level split within the objective shown on this page.
+   * Both bounds are session-global flat task indices (0-based, inclusive
+   * start, exclusive end) spanning all tasks across all objectives in order.
+   * undefined → render all tasks for the visible objective slice.
+   * Used as a fallback when a single large objective cannot be split at
+   * objective boundaries.
+   */
+  contentTaskRange?: { start: number; end?: number }
+  /**
    * Card-level split for template-free canvases.
    * Bounds are absolute card indices (0-based, inclusive start, exclusive end)
    * across the session's flattened dropped-card list sorted by `order`.
@@ -133,6 +144,18 @@ export interface CourseSession {
   canvases: CanvasPage[]
   topics: Topic[]
   durationMinutes?: number
+  /**
+   * The template type selected for this session (e.g. "lesson", "quiz", "exam").
+   * Drives which blocks the canvas renders via `blockKeys` on each CanvasPage.
+   */
+  templateType?: string
+  /**
+   * Per-block field visibility flags sourced from the active template's fieldState.
+   * Shape: { [blockKey]: { [fieldKey]: boolean } }
+   * Forwarded to BlockRenderer and individual block components to
+   * show/hide optional columns and task-area zones.
+   */
+  fieldEnabled?: Partial<Record<string, Record<string, boolean>>>
   // ── Course-level metadata — sourced at load time, used by Header/Footer ──
   courseTitle?: string
   institution?: string

@@ -25,11 +25,16 @@ import { CanvasPage as CanvasPageView } from "./CanvasPage"
 import { useCanvasStore }    from "../store/canvasStore"
 import { CanvasControlsStrip } from "./CanvasControlsStrip"
 import { PageNavStrip } from "./CanvasPageNavStrip"
+import { useLayoutEngine } from "../hooks/useLayoutEngine"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_GAP = 32
-const OVERSCAN = 1
+// Render enough extra rows so continuation canvas pages (created dynamically by
+// useCanvasOverflow splits) are mounted and measured before the user scrolls to
+// them.  Each session may need several overflow splits to converge, so keeping
+// a buffer of 5 extra rows ensures cascading splits happen without manual scrolling.
+const OVERSCAN = 5
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -37,6 +42,8 @@ interface CanvasVirtualizerProps {
   sessions:  CourseSession[]
   dims?:     PageDimensions
   bodyData?: Record<string, Record<string, unknown>>
+  /** If true, disable automatic overflow detection and page splitting */
+  disableOverflow?: boolean
 }
 
 // ─── Field values helper ───────────────────────────────────────────────────────
@@ -59,8 +66,12 @@ function makeFieldValues(
 
     // Course metadata (Header block: lesson_label | session_label | module | course_title | level)
     course_title:   session.courseTitle ?? "",
+    // Aliases used by HeaderBlock and FooterBlock
+    course_name:    session.courseTitle ?? session.title,
+    session_title:  session.title,
     module:         session.moduleName  ?? "",
     module_title:   session.moduleName  ?? "",
+    module_name:    session.moduleName  ?? "",
     level:          session.pedagogy    ?? "",
     pedagogy:       session.pedagogy    ?? "",
     teacher_name:   session.teacherName ?? "",
@@ -96,12 +107,33 @@ type VirtualRow =
 
 const SESSION_LABEL_HEIGHT = 48
 
+// ─── Layout syncer ────────────────────────────────────────────────────────────
+
+/**
+ * Renders nothing. Runs useLayoutEngine for a single session so that the
+ * hook is called once per session (hooks cannot be called inside loops).
+ * If disableOverflow is true, the layout engine is skipped.
+ */
+function SessionLayoutSyncer({
+  session,
+  dims,
+  disableOverflow,
+}: {
+  session: CourseSession
+  dims:    PageDimensions
+  disableOverflow: boolean
+}) {
+  useLayoutEngine({ session, dims, disabled: disableOverflow })
+  return null
+}
+
 // ─── Virtualizer ──────────────────────────────────────────────────────────────
 
 export function CanvasVirtualizer({
   sessions,
   dims = DEFAULT_PAGE_DIMENSIONS,
   bodyData = {},
+  disableOverflow = false,
 }: CanvasVirtualizerProps) {
   const scrollParentRef = useRef<HTMLDivElement>(null)
   const zoomLevel       = useCanvasStore((s) => s.zoomLevel)
@@ -168,6 +200,11 @@ export function CanvasVirtualizer({
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
+      {/* One layout syncer per session — runs useLayoutEngine for each session */}
+      {sessions.map((session) => (
+        <SessionLayoutSyncer key={session.id} session={session} dims={dims} disableOverflow={disableOverflow} />
+      ))}
+
       {/* Canvas area: controls | pages | nav */}
       <div className="flex flex-1 min-h-0 overflow-hidden bg-neutral-200">
         <CanvasControlsStrip />
@@ -245,6 +282,7 @@ export function CanvasVirtualizer({
                     fieldValues={row.fieldValues}
                     bodyData={bodyData}
                     virtualIndex={virtualRow.index}
+                    disableOverflow={disableOverflow}
                   />
                 </div>
               )

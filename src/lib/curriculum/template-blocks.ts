@@ -1,5 +1,5 @@
 /**
- * Template blocks — stub file. The full template system will be rebuilt here.
+ * Template blocks — canonical definition of every template type and its default block composition.
  */
 
 export type TemplateType = "lesson" | "certificate" | "quiz" | "assessment" | "exam"
@@ -18,17 +18,25 @@ export interface TemplateDesignConfig {
   blockSettings?: Partial<Record<TemplateBlockType, Record<string, unknown>>>
 }
 
-const DEFAULT_BLOCKS: TemplateBlockType[] = [
-  "header",
-  "program",
-  "resources",
-  "content",
-  "assignment",
-  "footer",
+/** All available template types in display order. */
+export const ALL_TEMPLATE_TYPES: TemplateType[] = [
+  "lesson",
+  "certificate",
+  "quiz",
+  "assessment",
+  "exam",
 ]
 
-export function getDefaultBlocksForType(_type: TemplateType): TemplateBlockType[] {
-  return DEFAULT_BLOCKS
+const BLOCKS_BY_TYPE: Record<TemplateType, TemplateBlockType[]> = {
+  lesson:      ["header", "program", "resources", "content", "assignment", "footer"],
+  certificate: ["header", "footer"],
+  quiz:        ["header", "resources", "scoring", "footer"],
+  assessment:  ["header", "program", "content", "scoring", "footer"],
+  exam:        ["header", "program", "content", "scoring", "footer"],
+}
+
+export function getDefaultBlocksForType(type: TemplateType): TemplateBlockType[] {
+  return BLOCKS_BY_TYPE[type] ?? BLOCKS_BY_TYPE.lesson
 }
 
 export function createDefaultTemplateDesign(_type?: TemplateType): TemplateDesignConfig {

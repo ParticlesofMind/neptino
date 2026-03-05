@@ -11,12 +11,12 @@ import {
 } from "@/components/coursebuilder"
 import {
   BLOCK_FIELDS,
-  LESSON_TEMPLATE_BLOCKS,
   TEMPLATE_TYPES,
   createDefaultTemplateFieldState,
   type BlockId,
   type TemplateFieldState,
 } from "./template-fields"
+import { getDefaultBlocksForType } from "@/lib/curriculum/template-blocks"
 import { TemplateConfigPanel } from "./template-config-panel"
 import { TemplateHeaderActions } from "./template-header-actions"
 import { TemplatePreviewPanel } from "./template-preview-panel"
@@ -41,11 +41,7 @@ interface CurriculumShape {
   session_rows?: Array<Record<string, unknown>>
 }
 
-export type SetupTemplateType = "lesson"
-
-const TEMPLATE_BLOCKS_BY_TYPE: Record<SetupTemplateType, BlockId[]> = {
-  lesson: LESSON_TEMPLATE_BLOCKS,
-}
+export type SetupTemplateType = "lesson" | "certificate" | "quiz" | "assessment" | "exam"
 
 function createTemplateDefinition(
   type: SetupTemplateType,
@@ -58,7 +54,7 @@ function createTemplateDefinition(
     type,
     label,
     description,
-    blocks: [...TEMPLATE_BLOCKS_BY_TYPE[type]],
+    blocks: [...getDefaultBlocksForType(type)],
     fieldState,
   }
 }
@@ -88,6 +84,12 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string>("")
+  // When activating a saved template we set fieldState and selectedTemplateType
+  // together.  The selectedTemplateType effect would normally reset fieldState to
+  // defaults (to keep the config panel in sync when the user switches types via
+  // the dropdown).  This flag tells the effect to skip that reset for the current
+  // render cycle so the saved fieldState is preserved.
+  const skipFieldStateResetRef = useRef(false)
 
   // Refs used for debounced fieldState auto-save —
   // using refs avoids the effect re-running when templateSettings changes
@@ -132,7 +134,8 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   )
   const savedTemplates = Array.isArray(templateSettings.templates) ? templateSettings.templates : []
 
-  const selectedBlocks = TEMPLATE_BLOCKS_BY_TYPE[selectedTemplateType]
+  const selectedBlocks = getDefaultBlocksForType(selectedTemplateType)
+
 
   const handleToggleOptional = useCallback((block: BlockId, key: string, checked: boolean) => {
     const def = (BLOCK_FIELDS[block] ?? []).find((field) => field.key === key)
@@ -168,6 +171,12 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   }, [courseId])
 
   useEffect(() => {
+    // Skip reset when activating a saved template — fieldState was already set
+    // to the saved template's state in the event handler.
+    if (skipFieldStateResetRef.current) {
+      skipFieldStateResetRef.current = false
+      return
+    }
     setFieldState(createDefaultTemplateFieldState(selectedTemplateType))
     // Selecting a different template type resets the editing context
     fieldStateInteractedRef.current = false
@@ -279,8 +288,15 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
 
   const openCreatePopup = useCallback(() => {
     setShowLoadPopup(false)
+    // Reset name to match the currently selected type
+    setCreateName((prev) => {
+      const defaultName = createType.charAt(0).toUpperCase() + createType.slice(1)
+      // Only reset if it looks like an auto-generated / default name
+      const knownDefaults = ["Lesson", "Certificate", "Quiz", "Assessment", "Exam"]
+      return knownDefaults.includes(prev) ? defaultName : prev
+    })
     setShowCreatePopup((prev) => !prev)
-  }, [])
+  }, [createType])
 
   const openLoadPopup = useCallback(() => {
     if (!savedTemplates.length) return
@@ -289,10 +305,36 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setShowLoadPopup((prev) => !prev)
   }, [savedTemplates])
 
+  const handleActivateTemplate = useCallback((templateId: string) => {
+    const targetTemplate = savedTemplates.find((t) => t.id === templateId)
+    if (!targetTemplate) return
+    // Guard must be set BEFORE setSelectedTemplateType so the effect that
+    // resets fieldState to type defaults sees the flag and skips the reset.
+    if (targetTemplate.fieldState) {
+      skipFieldStateResetRef.current = true
+      setFieldState(targetTemplate.fieldState)
+    }
+    setActiveTemplateId(templateId)
+    setSelectedTemplateType(targetTemplate.type)
+    fieldStateInteractedRef.current = false
+    setMessage("Template loaded.")
+  }, [savedTemplates])
+
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
+    const nextSettings: TemplateSettingsShape = {
+      ...templateSettings,
+      templates: savedTemplates.filter((t) => t.id !== templateId),
+    }
+    if (activeTemplateId === templateId) {
+      setActiveTemplateId(null)
+    }
+    await saveTemplateSettings(nextSettings)
+  }, [activeTemplateId, saveTemplateSettings, savedTemplates, templateSettings])
+
   return (
     <SetupSection
       title="Templates"
-      description="Create and load a reusable lesson template for coursebuilder sessions."
+      description="Create and configure reusable templates applied to course sessions."
       headerActions={(
         <TemplateHeaderActions
           canCreate={Boolean(courseId) && !saving}
@@ -305,6 +347,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
           createDescription={createDescription}
           selectedLoadTemplateId={selectedLoadTemplateId}
           savedTemplates={savedTemplates}
+          activeTemplateId={activeTemplateId}
           onOpenCreate={openCreatePopup}
           onOpenLoad={openLoadPopup}
           onCloseCreate={() => setShowCreatePopup(false)}
@@ -315,28 +358,44 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
           onChangeSelectedLoadTemplate={setSelectedLoadTemplateId}
           onCreate={handleCreateTemplate}
           onLoad={handleLoadTemplate}
+          onActivateTemplate={handleActivateTemplate}
+          onDeleteTemplate={handleDeleteTemplate}
         />
       )}
     >
       <SetupPanels
         config={(
           <div className="space-y-4">
+            {/* Active template indicator */}
+            {activeTemplateId && (() => {
+              const activeTpl = savedTemplates.find((t) => t.id === activeTemplateId)
+              return activeTpl ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Active template</span>
+                  <span className="text-xs font-medium text-foreground">{activeTpl.label}</span>
+                  <span className="rounded border border-border bg-background/70 px-1.5 py-0.5 text-[10px] text-muted-foreground capitalize">{activeTpl.type}</span>
+                </div>
+              ) : null
+            })()}
+
+            {/* Field toggle panel */}
             <div className="rounded-lg border border-border bg-background p-4">
-              <div>
-                <TemplateConfigPanel
-                  blocks={selectedBlocks}
-                  fieldDefs={BLOCK_FIELDS}
-                  fieldState={fieldState}
-                  onToggleOptional={handleToggleOptional}
-                />
-              </div>
+              <TemplateConfigPanel
+                blocks={selectedBlocks}
+                fieldDefs={BLOCK_FIELDS}
+                fieldState={fieldState}
+                onToggleOptional={handleToggleOptional}
+              />
               {message && <p className="mt-3 text-xs text-muted-foreground">{message}</p>}
               {!courseId && <p className="mt-2 text-xs text-muted-foreground">Create a course first to save templates.</p>}
             </div>
           </div>
         )}
         preview={(
-          <TemplatePreviewPanel blocks={selectedBlocks} fieldState={fieldState} />
+          <TemplatePreviewPanel
+            blocks={selectedBlocks}
+            fieldState={fieldState}
+          />
         )}
       />
     </SetupSection>

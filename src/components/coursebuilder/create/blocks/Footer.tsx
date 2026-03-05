@@ -2,17 +2,27 @@
 
 import type { BlockRenderProps } from "../types"
 
-export function FooterBlock({ fieldValues }: BlockRenderProps) {
-  const title      = fieldValues.course_name  || fieldValues.session_title || ""
-  const moduleName = fieldValues.module_name  || ""
-  const pageNumber = fieldValues.page_number  || "1"
+export function FooterBlock({ fieldValues, fieldEnabled }: BlockRenderProps) {
+  const fe = fieldEnabled?.footer
 
-  const leftText = [title, moduleName].filter(Boolean).join(" \u00b7 ")
+  const showCourseName  = fe ? (fe["course_name"]  ?? false) : true
+  const showModuleName  = fe ? (fe["module_name"]  ?? false) : true
+  const showPageNumber  = fe ? (fe["page_number"]  ?? true)  : true
+
+  const sessionTitle = fieldValues.session_title || fieldValues.course_name || ""
+  const courseName   = showCourseName ? (fieldValues.course_name || "") : ""
+  const moduleName   = showModuleName ? (fieldValues.module_name || "")  : ""
+  const pageNumber   = showPageNumber ? (fieldValues.page_number || "1") : ""
+
+  // Left side: session title is always shown; course name and module name are optional
+  const leftText = [sessionTitle, courseName !== sessionTitle ? courseName : "", moduleName]
+    .filter(Boolean)
+    .join(" \u00b7 ")
 
   return (
     <footer className="flex h-full items-center justify-between px-4 border-t border-neutral-200 text-[10px] text-neutral-400">
       <span>{leftText}</span>
-      <span>{pageNumber}</span>
+      {pageNumber ? <span>{pageNumber}</span> : null}
     </footer>
   )
 }

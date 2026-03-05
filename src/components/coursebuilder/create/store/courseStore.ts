@@ -12,11 +12,14 @@ import type {
   TopicId,
   ObjectiveId,
   TaskId,
+  BlockKey,
 } from "../types"
 import {
   expandCanvasCardRangesForInsertion,
   normalizeCanvasCardRanges,
 } from "./cardRangeUtils"
+import type { PageAssignment } from "../layout/layoutEngine"
+import { fullPageBlockKeys } from "../layout/layoutEngine"
 
 // ─── Shape ────────────────────────────────────────────────────────────────────
 
@@ -40,7 +43,7 @@ interface CourseState {
   appendCanvasPage: (
     sessionId: SessionId,
     contentTopicStart?: number,
-    options?: { topicEnd?: number; objectiveStart?: number; cardStart?: number; cardEnd?: number },
+    options?: { topicEnd?: number; objectiveStart?: number; cardStart?: number; cardEnd?: number; blockKeys?: BlockKey[] },
   ) => void
 
   setCanvasTopicRange: (
@@ -59,6 +62,15 @@ interface CourseState {
   ) => void
 
   setCanvasMeasuredHeight: (canvasId: CanvasId, heightPx: number) => void
+
+  /**
+   * Atomically reconcile a session's canvas pages with the given assignments
+   * produced by the layout engine.
+   *
+   * Existing canvas IDs are reused where possible so React keys stay stable.
+   * Extra canvases are pruned; new ones are appended with fresh IDs.
+   */
+  syncPageAssignments: (sessionId: SessionId, assignments: PageAssignment[]) => void
 
   getActiveSession: () => CourseSession | undefined
 }
@@ -117,7 +129,12 @@ export const useCourseStore = create<CourseState>()(
                 ...obj,
                 tasks: obj.tasks.map((task) =>
                   task.id === taskId
-                    ? { ...task, droppedCards: [...task.droppedCards, card] }
+                    ? {
+                        ...task,
+                        droppedCards: [...task.droppedCards, card].sort(
+                          (a, b) => a.order - b.order,
+                        ),
+                      }
                     : task,
                 ),
               })),
@@ -157,7 +174,7 @@ export const useCourseStore = create<CourseState>()(
                       oi !== 0 ? obj : {
                         ...obj,
                         tasks: obj.tasks.map((task, ki) =>
-                          ki !== 0 ? task : { ...task, droppedCards: [...task.droppedCards, card] }
+                          ki !== 0 ? task : { ...task, droppedCards: [...task.droppedCards, card].sort((a, b) => a.order - b.order) }
                         ),
                       }
                     ),
@@ -241,6 +258,10 @@ export const useCourseStore = create<CourseState>()(
               id: crypto.randomUUID() as CanvasId,
               sessionId,
               pageNumber: nextPage,
+              // Caller-supplied block keys for continuation pages. When provided,
+              // only those blocks are rendered (e.g. only content/assignment on
+              // overflow pages — program/resources must not repeat).
+              ...(options?.blockKeys !== undefined ? { blockKeys: options.blockKeys } : {}),
               // If the caller supplies a topic start index this page continues from
               // that point in the flat topic list (overflow-driven pagination).
               ...(contentTopicStart !== undefined
@@ -306,6 +327,35 @@ export const useCourseStore = create<CourseState>()(
               c.id === canvasId ? { ...c, measuredContentHeightPx: heightPx } : c,
             ),
           })),
+        })),
+
+      syncPageAssignments: (sessionId, assignments) =>
+        set((state) => ({
+          sessions: mapSession(state.sessions, sessionId, (session) => {
+            const existing = session.canvases
+            const next: CanvasPage[] = assignments.map((assignment, i) => {
+              // Reuse the existing canvas ID at this index for React key stability.
+              const existingId = existing[i]?.id ?? (crypto.randomUUID() as CanvasId)
+              const blockKeys  = fullPageBlockKeys(assignment, session)
+              const page: CanvasPage = {
+                id:         existingId,
+                sessionId,
+                pageNumber: i + 1,
+                blockKeys,
+                ...(assignment.topicRange
+                  ? { contentTopicRange: assignment.topicRange }
+                  : {}),
+                ...(assignment.objectiveRange
+                  ? { contentObjectiveRange: assignment.objectiveRange }
+                  : {}),
+                ...(assignment.taskRange
+                  ? { contentTaskRange: assignment.taskRange }
+                  : {}),
+              }
+              return page
+            })
+            return { ...session, canvases: next }
+          }),
         })),
 
       getActiveSession: () => {

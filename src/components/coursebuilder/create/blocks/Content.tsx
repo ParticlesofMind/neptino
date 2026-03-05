@@ -13,7 +13,7 @@ import {
   isBootstrappedTopic,
 } from "./contentBlockUtils"
 
-export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRenderProps) {
+export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled }: BlockRenderProps) {
   // Full topic list for this session (drives the visible slice below)
   const topics = useCourseStore(
     (s) => s.sessions.find((sess) => sess.id === sessionId)?.topics ?? [],
@@ -47,11 +47,24 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
     },
   )
 
+  const contentTaskRange = useCourseStore(
+    (s): { start: number; end?: number } | undefined => {
+      if (!canvasId) return undefined
+      const session = s.sessions.find((sess) => sess.id === sessionId)
+      if (!session) return undefined
+      const canvas = session.canvases.find((c) => (c.id as CanvasId) === canvasId)
+      return canvas?.contentTaskRange
+    },
+  )
+
   const topicStart: number = contentTopicRange?.start ?? 0
   const topicEnd:   number = contentTopicRange?.end   ?? topics.length
 
   const objStart: number        = contentObjectiveRange?.start ?? 0
   const objEnd:   number | undefined = contentObjectiveRange?.end
+
+  const taskStart: number       = contentTaskRange?.start ?? 0
+  const taskEnd:   number | undefined = contentTaskRange?.end
 
   // Catch-all droppable for the entire content block.
   // Routes drops to the first visible task on this page slice.
@@ -67,81 +80,126 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
     blockKey,
   }
   const { isOver: isCatchAllOver, setNodeRef: setCatchAllRef } = useDroppable({
-    id: `${sessionId}:catchall`,
+    id: `${sessionId}:${blockKey ?? "content"}:catchall`,
     data: catchAllDropData,
   })
 
   const visibleTopics = topics.slice(topicStart, topicEnd)
 
-  // Show all task-area phases by default; can be overridden via data.visibleAreas.
-  const ALL_AREAS: TaskAreaKind[] = ["instruction", "practice", "feedback"]
-  const visibleAreas: TaskAreaKind[] =
-    (data?.["visibleAreas"] as TaskAreaKind[] | undefined) ?? ALL_AREAS
+  // Determine visible task-area phases from the active template's fieldEnabled config.
+  // Falls back to showing all areas when no config is present.
+  const resolvedBlockKey = blockKey ?? "content"
+  const fe = fieldEnabled?.[resolvedBlockKey]
+  const showInstruction = fe ? (fe["instruction"] ?? true) : true
+  const showPractice    = fe ? (fe["practice"]    ?? true) : true
+  const showFeedback    = fe ? (fe["feedback"]    ?? true) : true
+  const visibleAreas: TaskAreaKind[] = [
+    ...(showInstruction ? ["instruction" as TaskAreaKind] : []),
+    ...(showPractice    ? ["practice"    as TaskAreaKind] : []),
+    ...(showFeedback    ? ["feedback"    as TaskAreaKind] : []),
+  ]
 
-  const isContinuation = topicStart > 0 || objStart > 0
+  const isContinuation = topicStart > 0 || objStart > 0 || taskStart > 0
   const noTopicsAtAll  = topics.length === 0
 
+  function objectiveHasVisibleTask(tasksCount: number, flatTaskStart: number): boolean {
+    if (tasksCount <= 0) {
+      return taskStart <= flatTaskStart && (taskEnd === undefined || flatTaskStart < taskEnd)
+    }
+    for (let taskRelIdx = 0; taskRelIdx < tasksCount; taskRelIdx++) {
+      const flatTaskIdx = flatTaskStart + taskRelIdx
+      if (flatTaskIdx >= taskStart && (taskEnd === undefined || flatTaskIdx < taskEnd)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  const hasVisibleSlice = noTopicsAtAll || visibleTopics.some((topic, relIdx) => {
+    const absoluteIdx = topicStart + relIdx
+    const objsBeforeThisTopic = topics
+      .slice(0, absoluteIdx)
+      .reduce((sum, t) => sum + t.objectives.length, 0)
+    const tasksBeforeThisTopic = topics
+      .slice(0, absoluteIdx)
+      .reduce((sum, t) => sum + t.objectives.reduce((os, o) => os + o.tasks.length, 0), 0)
+
+    return topic.objectives.some((obj, objRelIdx) => {
+      const flatObjIdx = objsBeforeThisTopic + objRelIdx
+      if (flatObjIdx < objStart) return false
+      if (objEnd !== undefined && flatObjIdx >= objEnd) return false
+
+      const tasksBeforeThisObj = tasksBeforeThisTopic
+        + topic.objectives.slice(0, objRelIdx).reduce((s, o) => s + o.tasks.length, 0)
+      return objectiveHasVisibleTask(obj.tasks.length, tasksBeforeThisObj)
+    })
+  })
+
+  if (!hasVisibleSlice) return null
+
   return (
-    <section ref={setCatchAllRef} className="rounded-lg border border-neutral-200 relative">
+    <section
+      ref={setCatchAllRef}
+      className={[
+        "relative",
+        isContinuation ? "" : "rounded-lg border border-neutral-200",
+      ].join(" ")}
+    >
       {/* Drag-active visual hint — shows the whole block as a drop target */}
       {mediaDragActive && (
         <div
           aria-hidden
           className={[
-            "absolute inset-0 z-10 rounded-lg border-2 border-dashed pointer-events-none transition-colors",
+            "absolute inset-0 z-10 border-2 border-dashed pointer-events-none transition-colors",
+            isContinuation ? "rounded-none" : "rounded-lg",
             isCatchAllOver
               ? "border-blue-400 bg-blue-50/40"
               : "border-blue-200",
           ].join(" ")}
         />
       )}
-      {/* Block header */}
-      <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-1 flex items-center gap-2">
-        <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400 flex-1">
-          Content
-        </h2>
-        {isContinuation && (
-          <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200 font-medium leading-none">
-            Continued
-          </span>
-        )}
-      </div>
 
-      <div className="bg-white px-3 py-2 space-y-2">
+      {!isContinuation && (
+        <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-1 flex items-center gap-2">
+          <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400 flex-1">
+            {blockKey === "assignment" ? "Assignment" : "Content"}
+          </h2>
+        </div>
+      )}
+
+      <div className={["bg-white space-y-2", isContinuation ? "px-0 py-0" : "px-3 py-2"].join(" ")}>
         {/*
-         * Fallback: no topics at all.
-         * Shows placeholder drop zones tied to a synthetic default-task ID.
-         * When a card is dropped, the store automatically creates a minimal
-         * topic \u2192 objective \u2192 task chain.
+         * No topics defined yet: render the same structural scaffold that
+         * appears once real topics exist — topic container → objective
+         * container → task-area drop zones — so the nesting is visible
+         * immediately.  Drop targets are live; the store bootstraps
+         * a minimal topic → objective → task chain on first drop.
          */}
         {noTopicsAtAll && (
-          <div className="space-y-1.5">
-            <div className="text-[10px] text-neutral-400 italic">
-              Drop content cards into the areas below
-            </div>
-            <div className="flex flex-col gap-2">
-              {visibleAreas.map((kind) => (
-                <TaskAreaDropZone
-                  key={kind}
-                  sessionId={sessionId}
-                  canvasId={canvasId}
-                  taskId={`${sessionId}${DEFAULT_TASK_SUFFIX}` as TaskId}
-                  areaKind={kind}
-                  blockKey={blockKey}
-                  label={AREA_LABELS[kind]}
-                  onRemoveCard={() => {}}
-                />
-              ))}
+          <div className="rounded border border-neutral-200 bg-neutral-50 p-1.5">
+            <div className="space-y-1.5 border-l-2 border-neutral-200 pl-1.5">
+              <div className="rounded border border-neutral-200 bg-white p-1.5">
+                <div className="flex flex-col gap-2">
+                  {visibleAreas.map((kind) => (
+                    <TaskAreaDropZone
+                      key={kind}
+                      sessionId={sessionId}
+                      canvasId={canvasId}
+                      taskId={`${sessionId}${DEFAULT_TASK_SUFFIX}` as TaskId}
+                      areaKind={kind}
+                      blockKey={blockKey}
+                      label={AREA_LABELS[kind]}
+                      onRemoveCard={() => {}}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Continuation page with no topics in its slice */}
-        {!noTopicsAtAll && visibleTopics.length === 0 && (
-          <div className="text-[10px] text-neutral-400 italic">
-            No further content for this session.
-          </div>
-        )}
+        {/* Continuation slice is empty — the block header and "Continued" badge
+            already communicate the state; no body content needed. */}
 
         {/* Render sliced topics */}
         {visibleTopics.map((topic, relIdx) => {
@@ -152,6 +210,11 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
           const objsBeforeThisTopic = topics
             .slice(0, absoluteIdx)
             .reduce((sum, t) => sum + t.objectives.length, 0)
+
+          // Flat task index: count all tasks in topics before this one
+          const tasksBeforeThisTopic = topics
+            .slice(0, absoluteIdx)
+            .reduce((sum, t) => sum + t.objectives.reduce((os, o) => os + o.tasks.length, 0), 0)
 
           // Skip this entire topic container if none of its objectives fall
           // within the current contentObjectiveRange (objective-level split).
@@ -183,10 +246,15 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
                 {topic.objectives.map((obj, objRelIdx) => {
                   const flatObjIdx = objsBeforeThisTopic + objRelIdx
 
-                  // Objective-level range filter — used when a single large topic
-                  // must be split across pages at objective boundaries.
+                  // Objective-level range filter
                   if (flatObjIdx < objStart) return null
                   if (objEnd !== undefined && flatObjIdx >= objEnd) return null
+
+                  // Flat task offset for this objective
+                  const tasksBeforeThisObj = tasksBeforeThisTopic
+                    + topic.objectives.slice(0, objRelIdx).reduce((s, o) => s + o.tasks.length, 0)
+
+                  if (!objectiveHasVisibleTask(obj.tasks.length, tasksBeforeThisObj)) return null
 
                   const hideObjLabel = bootstrapped && obj.label === ""
                   return (
@@ -214,7 +282,14 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
                             : "space-y-1.5 border-l-2 border-neutral-200 pl-1.5"
                         }
                       >
-                        {obj.tasks.map((task) => {
+                        {obj.tasks.map((task, taskRelIdx) => {
+                          const flatTaskIdx = tasksBeforeThisObj + taskRelIdx
+
+                          // Task-level range filter — used when a single large
+                          // objective must be split across pages at task boundaries.
+                          if (flatTaskIdx < taskStart) return null
+                          if (taskEnd !== undefined && flatTaskIdx >= taskEnd) return null
+
                           const hideTaskLabel = hideObjLabel && task.label === ""
                           return (
                             <div
@@ -235,7 +310,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data }: BlockRende
                               <div className="flex flex-col gap-2">
                                 {visibleAreas.map((kind) => {
                                   const cards = task.droppedCards
-                                    .filter((c) => c.areaKind === kind)
+                                    .filter((c) => c.areaKind === kind && (!c.blockKey || c.blockKey === resolvedBlockKey))
                                     .sort((a, b) => a.order - b.order)
                                   return (
                                     <TaskAreaDropZone

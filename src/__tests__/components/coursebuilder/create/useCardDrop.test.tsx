@@ -161,6 +161,106 @@ describe("canvas drop acceptance", () => {
     expect(taskB?.droppedCards[0]?.areaKind).toBe("practice")
   })
 
+  it("does not fall back to a body drop when blockKey collisions exist", () => {
+    const { session, sessionId, taskAId } = buildSession()
+    resetStoreWithSession(session)
+    const { result } = renderHook(() => useCardDrop())
+
+    // simulate a situation where both the broad body area and a catch-all
+    // for the content block are reported as collisions; previously the body
+    // droppable could win and yield card.blockKey === undefined.
+    act(() => {
+      result.current.onDragEnd({
+        active: {
+          data: {
+            current: {
+              type: "card",
+              cardId: "card-3" as CardId,
+              cardType: "text",
+              title: "Card 3",
+              content: { title: "Card 3" },
+            },
+          },
+        },
+        over: {
+          id: `${sessionId}:body`,
+          data: {
+            current: {
+              sessionId,
+              taskId: taskAId,
+              areaKind: "instruction",
+            },
+          },
+        },
+        collisions: [
+          { 
+            id: `${sessionId}:body`,
+            data: { droppableContainer: { data: { current: { sessionId, taskId: taskAId, areaKind: "instruction" } } } },
+          },
+          {
+            id: `${sessionId}:content:catchall`,
+            data: { droppableContainer: { data: { current: { sessionId, taskId: taskAId, areaKind: "instruction", blockKey: "content" } } } },
+          },
+        ],
+      } as never)
+    })
+
+    const updated = useCourseStore.getState().sessions[0]
+    const cards = updated.topics[0].objectives[0].tasks[0].droppedCards
+    expect(cards).toHaveLength(1)
+    expect(cards[0]?.blockKey).toBe("content")
+  })
+
+  it("chooses the over target when multiple block-level collisions occur", () => {
+    const { session, sessionId, taskAId } = buildSession()
+    resetStoreWithSession(session)
+    const { result } = renderHook(() => useCardDrop())
+
+    // collisions list contains both content and assignment catchalls; the
+    // pointer is directly over the assignment zone, so assignment should win.
+    act(() => {
+      result.current.onDragEnd({
+        active: {
+          data: {
+            current: {
+              type: "card",
+              cardId: "card-4" as CardId,
+              cardType: "text",
+              title: "Card 4",
+              content: { title: "Card 4" },
+            },
+          },
+        },
+        over: {
+          id: `${sessionId}:assignment:catchall`,
+          data: {
+            current: {
+              sessionId,
+              taskId: taskAId,
+              areaKind: "instruction",
+              blockKey: "assignment",
+            },
+          },
+        },
+        collisions: [
+          {
+            id: `${sessionId}:content:catchall`,
+            data: { droppableContainer: { data: { current: { sessionId, taskId: taskAId, areaKind: "instruction", blockKey: "content" } } } },
+          },
+          {
+            id: `${sessionId}:assignment:catchall`,
+            data: { droppableContainer: { data: { current: { sessionId, taskId: taskAId, areaKind: "instruction", blockKey: "assignment" } } } },
+          },
+        ],
+      } as never)
+    })
+
+    const updated = useCourseStore.getState().sessions[0]
+    const cards = updated.topics[0].objectives[0].tasks[0].droppedCards
+    expect(cards).toHaveLength(1)
+    expect(cards[0]?.blockKey).toBe("assignment")
+  })
+
   it("re-expands card range after delete then add on same canvas", () => {
     const { session, sessionId, taskAId } = buildSession()
     const canvasAId = session.canvases[0]!.id

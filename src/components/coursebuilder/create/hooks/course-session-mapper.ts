@@ -12,12 +12,14 @@ import type {
   ObjectiveId,
   TaskId,
   CanvasId,
+  BlockKey,
   CourseSession,
   Topic,
   Objective,
   Task,
   CanvasPage,
 } from "../types"
+import { getDefaultBlocksForType, type TemplateType } from "@/lib/curriculum/template-blocks"
 
 // ─── Raw DB shape (subset of CurriculumSessionRow) ────────────────────────────
 
@@ -58,6 +60,8 @@ export interface CourseMeta {
   topicsPerLesson: number
   objectivesPerTopic: number
   tasksPerObjective: number
+  /** Per-template-type fieldState map; keyed by template type string (e.g. "lesson"). */
+  fieldStateByType?: Record<string, Partial<Record<string, Record<string, boolean>>>>
 }
 
 // ─── Loader state ─────────────────────────────────────────────────────────────
@@ -133,11 +137,15 @@ export function mapRowToSession(
     }
   })
 
+  const templateType = (rawRow.template_type ?? "lesson") as TemplateType
+  const blockKeys = getDefaultBlocksForType(templateType) as BlockKey[]
+
   const canvases: CanvasPage[] = [
     {
       id:        `${sessionId}-canvas-1` as CanvasId,
       sessionId,
       pageNumber: 1,
+      blockKeys,
     },
   ]
 
@@ -148,6 +156,8 @@ export function mapRowToSession(
     title:           rawRow.title ?? `Session ${index + 1}`,
     canvases,
     topics,
+    templateType,
+    fieldEnabled:    meta.fieldStateByType?.[templateType],
     durationMinutes: rawRow.duration_minutes,
     courseTitle:     meta.courseTitle,
     institution:     meta.institution,
@@ -185,11 +195,12 @@ function overlayDroppedCards(derived: Topic[], saved: Topic[]): Topic[] {
 }
 
 function normaliseNonOverlappingRanges(canvases: CanvasPage[]): CanvasPage[] {
+  // ── Forward pass: ensure range starts are monotonically non-decreasing ──────
   let topicCursor = 0
   let objectiveCursor = 0
   let cardCursor = 0
 
-  return canvases.map((canvas, idx) => {
+  const result: CanvasPage[] = canvases.map((canvas, idx) => {
     const next: CanvasPage = {
       ...canvas,
       pageNumber: idx + 1,
@@ -227,6 +238,59 @@ function normaliseNonOverlappingRanges(canvases: CanvasPage[]): CanvasPage[] {
 
     return next
   })
+
+  // ── Backward fill: cap open-ended ranges using the following page's start ───
+  //
+  // Prevents content overlap when page N has an open-ended range (or no range
+  // at all) while page N+1 already has a definite start index.  This is the
+  // root cause of the card-duplication bug: if an old saved session had page 1
+  // with no contentTopicRange but page 2 starting at topic 3, page 1 would
+  // render all topics (0..N) including those "owned" by page 2, making cards
+  // dropped into topic 3 visible on every page.
+  //
+  // Rules per range type:
+  //   • If page N has the range but no end  → fill end from page N+1's start.
+  //   • If page N has no range at all       → assign { start: 0, end: N+1's start }
+  //     (only when page N+1 has a range, meaning a split point exists).
+  for (let i = 0; i < result.length - 1; i++) {
+    const curr = result[i]!
+    const succ = result[i + 1]!
+
+    const nextTopicStart = succ.contentTopicRange?.start
+    if (nextTopicStart !== undefined) {
+      if (curr.contentTopicRange) {
+        if (curr.contentTopicRange.end === undefined) {
+          curr.contentTopicRange = { ...curr.contentTopicRange, end: nextTopicStart }
+        }
+      } else {
+        curr.contentTopicRange = { start: 0, end: nextTopicStart }
+      }
+    }
+
+    const nextObjStart = succ.contentObjectiveRange?.start
+    if (nextObjStart !== undefined) {
+      if (curr.contentObjectiveRange) {
+        if (curr.contentObjectiveRange.end === undefined) {
+          curr.contentObjectiveRange = { ...curr.contentObjectiveRange, end: nextObjStart }
+        }
+      } else {
+        curr.contentObjectiveRange = { start: 0, end: nextObjStart }
+      }
+    }
+
+    const nextCardStart = succ.contentCardRange?.start
+    if (nextCardStart !== undefined) {
+      if (curr.contentCardRange) {
+        if (curr.contentCardRange.end === undefined) {
+          curr.contentCardRange = { ...curr.contentCardRange, end: nextCardStart }
+        }
+      } else {
+        curr.contentCardRange = { start: 0, end: nextCardStart }
+      }
+    }
+  }
+
+  return result
 }
 
 import type { LessonRow } from "@/components/coursebuilder/course-queries"
@@ -250,13 +314,38 @@ export function mergeSavedLesson(
   // IDs that embed a previous session's UUID.  If two sessions end up with the
   // same canvas ID (e.g. both "<old-uuid>-canvas-1"), the virtualizer receives
   // duplicate React keys and canvasStore lookups bleed across sessions.
+  const derivedBlockKeys = getDefaultBlocksForType(
+    (derived.templateType ?? "lesson") as TemplateType,
+  ) as BlockKey[]
+
+  // Content-type blocks shown on continuation pages (no header/footer/fixed blocks).
+  // These are the blocks that repeat on every overflow page alongside their content slice.
+  const FIXED_BODY_BLOCKS = new Set(["header", "footer", "program", "resources", "project"])
+  const continuationBlockKeys = derivedBlockKeys.filter(
+    (k) => !FIXED_BODY_BLOCKS.has(k),
+  ) as BlockKey[]
+
   const anchoredCanvases = savedCanvases
-    ? savedCanvases.map((c, i) => ({
-        ...c,
-        id:        `${derived.id}-canvas-${i + 1}` as CanvasId,
-        sessionId: derived.id as SessionId,
-        blockKeys: undefined,
-      }))
+    ? savedCanvases
+        .filter((c, i) => {
+          if (i === 0) return true
+          // Drop continuation pages that have no range set — these are
+          // corrupt / legacy saves that would show duplicate content.
+          return !!(
+            c.contentTopicRange ??
+            c.contentObjectiveRange ??
+            c.contentCardRange
+          )
+        })
+        .map((c, i) => ({
+          ...c,
+          id:        `${derived.id}-canvas-${i + 1}` as CanvasId,
+          sessionId: derived.id as SessionId,
+          // Page 1 gets the full template block list; continuation pages
+          // get only the content-type blocks (content + assignment for lesson,
+          // scoring for quiz, etc.) — no fixed blocks (program/resources) repeating.
+          blockKeys: i === 0 ? derivedBlockKeys : continuationBlockKeys,
+        }))
     : null
 
   const normalisedCanvases = anchoredCanvases

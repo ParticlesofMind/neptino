@@ -53,6 +53,7 @@ export function useCurriculumSessionRows(params: {
           objective_names: Array.from({ length: norm.objectivesPerTopic }, (_, i) => existing?.objective_names?.[i] ?? ""),
           task_names: Array.from({ length: norm.tasksPerObjective }, (_, i) => existing?.task_names?.[i] ?? ""),
           competencies: existing?.competencies,
+          template_type: existing?.template_type ?? "lesson",
         }
 
         if (!existing) { changed = true; return nextRow }
@@ -98,6 +99,7 @@ export function useCurriculumSessionRows(params: {
           topic_names: Array.from({ length: norm.topicsPerLesson }, (_, i) => row?.topic_names?.[i] || ""),
           objective_names: Array.from({ length: norm.objectivesPerTopic }, (_, i) => row?.objective_names?.[i] || ""),
           task_names: Array.from({ length: norm.tasksPerObjective }, (_, i) => row?.task_names?.[i] || ""),
+          template_type: row?.template_type ?? "lesson",
         }
       }),
     [effectiveSessionCount, sessionRows, topics, objectives, tasks],
@@ -124,6 +126,7 @@ export function useCurriculumSessionRows(params: {
           objective_names: preview.objective_names,
           task_names: preview.task_names,
           competencies: preview.competencies,
+          template_type: preview.template_type ?? "lesson",
         }
 
         next[index] = { ...existing, ...updates }
