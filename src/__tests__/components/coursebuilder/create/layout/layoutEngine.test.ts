@@ -254,10 +254,30 @@ describe("computePageAssignments — topic splitting", () => {
     )
     const session = makeSession(topics)
     const result = computePageAssignments(session, DIMS)
-    if (result.length > 1) {
-      expect(result[1]!.blockKeys).not.toContain("program")
-      expect(result[1]!.blockKeys).not.toContain("resources")
+    const contentPages = result.filter(
+      (p) => p.blockKeys.includes("content") || p.blockKeys.includes("assignment"),
+    )
+    if (contentPages.length > 1) {
+      expect(contentPages[1]!.blockKeys).not.toContain("program")
+      expect(contentPages[1]!.blockKeys).not.toContain("resources")
     }
+  })
+
+  it("splits overflowing program/resources rows across dedicated fixed pages", () => {
+    const topics = Array.from({ length: 2 }, (_, i) =>
+      makeTopic(`t${i}`, `Topic ${i + 1}`, 1, 15),
+    )
+    const session = makeSession(topics)
+    const result = computePageAssignments(session, DIMS)
+
+    const fixedContinuationPages = result.filter(
+      (p) => p.blockKeys.includes("program") && p.blockKeys.includes("resources") && p.taskRange,
+    )
+
+    expect(fixedContinuationPages.length).toBeGreaterThan(1)
+    expect(fixedContinuationPages[0]!.taskRange!.start).toBe(0)
+    expect(fixedContinuationPages[0]!.taskRange!.end).toBeDefined()
+    expect(fixedContinuationPages[1]!.taskRange!.start).toBe(fixedContinuationPages[0]!.taskRange!.end)
   })
 
   it("never orders assignment before content on any page", () => {

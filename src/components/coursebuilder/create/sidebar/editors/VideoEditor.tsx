@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import Hls from "hls.js"
 import { Link as LinkIcon, Play, Plus, Trash2 } from "lucide-react"
 
 interface VideoEditorProps {
@@ -40,6 +41,9 @@ function parseChapters(raw: unknown): Chapter[] {
 
 export function VideoEditor({ content, onChange }: VideoEditorProps) {
   const [urlDraft, setUrlDraft] = useState(typeof content.url === "string" ? content.url : "")
+  const [streamStatus, setStreamStatus] = useState<"idle" | "native" | "hls" | "error">("idle")
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const hlsRef = useRef<Hls | null>(null)
 
   const url = typeof content.url === "string" ? content.url : ""
   const poster = typeof content.poster === "string" ? content.poster : ""
@@ -50,6 +54,46 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
   const provider = detectProvider(url)
   const ytId = provider === "youtube" ? extractYouTubeId(url) : null
   const vimeoId = provider === "vimeo" ? extractVimeoId(url) : null
+  const isHlsStream = /\.m3u8(\?|$)/i.test(url)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !url || provider !== "direct") return
+
+    if (hlsRef.current) {
+      hlsRef.current.destroy()
+      hlsRef.current = null
+    }
+
+    if (isHlsStream && Hls.isSupported()) {
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+      })
+      hls.loadSource(url)
+      hls.attachMedia(video)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => setStreamStatus("hls"))
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) {
+          setStreamStatus("error")
+        }
+      })
+      hlsRef.current = hls
+      return () => {
+        hls.destroy()
+        hlsRef.current = null
+      }
+    }
+
+    if (isHlsStream && video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = url
+      setStreamStatus("native")
+      return
+    }
+
+    video.src = url
+    setStreamStatus(isHlsStream ? "error" : "native")
+  }, [url, provider, isHlsStream])
 
   const commitUrl = () => onChange("url", urlDraft)
 
@@ -145,12 +189,25 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
               />
             </div>
           ) : (
-            <video
-              src={url}
-              controls
-              className="w-full max-h-52 bg-black"
-              poster={poster || undefined}
-            />
+            <div className="space-y-2">
+              <video
+                ref={videoRef}
+                controls
+                className="w-full max-h-52 bg-black"
+                poster={poster || undefined}
+              />
+              {isHlsStream && (
+                <p className={[
+                  "text-[10px]",
+                  streamStatus === "error" ? "text-red-500" : "text-neutral-500",
+                ].join(" ")}>
+                  {streamStatus === "hls" && "Adaptive streaming active via hls.js"}
+                  {streamStatus === "native" && "Adaptive streaming handled by browser"}
+                  {streamStatus === "error" && "Unable to load HLS stream on this browser"}
+                  {streamStatus === "idle" && "Loading stream..."}
+                </p>
+              )}
+            </div>
           )}
         </div>
       )}

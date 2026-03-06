@@ -82,6 +82,16 @@ function totalTaskRows(topics: Topic[]): number {
   )
 }
 
+export function estimateTaskTableRowCount(topics: Topic[]): number {
+  return totalTaskRows(topics)
+}
+
+export function estimateTableBlockBaseHeight(): number {
+  return 2 + SECTION_HEADER + TABLE_HEADER
+}
+
+export const TABLE_ROW_HEIGHT = TABLE_ROW
+
 export function estimateProgramHeight(topics: Topic[]): number {
   // section border (2) + section header (24) + table header (24) + N rows (25 each)
   return 2 + SECTION_HEADER + TABLE_HEADER + totalTaskRows(topics) * TABLE_ROW

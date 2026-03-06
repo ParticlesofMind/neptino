@@ -6,10 +6,17 @@ import { useCourseStore } from "../store/courseStore"
 const TD = "px-2 py-1 border border-neutral-200 text-neutral-700 text-[11px] align-top"
 const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border border-neutral-200 bg-neutral-50"
 
-export function ResourcesBlock({ sessionId, fieldValues, fieldEnabled }: BlockRenderProps) {
-  const topics = useCourseStore(
-    (s) => s.sessions.find((sess) => sess.id === sessionId)?.topics ?? [],
-  )
+export function ResourcesBlock({ sessionId, canvasId, fieldValues, fieldEnabled }: BlockRenderProps) {
+  const { topics, taskRange } = useCourseStore((s) => {
+    const session = s.sessions.find((sess) => sess.id === sessionId)
+    const canvas = canvasId
+      ? session?.canvases.find((c) => c.id === canvasId)
+      : undefined
+    return {
+      topics: session?.topics ?? [],
+      taskRange: canvas?.contentTaskRange,
+    }
+  })
 
   // Column visibility — default true when no fieldEnabled config is present
   const fe = fieldEnabled?.resources
@@ -36,6 +43,10 @@ export function ResourcesBlock({ sessionId, fieldValues, fieldEnabled }: BlockRe
     )
   )
 
+  const rowStart = taskRange?.start ?? 0
+  const rowEnd = taskRange?.end ?? rows.length
+  const visibleRows = rows.slice(rowStart, rowEnd)
+
   return (
     <section className="overflow-hidden rounded-lg border border-neutral-200">
       <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-1">
@@ -53,14 +64,14 @@ export function ResourcesBlock({ sessionId, fieldValues, fieldEnabled }: BlockRe
           </tr>
         </thead>
         <tbody>
-          {rows.length === 0 ? (
+          {visibleRows.length === 0 ? (
             <tr>
               <td colSpan={visibleColCount} className="px-2 py-2 border border-neutral-200 text-neutral-400 text-[11px] italic">
                 No tasks defined yet.
               </td>
             </tr>
           ) : (
-            rows.map((row, i) => (
+            visibleRows.map((row, i) => (
               <tr key={i}>
                 {showTask    && <td className={TD}>{row.label}</td>}
                 {showType    && <td className={TD}>{row.type}</td>}

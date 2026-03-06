@@ -35,10 +35,13 @@ import {
   OBJ_LABEL,
   estimateProgramHeight,
   estimateResourcesHeight,
+  estimateTaskTableRowCount,
+  estimateTableBlockBaseHeight,
   estimateTopicHeight,
   isBootstrappedTopic,
   singleObjHeight,
   singleTaskHeight,
+  TABLE_ROW_HEIGHT,
 } from "./blockHeightModel"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -71,6 +74,7 @@ export interface PageAssignment {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const CONTENT_TYPE: ReadonlySet<BlockKey> = new Set(["content", "assignment", "scoring"])
+const TASK_ROW_SPLIT_FIXED_KEYS: ReadonlySet<BlockKey> = new Set(["program", "resources"])
 
 function visibleAreas(
   blockKey: BlockKey,
@@ -92,6 +96,84 @@ function estimateFixedBlockHeight(key: BlockKey, session: CourseSession): number
   if (key === "resources") return estimateResourcesHeight(session.topics)
   if (key === "project")   return 180
   return 120 // generic fallback for unknown fixed blocks
+}
+
+interface FixedPlacementResult {
+  preludePages: PageAssignment[]
+  firstPageFixedKeys: BlockKey[]
+  firstPageBudget: number
+}
+
+function computeFixedPlacement(
+  session: CourseSession,
+  available: number,
+  fixedKeys: BlockKey[],
+): FixedPlacementResult {
+  if (fixedKeys.length === 0) {
+    return { preludePages: [], firstPageFixedKeys: [], firstPageBudget: available }
+  }
+
+  const rowSplitFixedKeys = fixedKeys.filter((k) => TASK_ROW_SPLIT_FIXED_KEYS.has(k))
+  const rowSplitKeySet = new Set(rowSplitFixedKeys)
+  const taskRowCount = estimateTaskTableRowCount(session.topics)
+  const rowBlocksPerPage = rowSplitFixedKeys.length
+  const rowHeightPerPage = rowBlocksPerPage * TABLE_ROW_HEIGHT
+
+  const pageCostForRows = (rows: number, includeNonRowFixed: boolean): number => {
+    const keysOnPage = fixedKeys.filter((k) => includeNonRowFixed || rowSplitKeySet.has(k))
+    let cost = 0
+    for (let i = 0; i < keysOnPage.length; i++) {
+      const key = keysOnPage[i]!
+      cost += rowSplitKeySet.has(key)
+        ? estimateTableBlockBaseHeight() + rows * TABLE_ROW_HEIGHT
+        : estimateFixedBlockHeight(key, session)
+      if (i < keysOnPage.length - 1) cost += BLOCK_GAP
+    }
+    return cost
+  }
+
+  const fullFixedCost = pageCostForRows(taskRowCount, true)
+  const gapAfterFixed = fixedKeys.length > 0 ? BLOCK_GAP : 0
+  const firstPageBudget = available - fullFixedCost - gapAfterFixed
+
+  // Fits on one page (or no row-splittable fixed blocks): keep current behavior.
+  if (rowBlocksPerPage === 0 || fullFixedCost <= available) {
+    return {
+      preludePages: [],
+      firstPageFixedKeys: fixedKeys,
+      firstPageBudget,
+    }
+  }
+
+  // Fixed table blocks overflow: split by task rows and carry overflow rows forward.
+  const preludePages: PageAssignment[] = []
+  let taskStart = 0
+  while (taskStart < taskRowCount) {
+    const includeNonRowFixed = taskStart === 0
+    const keysOnPage = includeNonRowFixed
+      ? fixedKeys
+      : rowSplitFixedKeys
+
+    const overhead = pageCostForRows(0, includeNonRowFixed)
+    const maxRowsBySpace = rowHeightPerPage > 0
+      ? Math.floor((available - overhead) / rowHeightPerPage)
+      : 0
+    const rowsOnPage = Math.max(1, Math.min(taskRowCount - taskStart, maxRowsBySpace))
+    const taskEnd = taskStart + rowsOnPage
+
+    preludePages.push({
+      blockKeys: [...keysOnPage],
+      taskRange: { start: taskStart, end: taskEnd >= taskRowCount ? undefined : taskEnd },
+    })
+
+    taskStart = taskEnd
+  }
+
+  return {
+    preludePages,
+    firstPageFixedKeys: [],
+    firstPageBudget: available,
+  }
 }
 
 /**
@@ -278,28 +360,23 @@ export function computePageAssignments(
   const fixedKeys   = bodyKeys.filter((k) => !CONTENT_TYPE.has(k))
   const contentKeys = bodyKeys.filter((k) => CONTENT_TYPE.has(k))
 
-  // No content blocks: place all fixed blocks on one page
+  const fixedPlacement = computeFixedPlacement(session, available, fixedKeys)
+
+  // No content blocks: return fixed-block placement only.
   if (contentKeys.length === 0 || session.topics.length === 0) {
+    if (fixedPlacement.preludePages.length > 0) return fixedPlacement.preludePages
     return [{ blockKeys: bodyKeys }]
   }
-
-  // ── Compute fixed block cost ────────────────────────────────────────────────
-
-  let fixedCost = 0
-  for (let i = 0; i < fixedKeys.length; i++) {
-    fixedCost += estimateFixedBlockHeight(fixedKeys[i]!, session)
-    if (i < fixedKeys.length - 1) fixedCost += BLOCK_GAP
-  }
-  const gapAfterFixed = fixedKeys.length > 0 ? BLOCK_GAP : 0
-  const firstPageBudget = available - fixedCost - gapAfterFixed
 
   // ── Distribute topics across pages by block flow ───────────────────────────
   // Content-type blocks are independent container flows. We paginate one block
   // at a time in template order (e.g. content then assignment), so containers
   // do not ping-pong on continuation pages.
 
-  const pages: PageAssignment[] = []
-  let hasEmittedFirstPage = false
+  const pages: PageAssignment[] = [...fixedPlacement.preludePages]
+  let hasEmittedFirstPage = fixedPlacement.preludePages.length > 0
+  const firstPageFixedKeys = fixedPlacement.firstPageFixedKeys
+  const firstPageBudget = fixedPlacement.firstPageBudget
 
   for (const flowKey of contentKeys) {
     const activeContentKeys: BlockKey[] = [flowKey]
@@ -430,7 +507,7 @@ export function computePageAssignments(
           const sliceEnd = Math.min(topicIdx + count, session.topics.length)
           const isLast   = sliceEnd >= session.topics.length
           pages.push({
-            blockKeys: !hasEmittedFirstPage ? [...fixedKeys, flowKey] : [...activeContentKeys],
+            blockKeys: !hasEmittedFirstPage ? [...firstPageFixedKeys, flowKey] : [...activeContentKeys],
             topicRange: { start: topicIdx, end: isLast ? undefined : sliceEnd },
           })
           topicIdx = sliceEnd
@@ -442,8 +519,8 @@ export function computePageAssignments(
           const objCount = objectivesInBudget(topic, 0, objBudget, activeContentKeys, isBootstrapped, fieldEnabled)
 
           if (objCount === 0 && !hasEmittedFirstPage) {
-            if (fixedKeys.length > 0) {
-              pages.push({ blockKeys: fixedKeys })
+            if (firstPageFixedKeys.length > 0) {
+              pages.push({ blockKeys: firstPageFixedKeys })
               hasEmittedFirstPage = true
             }
           } else if (objCount === 0) {
@@ -463,7 +540,7 @@ export function computePageAssignments(
             const isLastPage   = allTasksDone && isLastObj && isLastTopic
 
             pages.push({
-              blockKeys:     !hasEmittedFirstPage ? [...fixedKeys, flowKey] : [...activeContentKeys],
+              blockKeys:     !hasEmittedFirstPage ? [...firstPageFixedKeys, flowKey] : [...activeContentKeys],
               topicRange:     { start: topicIdx, end: isLastPage ? undefined : topicIdx + 1 },
               objectiveRange: { start: flatObjOffset, end: flatObjOffset + 1 },
               taskRange:      { start: flatTaskBase, end: allTasksDone ? undefined : flatTaskBase + newTaskEnd },
@@ -484,7 +561,7 @@ export function computePageAssignments(
             const allObjsFit   = objCount >= topic.objectives.length
             const isLastTopic  = topicIdx + 1 >= session.topics.length
             pages.push({
-              blockKeys: !hasEmittedFirstPage ? [...fixedKeys, flowKey] : [...activeContentKeys],
+              blockKeys: !hasEmittedFirstPage ? [...firstPageFixedKeys, flowKey] : [...activeContentKeys],
               topicRange: { start: topicIdx, end: (isLastTopic && allObjsFit) ? undefined : topicIdx + 1 },
               ...(!allObjsFit
                 ? { objectiveRange: { start: flatObjOffset, end: flatObjOffset + objCount } }

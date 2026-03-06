@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Trash2, Upload, Link as LinkIcon, ChevronUp, ChevronDown } from "lucide-react"
-import { AudioPreview } from "../../cards/card-type-preview-subviews"
+import { useEffect, useMemo, useRef, useState } from "react"
+import WaveSurfer from "wavesurfer.js"
+import { ChevronDown, ChevronUp, Link as LinkIcon, Pause, Play, Plus, Trash2, Upload } from "lucide-react"
 
 interface AudioEditorProps {
   content: Record<string, unknown>
@@ -12,6 +12,22 @@ interface AudioEditorProps {
 interface Chapter {
   time: string
   title: string
+}
+
+function toSeconds(timecode: string): number {
+  const parts = timecode.trim().split(":").map((p) => Number(p))
+  if (parts.some((n) => Number.isNaN(n) || n < 0)) return 0
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+  if (parts.length === 2) return parts[0] * 60 + parts[1]
+  if (parts.length === 1) return parts[0]
+  return 0
+}
+
+function formatSeconds(sec: number): string {
+  const safe = Math.max(0, Math.floor(sec))
+  const m = Math.floor(safe / 60)
+  const s = safe % 60
+  return `${m}:${String(s).padStart(2, "0")}`
 }
 
 function parseChapters(raw: unknown): Chapter[] {
@@ -24,13 +40,76 @@ function parseChapters(raw: unknown): Chapter[] {
 export function AudioEditor({ content, onChange }: AudioEditorProps) {
   const [urlDraft, setUrlDraft] = useState(typeof content.url === "string" ? content.url : "")
   const [urlTab, setUrlTab] = useState<"url" | "upload">("url")
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const waveformRef = useRef<HTMLDivElement | null>(null)
+  const waveSurferRef = useRef<WaveSurfer | null>(null)
 
   const url = typeof content.url === "string" ? content.url : ""
   const transcript = typeof content.transcript === "string" ? content.transcript : ""
   const playback = typeof content.playback === "string" ? content.playback : "1x"
   const chapters = parseChapters(content.chapters)
+  const playbackRate = useMemo(() => Number(playback.replace("x", "")) || 1, [playback])
+
+  useEffect(() => {
+    if (!waveformRef.current) return
+    const ws = WaveSurfer.create({
+      container: waveformRef.current,
+      waveColor: "#cbd5e1",
+      progressColor: "#4a94ff",
+      cursorColor: "#0f172a",
+      barWidth: 2,
+      barGap: 1,
+      barRadius: 2,
+      height: 72,
+      normalize: true,
+      autoScroll: true,
+    })
+
+    ws.on("ready", () => {
+      setDuration(ws.getDuration())
+      ws.setPlaybackRate(playbackRate)
+    })
+    ws.on("timeupdate", (time) => setCurrentTime(time))
+    ws.on("play", () => setIsPlaying(true))
+    ws.on("pause", () => setIsPlaying(false))
+    ws.on("finish", () => setIsPlaying(false))
+
+    waveSurferRef.current = ws
+    return () => {
+      ws.destroy()
+      waveSurferRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const ws = waveSurferRef.current
+    if (!ws || !url) return
+    ws.load(url)
+  }, [url])
+
+  useEffect(() => {
+    const ws = waveSurferRef.current
+    if (!ws) return
+    ws.setPlaybackRate(playbackRate)
+  }, [playbackRate])
 
   const commitUrl = () => onChange("url", urlDraft)
+
+  const togglePlay = () => {
+    const ws = waveSurferRef.current
+    if (!ws) return
+    void ws.playPause()
+  }
+
+  const seekToChapter = (timecode: string) => {
+    const ws = waveSurferRef.current
+    if (!ws || duration <= 0) return
+    const target = Math.min(toSeconds(timecode), duration)
+    ws.seekTo(target / duration)
+    setCurrentTime(target)
+  }
 
   const addChapter = () => {
     onChange("chapters", [...chapters, { time: "0:00", title: "Chapter" }])
@@ -105,7 +184,22 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
       {/* Waveform player */}
       {url && (
         <div className="px-4 py-4 border-b border-neutral-100 bg-neutral-50">
-          <AudioPreview url={url} />
+          <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-3">
+            <div ref={waveformRef} />
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] font-mono text-neutral-500">
+                {formatSeconds(currentTime)} / {formatSeconds(duration)}
+              </div>
+              <button
+                type="button"
+                onClick={togglePlay}
+                className="inline-flex items-center gap-1 rounded-md border border-neutral-900 bg-neutral-900 px-2.5 py-1 text-[11px] font-medium text-white hover:opacity-90"
+              >
+                {isPlaying ? <Pause size={11} /> : <Play size={11} />}
+                {isPlaying ? "Pause" : "Play"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -148,6 +242,7 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
                 type="text"
                 value={ch.time}
                 onChange={(e) => updateChapter(i, "time", e.target.value)}
+                onBlur={() => seekToChapter(ch.time)}
                 className="w-16 shrink-0 border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] font-mono text-neutral-700 outline-none focus:border-neutral-400"
                 placeholder="0:00"
               />
@@ -163,6 +258,13 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
               </button>
               <button type="button" onClick={() => moveChapter(i, 1)} className="text-neutral-400 hover:text-neutral-700">
                 <ChevronDown size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={() => seekToChapter(ch.time)}
+                className="text-[10px] font-medium text-[#4a94ff] hover:text-[#326fd0]"
+              >
+                Seek
               </button>
               <button type="button" onClick={() => removeChapter(i)} className="text-neutral-400 hover:text-red-500">
                 <Trash2 size={13} />

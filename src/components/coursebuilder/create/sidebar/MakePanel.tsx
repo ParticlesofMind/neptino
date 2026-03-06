@@ -229,21 +229,27 @@ export function MakePanel() {
     ...g,
     items: filtered.filter((s) => s.group === g.id),
   })).filter((g) => g.items.length > 0)
+  const totalCards = CARD_SPECS.length
+  const visibleCards = filtered.length
 
   const meta = CARD_TYPE_META[selected]
   const selectedSpec = CARD_SPECS.find((s) => s.cardType === selected)
   const accent = GROUP_ACCENT[selectedSpec?.group ?? "media"]
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-neutral-50">
+    <div className="flex h-full w-full overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#f5f7fb_100%)]">
 
       {/* ── Left nav ─────────────────────────────────────────────────────────── */}
       <div className="flex w-60 shrink-0 flex-col overflow-hidden border-r border-neutral-200 bg-white">
 
         {/* Nav header */}
-        <div className="shrink-0 px-4 pt-4 pb-3 border-b border-neutral-100">
+        <div className="shrink-0 border-b border-neutral-100 px-4 pb-3 pt-4">
           <p className="text-[11px] font-bold tracking-tight text-neutral-900">Card library</p>
-          <p className="text-[10px] text-neutral-400 mt-0.5">Choose a type to configure</p>
+          <p className="mt-0.5 text-[10px] text-neutral-400">Choose a type to configure</p>
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="rounded bg-[#4a94ff]/10 px-1.5 py-0.5 text-[9px] font-semibold text-[#2b6cd2]">{visibleCards} visible</span>
+            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[9px] font-semibold text-neutral-500">{totalCards} total</span>
+          </div>
         </div>
 
         {/* Search */}
@@ -363,6 +369,9 @@ export function MakePanel() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <span className="hidden rounded border border-[#00ccb3]/20 bg-[#00ccb3]/10 px-2 py-1 text-[10px] font-semibold text-[#008f7e] md:inline">
+              Open-source ready
+            </span>
             {/* Preview toggle */}
             <button
               type="button"

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Cormorant_Garamond, Instrument_Sans } from "next/fon
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeTokensProvider } from "@/components/providers/ThemeTokensProvider";
 import "./globals.css";
+import "maplibre-gl/dist/maplibre-gl.css";
+import "@xyflow/react/dist/style.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -23,10 +23,17 @@ const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border 
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ProgramBlock({ sessionId, fieldValues, data, fieldEnabled }: BlockRenderProps) {
-  const topics = useCourseStore(
-    (s) => s.sessions.find((sess) => sess.id === sessionId)?.topics ?? [],
-  )
+export function ProgramBlock({ sessionId, canvasId, fieldValues, data, fieldEnabled }: BlockRenderProps) {
+  const { topics, taskRange } = useCourseStore((s) => {
+    const session = s.sessions.find((sess) => sess.id === sessionId)
+    const canvas = canvasId
+      ? session?.canvases.find((c) => c.id === canvasId)
+      : undefined
+    return {
+      topics: session?.topics ?? [],
+      taskRange: canvas?.contentTaskRange,
+    }
+  })
 
   // Column visibility — default true when no fieldEnabled config is present
   const fe = fieldEnabled?.program
@@ -43,29 +50,54 @@ export function ProgramBlock({ sessionId, fieldValues, data, fieldEnabled }: Blo
   const defaultTime       = fieldValues["duration"]    ?? data?.["duration"]    as string ??
     (fieldValues["session_duration"] ? `${fieldValues["session_duration"]} min` : "55 min")
 
-  // Build flat rows with rowspan markers
-  const rows: ProgramTableRow[] = []
+  // Build flat rows first; rowspans are recalculated after page slicing.
+  const allRows: Array<ProgramTableRow & { topicKey: string; objectiveKey: string }> = []
 
   topics.forEach((topic) => {
-    const topicSpan = topic.objectives.reduce((sum, obj) => sum + Math.max(1, obj.tasks.length), 0)
     topic.objectives.forEach((obj, oi) => {
-      const objSpan = Math.max(1, obj.tasks.length)
+      const objectiveKey = `${topic.id}:${obj.id}`
       const tasksToRender = obj.tasks.length > 0 ? obj.tasks : [{ id: `${obj.id}-empty`, label: "", order: 0, objectiveId: obj.id, droppedCards: [] }]
-      tasksToRender.forEach((task, ki) => {
-        rows.push({
-          isTopicFirst:  oi === 0 && ki === 0,
-          topicSpan,
-          topicLabel:    topic.label,
-          isObjFirst:    ki === 0,
-          objSpan,
-          objLabel:      obj.label,
-          taskLabel:     task.label,
-          method:        defaultMethod,
-          socialForm:    defaultSocialForm,
-          time:          defaultTime,
+      tasksToRender.forEach((task) => {
+        allRows.push({
+          isTopicFirst: false,
+          topicSpan: 1,
+          topicLabel: topic.label,
+          isObjFirst: false,
+          objSpan: 1,
+          objLabel: obj.label,
+          taskLabel: task.label,
+          method: defaultMethod,
+          socialForm: defaultSocialForm,
+          time: defaultTime,
+          topicKey: topic.id,
+          objectiveKey,
         })
       })
     })
+  })
+
+  const rowStart = taskRange?.start ?? 0
+  const rowEnd = taskRange?.end ?? allRows.length
+  const slicedRows = allRows.slice(rowStart, rowEnd)
+
+  const topicSpans = new Map<string, number>()
+  const objectiveSpans = new Map<string, number>()
+  for (const row of slicedRows) {
+    topicSpans.set(row.topicKey, (topicSpans.get(row.topicKey) ?? 0) + 1)
+    objectiveSpans.set(row.objectiveKey, (objectiveSpans.get(row.objectiveKey) ?? 0) + 1)
+  }
+
+  const rows: ProgramTableRow[] = slicedRows.map((row, idx) => {
+    const prev = idx > 0 ? slicedRows[idx - 1] : undefined
+    const isTopicFirst = !prev || prev.topicKey !== row.topicKey
+    const isObjFirst = !prev || prev.objectiveKey !== row.objectiveKey
+    return {
+      ...row,
+      isTopicFirst,
+      topicSpan: isTopicFirst ? (topicSpans.get(row.topicKey) ?? 1) : 1,
+      isObjFirst,
+      objSpan: isObjFirst ? (objectiveSpans.get(row.objectiveKey) ?? 1) : 1,
+    }
   })
 
   // Fallback — always show at least one empty row so the table is visible
