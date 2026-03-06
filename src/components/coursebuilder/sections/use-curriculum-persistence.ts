@@ -144,7 +144,17 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
   // the 800 ms debounce fires handleSave with fresh data from paramsRef.
 
   const sessionRowsFingerprint = params.sessionRows
-    .map((r) => `${r.id}:${r.title}:${r.topics ?? ""}:${r.objectives ?? ""}:${r.tasks ?? ""}`)
+    .map((r) => [
+      r.id,
+      r.title,
+      r.topics ?? "",
+      r.objectives ?? "",
+      r.tasks ?? "",
+      (r.topic_names ?? []).join("~"),
+      (r.objective_names ?? []).join("~"),
+      (r.task_names ?? []).join("~"),
+      r.template_type ?? "",
+    ].join(":"))
     .join("|")
   const moduleNamesFingerprint = params.moduleNames.join(",")
   const namingRulesFingerprint = `${params.namingRules.lessonTitleRule}:${params.namingRules.topicRule}:${params.namingRules.objectiveRule}:${params.namingRules.taskRule}`

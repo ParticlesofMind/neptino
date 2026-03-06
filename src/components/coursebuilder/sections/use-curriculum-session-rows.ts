@@ -5,6 +5,8 @@ import type React from "react"
 import { calculateSessionDuration, normalizeContentLoadConfig } from "@/lib/curriculum/content-load-service"
 import {
   createRowId,
+  normalizeObjectiveNames,
+  normalizeTaskNames,
   type CurriculumSessionRow,
   type ScheduleGeneratedEntry,
 } from "./curriculum-section-utils"
@@ -50,8 +52,8 @@ export function useCurriculumSessionRows(params: {
           objectives: norm.objectivesPerTopic,
           tasks: norm.tasksPerObjective,
           topic_names: Array.from({ length: norm.topicsPerLesson }, (_, i) => existing?.topic_names?.[i] ?? ""),
-          objective_names: Array.from({ length: norm.objectivesPerTopic }, (_, i) => existing?.objective_names?.[i] ?? ""),
-          task_names: Array.from({ length: norm.tasksPerObjective }, (_, i) => existing?.task_names?.[i] ?? ""),
+          objective_names: normalizeObjectiveNames(existing?.objective_names, norm.topicsPerLesson, norm.objectivesPerTopic),
+          task_names: normalizeTaskNames(existing?.task_names, norm.topicsPerLesson, norm.objectivesPerTopic, norm.tasksPerObjective),
           competencies: existing?.competencies,
           template_type: existing?.template_type ?? "lesson",
         }
@@ -97,8 +99,8 @@ export function useCurriculumSessionRows(params: {
           objectives: norm.objectivesPerTopic,
           tasks: norm.tasksPerObjective,
           topic_names: Array.from({ length: norm.topicsPerLesson }, (_, i) => row?.topic_names?.[i] || ""),
-          objective_names: Array.from({ length: norm.objectivesPerTopic }, (_, i) => row?.objective_names?.[i] || ""),
-          task_names: Array.from({ length: norm.tasksPerObjective }, (_, i) => row?.task_names?.[i] || ""),
+          objective_names: normalizeObjectiveNames(row?.objective_names, norm.topicsPerLesson, norm.objectivesPerTopic),
+          task_names: normalizeTaskNames(row?.task_names, norm.topicsPerLesson, norm.objectivesPerTopic, norm.tasksPerObjective),
           template_type: row?.template_type ?? "lesson",
         }
       }),

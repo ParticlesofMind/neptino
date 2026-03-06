@@ -40,6 +40,7 @@ export interface CourseRow {
   classification_data: Record<string, unknown> | null
   course_layout: Record<string, unknown> | null
   schedule_settings: Record<string, unknown> | null
+  curriculum_data: Record<string, unknown> | null
   visibility_settings: Record<string, boolean> | null
   marketplace_settings: Record<string, unknown> | null
   pricing_settings: Record<string, unknown> | null

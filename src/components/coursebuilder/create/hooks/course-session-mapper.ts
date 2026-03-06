@@ -64,6 +64,20 @@ export interface CourseMeta {
   fieldStateByType?: Record<string, Partial<Record<string, Record<string, boolean>>>>
 }
 
+function objectiveFlatIndex(topicIndex: number, objectiveIndex: number, objectivesPerTopic: number): number {
+  return topicIndex * objectivesPerTopic + objectiveIndex
+}
+
+function taskFlatIndex(
+  topicIndex: number,
+  objectiveIndex: number,
+  taskIndex: number,
+  objectivesPerTopic: number,
+  tasksPerObjective: number,
+): number {
+  return (topicIndex * objectivesPerTopic + objectiveIndex) * tasksPerObjective + taskIndex
+}
+
 // ─── Loader state ─────────────────────────────────────────────────────────────
 
 export interface LoaderState {
@@ -93,17 +107,25 @@ export function mapRowToSession(
   const objectivesPerTopic = rawRow.objectives ?? meta.objectivesPerTopic
   const tasksPerObjective  = rawRow.tasks      ?? meta.tasksPerObjective
 
-  const topicNames = rawRow.topic_names?.filter(Boolean).length
-    ? rawRow.topic_names!.filter(Boolean)
+  // Preserve positional indexes from curriculum_data as-is. Filtering out empty
+  // values collapses sparse arrays and can incorrectly reuse one name across
+  // multiple topic/objective/task branches.
+  const topicNames = Array.isArray(rawRow.topic_names)
+    ? rawRow.topic_names.map((name) => String(name ?? ""))
     : Array.from({ length: topicCount }, (_, i) => `Topic ${i + 1}`)
 
-  const objectiveNames = rawRow.objective_names?.filter(Boolean).length
-    ? rawRow.objective_names!.filter(Boolean)
+  const objectiveNames = Array.isArray(rawRow.objective_names)
+    ? rawRow.objective_names.map((name) => String(name ?? ""))
     : Array.from({ length: objectivesPerTopic }, (_, i) => `Objective ${i + 1}`)
 
-  const taskNames = rawRow.task_names?.filter(Boolean).length
-    ? rawRow.task_names!.filter(Boolean)
+  const taskNames = Array.isArray(rawRow.task_names)
+    ? rawRow.task_names.map((name) => String(name ?? ""))
     : Array.from({ length: tasksPerObjective }, (_, i) => `Task ${i + 1}`)
+
+  const expectedObjectiveNames = topicCount * objectivesPerTopic
+  const hasTopicScopedObjectives = objectiveNames.length === expectedObjectiveNames
+  const expectedTaskNames = topicCount * objectivesPerTopic * tasksPerObjective
+  const hasScopedTasks = taskNames.length === expectedTaskNames
 
   const topics: Topic[] = Array.from({ length: topicCount }, (_, ti) => {
     const topicId = `${sessionId}-t${ti}` as TopicId
@@ -114,7 +136,9 @@ export function mapRowToSession(
       const tasks: Task[] = Array.from({ length: tasksPerObjective }, (_, ki) => ({
         id:           `${objectiveId}-k${ki}` as TaskId,
         objectiveId,
-        label:        taskNames[ki] ?? `Task ${ki + 1}`,
+        label: hasScopedTasks
+          ? taskNames[taskFlatIndex(ti, oi, ki, objectivesPerTopic, tasksPerObjective)] ?? `Task ${ki + 1}`
+          : taskNames[ki] ?? `Task ${ki + 1}`,
         order:        ki,
         droppedCards: [],
       }))
@@ -122,7 +146,9 @@ export function mapRowToSession(
       return {
         id:      objectiveId,
         topicId,
-        label:   objectiveNames[oi] ?? `Objective ${oi + 1}`,
+        label:   hasTopicScopedObjectives
+          ? objectiveNames[objectiveFlatIndex(ti, oi, objectivesPerTopic)] ?? `Objective ${oi + 1}`
+          : objectiveNames[oi] ?? `Objective ${oi + 1}`,
         order:   oi,
         tasks,
       }

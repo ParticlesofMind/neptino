@@ -2,6 +2,7 @@
 
 import type React from "react"
 import type { CurriculumSessionRow } from "./curriculum-section-utils"
+import { objectiveNameIndex, taskNameIndex } from "./curriculum-section-utils"
 import type { ModulePreviewItem } from "./curriculum-derived"
 
 interface PreviewAllViewProps {
@@ -14,12 +15,18 @@ interface PreviewAllViewProps {
 }
 
 export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPreview, topics, objectives, tasks, setSessionRows }: PreviewAllViewProps) {
+  const writeNameAt = (list: string[] | undefined, at: number, value: string) => {
+    const next = Array.from({ length: Math.max(at + 1, list?.length ?? 0) }, (_, i) => list?.[i] ?? "")
+    next[at] = value
+    return next
+  }
+
   return (
     <div className="space-y-4">
       {modulesForPreview.map((module) => {
         const sessionsInModule = sessionRowsForPreview.slice(module.sessionStart - 1, module.sessionEnd)
         return (
-          <div key={module.title} className="rounded-md border border-border bg-card p-3.5">
+          <div key={`module-${module.index}`} className="rounded-md border border-border bg-card p-3.5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-base font-bold text-foreground">{module.title}</h2>
               <span className="text-xs text-muted-foreground">{sessionsInModule.length} sessions</span>
@@ -31,6 +38,7 @@ export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPrev
                   <div key={row.id} className="rounded-md border border-border/50 bg-background p-2.5">
                     <input
                       type="text"
+                      data-testid={`curriculum-all-session-input-${sessionIndex}`}
                       value={row.title}
                       onChange={(e) =>
                         setSessionRows((prev) =>
@@ -46,6 +54,7 @@ export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPrev
                             <label className="min-w-fit text-xs font-semibold text-muted-foreground">{topicIdx + 1}</label>
                             <input
                               type="text"
+                              data-testid={`curriculum-all-topic-input-${sessionIndex}-${topicIdx}`}
                               value={row.topic_names?.[topicIdx] || ""}
                               onChange={(e) => {
                                 setSessionRows((prev) =>
@@ -66,12 +75,14 @@ export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPrev
                                   <label className="min-w-fit text-xs font-medium text-muted-foreground">{objIdx + 1}</label>
                                   <input
                                     type="text"
-                                    value={row.objective_names?.[objIdx] || ""}
+                                    data-testid={`curriculum-all-objective-input-${sessionIndex}-${topicIdx}-${objIdx}`}
+                                    value={row.objective_names?.[objectiveNameIndex(topicIdx, objIdx, row.objectives ?? objectives)] || ""}
                                     onChange={(e) => {
+                                      const at = objectiveNameIndex(topicIdx, objIdx, row.objectives ?? objectives)
                                       setSessionRows((prev) =>
                                         prev.map((cur, ci) =>
                                           ci === sessionIndex
-                                            ? { ...cur, objective_names: [...(cur.objective_names?.slice(0, objIdx) || []), e.target.value, ...(cur.objective_names?.slice(objIdx + 1) || [])] }
+                                            ? { ...cur, objective_names: writeNameAt(cur.objective_names, at, e.target.value) }
                                             : cur,
                                         ),
                                       )
@@ -81,16 +92,18 @@ export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPrev
                                 </div>
                                 <div className="ml-1.5 space-y-1.5">
                                   {Array.from({ length: row.tasks ?? tasks }, (_, taskIdx) => (
-                                    <div key={`${row.id}-task-${objIdx}-${taskIdx}`} className="flex items-center gap-2">
+                                    <div key={`${row.id}-task-${topicIdx}-${objIdx}-${taskIdx}`} className="flex items-center gap-2">
                                       <label className="min-w-fit text-[11px] text-muted-foreground">{taskIdx + 1}</label>
                                       <input
                                         type="text"
-                                        value={row.task_names?.[taskIdx] || ""}
+                                        data-testid={`curriculum-all-task-input-${sessionIndex}-${topicIdx}-${objIdx}-${taskIdx}`}
+                                        value={row.task_names?.[taskNameIndex(topicIdx, objIdx, taskIdx, row.objectives ?? objectives, row.tasks ?? tasks)] || ""}
                                         onChange={(e) => {
+                                          const at = taskNameIndex(topicIdx, objIdx, taskIdx, row.objectives ?? objectives, row.tasks ?? tasks)
                                           setSessionRows((prev) =>
                                             prev.map((cur, ci) =>
                                               ci === sessionIndex
-                                                ? { ...cur, task_names: [...(cur.task_names?.slice(0, taskIdx) || []), e.target.value, ...(cur.task_names?.slice(taskIdx + 1) || [])] }
+                                                ? { ...cur, task_names: writeNameAt(cur.task_names, at, e.target.value) }
                                                 : cur,
                                             ),
                                           )

@@ -180,11 +180,19 @@ export async function runGenerationAction(
     }
     if (action === "all" || action === "objectives") {
       updates.objectives = norm.objectivesPerTopic
-      updates.objective_names = Array.from({ length: norm.objectivesPerTopic }, (_, i) => gen.objectives?.[i] ?? row.objective_names?.[i] ?? "")
+      const fullObjectives = norm.topicsPerLesson * norm.objectivesPerTopic
+      updates.objective_names = Array.from({ length: fullObjectives }, (_, i) => {
+        const objectiveSlot = i % norm.objectivesPerTopic
+        return gen.objectives?.[objectiveSlot] ?? row.objective_names?.[i] ?? row.objective_names?.[objectiveSlot] ?? ""
+      })
     }
     if (action === "all" || action === "tasks") {
       updates.tasks = norm.tasksPerObjective
-      updates.task_names = Array.from({ length: norm.tasksPerObjective }, (_, i) => gen.tasks?.[i] ?? row.task_names?.[i] ?? "")
+      const fullTasks = norm.topicsPerLesson * norm.objectivesPerTopic * norm.tasksPerObjective
+      updates.task_names = Array.from({ length: fullTasks }, (_, i) => {
+        const taskSlot = i % norm.tasksPerObjective
+        return gen.tasks?.[taskSlot] ?? row.task_names?.[i] ?? row.task_names?.[taskSlot] ?? ""
+      })
     }
     return { ...row, ...updates }
   })

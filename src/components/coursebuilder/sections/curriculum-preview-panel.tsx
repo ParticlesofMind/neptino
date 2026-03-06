@@ -3,7 +3,15 @@
 import type React from "react"
 import { SetupColumn } from "@/components/coursebuilder"
 import type { GenerationAction } from "@/lib/curriculum/ai-generation-service"
-import { GENERATION_ACTION_CONFIG, type CurriculumSessionRow, type PreviewMode, type ScheduleGeneratedEntry } from "./curriculum-section-utils"
+import {
+  GENERATION_ACTION_CONFIG,
+  objectiveNameIndex,
+  taskNameIndex,
+  type CurriculumSessionRow,
+  type PreviewMode,
+  type ScheduleGeneratedEntry,
+} from "./curriculum-section-utils"
+import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import type { ModulePreviewItem } from "./curriculum-derived"
 import { CurriculumPreviewAllView } from "./curriculum-preview-all-view"
 
@@ -34,6 +42,12 @@ export interface CurriculumPreviewPanelProps {
 }
 
 export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
+  const writeNameAt = (list: string[] | undefined, at: number, value: string) => {
+    const next = Array.from({ length: Math.max(at + 1, list?.length ?? 0) }, (_, i) => list?.[i] ?? "")
+    next[at] = value
+    return next
+  }
+
   return (
     <SetupColumn>
       <div className="mb-2 flex flex-wrap gap-1.5">
@@ -55,12 +69,13 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
             {props.modulesForPreview.map((module) => {
               const sessions = props.sessionRowsForPreview.slice(module.sessionStart - 1, module.sessionEnd)
               return (
-                <div key={module.title} className="rounded-md border border-border bg-card p-3">
+                <div key={`module-${module.index}`} className="rounded-md border border-border bg-card p-3">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="text-xs font-medium text-muted-foreground">Module {module.index + 1}</span>
                     <span className="text-xs text-muted-foreground">{sessions.length} sessions</span>
                   </div>
                   <input type="text" value={module.title}
+                    data-testid={`curriculum-module-input-${module.index}`}
                     onChange={(e) => { props.setModuleNames((prev) => { const updated = [...prev]; updated[module.index] = e.target.value; return updated }) }}
                     className="mb-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     placeholder={`Module ${module.index + 1}`}
@@ -90,7 +105,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                     </label>
                     <select
                       value={row.template_type ?? "lesson"}
-                      onChange={(e) => props.upsertSessionRow(index, { template_type: e.target.value })}
+                      onChange={(e) => props.upsertSessionRow(index, { template_type: e.target.value as TemplateType })}
                       className="rounded border border-border bg-background px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                       aria-label={`Template type for session ${index + 1}`}
                     >
@@ -123,6 +138,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                     <div key={`${row.id}-t${ti}`} className="rounded-md border border-border/50 bg-background p-2">
                       <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">{ti + 1}</label>
                       <input type="text" value={row.topic_names?.[ti] || ""}
+                        data-testid={`curriculum-topic-input-${index}-${ti}`}
                         onChange={(e) => { props.setSessionRows((prev) => prev.map((cur, ci) => ci === index ? { ...cur, topic_names: [...(cur.topic_names?.slice(0, ti) || []), e.target.value, ...(cur.topic_names?.slice(ti + 1) || [])] } : cur)) }}
                         className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                       />
@@ -150,8 +166,18 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                         {Array.from({ length: row.objectives ?? props.objectives }, (_, oi) => (
                           <div key={`${row.id}-t${ti}-o${oi}`} className="rounded-md border border-border/50 bg-background p-2">
                             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{oi + 1}</label>
-                            <input type="text" value={row.objective_names?.[oi] || ""}
-                              onChange={(e) => { props.setSessionRows((prev) => prev.map((cur, ci) => ci === index ? { ...cur, objective_names: [...(cur.objective_names?.slice(0, oi) || []), e.target.value, ...(cur.objective_names?.slice(oi + 1) || [])] } : cur)) }}
+                            <input type="text" value={row.objective_names?.[objectiveNameIndex(ti, oi, row.objectives ?? props.objectives)] || ""}
+                              data-testid={`curriculum-objective-input-${index}-${ti}-${oi}`}
+                              onChange={(e) => {
+                                const at = objectiveNameIndex(ti, oi, row.objectives ?? props.objectives)
+                                props.setSessionRows((prev) =>
+                                  prev.map((cur, ci) =>
+                                    ci === index
+                                      ? { ...cur, objective_names: writeNameAt(cur.objective_names, at, e.target.value) }
+                                      : cur,
+                                  ),
+                                )
+                              }}
                               className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                             />
                           </div>
@@ -183,10 +209,22 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                             <p className="mb-2 text-xs font-medium text-muted-foreground">{oi + 1}</p>
                             <div className="ml-1.5 space-y-1.5">
                               {Array.from({ length: row.tasks ?? props.tasks }, (_, tki) => (
-                                <div key={`${row.id}-task-${oi}-${tki}`} className="rounded-md border border-border/50 bg-background p-1.5">
+                                <div key={`${row.id}-task-${ti}-${oi}-${tki}`} className="rounded-md border border-border/50 bg-background p-1.5">
                                   <label className="mb-1 block text-xs font-medium text-muted-foreground">{tki + 1}</label>
-                                  <input type="text" value={row.task_names?.[tki] || ""}
-                                    onChange={(e) => { props.setSessionRows((prev) => prev.map((cur, ci) => ci === index ? { ...cur, task_names: [...(cur.task_names?.slice(0, tki) || []), e.target.value, ...(cur.task_names?.slice(tki + 1) || [])] } : cur)) }}
+                                  <input
+                                    type="text"
+                                    data-testid={`curriculum-task-input-${index}-${ti}-${oi}-${tki}`}
+                                    value={row.task_names?.[taskNameIndex(ti, oi, tki, row.objectives ?? props.objectives, row.tasks ?? props.tasks)] || ""}
+                                    onChange={(e) => {
+                                      const at = taskNameIndex(ti, oi, tki, row.objectives ?? props.objectives, row.tasks ?? props.tasks)
+                                      props.setSessionRows((prev) =>
+                                        prev.map((cur, ci) =>
+                                          ci === index
+                                            ? { ...cur, task_names: writeNameAt(cur.task_names, at, e.target.value) }
+                                            : cur,
+                                        ),
+                                      )
+                                    }}
                                     className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                   />
                                 </div>

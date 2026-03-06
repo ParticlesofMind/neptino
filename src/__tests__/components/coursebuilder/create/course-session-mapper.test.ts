@@ -252,7 +252,7 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
     expect(merged.canvases[1]!.id).toBe("new-sid-canvas-2")
   })
 
-  it("continuation pages always get blockKeys=['content'], regardless of saved value", () => {
+  it("continuation pages keep only content-type block keys (no fixed header/footer blocks)", () => {
     const derived = mapRowToSession(ROW_4T, 0, COURSE_ID, META_4T)
     const saved: LessonRow = {
       lesson_number: 1,
@@ -274,7 +274,11 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
     }
     const merged = mergeSavedLesson(derived, saved)
     expect(merged.canvases[0]!.blockKeys).toEqual(getDefaultBlocksForType("lesson"))
-    expect(merged.canvases[1]!.blockKeys).toEqual(["content"])
+    expect(merged.canvases[1]!.blockKeys).toEqual(expect.arrayContaining(["content"]))
+    expect(merged.canvases[1]!.blockKeys).not.toContain("header")
+    expect(merged.canvases[1]!.blockKeys).not.toContain("program")
+    expect(merged.canvases[1]!.blockKeys).not.toContain("resources")
+    expect(merged.canvases[1]!.blockKeys).not.toContain("footer")
   })
 
   // ── Backward fill: missing-end normalisation (card-duplication bug fix) ──
