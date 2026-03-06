@@ -14,7 +14,7 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
 
   // single-row top-level navigation; create sub-modes render in the editor body
   return (
-    <div className="flex h-12 items-center justify-between border-b border-border px-4 shrink-0 gap-4">
+    <div className="flex h-9 items-center justify-between border-b border-border px-3 shrink-0 gap-4">
       {/* Left: back/previous */}
       <div className="flex items-center gap-4 min-w-[110px]">
         {prevView === null ? (

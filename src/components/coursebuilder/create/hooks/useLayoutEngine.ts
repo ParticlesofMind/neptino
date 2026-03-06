@@ -10,8 +10,11 @@
  * via syncPageAssignments — atomically replacing the session's canvas list
  * with correctly-sized, correctly-keyed pages.
  *
- * This hook is mounted once per session (in CanvasVirtualizer). It completely
- * replaces the DOM-observation approach in useCanvasOverflow.
+ * This hook is mounted once per session (in CanvasVirtualizer). It handles all
+ * structural pagination (topic / objective / task / fixed-block splits).
+ * useCanvasOverflow remains active per page as a fallback safety net: it provides
+ * the overflow ring indicator and corrects any cases where height estimates drift
+ * from what the browser actually renders.
  */
 
 import { useMemo, useEffect, useRef } from "react"

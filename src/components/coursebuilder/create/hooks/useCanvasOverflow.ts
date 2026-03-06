@@ -25,7 +25,7 @@
  */
 
 import { useEffect, useRef, useCallback } from "react"
-import type { CanvasId, SessionId } from "../types"
+import type { BlockKey, CanvasId, SessionId } from "../types"
 import { useCanvasStore } from "../store/canvasStore"
 import { useCourseStore } from "../store/courseStore"
 
@@ -80,14 +80,16 @@ export function findCardSplitPoint(
 }
 
 interface UseCanvasOverflowOptions {
-  canvasId:   CanvasId
-  sessionId:  SessionId
-  /** Ref to the body container \u2014 used for available height (clientHeight) */
-  bodyRef:    React.RefObject<HTMLElement | null>
-  /** Ref to the content inside the body \u2014 observed for natural height growth */
-  contentRef: React.RefObject<HTMLElement | null>
+  canvasId:       CanvasId
+  sessionId:      SessionId
+  /** Ref to the body container — used for available height (clientHeight) */
+  bodyRef:        React.RefObject<HTMLElement | null>
+  /** Ref to the content inside the body — observed for natural height growth */
+  contentRef:     React.RefObject<HTMLElement | null>
+  /** Block keys rendered on this page — passed to continuation pages on task-row splits */
+  pageBlockKeys?: string[]
   /** If false the hook is a no-op */
-  enabled?:   boolean
+  enabled?:       boolean
 }
 
 export function useCanvasOverflow({
@@ -95,12 +97,14 @@ export function useCanvasOverflow({
   sessionId,
   bodyRef,
   contentRef,
+  pageBlockKeys,
   enabled = true,
 }: UseCanvasOverflowOptions) {
   const markCanvasOverflow      = useCanvasStore((s) => s.markCanvasOverflow)
   const overflowingIds          = useCanvasStore((s) => s.overflowingCanvasIds)
   const setCanvasTopicRange     = useCourseStore((s) => s.setCanvasTopicRange)
   const setCanvasObjectiveRange = useCourseStore((s) => s.setCanvasObjectiveRange)
+  const setCanvasTaskRange      = useCourseStore((s) => s.setCanvasTaskRange)
   const setCanvasCardRange      = useCourseStore((s) => s.setCanvasCardRange)
   const appendCanvasPage        = useCourseStore((s) => s.appendCanvasPage)
 
@@ -120,6 +124,13 @@ export function useCanvasOverflow({
     const session = sessions.find((s) => s.id === sessionId)
     const canvas  = session?.canvases.find((c) => c.id === canvasId)
     return canvas?.contentObjectiveRange?.start ?? 0
+  }, [canvasId, sessionId])
+
+  const getTaskRangeStart = useCallback((): number => {
+    const sessions = useCourseStore.getState().sessions
+    const session = sessions.find((s) => s.id === sessionId)
+    const canvas  = session?.canvases.find((c) => c.id === canvasId)
+    return canvas?.contentTaskRange?.start ?? 0
   }, [canvasId, sessionId])
 
   const getCardRangeStart = useCallback((): number => {
@@ -165,7 +176,44 @@ export function useCanvasOverflow({
     // helper that attempts to split the current canvas and return `true` if
     // a split was dispatched (in which case the check can return early).
     const trySplit = (): boolean => {
-      // a) topic-level split
+      // a) task-row-level split (program / resources tables)
+      const taskRowEls = Array.from(
+        content.querySelectorAll<HTMLElement>("[data-task-row-idx]"),
+      ).sort((a, b) => Number(a.dataset.taskRowIdx) - Number(b.dataset.taskRowIdx))
+      if (taskRowEls.length >= 1) {
+        for (let i = taskRowEls.length - 1; i >= 0; i--) {
+          const el = taskRowEls[i]
+          if (!el) continue
+          const elBottom = offsetTopRelativeTo(el, body) + el.offsetHeight
+          if (elBottom <= available) {
+            const splitAtRowIdx = Number(el.dataset.taskRowIdx) + 1
+            const currentTaskStart = getTaskRangeStart()
+            if (splitAtRowIdx > currentTaskStart) {
+              const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
+              const canvasSnap  = sessionSnap?.canvases.find((c) => c.id === canvasId)
+              const currentTaskEnd = canvasSnap?.contentTaskRange?.end
+              const continuationExists = sessionSnap?.canvases.some(
+                (c) => c.id !== canvasId && c.contentTaskRange?.start === splitAtRowIdx,
+              )
+              if (!(currentTaskEnd === splitAtRowIdx && continuationExists)) {
+                splitGuard.current = true
+                setCanvasTaskRange(canvasId, { start: currentTaskStart, end: splitAtRowIdx })
+                if (!continuationExists) {
+                  appendCanvasPage(sessionId, undefined, {
+                    taskStart: splitAtRowIdx,
+                    blockKeys: pageBlockKeys as BlockKey[] | undefined,
+                  })
+                }
+                setTimeout(() => { splitGuard.current = false }, 600)
+                return true
+              }
+            }
+            break
+          }
+        }
+      }
+
+      // b) topic-level split
       if (topicEls.length >= 2) {
         for (let i = topicEls.length - 1; i >= 0; i--) {
           const el = topicEls[i]
@@ -270,78 +318,11 @@ export function useCanvasOverflow({
       return false
     }
 
-    // call the helper; if it handled a split we stop
-    if (trySplit()) return
-
-    // Find the last topic whose bottom fits inside the available height.
-    //
-    // IMPORTANT: do NOT use getBoundingClientRect here.  That method returns
-    // viewport-pixel coordinates which are affected by the canvas outer div's
-    // `transform: scale()`.  At zoom != 100 %, elBottom would be
-    // proportionally smaller than the CSS-pixel `available`, so every topic
-    // would appear to fit — producing a split point of topics.length, a no-op
-    // trim that still calls appendCanvasPage endlessly.
-    //
-    // `el.offsetTop` + `el.offsetHeight` returns CSS pixels relative to
-    // el.offsetParent, which is the `position: absolute` bodyRef (the nearest
-    // positioned ancestor).  These values are unaffected by CSS transforms.
-
-    let splitAtAbsoluteIdx: number | null = null
-    for (let i = topicEls.length - 1; i >= 0; i--) {
-      const el       = topicEls[i]
-      if (!el) continue
-      const elBottom = offsetTopRelativeTo(el, body) + el.offsetHeight // CSS px from bodyRef top
-
-      // The first element from the end that fits defines the split boundary.
-      // splitAtAbsoluteIdx is the index of the FIRST topic that should appear
-      // on the NEXT page (i.e. topic i+1).
-      if (elBottom <= available) {
-        const absIdx = Number(el.dataset.topicIdx)
-        splitAtAbsoluteIdx = absIdx + 1 // next page starts after this topic
-        break
-      }
-    }
-
-    // If every single topic overflows even individually, we can't split further.
-    if (splitAtAbsoluteIdx === null || splitAtAbsoluteIdx <= 0) return
-
-    const currentStart = getTopicRangeStart()
-
-    // Nothing to do if the split point equals the current start (degenerate).
-    if (splitAtAbsoluteIdx <= currentStart) return
-
-    // Resolve the current end of this page's range so we can detect whether
-    // this would be a no-op split (splitAtAbsoluteIdx equals the existing end)
-    // or a duplicate continuation page (a page with that start already exists).
-    const sessions = useCourseStore.getState().sessions
-    const session  = sessions.find((s) => s.id === sessionId)
-    const canvas   = session?.canvases.find((c) => c.id === canvasId)
-    const currentEnd = canvas?.contentTopicRange?.end
-
-    // If the range wouldn't actually change, skip the store update but still
-    // guard against appending another page for the same start index.
-    const continuationAlreadyExists = session?.canvases.some(
-      (c) => c.id !== canvasId && c.contentTopicRange?.start === splitAtAbsoluteIdx,
-    )
-
-    if (currentEnd === splitAtAbsoluteIdx && continuationAlreadyExists) return
-
-    // Acquire the split guard to prevent re-entrancy.
-    splitGuard.current = true
-
-    // a) Narrow this page to [currentStart, splitAtAbsoluteIdx).
-    setCanvasTopicRange(canvasId, { start: currentStart, end: splitAtAbsoluteIdx })
-
-    // b) Append a continuation page starting from splitAtAbsoluteIdx, but only
-    //    if one doesn't already exist (prevents duplicate pages on re-split).
-    if (!continuationAlreadyExists) {
-      appendCanvasPage(sessionId, splitAtAbsoluteIdx)
-    }
-
-    // Release the guard after React has had time to re-render the trimmed content.
-    setTimeout(() => {
-      splitGuard.current = false
-    }, 600)
+    // trySplit() covers all structural split levels: task-row, topic (≥2 on
+    // page), objective, and card.  For single-topic overflow, objective and
+    // card splits already give finer granularity; a naked topic-boundary split
+    // on one topic would only create an empty continuation page.
+    trySplit()
   }, [
     bodyRef,
     contentRef,
@@ -351,11 +332,14 @@ export function useCanvasOverflow({
     markCanvasOverflow,
     setCanvasTopicRange,
     setCanvasObjectiveRange,
+    setCanvasTaskRange,
     setCanvasCardRange,
     appendCanvasPage,
     getTopicRangeStart,
     getObjectiveRangeStart,
+    getTaskRangeStart,
     getCardRangeStart,
+    pageBlockKeys,
   ])
 
   useEffect(() => {

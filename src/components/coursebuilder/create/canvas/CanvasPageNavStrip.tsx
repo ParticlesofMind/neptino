@@ -12,7 +12,12 @@ import { useCanvasStore } from "../store/canvasStore"
 
 // ─── Right page navigation strip ─────────────────────────────────────────────
 
-export function PageNavStrip({ sessions }: { sessions: CourseSession[] }) {
+interface PageNavStripProps {
+  sessions:   CourseSession[]
+  onScrollTo?: (canvasId: string) => void
+}
+
+export function PageNavStrip({ sessions, onScrollTo }: PageNavStripProps) {
   const activeCanvasId  = useCanvasStore((s) => s.activeCanvasId)
   const setActiveCanvas = useCanvasStore((s) => s.setActiveCanvas)
 
@@ -27,11 +32,14 @@ export function PageNavStrip({ sessions }: { sessions: CourseSession[] }) {
 
   const goTo = (index: number) => {
     const page = pages[Math.max(0, Math.min(total - 1, index))]
-    if (page) setActiveCanvas(page.id as CanvasId)
+    if (page) {
+      setActiveCanvas(page.id as CanvasId)
+      onScrollTo?.(page.id)
+    }
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white border-l border-neutral-200 py-3">
+    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white rounded-xl shadow-sm self-center mx-2 py-3">
       <NavBtn title="First page"    onClick={() => goTo(0)}>
         <ChevronsUp   size={13} strokeWidth={1.5} />
         <span className="text-[7px]">First</span>

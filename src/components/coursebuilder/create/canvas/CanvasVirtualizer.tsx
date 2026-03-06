@@ -17,7 +17,7 @@
  * TanStack Virtual renders only the 2-3 visible rows at any time.
  */
 
-import { useRef, useMemo, useEffect } from "react"
+import { useRef, useMemo, useEffect, useState, useCallback } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import type { CourseSession, CanvasPage, PageDimensions } from "../types"
 import { DEFAULT_PAGE_DIMENSIONS } from "../types"
@@ -30,6 +30,8 @@ import { useLayoutEngine } from "../hooks/useLayoutEngine"
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_GAP = 32
+// Horizontal breathing room kept around the page when computing fit scale.
+const PAGE_H_PADDING = 32
 // Render enough extra rows so continuation canvas pages (created dynamically by
 // useCanvasOverflow splits) are mounted and measured before the user scrolls to
 // them.  Each session may need several overflow splits to converge, so keeping
@@ -137,11 +139,34 @@ export function CanvasVirtualizer({
 }: CanvasVirtualizerProps) {
   const scrollParentRef = useRef<HTMLDivElement>(null)
   const zoomLevel       = useCanvasStore((s) => s.zoomLevel)
-  const scale           = zoomLevel / 100
+
+  // Track the scroll container's width so the canvas always fits it exactly at
+  // 100% zoom — the same way a browser reflows text. Initialise to the natural
+  // page width + padding so the first render uses a 1.0 fit scale before the
+  // ResizeObserver fires.
+  const [containerWidth, setContainerWidth] = useState(
+    () => dims.widthPx + PAGE_H_PADDING,
+  )
+
+  useEffect(() => {
+    const el = scrollParentRef.current
+    if (!el) return
+    setContainerWidth(el.clientWidth)
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerWidth(entry.contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // fitScale: the scale at which the page exactly fills the container (minus
+  // padding). zoomLevel acts as a percentage multiplier on top of this.
+  const fitScale      = Math.max(0.1, (containerWidth - PAGE_H_PADDING) / dims.widthPx)
+  const effectiveScale = fitScale * (zoomLevel / 100)
 
   const rowHeight = useMemo(
-    () => Math.round(dims.heightPx * scale + PAGE_GAP),
-    [dims.heightPx, scale],
+    () => Math.round(dims.heightPx * effectiveScale + PAGE_GAP),
+    [dims.heightPx, effectiveScale],
   )
 
   // Build flat virtual rows: session-label header + canvases per session.
@@ -190,13 +215,30 @@ export function CanvasVirtualizer({
     useFlushSync: false,
   })
 
-  // Re-measure rows when zoom changes
+  // Re-measure rows when zoom or container width changes
   useEffect(() => {
     virtualizer.measure()
-  }, [zoomLevel, virtualizer])
+  }, [zoomLevel, containerWidth, virtualizer])
 
-  // NOTE: no auto-scroll on activeCanvasId change — clicking a canvas should
-  // not reposition the viewport. Navigation buttons handle programmatic scrolling.
+  // Build a canvas-id → virtual row index map so the nav strip can trigger
+  // scroll-to without needing direct access to the virtualizer.
+  const canvasIdToRowIndex = useMemo(() => {
+    const map = new Map<string, number>()
+    allRows.forEach((row, idx) => {
+      if (row.kind === "canvas") map.set(row.page.id, idx)
+    })
+    return map
+  }, [allRows])
+
+  const scrollToCanvasId = useCallback(
+    (canvasId: string) => {
+      const rowIdx = canvasIdToRowIndex.get(canvasId)
+      if (rowIdx !== undefined) {
+        virtualizer.scrollToIndex(rowIdx, { align: "start" })
+      }
+    },
+    [canvasIdToRowIndex, virtualizer],
+  )
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
@@ -212,8 +254,8 @@ export function CanvasVirtualizer({
         {/* Scrollable pages */}
         <div
           ref={scrollParentRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden"
-          style={{ contain: "strict" }}
+          className="flex-1 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden"
+          style={{ contain: "strict", scrollbarWidth: "none" }}
         >
           <div
             style={{
@@ -279,6 +321,7 @@ export function CanvasVirtualizer({
                     session={row.session}
                     isLastPage={row.isLastPage}
                     dims={dims}
+                    scale={effectiveScale}
                     fieldValues={row.fieldValues}
                     bodyData={bodyData}
                     virtualIndex={virtualRow.index}
@@ -290,7 +333,7 @@ export function CanvasVirtualizer({
           </div>
         </div>
 
-        <PageNavStrip sessions={sessions} />
+        <PageNavStrip sessions={sessions} onScrollTo={scrollToCanvasId} />
       </div>
     </div>
   )

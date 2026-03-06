@@ -79,19 +79,19 @@ function CourseBuilderPageInner() {
             </div>
           </div>
         ) : view === "create" ? (
-          <div className="flex flex-1 overflow-hidden p-2 bg-muted/10">
+          <div className="flex flex-1 overflow-hidden p-3 bg-muted/10">
             <div className="flex flex-1 overflow-hidden rounded-xl border border-border shadow-sm">
               <CreateEditorLayout courseId={courseId} />
             </div>
           </div>
         ) : view === "preview" ? (
-          <div className="no-scrollbar flex flex-1 overflow-y-auto p-2 bg-muted/10">
+          <div className="no-scrollbar flex flex-1 overflow-y-auto p-3 bg-muted/10">
             <div className="no-scrollbar flex flex-1 overflow-y-auto rounded-xl border border-border shadow-sm bg-background px-6">
               <PreviewView courseData={courseCreatedData} />
             </div>
           </div>
         ) : (
-          <div className="no-scrollbar flex flex-1 overflow-y-auto p-2 bg-muted/10">
+          <div className="no-scrollbar flex flex-1 overflow-y-auto p-3 bg-muted/10">
             <div className="no-scrollbar flex flex-1 overflow-y-auto rounded-xl border border-border shadow-sm bg-background px-6">
               <LaunchView courseId={courseId} courseData={courseCreatedData} onSetView={setView} />
             </div>

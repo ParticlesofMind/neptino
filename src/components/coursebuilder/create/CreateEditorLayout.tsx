@@ -102,7 +102,7 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
   const mode = useCreateModeStore((s) => s.mode)
 
   // Resizable file-browser sidebar
-  const [sidebarWidth, setSidebarWidth] = useState(288)
+  const [sidebarWidth, setSidebarWidth] = useState(360)
   const sidebarWidthRef = useRef(sidebarWidth)
   sidebarWidthRef.current = sidebarWidth
 

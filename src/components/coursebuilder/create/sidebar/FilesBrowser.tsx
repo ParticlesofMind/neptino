@@ -3,9 +3,9 @@
 /**
  * Files Browser (sidebar — Curate mode)
  *
- * Two-column layout:
+ * Two-panel layout:
  *   - Narrow icon rail on the left for category switching
- *   - Search + draggable library items on the right
+ *   - Search + draggable card list (single column) on the right
  *
  * Only rendered when the editor is in Curate mode.
  * Make and Fix modes have their own full-width panels.
@@ -27,6 +27,7 @@ import {
 import type { CardType, CardId } from "../types"
 import type { DragSourceData } from "../hooks/useCardDrop"
 import { getSampleCardContent } from "../utils/cardDefaults"
+import { CARD_TYPE_META } from "../cards/CardTypePreview"
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
@@ -84,6 +85,29 @@ const MOCK_ITEMS: LibraryItem[] = [
   { id: "c-table-1"      as CardId, cardType: "table",      label: "Data Table",            title: "Climate Data 1850–2024"                  },
 ]
 
+// ─── Card-type colour palette ─────────────────────────────────────────────────
+
+const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = {
+  text:         { bg: "bg-blue-50",    text: "text-blue-500"   },
+  image:        { bg: "bg-emerald-50", text: "text-emerald-500" },
+  audio:        { bg: "bg-orange-50",  text: "text-orange-500" },
+  video:        { bg: "bg-violet-50",  text: "text-violet-500" },
+  animation:    { bg: "bg-pink-50",    text: "text-pink-500"   },
+  dataset:      { bg: "bg-sky-50",     text: "text-sky-500"    },
+  "model-3d":   { bg: "bg-amber-50",   text: "text-amber-500"  },
+  map:          { bg: "bg-teal-50",    text: "text-teal-500"   },
+  chart:        { bg: "bg-cyan-50",    text: "text-cyan-600"   },
+  diagram:      { bg: "bg-indigo-50",  text: "text-indigo-500" },
+  media:        { bg: "bg-purple-50",  text: "text-purple-500" },
+  document:     { bg: "bg-slate-100",  text: "text-slate-500"  },
+  table:        { bg: "bg-cyan-50",    text: "text-cyan-600"   },
+  "rich-sim":   { bg: "bg-indigo-50",  text: "text-indigo-500" },
+  "village-3d": { bg: "bg-amber-50",   text: "text-amber-500"  },
+  interactive:  { bg: "bg-teal-50",    text: "text-teal-500"   },
+  games:        { bg: "bg-yellow-50",  text: "text-yellow-600" },
+  chat:         { bg: "bg-rose-50",    text: "text-rose-500"   },
+}
+
 // ─── Draggable item ───────────────────────────────────────────────────────────
 
 function DraggableItem({ item }: { item: LibraryItem }) {
@@ -100,23 +124,35 @@ function DraggableItem({ item }: { item: LibraryItem }) {
     data: dragData,
   })
 
+  const meta   = CARD_TYPE_META[item.cardType]
+  const colors = CARD_TYPE_COLORS[item.cardType]
+  const Icon   = meta.icon
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
       className={[
-        "px-3 py-1.5 cursor-grab select-none rounded-sm",
-        "hover:bg-neutral-100 transition-colors",
-        isDragging ? "opacity-40 bg-neutral-100" : "",
+        "flex items-center gap-2.5 rounded-lg border border-neutral-200 px-2 py-3",
+        "cursor-grab select-none transition-all bg-white",
+        "hover:border-neutral-300 hover:shadow-sm",
+        isDragging ? "opacity-40 shadow-md" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <p className="text-[12px] font-medium text-neutral-800 leading-tight truncate">
-        {item.title}
-      </p>
-      <p className="text-[10px] text-neutral-400 mt-0.5">{item.label}</p>
+      {/* Icon thumbnail */}
+      <div className={`flex items-center justify-center w-11 h-11 rounded-md shrink-0 ${colors.bg}`}>
+        <Icon size={22} strokeWidth={1.5} className={colors.text} />
+      </div>
+      {/* Info */}
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium text-neutral-800 leading-tight line-clamp-2">
+          {item.title}
+        </p>
+        <p className="text-[9px] text-neutral-400 mt-0.5 uppercase tracking-wide font-medium">{item.label}</p>
+      </div>
     </div>
   )
 }
@@ -165,7 +201,7 @@ export function FilesBrowser() {
   return (
     <div className="flex h-full w-full overflow-hidden border-r border-neutral-200 bg-white">
       {/* Narrow icon rail */}
-      <div className="flex flex-col w-12 shrink-0 border-r border-neutral-100 overflow-y-auto">
+      <div className="flex flex-col w-12 shrink-0 border-r border-neutral-100 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
         {CATEGORIES.map((c) => (
           <RailButton
             key={c.id}
@@ -189,11 +225,13 @@ export function FilesBrowser() {
           />
         </div>
 
-        {/* Items */}
-        <div className="flex-1 overflow-y-auto divide-y divide-neutral-100">
-          {visible.map((item) => (
-            <DraggableItem key={item.id} item={item} />
-          ))}
+        {/* Items grid */}
+        <div className="flex-1 overflow-y-auto p-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex flex-col gap-1.5">
+            {visible.map((item) => (
+              <DraggableItem key={item.id} item={item} />
+            ))}
+          </div>
           {visible.length === 0 && (
             <p className="px-3 py-4 text-xs text-neutral-400 italic">
               {search ? "No results." : "Nothing in this category yet."}

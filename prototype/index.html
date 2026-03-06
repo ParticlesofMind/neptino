@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Option D — Entity Scope vs Entity Tag</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      background: #f5f5f4;
+      color: #1c1917;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    /* ── Page header ───────────────────────────────────────────── */
+    .page-header {
+      max-width: 1200px;
+      margin: 0 auto 28px;
+    }
+    .page-header h1 {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .page-header p {
+      margin-top: 4px;
+      color: #78716c;
+      max-width: 640px;
+      line-height: 1.5;
+    }
+    .label-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    .badge-scope  { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
+    .badge-tag    { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-atomic { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-compound { background: #fdf4ff; color: #86198f; border: 1px solid #f0abfc; }
+    .badge-wired  { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+
+    /* ── Two-column layout ─────────────────────────────────────── */
+    .columns {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Panel shell ───────────────────────────────────────────── */
+    .panel {
+      background: #fff;
+      border: 1px solid #e7e5e4;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f5f5f4;
+      background: #fafaf9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-header-left { display: flex; flex-direction: column; gap: 4px; }
+    .panel-title { font-size: 12px; font-weight: 600; color: #292524; }
+    .panel-subtitle { font-size: 11px; color: #a8a29e; }
+    .panel-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── Atomic card ───────────────────────────────────────────── */
+    .card {
+      border: 1px solid #e7e5e4;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .card-header {
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f5f5f4;
+      background: #fafaf9;
+      gap: 8px;
+    }
+    .card-type-pill {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #f5f5f4;
+      color: #78716c;
+      border: 1px solid #e7e5e4;
+    }
+    .card-title { font-size: 12px; font-weight: 500; color: #292524; flex: 1; }
+    .card-body { padding: 10px; }
+
+    /* ── Entity tag chip ───────────────────────────────────────── */
+    .entity-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+    .entity-tag .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+    }
+    .entity-tag-label {
+      font-size: 10px;
+      color: #a8a29e;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ── No-behavior notice ────────────────────────────────────── */
+    .no-behavior-notice {
+      margin-top: 8px;
+      padding: 7px 9px;
+      background: #fafaf9;
+      border: 1px solid #f5f5f4;
+      border-radius: 5px;
+      font-size: 11px;
+      color: #a8a29e;
+      line-height: 1.4;
+    }
+    .no-behavior-notice strong { color: #78716c; }
+
+    /* ── Map (static / standalone) ─────────────────────────────── */
+    .map-placeholder {
+      width: 100%;
+      height: 140px;
+      background: #dbeafe;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #bfdbfe;
+    }
+    .map-placeholder svg { width: 100%; height: 100%; }
+
+    /* ── Compound shell ────────────────────────────────────────── */
+    .compound {
+      border: 1.5px solid #ddd6fe;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .compound-header {
+      padding: 8px 12px;
+      background: #faf5ff;
+      border-bottom: 1.5px solid #ddd6fe;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .compound-title-block { display: flex; flex-direction: column; gap: 3px; }
+    .compound-type-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #7c3aed;
+    }
+    .compound-title { font-size: 13px; font-weight: 600; color: #292524; }
+
+    /* ── Entity scope chip ─────────────────────────────────────── */
+    .entity-scope {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #ede9fe;
+      color: #5b21b6;
+      border: 1px solid #ddd6fe;
+      white-space: nowrap;
+    }
+    .entity-scope .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #8b5cf6;
+      flex-shrink: 0;
+    }
+    .entity-scope-label {
+      font-size: 10px;
+      color: #a78bfa;
+      margin-top: 2px;
+      display: block;
+    }
+
+    /* ── Compound body – constituent grid ──────────────────────── */
+    .compound-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+
+    .constituent {
+      border: 1px solid #e7e5e4;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .constituent-header {
+      padding: 5px 9px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #a8a29e;
+      background: #fafaf9;
+      border-bottom: 1px solid #f5f5f4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .wired-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #c2410c;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .constituent-body { padding: 9px; }
+
+    /* ── Timeline scrubber ─────────────────────────────────────── */
+    .timeline-scrubber { display: flex; flex-direction: column; gap: 6px; }
+    .timeline-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #a8a29e;
+    }
+    .timeline-year {
+      font-size: 13px;
+      font-weight: 600;
+      color: #7c3aed;
+      text-align: center;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #7c3aed;
+      cursor: pointer;
+      height: 4px;
+    }
+    .era-label {
+      text-align: center;
+      font-size: 11px;
+      color: #78716c;
+      font-style: italic;
+    }
+
+    /* ── Coordinated map ───────────────────────────────────────── */
+    .coord-map {
+      width: 100%;
+      height: 120px;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #e7e5e4;
+      transition: background 0.3s;
+    }
+    .coord-map svg { width: 100%; height: 100%; }
+
+    /* ── Text constituent ──────────────────────────────────────── */
+    .text-content {
+      font-size: 11.5px;
+      line-height: 1.55;
+      color: #44403c;
+      min-height: 48px;
+      transition: opacity 0.2s;
+    }
+    .text-content.fading { opacity: 0.3; }
+
+    /* ── Wiring diagram (below) ────────────────────────────────── */
+    .wiring-section {
+      max-width: 1200px;
+      margin: 20px auto 0;
+      background: #fff;
+      border: 1px solid #e7e5e4;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .wiring-section h2 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #292524;
+      margin-bottom: 10px;
+    }
+    .wiring-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .wiring-box {
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid;
+      text-align: center;
+    }
+    .wb-entity  { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+    .wb-scope   { background: #fdf4ff; color: #86198f; border-color: #f0abfc; }
+    .wb-tag     { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+    .wb-card    { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+    .wb-wired   { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+    .arrow {
+      font-size: 14px;
+      color: #a8a29e;
+    }
+    .wiring-note {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #78716c;
+      line-height: 1.5;
+    }
+    .wiring-note span { font-weight: 600; color: #44403c; }
+
+    /* ── Diff callout ──────────────────────────────────────────── */
+    .diff-callout {
+      max-width: 1200px;
+      margin: 12px auto 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .diff-box {
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid;
+      font-size: 11.5px;
+      line-height: 1.5;
+    }
+    .diff-tag-box  { background: #f0f9ff; border-color: #bae6fd; }
+    .diff-scope-box { background: #faf5ff; border-color: #ddd6fe; }
+    .diff-box h3 { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+    .diff-tag-box h3  { color: #0369a1; }
+    .diff-scope-box h3 { color: #7c3aed; }
+    .diff-box ul { padding-left: 14px; color: #44403c; }
+    .diff-box li { margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <h1>Option D — Entity Scope vs Entity Tag</h1>
+    <p>
+      Prototype demonstrating the two-mechanism model.
+      Atomic cards carry an optional entity <strong>tag</strong> (metadata only — drives search, no behavior).
+      Compounds carry a required entity <strong>scope</strong> (behavioral — wires constituents together).
+    </p>
+    <div class="label-row">
+      <span class="badge badge-tag">entity tag — metadata only</span>
+      <span class="badge badge-scope">entity scope — behavioral</span>
+      <span class="badge badge-atomic">atomic card</span>
+      <span class="badge badge-compound">compound</span>
+      <span class="badge badge-wired">wired constituent</span>
+    </div>
+  </div>
+
+  <!-- ── Diff callout ── -->
+  <div class="diff-callout">
+    <div class="diff-box diff-tag-box">
+      <h3>Entity Tag (atomic cards)</h3>
+      <ul>
+        <li>Optional — card works without it</li>
+        <li>Pure metadata; drives search and file browser filtering</li>
+        <li>Has no <code>onEntityChange</code> handler by type design</li>
+        <li>Multiple entities can be tagged on one card</li>
+        <li>Cannot be read by siblings — no shared state</li>
+      </ul>
+    </div>
+    <div class="diff-box diff-scope-box">
+      <h3>Entity Scope (compounds)</h3>
+      <ul>
+        <li>Required — compound cannot exist without a scope entity</li>
+        <li>Drives constituent behavior: map bounds, timeline range, text seed</li>
+        <li>Scoped state is readable by all constituents in the compound</li>
+        <li>One scope entity per compound (multi-entity = multiple compounds)</li>
+        <li>Constituents may carry their own tag independently</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── Two columns ── -->
+  <div class="columns" style="margin-top: 16px;">
+
+    <!-- LEFT: Atomic card with entity tag -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-header-left">
+          <span class="panel-title">Atomic Card — entity tag</span>
+          <span class="panel-subtitle">Standalone map card tagged with an entity. Tag is metadata only.</span>
+        </div>
+        <span class="badge badge-atomic">atomic</span>
+      </div>
+      <div class="panel-body">
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-type-pill">Map</span>
+            <span class="card-title">Ottoman territorial extent</span>
+          </div>
+          <div class="card-body">
+            <!-- Static map — no coordination possible -->
+            <div class="map-placeholder">
+              <svg viewBox="0 0 400 140" xmlns="http://www.w3.org/2000/svg">
+                <!-- Sea background -->
+                <rect width="400" height="140" fill="#bfdbfe"/>
+                <!-- Generic landmass shapes — static, never updates -->
+                <ellipse cx="180" cy="70" rx="90" ry="40" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+                <ellipse cx="120" cy="55" rx="60" ry="30" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+                <ellipse cx="260" cy="65" rx="50" ry="25" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+                <!-- No year indicator — static -->
+                <text x="200" y="120" text-anchor="middle" font-size="10" fill="#60a5fa" font-family="sans-serif">Static — not coordinated with any other card</text>
+              </svg>
+            </div>
+
+            <!-- Entity tag -->
+            <div style="margin-top: 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+              <div>
+                <span class="entity-tag">
+                  <span class="dot"></span>
+                  Ottoman Empire
+                  <span style="color: #7dd3fc; margin-left: 2px;">· Institution</span>
+                </span>
+                <span class="entity-tag-label">entity tag — for search &amp; organisation only</span>
+              </div>
+            </div>
+
+            <div class="no-behavior-notice">
+              <strong>No behavior attached to this tag.</strong> Changing the tagged entity does not affect this card's visual output.
+              No listener. No handler. Tag is structurally inert at the type level —
+              it makes this card findable when filtering by "Ottoman Empire" in the file browser.
+            </div>
+          </div>
+        </div>
+
+        <!-- Second atomic — different entity tag, no relation -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-type-pill">Image</span>
+            <span class="card-title">Hagia Sophia, Constantinople</span>
+          </div>
+          <div class="card-body">
+            <div style="width:100%; height:80px; background:#fef9c3; border:1px solid #fde68a; border-radius:4px; display:flex; align-items:center; justify-content:center;">
+              <span style="font-size:11px; color:#92400e;">[Image placeholder — photograph, ~1890]</span>
+            </div>
+            <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+              <span class="entity-tag">
+                <span class="dot"></span>
+                Byzantine Empire
+                <span style="color: #7dd3fc; margin-left: 2px;">· Institution</span>
+              </span>
+              <span class="entity-tag">
+                <span class="dot"></span>
+                Ottoman Empire
+                <span style="color: #7dd3fc; margin-left: 2px;">· Institution</span>
+              </span>
+            </div>
+            <div class="no-behavior-notice" style="margin-top: 8px;">
+              Multiple entity tags. Neither drives behavior. Card is findable under
+              both "Byzantine Empire" and "Ottoman Empire" in search.
+              The tags have no relationship to each other.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Compound with entity scope -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-header-left">
+          <span class="panel-title">Compound — entity scope</span>
+          <span class="panel-subtitle">Simulation compound. Scope entity drives all three constituents in lock-step.</span>
+        </div>
+        <span class="badge badge-compound">compound</span>
+      </div>
+      <div class="panel-body">
+
+        <div class="compound">
+          <div class="compound-header">
+            <div class="compound-title-block">
+              <span class="compound-type-label">Simulation</span>
+              <span class="compound-title">Rise and fall of the Ottoman Empire</span>
+              <span class="entity-scope-label">entity scope</span>
+            </div>
+            <div>
+              <span class="entity-scope">
+                <span class="dot"></span>
+                Ottoman Empire
+                <span style="color: #a78bfa; margin-left: 2px;">· Institution</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="compound-body">
+
+            <!-- Constituent 1: Timeline (the scrubber) -->
+            <div class="constituent">
+              <div class="constituent-header">
+                Timeline
+                <span class="wired-indicator">wired — drives map &amp; text</span>
+              </div>
+              <div class="constituent-body">
+                <div class="timeline-scrubber">
+                  <div class="timeline-year" id="year-display">1299</div>
+                  <input type="range" id="timeline" min="1299" max="1922" step="1" value="1299" />
+                  <div class="timeline-labels">
+                    <span>1299 — Founded</span>
+                    <span>1922 — Dissolved</span>
+                  </div>
+                  <div class="era-label" id="era-label">Founding era</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Constituent 2: Map (coordinated) -->
+            <div class="constituent">
+              <div class="constituent-header">
+                Map
+                <span class="wired-indicator">wired — reads scope year</span>
+              </div>
+              <div class="constituent-body">
+                <div class="coord-map" id="coord-map">
+                  <svg id="map-svg" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Sea -->
+                    <rect width="400" height="120" fill="#bfdbfe"/>
+                    <!-- Static landmass outlines -->
+                    <path d="M30,40 Q60,20 100,30 Q140,15 180,25 Q220,10 260,20 Q300,15 340,30 Q370,40 380,60 Q370,80 340,90 Q300,100 260,95 Q220,105 180,100 Q140,108 100,100 Q60,105 30,90 Q10,75 30,40 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+
+                    <!-- Territory overlay — changes with era -->
+                    <path id="territory" d="" fill="#c4b5fd" fill-opacity="0.6" stroke="#7c3aed" stroke-width="1.5"/>
+
+                    <!-- Year label -->
+                    <rect x="5" y="5" width="55" height="18" rx="3" fill="rgba(255,255,255,0.9)"/>
+                    <text id="map-year-text" x="32" y="17" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="600" font-family="sans-serif">1299</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Constituent 3: Text (coordinated) -->
+            <div class="constituent">
+              <div class="constituent-header">
+                Text
+                <span class="wired-indicator">wired — reads scope year</span>
+              </div>
+              <div class="constituent-body">
+                <div class="text-content" id="text-content">
+                  The Ottoman state emerges in northwestern Anatolia under Osman I.
+                  A small tribal principality begins expanding at the expense of weakening Byzantine border territories.
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /compound-body -->
+        </div><!-- /compound -->
+
+      </div>
+    </div>
+
+  </div><!-- /columns -->
+
+  <!-- ── Wiring explanation ── -->
+  <div class="wiring-section">
+    <h2>How the wiring works — compound vs atomic</h2>
+    <div class="wiring-row">
+      <div class="wiring-box wb-entity">Ottoman Empire<br/><span style="font-size:10px;font-weight:400">Wikidata entity</span></div>
+      <span class="arrow">&#x2192;</span>
+      <div class="wiring-box wb-scope">Compound scope<br/><span style="font-size:10px;font-weight:400">required, behavioral</span></div>
+      <span class="arrow">&#x2192;</span>
+      <div class="wiring-box wb-wired">Shared state<br/><span style="font-size:10px;font-weight:400">year, bounds, events</span></div>
+      <span class="arrow">&#x2192;</span>
+      <div class="wiring-box wb-card">Map constituent<br/><span style="font-size:10px;font-weight:400">reads shared state</span></div>
+      <span class="arrow">+</span>
+      <div class="wiring-box wb-card">Timeline constituent<br/><span style="font-size:10px;font-weight:400">writes shared state</span></div>
+      <span class="arrow">+</span>
+      <div class="wiring-box wb-card">Text constituent<br/><span style="font-size:10px;font-weight:400">reads shared state</span></div>
+    </div>
+    <div class="wiring-row" style="margin-top: 12px;">
+      <div class="wiring-box wb-entity">Ottoman Empire<br/><span style="font-size:10px;font-weight:400">Wikidata entity</span></div>
+      <span class="arrow">&#x2192;</span>
+      <div class="wiring-box wb-tag">Atomic tag<br/><span style="font-size:10px;font-weight:400">optional, metadata only</span></div>
+      <span class="arrow">&#x2192;</span>
+      <div class="wiring-box wb-card" style="border-color:#bbf7d0;">Map card (standalone)<br/><span style="font-size:10px;font-weight:400">renders independently</span></div>
+      <span class="arrow" style="color:#e7e5e4;">&#x2192;</span>
+      <div class="wiring-box" style="background:#fafaf9;color:#a8a29e;border-color:#e7e5e4;">No shared state<br/><span style="font-size:10px;font-weight:400">nothing to read</span></div>
+    </div>
+    <div class="wiring-note">
+      <span>Key constraint:</span> Atomic card types have no <code>onEntityChange</code> handler defined at the type level.
+      Behavioral attachment is structurally impossible — not just discouraged by convention.
+      A compound's scope entity does have handlers, but they are only accessible inside the compound runtime and are not exposed to the card API.
+    </div>
+  </div>
+
+  <script>
+    const ERA_DATA = [
+      {
+        start: 1299, end: 1360,
+        label: "Founding era — Bithynia and NW Anatolia",
+        text: "The Ottoman state emerges in northwestern Anatolia under Osman I. A small tribal principality begins expanding at the expense of weakening Byzantine border territories.",
+        path: "M155,45 Q170,38 190,42 Q205,38 215,44 Q220,52 215,62 Q200,68 185,65 Q168,68 158,62 Q150,55 155,45 Z"
+      },
+      {
+        start: 1361, end: 1453,
+        label: "Early expansion — Thrace and Balkans",
+        text: "Murad I extends Ottoman authority into Thrace, capturing Adrianople (Edirne) in 1361, which becomes the new capital. The empire straddles Europe and Asia for the first time.",
+        path: "M100,30 Q140,18 190,22 Q225,18 245,28 Q255,40 250,58 Q235,72 200,75 Q165,78 140,72 Q110,68 95,55 Q85,45 100,30 Z"
+      },
+      {
+        start: 1454, end: 1566,
+        label: "Peak — Suleiman the Magnificent",
+        text: "Under Selim I and Suleiman, the empire reaches its greatest territorial height: controlling Anatolia, the Balkans, the Levant, Egypt, North Africa, and the Arabian peninsula. Constantinople falls in 1453.",
+        path: "M60,25 Q120,8 200,12 Q270,8 320,22 Q355,35 360,60 Q350,85 310,95 Q260,105 200,100 Q140,105 90,95 Q45,82 35,60 Q28,40 60,25 Z"
+      },
+      {
+        start: 1567, end: 1699,
+        label: "Consolidation and first decline",
+        text: "The empire stabilizes but faces increasing pressure from the Habsburgs and the Safavids. The failed siege of Vienna in 1683 marks the turning point; territory in Hungary is ceded at Karlowitz in 1699.",
+        path: "M80,28 Q140,12 200,16 Q255,12 295,26 Q325,40 325,65 Q312,88 270,97 Q220,105 175,100 Q130,104 95,92 Q55,78 48,57 Q42,38 80,28 Z"
+      },
+      {
+        start: 1700, end: 1850,
+        label: "Decline — loss of European provinces",
+        text: "The Tanzimat reform period attempts to modernize the empire, but territory is steadily lost in the Balkans and Caucasus. Greece gains independence in 1821. Russia exerts growing influence.",
+        path: "M130,35 Q170,22 210,26 Q245,22 270,36 Q285,50 280,68 Q265,84 235,90 Q200,96 170,92 Q140,95 118,83 Q95,70 100,52 Q108,38 130,35 Z"
+      },
+      {
+        start: 1851, end: 1922,
+        label: "Late empire — core Anatolia only",
+        text: "The 'Sick Man of Europe' loses most Balkan territory in the First and Second Balkan Wars (1912–13). WWI ends in defeat; the Ottoman Empire is formally dissolved in 1922 with the founding of the Republic of Turkey.",
+        path: "M155,42 Q175,34 200,38 Q222,34 237,46 Q244,58 238,70 Q222,80 200,82 Q178,82 163,73 Q150,62 155,42 Z"
+      }
+    ]
+
+    function getEra(year) {
+      return ERA_DATA.find(e => year >= e.start && year <= e.end) || ERA_DATA[ERA_DATA.length - 1]
+    }
+
+    const timeline = document.getElementById('timeline')
+    const yearDisplay = document.getElementById('year-display')
+    const eraLabel = document.getElementById('era-label')
+    const textContent = document.getElementById('text-content')
+    const territory = document.getElementById('territory')
+    const mapYearText = document.getElementById('map-year-text')
+
+    function update(year) {
+      const era = getEra(parseInt(year))
+      yearDisplay.textContent = year
+      mapYearText.textContent = year
+      eraLabel.textContent = era.label
+
+      textContent.classList.add('fading')
+      setTimeout(() => {
+        textContent.textContent = era.text
+        textContent.classList.remove('fading')
+      }, 150)
+
+      territory.setAttribute('d', era.path)
+    }
+
+    timeline.addEventListener('input', e => update(e.target.value))
+    update(1299)
+  </script>
+
+</body>
+</html>

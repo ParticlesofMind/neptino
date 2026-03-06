@@ -1,21 +1,24 @@
 "use client"
 
-import type { BlockRenderProps } from "../types"
+import type { BlockRenderProps, Topic } from "../types"
 import { useCourseStore } from "../store/courseStore"
 
 const TD = "px-2 py-1 border border-neutral-200 text-neutral-700 text-[11px] align-top"
 const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border border-neutral-200 bg-neutral-50"
+const EMPTY_TOPICS: Topic[] = []
 
 export function ResourcesBlock({ sessionId, canvasId, fieldValues, fieldEnabled }: BlockRenderProps) {
-  const { topics, taskRange } = useCourseStore((s) => {
+  const topics = useCourseStore((s) => {
+    const session = s.sessions.find((sess) => sess.id === sessionId)
+    return session?.topics ?? EMPTY_TOPICS
+  })
+
+  const taskRange = useCourseStore((s) => {
     const session = s.sessions.find((sess) => sess.id === sessionId)
     const canvas = canvasId
       ? session?.canvases.find((c) => c.id === canvasId)
       : undefined
-    return {
-      topics: session?.topics ?? [],
-      taskRange: canvas?.contentTaskRange,
-    }
+    return canvas?.contentTaskRange
   })
 
   // Column visibility — default true when no fieldEnabled config is present
@@ -72,7 +75,7 @@ export function ResourcesBlock({ sessionId, canvasId, fieldValues, fieldEnabled 
             </tr>
           ) : (
             visibleRows.map((row, i) => (
-              <tr key={i}>
+              <tr key={i} data-task-row-idx={rowStart + i}>
                 {showTask    && <td className={TD}>{row.label}</td>}
                 {showType    && <td className={TD}>{row.type}</td>}
                 {showOrigin  && <td className={TD}>{row.origin}</td>}

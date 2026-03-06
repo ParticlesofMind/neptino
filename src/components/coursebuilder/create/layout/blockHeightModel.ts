@@ -92,13 +92,84 @@ export function estimateTableBlockBaseHeight(): number {
 
 export const TABLE_ROW_HEIGHT = TABLE_ROW
 
+// ─── Text-wrapping row height estimation ──────────────────────────────────────
+
+/**
+ * Usable inner canvas width in CSS pixels.
+ * A4 page (794px) minus left (76px) and right (76px) margins.
+ */
+const CANVAS_INNER_WIDTH_PX = 642
+
+/**
+ * Average character width at text-[11px] in a typical sans-serif font.
+ * Slightly conservative (larger than real) to avoid under-estimating line counts.
+ */
+const CHAR_WIDTH_PX = 7
+
+/** Effective rendered line height at text-[11px] with ~1.5 line-height ratio */
+const TEXT_LINE_HEIGHT_PX = 17
+
+/**
+ * Estimate the rendered height of a single table row by approximating how many
+ * lines the dominant (widest) cell will wrap to.
+ *
+ * @param text       - Text content of the dominant column in this row.
+ * @param colWidthPx - CSS pixel width of that column.
+ */
+function estimateWrappedRowHeight(text: string, colWidthPx: number): number {
+  const charsPerLine = Math.max(1, Math.floor(colWidthPx / CHAR_WIDTH_PX))
+  const lines = Math.max(1, Math.ceil((text.length || 0) / charsPerLine))
+  return Math.max(TABLE_ROW, lines * TEXT_LINE_HEIGHT_PX + 8) // 8px = py-1 vertical padding
+}
+
+/**
+ * Program table: approximate CSS pixel width of the Task column.
+ * Column distribution: Topic(13%) Objective(25%) Task(32%) Method(13%) SocialForm(10%) Time(7%)
+ */
+const PROGRAM_TASK_COL_WIDTH_PX = Math.round(CANVAS_INNER_WIDTH_PX * 0.32)
+
+/**
+ * Resources table: approximate CSS pixel width of the Task column.
+ * The task label carries the full "1.1.1 topic: obj — task" string (~55% of width).
+ */
+const RESOURCES_TASK_COL_WIDTH_PX = Math.round(CANVAS_INNER_WIDTH_PX * 0.55)
+
+/**
+ * Returns an array of estimated rendered row heights (CSS pixels) for every flat
+ * task row in the given block type.
+ *
+ * Row order mirrors the iteration used in ProgramBlock and ResourcesBlock:
+ * topics → objectives → tasks (1 row per task, or 1 placeholder row per empty objective).
+ */
+export function estimateBlockRowHeights(key: "program" | "resources", topics: Topic[]): number[] {
+  const heights: number[] = []
+  topics.forEach((topic, ti) => {
+    topic.objectives.forEach((obj, oi) => {
+      const tasks = obj.tasks.length > 0 ? obj.tasks : [{ label: "" }]
+      tasks.forEach((task, ki) => {
+        if (key === "program") {
+          heights.push(estimateWrappedRowHeight(task.label, PROGRAM_TASK_COL_WIDTH_PX))
+        } else {
+          // Resources label mirrors ResourcesBlock: `${ti+1}.${oi+1}.${ki+1} topic: obj — task`
+          const label = `${ti + 1}.${oi + 1}.${ki + 1} ${topic.label}: ${obj.label} \u2014 ${task.label}`
+          heights.push(estimateWrappedRowHeight(label, RESOURCES_TASK_COL_WIDTH_PX))
+        }
+      })
+    })
+  })
+  // Always at least one placeholder row
+  if (heights.length === 0) heights.push(TABLE_ROW)
+  return heights
+}
+
 export function estimateProgramHeight(topics: Topic[]): number {
-  // section border (2) + section header (24) + table header (24) + N rows (25 each)
-  return 2 + SECTION_HEADER + TABLE_HEADER + totalTaskRows(topics) * TABLE_ROW
+  const rowHeights = estimateBlockRowHeights("program", topics)
+  return 2 + SECTION_HEADER + TABLE_HEADER + rowHeights.reduce((s, h) => s + h, 0)
 }
 
 export function estimateResourcesHeight(topics: Topic[]): number {
-  return 2 + SECTION_HEADER + TABLE_HEADER + totalTaskRows(topics) * TABLE_ROW
+  const rowHeights = estimateBlockRowHeights("resources", topics)
+  return 2 + SECTION_HEADER + TABLE_HEADER + rowHeights.reduce((s, h) => s + h, 0)
 }
 
 // ─── Content / Assignment ─────────────────────────────────────────────────────

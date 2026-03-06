@@ -43,7 +43,7 @@ interface CourseState {
   appendCanvasPage: (
     sessionId: SessionId,
     contentTopicStart?: number,
-    options?: { topicEnd?: number; objectiveStart?: number; cardStart?: number; cardEnd?: number; blockKeys?: BlockKey[] },
+    options?: { topicEnd?: number; objectiveStart?: number; cardStart?: number; cardEnd?: number; blockKeys?: BlockKey[]; taskStart?: number },
   ) => void
 
   setCanvasTopicRange: (
@@ -52,6 +52,11 @@ interface CourseState {
   ) => void
 
   setCanvasObjectiveRange: (
+    canvasId: CanvasId,
+    range: { start: number; end?: number },
+  ) => void
+
+  setCanvasTaskRange: (
     canvasId: CanvasId,
     range: { start: number; end?: number },
   ) => void
@@ -276,6 +281,9 @@ export const useCourseStore = create<CourseState>()(
               ...(options?.objectiveStart !== undefined
                 ? { contentObjectiveRange: { start: options.objectiveStart } }
                 : {}),
+              ...(options?.taskStart !== undefined
+                ? { contentTaskRange: { start: options.taskStart } }
+                : {}),
               ...(options?.cardStart !== undefined
                 ? {
                     contentCardRange: {
@@ -305,6 +313,16 @@ export const useCourseStore = create<CourseState>()(
             ...session,
             canvases: session.canvases.map((c) =>
               c.id === canvasId ? { ...c, contentObjectiveRange: range } : c,
+            ),
+          })),
+        })),
+
+      setCanvasTaskRange: (canvasId, range) =>
+        set((state) => ({
+          sessions: state.sessions.map((session) => ({
+            ...session,
+            canvases: session.canvases.map((c) =>
+              c.id === canvasId ? { ...c, contentTaskRange: range } : c,
             ),
           })),
         })),

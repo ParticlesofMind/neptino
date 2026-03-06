@@ -1,6 +1,6 @@
 "use client"
 
-import type { BlockRenderProps, SessionId } from "../types"
+import type { BlockRenderProps, SessionId, Topic } from "../types"
 import { useCourseStore } from "../store/courseStore"
 
 // ─── Row shape ────────────────────────────────────────────────────────────────
@@ -20,19 +20,22 @@ interface ProgramTableRow {
 
 const TD = "px-2 py-1 border border-neutral-200 text-neutral-700 text-[11px] align-top"
 const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border border-neutral-200 bg-neutral-50"
+const EMPTY_TOPICS: Topic[] = []
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ProgramBlock({ sessionId, canvasId, fieldValues, data, fieldEnabled }: BlockRenderProps) {
-  const { topics, taskRange } = useCourseStore((s) => {
+  const topics = useCourseStore((s) => {
+    const session = s.sessions.find((sess) => sess.id === sessionId)
+    return session?.topics ?? EMPTY_TOPICS
+  })
+
+  const taskRange = useCourseStore((s) => {
     const session = s.sessions.find((sess) => sess.id === sessionId)
     const canvas = canvasId
       ? session?.canvases.find((c) => c.id === canvasId)
       : undefined
-    return {
-      topics: session?.topics ?? [],
-      taskRange: canvas?.contentTaskRange,
-    }
+    return canvas?.contentTaskRange
   })
 
   // Column visibility — default true when no fieldEnabled config is present
@@ -54,7 +57,7 @@ export function ProgramBlock({ sessionId, canvasId, fieldValues, data, fieldEnab
   const allRows: Array<ProgramTableRow & { topicKey: string; objectiveKey: string }> = []
 
   topics.forEach((topic) => {
-    topic.objectives.forEach((obj, oi) => {
+    topic.objectives.forEach((obj) => {
       const objectiveKey = `${topic.id}:${obj.id}`
       const tasksToRender = obj.tasks.length > 0 ? obj.tasks : [{ id: `${obj.id}-empty`, label: "", order: 0, objectiveId: obj.id, droppedCards: [] }]
       tasksToRender.forEach((task) => {
@@ -128,7 +131,7 @@ export function ProgramBlock({ sessionId, canvasId, fieldValues, data, fieldEnab
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i}>
+            <tr key={i} data-task-row-idx={rowStart + i}>
               {showTopic     && row.isTopicFirst && (
                 <td className={TD} rowSpan={row.topicSpan}>{row.topicLabel}</td>
               )}

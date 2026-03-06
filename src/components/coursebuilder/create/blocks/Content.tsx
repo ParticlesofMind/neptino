@@ -142,7 +142,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
       ref={setCatchAllRef}
       className={[
         "relative",
-        isContinuation ? "" : "rounded-lg border border-neutral-200",
+        isContinuation ? "" : "overflow-hidden rounded-lg border border-neutral-200",
       ].join(" ")}
     >
       {/* Drag-active visual hint — shows the whole block as a drop target */}
@@ -177,7 +177,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
          */}
         {noTopicsAtAll && (
           <div className="rounded border border-neutral-200 bg-neutral-50 p-1.5">
-            <div className="space-y-1.5 border-l-2 border-neutral-200 pl-1.5">
+            <div className="space-y-1.5">
               <div className="rounded border border-neutral-200 bg-white p-1.5">
                 <div className="flex flex-col gap-2">
                   {visibleAreas.map((kind) => (
@@ -237,11 +237,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
               )}
 
               <div
-                className={
-                  bootstrapped
-                    ? "space-y-1.5"
-                    : "space-y-1.5 border-l-2 border-neutral-200 pl-1.5"
-                }
+                className="space-y-1.5"
               >
                 {topic.objectives.map((obj, objRelIdx) => {
                   const flatObjIdx = objsBeforeThisTopic + objRelIdx
@@ -276,11 +272,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
                       )}
 
                       <div
-                        className={
-                          hideObjLabel
-                            ? "space-y-1.5"
-                            : "space-y-1.5 border-l-2 border-neutral-200 pl-1.5"
-                        }
+                        className="space-y-1.5"
                       >
                         {obj.tasks.map((task, taskRelIdx) => {
                           const flatTaskIdx = tasksBeforeThisObj + taskRelIdx

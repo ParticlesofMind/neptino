@@ -78,26 +78,23 @@ export function TaskAreaDropZone({
   const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
 
   return (
-    <div className="space-y-0.5" data-testid={`task-area-${areaKind}`}>
-      <div className="text-[9px] font-semibold uppercase tracking-wider text-neutral-500 px-1">
-        {label}
-      </div>
+    <div data-testid={`task-area-${areaKind}`}>
       <div
         ref={setNodeRef}
         data-testid={`task-area-droppable-${areaKind}`}
         className={[
-          "rounded-lg border border-neutral-200 bg-white px-2 py-1.5 transition-colors",
+          "rounded-lg border border-neutral-200 bg-white py-1 transition-colors",
           mediaDragActive ? "min-h-[2.5rem]" : "min-h-[2rem]",
           isOver ? "border-blue-300 bg-blue-50" : "",
         ].join(" ")}
       >
-        <div className="px-2 py-1.5 space-y-1">
+        <div className="space-y-1">
           {hasCards && (
             <div className="space-y-0.5">
               {cards.map((card, index) => {
                 const prevOrder = index > 0 ? cards[index - 1]?.order : undefined
                 return (
-                  <div key={card.id}>
+                  <div key={card.id} className="w-full">
                     <InsertionLineSlot
                       sessionId={sessionId}
                       canvasId={canvasId}
@@ -108,10 +105,12 @@ export function TaskAreaDropZone({
                       nextOrder={card.order}
                       slotIndex={index}
                     />
-                    <CardRenderer
-                      card={card}
-                      onRemove={() => onRemoveCard(card.id)}
-                    />
+                    <div className="w-full">
+                      <CardRenderer
+                        card={card}
+                        onRemove={() => onRemoveCard(card.id)}
+                      />
+                    </div>
                   </div>
                 )
               })}
@@ -140,9 +139,9 @@ export function TaskAreaDropZone({
             </div>
           )}
           {!hasCards && !isOver && (
-            <div className={`flex items-center px-1 ${mediaDragActive ? "h-10" : "h-6"}`}>
+            <div className={`flex items-center px-2 ${mediaDragActive ? "h-10" : "h-6"}`}>
               <span className={`text-[9px] italic ${mediaDragActive ? "text-blue-300" : "text-neutral-300"}`}>
-                {mediaDragActive ? "Drop here" : "Empty"}
+                {mediaDragActive ? "Drop here" : label}
               </span>
             </div>
           )}

@@ -28,6 +28,7 @@ import { FooterBlock } from "../blocks/Footer"
 import { useCanvasStore } from "../store/canvasStore"
 import { useCourseStore } from "../store/courseStore"
 import { CardRenderer } from "../cards/CardRenderer"
+import { useCanvasOverflow } from "../hooks/useCanvasOverflow"
 
 function findFirstVisibleTaskId(session: CourseSession, page: CanvasPageModel): TaskId {
   const topicStart = page.contentTopicRange?.start ?? 0
@@ -118,6 +119,10 @@ interface CanvasNewPageProps {
   session:      CourseSession
   isLastPage:   boolean
   dims?:        PageDimensions
+  /** Pre-computed effective scale (fitScale * zoomLevel/100). When provided,
+   *  the store zoomLevel is ignored so the virtualizer stays as the single
+   *  source of truth for the rendered size. */
+  scale?:       number
   /** Field values for header / footer rendering */
   fieldValues:  Record<string, string>
   /** Body data keyed by block key */
@@ -135,23 +140,36 @@ export function CanvasPage({
   session,
   isLastPage,
   dims = DEFAULT_PAGE_DIMENSIONS,
+  scale: scaleProp,
   fieldValues,
   bodyData = {},
   virtualIndex,
   disableOverflow = false,
 }: CanvasNewPageProps) {
   const bodyRef    = useRef<HTMLDivElement>(null)
-  const zoomLevel   = useCanvasStore((s) => s.zoomLevel)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const zoomLevel      = useCanvasStore((s) => s.zoomLevel)
   const activeCanvasId = useCanvasStore((s) => s.activeCanvasId)
   const setActiveCanvas = useCanvasStore((s) => s.setActiveCanvas)
 
-  const scale = zoomLevel / 100
+  // Use the pre-computed scale from the virtualizer when available; fall back
+  // to store zoomLevel for standalone usage (tests, storybook, etc.).
+  const scale = scaleProp ?? (zoomLevel / 100)
 
   const isActive = activeCanvasId === page.id
   const bodyDropTaskId = findFirstVisibleTaskId(session, page)
   const removeDroppedCard = useCourseStore((s) => s.removeDroppedCard)
 
   const isTemplateFreeCanvas = !page.blockKeys || page.blockKeys.length === 0
+
+  useCanvasOverflow({
+    canvasId:      page.id,
+    sessionId:     session.id as SessionId,
+    bodyRef,
+    contentRef,
+    pageBlockKeys: page.blockKeys,
+    enabled:       !disableOverflow && !isTemplateFreeCanvas,
+  })
   const flatDroppedCards = session.topics
     .flatMap((topic) => topic.objectives)
     .flatMap((objective) => objective.tasks)
@@ -191,7 +209,7 @@ export function CanvasPage({
         overflow:         "hidden",
         // Zones baked in as grid rows: header | body | footer
         display:          "grid",
-        gridTemplateRows: `${dims.margins.top}px 1fr ${dims.margins.bottom}px`,
+        gridTemplateRows: `${dims.margins.top}px minmax(0, 1fr) ${dims.margins.bottom}px`,
         transform:        `scale(${scale})`,
         transformOrigin:  "top center",
         // Compensate margin collapse under scale so the virtualizer rows stay accurate
@@ -222,6 +240,7 @@ export function CanvasPage({
         }}
         style={{
           overflow:     "hidden",
+          minHeight:    0,
           paddingLeft:  dims.margins.left,
           paddingRight: dims.margins.right,
         }}
@@ -275,14 +294,16 @@ export function CanvasPage({
             )}
           </section>
         ) : (
-          <BlockRenderer
-            sessionId={session.id as SessionId}
-            canvasId={page.id}
-            fieldValues={fieldValues}
-            data={bodyData}
-            blockKeys={page.blockKeys}
-            fieldEnabled={session.fieldEnabled}
-          />
+          <div ref={contentRef}>
+            <BlockRenderer
+              sessionId={session.id as SessionId}
+              canvasId={page.id}
+              fieldValues={fieldValues}
+              data={bodyData}
+              blockKeys={page.blockKeys}
+              fieldEnabled={session.fieldEnabled}
+            />
+          </div>
         )}
       </div>
 
