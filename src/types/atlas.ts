@@ -103,7 +103,12 @@ export type ProductType =
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
- * The 5 activities that demand something back from the student.
+ * The 6 activities that demand something back from the student.
+ *
+ * Note: "Game" appears in both ProductType (Layer 3) and ActivityType (Layer 4).
+ * This is intentional — a game can be delivered passively as a Product or require
+ * active student participation as an Activity. Filtering logic should check both
+ * layers where relevant rather than assuming Game is exclusive to one.
  */
 export type ActivityType =
   | "Exercise"
@@ -111,6 +116,7 @@ export type ActivityType =
   | "Assessment"
   | "Interactive Simulation"
   | "Game"
+  | "AI Chat"
 
 // ═══════════════════════════════════════════════════════════════════════
 // COMBINED TYPES
@@ -294,6 +300,7 @@ export const ACTIVITY_TYPES: ActivityType[] = [
   "Assessment",
   "Interactive Simulation",
   "Game",
+  "AI Chat",
 ]
 
 /**
@@ -311,6 +318,97 @@ export const ISCED_DOMAINS: ISCEDDomain[] = [
   "Health and welfare",
   "Services",
 ]
+
+// ═══════════════════════════════════════════════════════════════════════
+// NACHSCHLAGEWERK — Course-level persistent reference layer
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * The three kinds of Nachschlagewerk entry.
+ *
+ * atlas_stub      — Auto-created when a teacher creates an inline entity reference.
+ *                   Sourced from Atlas Layer 1; not teacher-authored.
+ * course_extension — Teacher annotation layered on top of an Atlas stub.
+ *                   The global Atlas entry stays clean; course context is added here.
+ * custom_entry    — Fully teacher-authored; no Atlas anchor (no wikidata_id).
+ */
+export type NachschlageEntryKind = "atlas_stub" | "course_extension" | "custom_entry"
+
+interface NachschlageEntryBase {
+  id: string
+  courseId: string
+  kind: NachschlageEntryKind
+  createdAt?: string
+  updatedAt?: string
+}
+
+/** Atlas stub — a mirror of an AtlasItem, pulled in when the teacher first links it. */
+export interface NachschlageAtlasStub extends NachschlageEntryBase {
+  kind: "atlas_stub"
+  atlasItem: AtlasItem
+}
+
+/**
+ * Course extension — teacher annotation layered on top of an Atlas stub.
+ * The teacher can add notes, course-specific examples, and additional context
+ * without modifying the global Atlas entry.
+ */
+export interface NachschlageCourseExtension extends NachschlageEntryBase {
+  kind: "course_extension"
+  atlasItem: AtlasItem
+  teacherNotes: string
+  courseExamples: string[]
+  addedContext: string
+}
+
+/**
+ * Custom entry — fully teacher-authored with no Atlas anchor.
+ * Goes through editorial review before becoming globally visible in Atlas.
+ */
+export interface NachschlageCustomEntry extends NachschlageEntryBase {
+  kind: "custom_entry"
+  title: string
+  entityType: EntityType
+  subType?: EntitySubType
+  summary: string
+  domain?: string
+  teacherNotes?: string
+  /** If null, the entry is course-scoped only. Set after editorial approval. */
+  atlasId?: string | null
+  contributionStatus: AtlasContributionStatus
+}
+
+export type NachschlageEntry =
+  | NachschlageAtlasStub
+  | NachschlageCourseExtension
+  | NachschlageCustomEntry
+
+// ═══════════════════════════════════════════════════════════════════════
+// ATLAS CONTRIBUTION MODEL
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Editorial status for teacher-contributed Atlas entries.
+ *
+ * draft     — Not yet submitted; only visible to the authoring teacher.
+ * pending   — Submitted for editorial review; course-scoped immediately.
+ * approved  — Globally visible in Atlas.
+ * rejected  — Returned with editorial feedback; teacher can revise.
+ */
+export type AtlasContributionStatus = "draft" | "pending" | "approved" | "rejected"
+
+export interface AtlasContribution {
+  id: string
+  teacherId: string
+  courseId: string
+  /** The custom entry this contribution promotes to Atlas */
+  entry: NachschlageCustomEntry
+  status: AtlasContributionStatus
+  /** Set when status is "rejected"; describes what needs to change */
+  editorialFeedback?: string
+  submittedAt?: string
+  reviewedAt?: string
+}
 
 /**
  * Color mappings for layers (for UI consistency).

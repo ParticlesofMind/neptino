@@ -41,6 +41,14 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     interactive:  { width: 480, height: 280 },
     games:        { width: 560, height: 360 },
     chat:         { width: 420, height: 320 },
+
+    // ── Layout cards ──
+    "layout-split":   { width: 642, height: 310 },
+    "layout-stack":   { width: 642, height: 420 },
+    "layout-feature": { width: 642, height: 400 },
+    "layout-sidebar": { width: 642, height: 310 },
+    "layout-quad":    { width: 642, height: 510 },
+    "layout-mosaic":  { width: 642, height: 630 },
   }
 
   return dimensionMap[cardType] ?? { width: 420, height: 220 }
@@ -219,6 +227,14 @@ export function getSampleCardContent(
         maxTurns: 20,
         difficulty: "intermediate",
       }
+
+    case "layout-split":
+    case "layout-stack":
+    case "layout-feature":
+    case "layout-sidebar":
+    case "layout-quad":
+    case "layout-mosaic":
+      return { slots: {} }
 
     default:
       return { title }

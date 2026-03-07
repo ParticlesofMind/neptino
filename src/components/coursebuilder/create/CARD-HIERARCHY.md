@@ -16,7 +16,8 @@ the **Atlas knowledge system** (`src/types/atlas.ts`) so the two stay in sync.
 | 4     | Activities  | What does the student have to do?      |
 
 Cards in the Make panel represent **Layers 2 – 4**.
-Knowledge cards (new, see below) expose **Layer 1** entities directly.
+Layer 1 entities surface in two ways: as **inline entity references** within card
+content, and as the **Nachschlagewerk** — see below.
 
 ---
 
@@ -53,6 +54,12 @@ Products that organise data visually. Delivered passively.
 
 > **Atlas gap:** Chart, Table, and Dataset have no direct `ProductType` equivalent.
 > Timeline (a `ProductType`) has no card yet — candidate for addition.
+>
+> **Note on Dataset placement:** `Dataset` is classified as a `MediaType` in
+> `atlas.ts` (Layer 2 — raw material), but sits in the Data category here as a
+> structured view. This inconsistency should be resolved: if Dataset is raw
+> material it belongs in Media; if it is a structured view it should be added to
+> `ProductType`. Decision pending.
 
 ---
 
@@ -82,64 +89,61 @@ completion, correctness, or interaction state is tracked.
 |------------------------|---------------|-----------------------------|----------------------------------------------------------|
 | Quiz                   | `interactive` | Quiz                        | Graded questions; MCQ / T-F / Short Answer / Ranking     |
 | Game                   | `games`       | Game                        | Word Match / Memory / Fill-in-the-Blank / Drag-and-Drop  |
-| AI Chat                | `chat`        | —                           | Student-driven; Socratic / role-play / Q&A modes         |
+| AI Chat                | `chat`        | AI Chat                     | Student-driven; Socratic / role-play / Q&A modes         |
 | Exercise               | —             | Exercise                    | Open-ended written response; no card yet                 |
 | Assessment             | —             | Assessment                  | Graded artefact (essay, portfolio, submission); no card  |
 | Interactive Simulation | —             | Interactive Simulation      | Student-steered variant of `rich-sim`; no card yet       |
 
 > **Note:** Game spans Atlas Layer 3 (Product) and Layer 4 (Activity). In the
 > builder it is an **Activity** — the student must play, not just observe.
-> AI Chat has no Atlas `ActivityType` equivalent — candidate for addition.
->
-> **Simulation split:** The `rich-sim` card covers the *passive* (Product) variant.
-> An interactive student-steered simulation is a separate Activity card, not yet built.
+> The `atlas.ts` schema lists Game in both `ProductType` and `ActivityType`;
+> this is intentional — it can be delivered passively (Product) or require student
+> interaction (Activity). Filtering logic should check both layers when needed.
 
 ---
 
 ## Category: Knowledge  *(Atlas Layer 1 — Entity Types)*
 
-Cards that surface a named Atlas entity directly, letting a teacher reference
-"a concept", "a person", "a place", etc. without authoring raw media.
+**Resolved: Knowledge entities do not exist as standalone draggable cards.**
 
-These do **not** yet exist as `CardType` values — they are the next tier to build.
+Layer 1 entities surface in two distinct ways, both of which are structurally
+separate from the Make panel card system:
 
-### Entity Types (the 11 ontological categories)
+### 1. Inline entity references *(annotation layer on card content)*
 
-| Entity          | Sub-types                                         | Typical use in a lesson                            |
-|-----------------|---------------------------------------------------|----------------------------------------------------|
-| **Concept**     | Theory, Theorem, Law, Principle, Model, Definition | Define a key idea; link to encyclopedia entry      |
-| **Process**     | —                                                 | Explain a sequence of steps or a mechanism        |
-| **Instance**    | —                                                 | A concrete example of a concept or process        |
-| **Person**      | —                                                 | Biographical reference; link to timeline / profile |
-| **State**       | —                                                 | A condition or situation (e.g. a country's status) |
-| **Time**        | Event, Period, Epoch                              | Anchor to a point or span on a timeline            |
-| **Environment** | Place, Organism, Matter                           | Geographic, ecological, or physical reference      |
-| **Work**        | —                                                 | A book, artwork, law, treaty, or other artefact    |
-| **Institution** | —                                                 | Organisation, school, government body              |
-| **Technology**  | —                                                 | Tool, system, invention, platform                  |
-| **Movement**    | —                                                 | Intellectual, social, or political movement        |
+Any card whose content includes prose — Text, Audio transcript, Video caption,
+Narrative, Documentary — can carry **inline entity references**: tappable
+annotations that link a word or phrase to an Atlas Layer 1 entity. These are not
+cards. They are a content primitive that lives inside a card's rich-text field.
 
-### Proposed Knowledge `CardType` values
+When a student taps "Janissaries" in a Text card, a side drawer opens with the
+Atlas entry. The lesson is not interrupted. The card is not replaced.
 
-```
-"entity-concept"
-"entity-process"
-"entity-instance"
-"entity-person"
-"entity-state"
-"entity-time"
-"entity-environment"
-"entity-work"
-"entity-institution"
-"entity-technology"
-"entity-movement"
-```
+- Implemented as the `EntityRefMark` TipTap extension (`src/lib/tiptap/EntityRefMark.ts`)
+- Stored as a `<span data-entity-id="..." data-entity-type="...">` in the card's
+  rich-text HTML — no separate data field on the `DroppedCard` content object
+- The teacher annotates during authoring; the student reads during delivery
+- Drives no coordination logic; structurally inert at the card level
 
-Or, if a single generic card is preferred:
+### 2. The Nachschlagewerk *(course-level persistent reference layer)*
 
-```
-"entity"   // with a `entityType: EntityType` field in content
-```
+The **Nachschlagewerk** is a course-level reference work — always accessible,
+never part of the linear card sequence. It is consulted on demand, not read
+in order. Think: dictionary, glossary, encyclopaedia of figures, cast of
+characters.
+
+It is architecturally separate from the canvas. The canvas is where learning
+*happens*. The Nachschlagewerk is where students and teachers *look things up*.
+
+See the **Three-tier course structure** section below.
+
+### What this means for `CardType`
+
+No new `CardType` values are added for Knowledge entities. The one exception:
+a single generic `"entity"` card may be warranted as an **Activation-specific
+escape hatch** — "here is who Darwin was, before we study his theory" — where
+the point of the lesson moment *is* the entity. This is scoped narrowly to
+Activation and is not a general-purpose card type.
 
 ---
 
@@ -211,16 +215,89 @@ Behavioural attachment is structurally impossible on an atomic card.
 
 ---
 
-## Three-tier model
+## Three-tier course structure
+
+A course is more than its canvases. Three layers operate in parallel:
+
+```
+Tier A — Sessions / Canvases / Tasks
+         The linear instructional sequence.
+         Where learning happens.
+         Built from cards in the Make panel.
+
+Tier B — Nachschlagewerk  (reference layer)
+         Course-scoped persistent reference work.
+         Always accessible; never part of the card sequence.
+         Where students and teachers look things up.
+
+Tier C — Atlas  (global entity graph)
+         Wikidata-anchored; community-contributed; editorially moderated.
+         The substrate that Tier B draws from.
+         Not course-specific; shared across all courses.
+```
+
+### Nachschlagewerk detail
+
+The Nachschlagewerk surfaces as a **persistent panel or overlay** available
+throughout the course — not a canvas page, not a card. Its entries are:
+
+| Entry kind | Source | Who authors it |
+|---|---|---|
+| **Atlas stub** | Pulled from Atlas Layer 1 on entity link | Community / editorial |
+| **Course extension** | Teacher annotation on top of an Atlas stub | Course teacher |
+| **Custom entry** | Fully teacher-authored; no Atlas anchor | Course teacher |
+
+A student in a course sees the Atlas global layer plus the teacher's course-scoped
+enrichment. The global Atlas entry stays clean; course-specific elaboration is
+layered on top.
+
+Inline entity references (see Knowledge section above) link directly into the
+Nachschlagewerk: tapping an annotated word in a Text card opens the corresponding
+Nachschlagewerk entry in a side drawer.
+
+**Implementation:** See `src/types/atlas.ts` (`NachschlageEntry` union type) and
+`src/components/nachschlagewerk/NachschlageDrawer.tsx`.
+
+---
+
+## Atlas contribution model
+
+Atlas is a **community-contributed, editorially moderated** knowledge base
+anchored to Wikidata where possible.
+
+### Creation flow
+
+1. Teacher types the entity name in the search field
+2. System resolves against existing Atlas entries **and** Wikidata simultaneously
+3. If a match exists → teacher enriches the existing entry (course extension)
+4. If no match exists → teacher creates a new entry, which requires:
+   - Selecting an `EntityType` (11 categories)
+   - Selecting a `sub_type` where applicable
+   - Providing a title, summary, and at least one domain tag
+5. New entries enter **editorial review** before becoming globally visible
+   (course-scoped immediately; Atlas-global after approval)
+
+### Deduplication
+
+`wikidata_id` is the canonical deduplication key. "Napoleon", "Napoleon I",
+"Napoleon Bonaparte", and "Emperor Napoleon" all resolve to the same Wikidata
+QID and therefore the same Atlas entry. Free-text entries without a Wikidata
+anchor are deduplicated by title + `EntityType` + domain during editorial review.
+
+---
+
+## Three-tier card model
 
 ```
 Tier 1 — Entity    (Atlas Layer 1 — what the content is about)
          Fetched from Wikidata / Wikipedia. Not authored by the teacher.
+         Surfaces as inline annotations and Nachschlagewerk entries.
          Attaches to cards as a tag (atomic) or scope (compound).
 
 Tier 2 — Card      (Atlas Layers 2 – 4 — how content is delivered)
          Atomic builder cards dragged from the Make panel.
          May carry an optional entity tag.
+         May carry inline entity reference annotations in rich-text fields.
 
 Tier 3 — Compound  (pre-wired blueprint of cards + one entity scope)
          Named blueprints assembled from atomic cards.
@@ -312,24 +389,31 @@ Make Panel
 │   └── Simulation
 │       (Timeline, Documentary, Narrative, Profile — not yet built)
 │
-├── Activities       (Layer 4 — student response required)
-│   ├── Quiz
-│   ├── Game
-│   ├── AI Chat
-│   └── (Exercise, Assessment, Interactive Simulation — not yet built)
-│
-└── Knowledge        (Layer 1 — entity references)  ← to be built
-    ├── Concept       (Theory, Theorem, Law, Principle, Model, Definition)
-    ├── Process
-    ├── Instance
-    ├── Person
-    ├── State
-    ├── Time          (Event, Period, Epoch)
-    ├── Environment   (Place, Organism, Matter)
-    ├── Work
-    ├── Institution
-    ├── Technology
-    └── Movement
+└── Activities       (Layer 4 — student response required)
+    ├── Quiz
+    ├── Game
+    ├── AI Chat
+    └── (Exercise, Assessment, Interactive Simulation — not yet built)
+
+─── NOT in the Make panel ──────────────────────────────────────────────
+
+Nachschlagewerk    (course-level persistent reference layer)
+    Inline entity references — annotation primitive inside card content
+    Course extensions — teacher elaboration on Atlas stubs
+    Custom entries — fully teacher-authored
+
+Atlas              (global entity graph — Layer 1)
+    Concept       (Theory, Theorem, Law, Principle, Model, Definition)
+    Process
+    Instance
+    Person
+    State
+    Time          (Event, Period, Epoch)
+    Environment   (Place, Organism, Matter)
+    Work
+    Institution
+    Technology
+    Movement
 ```
 
 ---
@@ -436,14 +520,37 @@ pedagogical role.
 | **Exercise** | Practice | — | Open-ended written response |
 | **Assessment** | Feedback | — | Graded submission artefact |
 | **Interactive Sim** | Practice | — | Student-steered exploration |
-| **Knowledge entity** | Instruction | Activation | In Activation: here is the entity with gaps to fill |
+| **Entity card** | Activation | — | Narrow escape hatch only; see Knowledge section |
+
+---
+
+## Marketplace
+
+The **Marketplace** is a separate surface — distinct from Atlas — where teachers can
+browse, acquire, and optionally sell content assets created by other teachers.
+
+- Similar to Atlas in visual design but with transactional affordances (preview,
+  acquire, purchase)
+- Assets include simulations, compound blueprints, full lesson templates, game
+  configurations, and other teacher-created content
+- Free and paid listings; teachers can monetise their own creations
+- Assets are imported into the teacher's own course builder on acquisition;
+  they are not live-linked to the seller's originals
+
+> **Relationship to Atlas:** Atlas is a knowledge graph (Layer 1 entities and their
+> associated media). The Marketplace is a content asset store (Layers 2–4 card
+> configurations). The two are complementary, not overlapping.
+
+**Implementation:** See `src/types/marketplace.ts` for asset types and
+`src/components/coursebuilder/sections/marketplace-section.tsx` for the existing
+setup UI entry point.
 
 ---
 
 ## Open questions
 
-1. Should **Knowledge** cards be standalone drag-and-drop cards, or a sub-panel
-   that enriches an existing card with entity metadata?
+1. Should **Dataset** move from the Data category to the Media category to align
+   with its `MediaType` classification in `atlas.ts`?
 2. Should **Timeline** be in the **Data** category (passive view) or **Products**
    (it can be interactive)?
 3. ~~Should **Exercise** and **Assessment** form a fifth category?~~ **Resolved:**

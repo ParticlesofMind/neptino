@@ -18,18 +18,24 @@ import {
   Bot,
   Box,
   Check,
+  Columns2,
   Database,
   FileText,
   Film,
   Gamepad2,
+  Grid3X3,
   HelpCircle,
   Image as ImageIcon,
+  Layout,
   Layers,
+  LayoutGrid,
   LineChart,
   Map as MapIcon,
   MessageSquare,
   Network,
+  PanelLeft,
   PlayCircle,
+  Rows2,
   Sparkles,
   Table2,
 } from "lucide-react"
@@ -72,6 +78,13 @@ export const CARD_TYPE_META: Record<CardType, CardTypeMeta> = {
   interactive:  { label: "Quiz",        icon: HelpCircle  },
   games:        { label: "Game",        icon: Gamepad2    },
   chat:         { label: "AI Chat",     icon: Bot         },
+  // ── Layout containers ─────────────────────────────────────────
+  "layout-split":   { label: "Split",   icon: Columns2  },
+  "layout-stack":   { label: "Stack",   icon: Rows2     },
+  "layout-feature": { label: "Feature", icon: Layout    },
+  "layout-sidebar": { label: "Sidebar", icon: PanelLeft },
+  "layout-quad":    { label: "Quad",    icon: LayoutGrid },
+  "layout-mosaic":  { label: "Mosaic",  icon: Grid3X3   },
 }
 
 // ─── Main exported component ──────────────────────────────────────────────────

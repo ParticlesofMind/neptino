@@ -142,7 +142,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
       ref={setCatchAllRef}
       className={[
         "relative",
-        isContinuation ? "" : "overflow-hidden rounded-lg border border-neutral-200",
+        isContinuation ? "" : "overflow-hidden rounded-lg border border-border",
       ].join(" ")}
     >
       {/* Drag-active visual hint — shows the whole block as a drop target */}
@@ -160,14 +160,14 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
       )}
 
       {!isContinuation && (
-        <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-1 flex items-center gap-2">
-          <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400 flex-1">
+        <div className="border-b border-border bg-muted/30 px-2 py-1 flex items-center gap-2">
+          <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground flex-1">
             {blockKey === "assignment" ? "Assignment" : "Content"}
           </h2>
         </div>
       )}
 
-      <div className={["bg-white space-y-2", isContinuation ? "px-0 py-0" : "px-3 py-2"].join(" ")}>
+      <div className={["space-y-2", isContinuation ? "px-0 py-0" : "px-3 py-2"].join(" ")}>
         {/*
          * No topics defined yet: render the same structural scaffold that
          * appears once real topics exist — topic container → objective
@@ -176,9 +176,9 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
          * a minimal topic → objective → task chain on first drop.
          */}
         {noTopicsAtAll && (
-          <div className="rounded border border-neutral-200 bg-neutral-50 p-1.5">
+          <div className="rounded border border-border bg-muted/20 p-1.5">
             <div className="space-y-1.5">
-              <div className="rounded border border-neutral-200 bg-white p-1.5">
+              <div className="rounded border border-border bg-background p-1.5">
                 <div className="flex flex-col gap-2">
                   {visibleAreas.map((kind) => (
                     <TaskAreaDropZone
@@ -229,11 +229,11 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
               key={topic.id}
               // Absolute topic index — queried by useCanvasOverflow for DOM-based split detection
               data-topic-idx={absoluteIdx}
-              className="rounded border border-neutral-200 bg-neutral-50 p-1.5"
+              className="rounded border border-border bg-muted/20 p-1.5"
             >
               {/* Topic heading (hidden for bootstrapped/anonymous topics) */}
               {!bootstrapped && (
-                <p className="text-[11px] font-semibold text-neutral-700 mb-1.5">{topic.label}</p>
+                <p className="text-[11px] font-semibold text-foreground mb-1.5">{topic.label}</p>
               )}
 
               <div
@@ -262,11 +262,11 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
                       className={
                         hideObjLabel
                           ? "space-y-1.5"
-                          : "rounded border border-neutral-200 bg-white p-1.5"
+                          : "rounded border border-border bg-background p-1.5"
                       }
                     >
                       {!hideObjLabel && (
-                        <p className="text-[10px] font-medium text-neutral-600 mb-1.5">
+                        <p className="text-[10px] font-medium text-foreground/70 mb-1.5">
                           {obj.label}
                         </p>
                       )}
@@ -289,11 +289,11 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
                               className={
                                 hideTaskLabel
                                   ? "flex flex-col gap-2"
-                                  : "rounded border border-neutral-100 bg-neutral-50 p-1.5"
+                                  : "rounded border border-border/60 bg-muted/20 p-1.5"
                               }
                             >
                               {!hideTaskLabel && (
-                                <p className="text-[10px] text-neutral-500 mb-1.5">
+                                <p className="text-[10px] text-muted-foreground mb-1.5">
                                   {task.label}
                                 </p>
                               )}

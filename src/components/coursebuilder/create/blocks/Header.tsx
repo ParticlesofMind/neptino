@@ -18,28 +18,28 @@ export function HeaderBlock({ fieldValues, fieldEnabled }: BlockRenderProps) {
   const teacher     = showTeacher     ? (fieldValues.teacher_name || "") : ""
 
   return (
-    <header className="flex h-full items-center justify-between border-b border-neutral-200 bg-white">
-      <div className="flex items-center overflow-x-hidden divide-x divide-neutral-200">
+    <header className="flex h-full items-center justify-between border-b border-border bg-background">
+      <div className="flex items-center overflow-x-hidden divide-x divide-border">
         {title ? (
-          <span className="px-3 py-2 text-xs font-semibold text-neutral-800 whitespace-nowrap">
+          <span className="px-3 py-2 text-xs font-semibold text-foreground whitespace-nowrap">
             {title}
           </span>
         ) : null}
         {institution ? (
-          <span className="px-3 py-2 text-xs text-neutral-500 whitespace-nowrap">
+          <span className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
             {institution}
           </span>
         ) : null}
         {!title && !institution && (
-          <span className="px-3 py-2 text-xs italic text-neutral-400">Untitled Session</span>
+          <span className="px-3 py-2 text-xs italic text-muted-foreground">Untitled Session</span>
         )}
       </div>
-      <div className="shrink-0 flex items-center divide-x divide-neutral-200">
+      <div className="shrink-0 flex items-center divide-x divide-border">
         {teacher ? (
-          <span className="px-3 py-2 text-[11px] text-neutral-400 whitespace-nowrap">{teacher}</span>
+          <span className="px-3 py-2 text-[11px] text-muted-foreground whitespace-nowrap">{teacher}</span>
         ) : null}
         {date ? (
-          <span className="px-3 py-2 text-[11px] text-neutral-400 whitespace-nowrap">{date}</span>
+          <span className="px-3 py-2 text-[11px] text-muted-foreground whitespace-nowrap">{date}</span>
         ) : null}
       </div>
     </header>

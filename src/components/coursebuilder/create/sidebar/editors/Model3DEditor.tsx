@@ -2,7 +2,13 @@
 
 import { Suspense, useState, useRef } from "react"
 import dynamic from "next/dynamic"
-import { Plus, Trash2, Box } from "lucide-react"
+import { Plus, Trash2, Box, RotateCcw } from "lucide-react"
+import {
+  StudioSection,
+  StudioUrlInput,
+  StudioSegment,
+  StudioToggle,
+} from "./studio-primitives"
 
 // Dynamic imports to avoid SSR issues
 const CanvasR3F = dynamic(() => import("@react-three/fiber").then((m) => m.Canvas), { ssr: false })
@@ -47,40 +53,36 @@ interface Model3DEditorProps {
 
 function parseAnnotations(raw: unknown): Annotation[] {
   if (!Array.isArray(raw)) return []
-  return raw.filter((a): a is Annotation =>
-    typeof a === "object" && a !== null && "label" in a,
-  )
+  return raw.filter((a): a is Annotation => typeof a === "object" && a !== null && "label" in a)
 }
 
 type EnvPreset = "city" | "studio" | "sunset" | "dawn" | "forest"
-type CameraPreset = "front" | "side" | "top" | "isometric"
+type CameraPreset = "front" | "side" | "top" | "iso"
 
 const CAMERA_POSITIONS: Record<CameraPreset, [number, number, number]> = {
   front: [0, 0, 6],
-  side: [6, 0, 0],
-  top: [0, 8, 0],
-  isometric: [4, 4, 4],
+  side:  [6, 0, 0],
+  top:   [0, 8, 0],
+  iso:   [4, 4, 4],
 }
 
+const ENV_LABELS: EnvPreset[] = ["studio", "city", "sunset", "dawn", "forest"]
+
 export function Model3DEditor({ content, onChange }: Model3DEditorProps) {
-  const [urlDraft, setUrlDraft] = useState(typeof content.url === "string" ? content.url : "")
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>("front")
   const [env, setEnv] = useState<EnvPreset>("studio")
   const [wireframe, setWireframe] = useState(false)
+  const [autoRotate, setAutoRotate] = useState(false)
   const orbitRef = useRef<{ object: { position: { set: (x: number, y: number, z: number) => void } } }>(null)
 
   const url = typeof content.url === "string" ? content.url : ""
   const format = typeof content.format === "string" ? content.format : "glb"
   const annotations = parseAnnotations(content.annotations)
 
-  const commitUrl = () => onChange("url", urlDraft)
-
   const applyCamera = (preset: CameraPreset) => {
     setCameraPreset(preset)
     const [x, y, z] = CAMERA_POSITIONS[preset]
-    if (orbitRef.current) {
-      orbitRef.current.object.position.set(x, y, z)
-    }
+    orbitRef.current?.object.position.set(x, y, z)
   }
 
   const addAnnotation = () => {
@@ -92,114 +94,75 @@ export function Model3DEditor({ content, onChange }: Model3DEditorProps) {
   }
 
   const updateAnnotation = (i: number, field: keyof Annotation, value: string) => {
-    onChange("annotations", annotations.map((a, idx) => idx === i ? { ...a, [field]: value } : a))
+    onChange("annotations", annotations.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)))
   }
 
   const cameraPos = CAMERA_POSITIONS[cameraPreset]
 
   return (
     <div className="flex h-full flex-col overflow-auto bg-white">
-      {/* URL input */}
-      <div className="px-4 pt-4 pb-3 border-b border-neutral-100 space-y-3">
-        <div className="flex gap-0 border border-neutral-200 divide-x divide-neutral-200 w-fit">
-          {(["glb", "gltf", "usdz"] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => onChange("format", f)}
-              className={[
-                "px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors",
-                format === f ? "bg-neutral-900 text-white" : "bg-white text-neutral-500 hover:bg-neutral-50",
-              ].join(" ")}
-            >
-              {f.toUpperCase()}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={urlDraft}
-            placeholder="https://example.com/model.glb"
-            onChange={(e) => setUrlDraft(e.target.value)}
-            onBlur={commitUrl}
-            onKeyDown={(e) => e.key === "Enter" && commitUrl()}
-            className="flex-1 border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
-          />
-          <button
-            type="button"
-            onClick={commitUrl}
-            className="border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-[11px] font-medium text-white hover:opacity-90"
+
+      {/* 3D Viewport — the hero, at the top */}
+      <div className="relative shrink-0 border-b border-neutral-100 bg-neutral-950" style={{ height: 300 }}>
+        {url ? (
+          <CanvasR3F
+            camera={{ position: cameraPos, fov: 46 }}
+            gl={{ antialias: true, alpha: true }}
+            dpr={[1, 1.5]}
+            className="h-full w-full"
           >
-            Load
-          </button>
-        </div>
-      </div>
+            <EnvironmentR3F preset={env} />
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[5, 8, 5]} intensity={1.2} />
+            <Suspense fallback={null}>
+              {UseGLTF && <UseGLTF url={url} />}
+            </Suspense>
+            <OrbitControlsR3F
+              ref={orbitRef as React.RefObject<never>}
+              enableZoom
+              enablePan
+              autoRotate={autoRotate}
+              autoRotateSpeed={2}
+            />
+          </CanvasR3F>
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-3">
+            <Box size={40} className="text-neutral-700" />
+            <p className="text-[12px] text-neutral-500">Load a model below to preview</p>
+          </div>
+        )}
 
-      {/* 3D Viewer */}
-      <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50">
-        <div className="overflow-hidden bg-black border border-neutral-200" style={{ height: 260 }}>
-          {url ? (
-            <CanvasR3F
-              camera={{ position: cameraPos, fov: 46 }}
-              gl={{ antialias: true, alpha: true }}
-              dpr={[1, 1.5]}
-            >
-              <EnvironmentR3F preset={env} />
-              <ambientLight intensity={0.5} />
-              <directionalLight position={[5, 8, 5]} intensity={1.2} />
-              <Suspense fallback={null}>
-                {UseGLTF && <UseGLTF url={url} />}
-              </Suspense>
-              <OrbitControlsR3F
-                ref={orbitRef as React.RefObject<never>}
-                enableZoom
-                enablePan
-                autoRotate={false}
-              />
-            </CanvasR3F>
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-3">
-              <Box size={32} className="text-neutral-600" />
-              <p className="text-[12px] text-neutral-500">Enter a GLB/GLTF URL above to view model</p>
-            </div>
-          )}
-        </div>
-        <p className="mt-1.5 text-center text-[10px] text-neutral-400">Drag to orbit · Scroll to zoom · Right-drag to pan</p>
-      </div>
-
-      {/* Camera presets */}
-      <div className="px-4 py-3 border-b border-neutral-100 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Camera preset</p>
-        <div className="flex gap-1 flex-wrap">
-          {(["front", "side", "top", "isometric"] as CameraPreset[]).map((p) => (
+        {/* Overlaid camera controls — top left */}
+        <div className="absolute left-2 top-2 flex gap-1">
+          {(["front", "side", "top", "iso"] as CameraPreset[]).map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => applyCamera(p)}
               className={[
-                "border px-3 py-1.5 text-[11px] font-medium capitalize transition-colors",
-                cameraPreset === p ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
+                "rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all",
+                cameraPreset === p
+                  ? "bg-white text-neutral-900 shadow-sm"
+                  : "bg-black/40 text-white/70 hover:bg-black/60 hover:text-white",
               ].join(" ")}
             >
               {p}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Environment */}
-      <div className="px-4 py-3 border-b border-neutral-100 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Lighting</p>
-        <div className="flex gap-1 flex-wrap">
-          {(["studio", "city", "sunset", "dawn", "forest"] as EnvPreset[]).map((e) => (
+        {/* Overlaid environment controls — top right */}
+        <div className="absolute right-2 top-2 flex gap-1">
+          {ENV_LABELS.map((e) => (
             <button
               key={e}
               type="button"
               onClick={() => setEnv(e)}
               className={[
-                "border px-3 py-1.5 text-[11px] font-medium capitalize transition-colors",
-                env === e ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
+                "rounded px-2 py-0.5 text-[9px] font-bold capitalize tracking-wider transition-all",
+                env === e
+                  ? "bg-white text-neutral-900 shadow-sm"
+                  : "bg-black/40 text-white/70 hover:bg-black/60 hover:text-white",
               ].join(" ")}
             >
               {e}
@@ -207,63 +170,127 @@ export function Model3DEditor({ content, onChange }: Model3DEditorProps) {
           ))}
         </div>
 
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={wireframe}
-            onChange={(e) => setWireframe(e.target.checked)}
-            className="accent-neutral-900"
-          />
-          <span className="text-[11px] text-neutral-600">Wireframe overlay</span>
-        </label>
+        {/* Overlaid display toggles — bottom left */}
+        <div className="absolute bottom-2 left-2 flex gap-1">
+          <button
+            type="button"
+            onClick={() => setWireframe((w) => !w)}
+            className={[
+              "rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all",
+              wireframe ? "bg-[#4a94ff] text-white" : "bg-black/40 text-white/70 hover:bg-black/60",
+            ].join(" ")}
+          >
+            Wire
+          </button>
+          <button
+            type="button"
+            onClick={() => setAutoRotate((r) => !r)}
+            title="Auto-rotate"
+            className={[
+              "flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all",
+              autoRotate ? "bg-[#4a94ff] text-white" : "bg-black/40 text-white/70 hover:bg-black/60",
+            ].join(" ")}
+          >
+            <RotateCcw size={9} />
+            Spin
+          </button>
+        </div>
+
+        {/* Hint */}
+        <div className="absolute bottom-2 right-2 rounded bg-black/30 px-1.5 py-0.5 text-[8px] text-white/60">
+          Drag · Scroll · R-drag
+        </div>
       </div>
 
+      {/* Source */}
+      <StudioSection label="Model source" className="pt-4">
+        <StudioSegment
+          label="Format"
+          options={[
+            { value: "glb", label: "GLB" },
+            { value: "gltf", label: "GLTF" },
+            { value: "usdz", label: "USDZ" },
+          ]}
+          value={format}
+          onChange={(f) => onChange("format", f)}
+          size="xs"
+        />
+        <StudioUrlInput
+          value={url}
+          placeholder="https://example.com/model.glb"
+          onCommit={(u) => onChange("url", u)}
+        />
+      </StudioSection>
+
+      {/* Render settings */}
+      <StudioSection label="Render settings">
+        <StudioToggle
+          label="Wireframe overlay"
+          description="Show mesh edges over the surface"
+          checked={wireframe}
+          onChange={setWireframe}
+        />
+        <StudioToggle
+          label="Auto-rotate"
+          description="Continuously spin the model"
+          checked={autoRotate}
+          onChange={setAutoRotate}
+        />
+      </StudioSection>
+
       {/* Annotations */}
-      <div className="px-4 py-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Annotations</p>
+      <StudioSection
+        label="3D Annotations"
+        noBorder
+        action={
           <button
             type="button"
             onClick={addAnnotation}
-            className="flex items-center gap-1 border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 hover:bg-neutral-50"
+            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-all hover:border-neutral-300 hover:bg-neutral-50"
           >
-            <Plus size={10} /> Add point
+            <Plus size={10} />
+            Add point
           </button>
-        </div>
+        }
+      >
         {annotations.length === 0 && (
-          <p className="text-[11px] text-neutral-400 italic">No annotations. Add a labeled point in 3D space.</p>
+          <p className="text-[11px] italic text-neutral-400">No annotations. Label a point in 3D space.</p>
         )}
         <div className="space-y-2">
           {annotations.map((a, i) => (
-            <div key={i} className="border border-neutral-200 p-2 space-y-1.5">
+            <div key={i} className="space-y-1.5 rounded-lg border border-neutral-100 bg-neutral-50 p-2.5">
               <input
                 type="text"
                 value={a.label}
                 onChange={(e) => updateAnnotation(i, "label", e.target.value)}
                 placeholder="Label"
-                className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700 outline-none focus:border-neutral-400"
+                className="w-full rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-[#4a94ff]/60"
               />
-              <div className="flex gap-1">
+              <div className="flex items-center gap-1.5">
                 {(["x", "y", "z"] as const).map((axis) => (
-                  <label key={axis} className="flex items-center gap-1 flex-1">
-                    <span className="text-[10px] font-mono font-bold text-neutral-400 w-4">{axis}</span>
+                  <div key={axis} className="flex flex-1 items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1">
+                    <span className="font-mono text-[9px] font-bold text-neutral-400">{axis.toUpperCase()}</span>
                     <input
                       type="number"
                       value={a[axis]}
                       step={0.1}
                       onChange={(e) => updateAnnotation(i, axis, e.target.value)}
-                      className="flex-1 min-w-0 border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] font-mono text-neutral-700 outline-none focus:border-neutral-400"
+                      className="min-w-0 flex-1 bg-transparent font-mono text-[11px] text-neutral-700 outline-none"
                     />
-                  </label>
+                  </div>
                 ))}
-                <button type="button" onClick={() => removeAnnotation(i)} className="ml-1 text-neutral-400 hover:text-red-500">
+                <button
+                  type="button"
+                  onClick={() => removeAnnotation(i)}
+                  className="shrink-0 text-neutral-400 transition-colors hover:text-red-500"
+                >
                   <Trash2 size={13} />
                 </button>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </StudioSection>
     </div>
   )
 }

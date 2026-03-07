@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import WaveSurfer from "wavesurfer.js"
-import { ChevronDown, ChevronUp, Link as LinkIcon, Pause, Play, Plus, Trash2, Upload } from "lucide-react"
+import { ChevronDown, ChevronUp, Pause, Play, Plus, Trash2, Upload, AudioLines } from "lucide-react"
+import {
+  StudioSection,
+  StudioUrlInput,
+  StudioDropZone,
+  StudioTextarea,
+  StudioPillGroup,
+  StudioSegment,
+} from "./studio-primitives"
 
 interface AudioEditorProps {
   content: Record<string, unknown>
@@ -37,13 +45,22 @@ function parseChapters(raw: unknown): Chapter[] {
   )
 }
 
+const SPEED_OPTIONS = [
+  { value: "0.5x", label: "0.5×" },
+  { value: "0.75x", label: "0.75×" },
+  { value: "1x", label: "1×" },
+  { value: "1.25x", label: "1.25×" },
+  { value: "1.5x", label: "1.5×" },
+  { value: "2x", label: "2×" },
+] as const
+
 export function AudioEditor({ content, onChange }: AudioEditorProps) {
-  const [urlDraft, setUrlDraft] = useState(typeof content.url === "string" ? content.url : "")
-  const [urlTab, setUrlTab] = useState<"url" | "upload">("url")
+  const [sourceTab, setSourceTab] = useState<"url" | "upload">("url")
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const waveformRef = useRef<HTMLDivElement | null>(null)
+  const waveContainerRef = useRef<HTMLDivElement | null>(null)
   const waveSurferRef = useRef<WaveSurfer | null>(null)
 
   const url = typeof content.url === "string" ? content.url : ""
@@ -56,31 +73,24 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
     if (!waveformRef.current) return
     const ws = WaveSurfer.create({
       container: waveformRef.current,
-      waveColor: "#cbd5e1",
+      waveColor: "#334155",
       progressColor: "#4a94ff",
-      cursorColor: "#0f172a",
+      cursorColor: "#60a5fa",
       barWidth: 2,
       barGap: 1,
       barRadius: 2,
-      height: 72,
+      height: 96,
       normalize: true,
       autoScroll: true,
     })
-
-    ws.on("ready", () => {
-      setDuration(ws.getDuration())
-      ws.setPlaybackRate(playbackRate)
-    })
-    ws.on("timeupdate", (time) => setCurrentTime(time))
+    ws.on("ready", () => { setDuration(ws.getDuration()); ws.setPlaybackRate(playbackRate) })
+    ws.on("timeupdate", (t) => setCurrentTime(t))
     ws.on("play", () => setIsPlaying(true))
     ws.on("pause", () => setIsPlaying(false))
     ws.on("finish", () => setIsPlaying(false))
-
     waveSurferRef.current = ws
-    return () => {
-      ws.destroy()
-      waveSurferRef.current = null
-    }
+    return () => { ws.destroy(); waveSurferRef.current = null }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -90,18 +100,10 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
   }, [url])
 
   useEffect(() => {
-    const ws = waveSurferRef.current
-    if (!ws) return
-    ws.setPlaybackRate(playbackRate)
+    waveSurferRef.current?.setPlaybackRate(playbackRate)
   }, [playbackRate])
 
-  const commitUrl = () => onChange("url", urlDraft)
-
-  const togglePlay = () => {
-    const ws = waveSurferRef.current
-    if (!ws) return
-    void ws.playPause()
-  }
+  const togglePlay = () => { void waveSurferRef.current?.playPause() }
 
   const seekToChapter = (timecode: string) => {
     const ws = waveSurferRef.current
@@ -112,7 +114,8 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
   }
 
   const addChapter = () => {
-    onChange("chapters", [...chapters, { time: "0:00", title: "Chapter" }])
+    const t = duration > 0 ? formatSeconds(currentTime) : "0:00"
+    onChange("chapters", [...chapters, { time: t, title: `Chapter ${chapters.length + 1}` }])
   }
 
   const removeChapter = (i: number) => {
@@ -120,8 +123,7 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
   }
 
   const updateChapter = (i: number, field: keyof Chapter, value: string) => {
-    const next = chapters.map((c, idx) => idx === i ? { ...c, [field]: value } : c)
-    onChange("chapters", next)
+    onChange("chapters", chapters.map((c, idx) => (idx === i ? { ...c, [field]: value } : c)))
   }
 
   const moveChapter = (i: number, dir: -1 | 1) => {
@@ -134,158 +136,171 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
 
   return (
     <div className="flex h-full flex-col overflow-auto bg-white">
-      {/* Source section */}
-      <div className="px-4 pt-4 pb-3 border-b border-neutral-100 space-y-3">
-        <div className="flex items-center gap-0 border border-neutral-200 divide-x divide-neutral-200 w-fit">
-          {(["url", "upload"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setUrlTab(t)}
-              className={[
-                "flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
-                urlTab === t ? "bg-neutral-900 text-white" : "bg-white text-neutral-500 hover:bg-neutral-50",
-              ].join(" ")}
-            >
-              {t === "url" ? <LinkIcon size={10} /> : <Upload size={10} />}
-              {t === "url" ? "URL" : "Upload"}
-            </button>
-          ))}
-        </div>
 
-        {urlTab === "url" ? (
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={urlDraft}
-              placeholder="https://example.com/audio.mp3"
-              onChange={(e) => setUrlDraft(e.target.value)}
-              onBlur={commitUrl}
-              onKeyDown={(e) => e.key === "Enter" && commitUrl()}
-              className="flex-1 border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
-            />
-            <button
-              type="button"
-              onClick={commitUrl}
-              className="border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-[11px] font-medium text-white hover:opacity-90"
-            >
-              Load
-            </button>
-          </div>
+      {/* Source */}
+      <StudioSection className="pt-4">
+        <StudioSegment
+          options={[
+            { value: "url", label: "URL" },
+            { value: "upload", label: "Upload" },
+          ]}
+          value={sourceTab}
+          onChange={setSourceTab}
+        />
+        {sourceTab === "url" ? (
+          <StudioUrlInput
+            value={url}
+            placeholder="https://example.com/audio.mp3"
+            onCommit={(u) => onChange("url", u)}
+          />
         ) : (
-          <div className="flex cursor-pointer flex-col items-center gap-2 border-2 border-dashed border-neutral-300 bg-neutral-50 py-6 hover:border-neutral-400 hover:bg-neutral-100">
-            <Upload size={20} className="text-neutral-400" />
-            <p className="text-[11px] text-neutral-500">Drop an MP3, WAV, or OGG file</p>
-            <p className="text-[10px] text-neutral-400">Upload to Supabase storage — coming soon</p>
+          <StudioDropZone
+            icon={<Upload size={22} />}
+            label="Drop an MP3, WAV, or OGG file"
+            hint="Upload to Supabase storage — coming soon"
+            onDrop={() => {}}
+            accept="audio/*"
+          />
+        )}
+      </StudioSection>
+
+      {/* Waveform player — hero */}
+      <div className="shrink-0 border-b border-neutral-100 bg-neutral-950">
+        {!url && (
+          <div className="flex flex-col items-center justify-center gap-2.5 py-10">
+            <AudioLines size={28} className="text-neutral-700" />
+            <p className="text-[11px] text-neutral-500">Load an audio file above</p>
           </div>
         )}
-      </div>
 
-      {/* Waveform player */}
-      {url && (
-        <div className="px-4 py-4 border-b border-neutral-100 bg-neutral-50">
-          <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-3">
-            <div ref={waveformRef} />
-            <div className="flex items-center justify-between">
-              <div className="text-[10px] font-mono text-neutral-500">
-                {formatSeconds(currentTime)} / {formatSeconds(duration)}
-              </div>
+        {url && (
+          <div className="px-4 pt-4 pb-3 space-y-2">
+            {/* Waveform + chapter pin overlay */}
+            <div ref={waveContainerRef} className="relative">
+              <div ref={waveformRef} className="rounded-md overflow-hidden" />
+              {/* Chapter pins overlaid on waveform */}
+              {duration > 0 && chapters.map((ch, i) => {
+                const secs = toSeconds(ch.time)
+                const pct = Math.min(100, Math.max(0, (secs / duration) * 100))
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => seekToChapter(ch.time)}
+                    style={{ left: `${pct}%` }}
+                    className="group absolute inset-y-0 -translate-x-1/2 pointer-events-auto"
+                    title={ch.title || `Chapter ${i + 1}`}
+                  >
+                    <div className="absolute inset-y-0 w-px bg-[#4a94ff]/70 group-hover:bg-[#4a94ff]" />
+                    <div className="absolute top-0 -translate-x-1/2 flex h-4 w-4 items-center justify-center rounded-b bg-[#4a94ff] text-[8px] font-bold text-white shadow-sm">
+                      {i + 1}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Transport controls */}
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={togglePlay}
-                className="inline-flex items-center gap-1 rounded-md border border-neutral-900 bg-neutral-900 px-2.5 py-1 text-[11px] font-medium text-white hover:opacity-90"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#4a94ff] text-white shadow-sm hover:bg-[#3a84ef] transition-colors"
               >
-                {isPlaying ? <Pause size={11} /> : <Play size={11} />}
-                {isPlaying ? "Pause" : "Play"}
+                {isPlaying ? <Pause size={14} /> : <Play size={14} />}
               </button>
+              <div className="flex-1 text-[10px] font-mono text-neutral-400">
+                {formatSeconds(currentTime)}
+                <span className="mx-1 text-neutral-600">/</span>
+                {formatSeconds(duration)}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Playback settings */}
-      <div className="px-4 py-3 border-b border-neutral-100 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Playback</p>
-        <label className="block space-y-1">
-          <span className="text-[11px] font-medium text-neutral-600">Default speed</span>
-          <select
-            value={playback}
-            onChange={(e) => onChange("playback", e.target.value)}
-            className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
-          >
-            {["0.5x", "0.75x", "1x", "1.25x", "1.5x", "2x"].map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </label>
+        )}
       </div>
 
+      {/* Speed */}
+      <StudioSection label="Playback speed">
+        <StudioPillGroup
+          options={SPEED_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          value={playback}
+          onChange={(v) => onChange("playback", v)}
+          accentColor="#4a94ff"
+        />
+      </StudioSection>
+
       {/* Chapter markers */}
-      <div className="px-4 py-3 border-b border-neutral-100 space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Chapters</p>
+      <StudioSection
+        label="Chapter markers"
+        action={
           <button
             type="button"
             onClick={addChapter}
-            className="flex items-center gap-1 border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 hover:bg-neutral-50"
+            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-all hover:border-neutral-300 hover:bg-neutral-50"
           >
-            <Plus size={10} /> Add
+            <Plus size={10} />
+            {duration > 0 ? "Add at playhead" : "Add"}
           </button>
-        </div>
+        }
+      >
         {chapters.length === 0 && (
-          <p className="text-[11px] text-neutral-400 italic">No chapters. Add one to mark key moments.</p>
+          <p className="text-[11px] italic text-neutral-400">No chapters. Add one to mark key moments.</p>
         )}
         <div className="space-y-1.5">
           {chapters.map((ch, i) => (
-            <div key={i} className="flex items-center gap-1.5">
+            <div key={i} className="flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2.5 py-1.5">
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#4a94ff] text-[8px] font-bold text-white">
+                {i + 1}
+              </span>
               <input
                 type="text"
                 value={ch.time}
                 onChange={(e) => updateChapter(i, "time", e.target.value)}
                 onBlur={() => seekToChapter(ch.time)}
-                className="w-16 shrink-0 border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] font-mono text-neutral-700 outline-none focus:border-neutral-400"
                 placeholder="0:00"
+                className="w-14 shrink-0 bg-transparent font-mono text-[10px] text-neutral-500 outline-none focus:text-neutral-800"
               />
               <input
                 type="text"
                 value={ch.title}
                 onChange={(e) => updateChapter(i, "title", e.target.value)}
-                className="flex-1 border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px] text-neutral-700 outline-none focus:border-neutral-400"
                 placeholder="Chapter title"
+                className="min-w-0 flex-1 bg-transparent text-[12px] text-neutral-700 outline-none focus:text-neutral-900"
               />
-              <button type="button" onClick={() => moveChapter(i, -1)} className="text-neutral-400 hover:text-neutral-700">
-                <ChevronUp size={13} />
-              </button>
-              <button type="button" onClick={() => moveChapter(i, 1)} className="text-neutral-400 hover:text-neutral-700">
-                <ChevronDown size={13} />
-              </button>
-              <button
-                type="button"
-                onClick={() => seekToChapter(ch.time)}
-                className="text-[10px] font-medium text-[#4a94ff] hover:text-[#326fd0]"
-              >
-                Seek
-              </button>
-              <button type="button" onClick={() => removeChapter(i)} className="text-neutral-400 hover:text-red-500">
-                <Trash2 size={13} />
-              </button>
+              <div className="flex items-center gap-0.5">
+                <button type="button" onClick={() => moveChapter(i, -1)} className="p-0.5 text-neutral-400 hover:text-neutral-700">
+                  <ChevronUp size={12} />
+                </button>
+                <button type="button" onClick={() => moveChapter(i, 1)} className="p-0.5 text-neutral-400 hover:text-neutral-700">
+                  <ChevronDown size={12} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => seekToChapter(ch.time)}
+                  className="ml-1 rounded px-1.5 py-0.5 text-[9px] font-semibold text-[#4a94ff] hover:bg-[#4a94ff]/10 transition-colors"
+                >
+                  Seek
+                </button>
+                <button type="button" onClick={() => removeChapter(i)} className="ml-0.5 p-0.5 text-neutral-400 hover:text-red-500 transition-colors">
+                  <Trash2 size={12} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      </StudioSection>
 
       {/* Transcript */}
-      <div className="px-4 py-3 space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Transcript</p>
-        <p className="text-[10px] text-neutral-400">Use timecodes like <code className="bg-neutral-100 px-1">[0:30]</code> to mark sections.</p>
-        <textarea
+      <StudioSection label="Transcript" noBorder>
+        <StudioTextarea
           value={transcript}
           rows={8}
           placeholder={"[0:00] Welcome to today's lecture.\n[0:30] We'll start with…"}
           onChange={(e) => onChange("transcript", e.target.value)}
-          className="w-full resize-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-[12px] font-mono text-neutral-700 leading-relaxed outline-none focus:border-neutral-400"
+          hint="Use [0:30] timecodes to mark sections."
+          className="font-mono"
         />
-      </div>
+      </StudioSection>
     </div>
   )
 }

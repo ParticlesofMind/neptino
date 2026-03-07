@@ -20,7 +20,7 @@ export function FooterBlock({ fieldValues, fieldEnabled }: BlockRenderProps) {
     .join(" \u00b7 ")
 
   return (
-    <footer className="flex h-full items-center justify-between px-4 border-t border-neutral-200 text-[10px] text-neutral-400">
+    <footer className="flex h-full items-center justify-between px-4 border-t border-border text-[10px] text-muted-foreground">
       <span>{leftText}</span>
       {pageNumber ? <span>{pageNumber}</span> : null}
     </footer>

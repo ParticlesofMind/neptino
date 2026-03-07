@@ -83,7 +83,7 @@ export function TaskAreaDropZone({
         ref={setNodeRef}
         data-testid={`task-area-droppable-${areaKind}`}
         className={[
-          "rounded-lg border border-neutral-200 bg-white py-1 transition-colors",
+          "rounded-lg border border-border bg-background py-1 transition-colors",
           mediaDragActive ? "min-h-[2.5rem]" : "min-h-[2rem]",
           isOver ? "border-blue-300 bg-blue-50" : "",
         ].join(" ")}
@@ -140,7 +140,7 @@ export function TaskAreaDropZone({
           )}
           {!hasCards && !isOver && (
             <div className={`flex items-center px-2 ${mediaDragActive ? "h-10" : "h-6"}`}>
-              <span className={`text-[9px] italic ${mediaDragActive ? "text-blue-300" : "text-neutral-300"}`}>
+              <span className={`text-[9px] italic ${mediaDragActive ? "text-blue-300" : "text-muted-foreground/50"}`}>
                 {mediaDragActive ? "Drop here" : label}
               </span>
             </div>

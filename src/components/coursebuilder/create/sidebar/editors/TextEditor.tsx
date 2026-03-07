@@ -7,7 +7,7 @@ import Color from "@tiptap/extension-color"
 import { TextStyle } from "@tiptap/extension-text-style"
 import Placeholder from "@tiptap/extension-placeholder"
 import Link from "@tiptap/extension-link"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Bold,
   Italic,
@@ -22,7 +22,13 @@ import {
   Minus,
   Sparkles,
   Link as LinkIcon,
+  Tag,
+  X,
 } from "lucide-react"
+import { StudioInput, StudioNumberInput, StudioTextarea, StudioSelect } from "./studio-primitives"
+import { EntityRefMark } from "@/lib/tiptap/EntityRefMark"
+import { AtlasEntitySearch } from "@/components/nachschlagewerk/AtlasEntitySearch"
+import type { AtlasItem } from "@/types/atlas"
 
 interface TextEditorProps {
   content: Record<string, unknown>
@@ -76,6 +82,7 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
   const targetLength = typeof content.targetLength === "string" ? content.targetLength : "medium"
 
   const suppressSync = useRef(false)
+  const [showEntityPicker, setShowEntityPicker] = useState(false)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -86,6 +93,7 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
       Color,
       Placeholder.configure({ placeholder: "Start writing your content here…" }),
       Link.configure({ openOnClick: false }),
+      EntityRefMark,
     ],
     content: html,
     onUpdate({ editor: ed }) {
@@ -111,6 +119,32 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
     const url = window.prompt("Enter URL")
     if (!url) return
     editor?.chain().focus().setLink({ href: url }).run()
+  }
+
+  const handleEntitySelect = (entity: AtlasItem) => {
+    if (!editor) return
+    const { from, to } = editor.state.selection
+    if (from === to) {
+      // No selection — insert entity title as annotated text
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<span class="entity-ref" data-entity-id="${entity.id}" data-entity-title="${entity.title}" data-entity-type="${entity.knowledge_type}">${entity.title}</span> `)
+        .run()
+    } else {
+      // Annotate the existing selection
+      editor
+        .chain()
+        .focus()
+        .setEntityRef({
+          entityId:      entity.id,
+          entityTitle:   entity.title,
+          entityType:    entity.knowledge_type,
+          entitySubType: entity.sub_type ?? undefined,
+        })
+        .run()
+    }
+    setShowEntityPicker(false)
   }
 
   return (
@@ -172,6 +206,13 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
         <ToolbarButton title="Link" onClick={setLink} active={editor?.isActive("link")}>
           <LinkIcon size={13} />
         </ToolbarButton>
+        <ToolbarButton
+          title="Annotate entity reference"
+          onClick={() => setShowEntityPicker((v) => !v)}
+          active={showEntityPicker || editor?.isActive("entityRef")}
+        >
+          <Tag size={13} />
+        </ToolbarButton>
 
         <span className="mx-1 h-5 w-px bg-neutral-200" />
 
@@ -203,6 +244,31 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
           <Minus size={13} />
         </ToolbarButton>
       </div>
+
+      {/* Entity picker — inline popover below toolbar */}
+      {showEntityPicker && (
+        <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-4 py-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Tag size={11} className="text-neutral-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                Annotate entity reference
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowEntityPicker(false)}
+              className="text-neutral-400 hover:text-neutral-700"
+            >
+              <X size={13} />
+            </button>
+          </div>
+          <p className="mb-2 text-[10px] text-neutral-400">
+            Select text first, then pick an entity — or pick an entity to insert it.
+          </p>
+          <AtlasEntitySearch onSelect={handleEntitySelect} autoFocus />
+        </div>
+      )}
 
       {/* Editor body */}
       <div className="relative min-h-0 flex-1 overflow-auto bg-white">
@@ -238,6 +304,16 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
             height: 0;
             pointer-events: none;
           }
+          .tiptap-editor .ProseMirror .entity-ref {
+            border-bottom: 2px dotted #6b9fe8;
+            color: inherit;
+            cursor: pointer;
+            padding-bottom: 1px;
+          }
+          .tiptap-editor .ProseMirror .entity-ref:hover {
+            background: rgba(107, 159, 232, 0.10);
+            border-radius: 2px;
+          }
         `}</style>
       </div>
 
@@ -247,70 +323,60 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
       </div>
 
       {/* Metadata section */}
-      <div className="shrink-0 border-t border-neutral-200 bg-white px-4 py-3 space-y-3">
+      <div className="shrink-0 border-t border-neutral-100 bg-white px-4 py-3">
         <div className="grid grid-cols-2 gap-3">
-          <label className="space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Reading level</span>
-            <input
-              type="text"
-              value={readingLevel}
-              placeholder="e.g. B1, Grade 8"
-              onChange={(e) => onChange("readingLevel", e.target.value)}
-              className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
-            />
-          </label>
-          <label className="space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Est. duration (min)</span>
-            <input
-              type="number"
-              value={durationMinutes}
-              min={0}
-              max={180}
-              onChange={(e) => onChange("durationMinutes", Number(e.target.value))}
-              className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
-            />
-          </label>
+          <StudioInput
+            label="Reading level"
+            value={readingLevel}
+            placeholder="B1, Grade 8…"
+            onChange={(e) => onChange("readingLevel", e.target.value)}
+          />
+          <StudioNumberInput
+            label="Duration (min)"
+            value={durationMinutes}
+            min={0}
+            max={180}
+            onChange={(v) => onChange("durationMinutes", v)}
+          />
         </div>
       </div>
 
       {/* AI generation section */}
-      <div className="shrink-0 border-t border-neutral-200 bg-neutral-50 px-4 py-3 space-y-2">
-        <div className="flex items-center gap-1.5 mb-2">
-          <Sparkles size={12} className="text-neutral-400" />
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">AI Generation</span>
+      <div className="shrink-0 border-t border-neutral-100 bg-neutral-50 px-4 py-3 space-y-2.5">
+        <div className="flex items-center gap-1.5">
+          <Sparkles size={11} className="text-neutral-400" />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">AI Generation</span>
         </div>
-        <textarea
+        <StudioTextarea
           value={generationPrompt}
           rows={2}
           placeholder="Describe what to write about…"
           onChange={(e) => onChange("generationPrompt", e.target.value)}
-          className="w-full border border-neutral-200 bg-white px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400 resize-none"
         />
         <div className="flex items-center gap-2">
-          <select
+          <StudioSelect
             value={writingTone}
             onChange={(e) => onChange("writingTone", e.target.value)}
-            className="flex-1 border border-neutral-200 bg-white px-2 py-1.5 text-[11px] text-neutral-700 outline-none"
+            className="flex-1"
           >
             <option value="instructional">Instructional</option>
             <option value="academic">Academic</option>
             <option value="conversational">Conversational</option>
             <option value="narrative">Narrative</option>
-          </select>
-          <select
+          </StudioSelect>
+          <StudioSelect
             value={targetLength}
             onChange={(e) => onChange("targetLength", e.target.value)}
-            className="flex-1 border border-neutral-200 bg-white px-2 py-1.5 text-[11px] text-neutral-700 outline-none"
+            className="flex-1"
           >
             <option value="short">Short</option>
             <option value="medium">Medium</option>
             <option value="long">Long</option>
-          </select>
+          </StudioSelect>
           <button
             type="button"
             disabled
-            title="AI generation not yet wired"
-            className="flex items-center gap-1.5 border border-neutral-300 bg-neutral-100 px-3 py-1.5 text-[11px] font-medium text-neutral-400 cursor-not-allowed"
+            className="flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-100 px-3 py-2 text-[11px] font-semibold text-neutral-400"
           >
             <Sparkles size={11} />
             Generate

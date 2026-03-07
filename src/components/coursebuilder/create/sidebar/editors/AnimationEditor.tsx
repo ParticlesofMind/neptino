@@ -2,7 +2,14 @@
 
 import { useRef, useState } from "react"
 import dynamic from "next/dynamic"
-import { Play, Pause, RotateCcw, Upload, Link as LinkIcon, Film } from "lucide-react"
+import { Play, Pause, RotateCcw, Film } from "lucide-react"
+import {
+  StudioSection,
+  StudioSegment,
+  StudioUrlInput,
+  StudioSlider,
+  StudioToggle,
+} from "./studio-primitives"
 
 // Dynamically import lottie-react to avoid SSR issues
 const LottiePlayer = dynamic(() => import("lottie-react").then((m) => m.default), {
@@ -20,12 +27,11 @@ interface AnimationEditorProps {
 }
 
 export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
-  const [urlDraft, setUrlDraft] = useState(typeof content.url === "string" ? content.url : "")
   const [lottieData, setLottieData] = useState<object | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [loading, setLoading] = useState(false)
   const [playing, setPlaying] = useState(true)
-  const lottieRef = useRef<{ play: () => void; pause: () => void; stop: () => void; goToAndStop: (frame: number, isFrame: boolean) => void; animationItem?: { totalFrames: number } } | null>(null)
+  const lottieRef = useRef<{ play: () => void; pause: () => void; stop: () => void } | null>(null)
 
   const url = typeof content.url === "string" ? content.url : ""
   const format = typeof content.format === "string" ? content.format : "lottie"
@@ -39,8 +45,7 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
     try {
       const resp = await fetch(src)
       if (!resp.ok) throw new Error("Failed to fetch")
-      const data = await resp.json()
-      setLottieData(data)
+      setLottieData(await resp.json())
     } catch {
       setLoadError(true)
     } finally {
@@ -48,19 +53,10 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
     }
   }
 
-  const commitUrl = () => {
-    onChange("url", urlDraft)
-    if (urlDraft) void loadLottie(urlDraft)
-  }
-
   const togglePlay = () => {
     if (!lottieRef.current) return
-    if (playing) {
-      lottieRef.current.pause()
-    } else {
-      lottieRef.current.play()
-    }
-    setPlaying(!playing)
+    playing ? lottieRef.current.pause() : lottieRef.current.play()
+    setPlaying((p) => !p)
   }
 
   const replay = () => {
@@ -72,169 +68,119 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
 
   return (
     <div className="flex h-full flex-col overflow-auto bg-white">
+
       {/* Source */}
-      <div className="px-4 pt-4 pb-3 border-b border-neutral-100 space-y-3">
-        <div className="flex gap-0 border border-neutral-200 divide-x divide-neutral-200 w-fit">
-          {(["lottie", "gif", "svg"] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => onChange("format", f)}
-              className={[
-                "px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors",
-                format === f ? "bg-neutral-900 text-white" : "bg-white text-neutral-500 hover:bg-neutral-50",
-              ].join(" ")}
-            >
-              {f.toUpperCase()}
-            </button>
-          ))}
-        </div>
+      <StudioSection label="Source" className="pt-4">
+        <StudioSegment
+          options={[
+            { value: "lottie", label: "Lottie" },
+            { value: "gif", label: "GIF" },
+            { value: "svg", label: "SVG" },
+          ]}
+          value={format}
+          onChange={(f) => onChange("format", f)}
+          size="xs"
+        />
+        <StudioUrlInput
+          value={url}
+          placeholder={format === "lottie" ? "https://…/animation.json" : `https://…/animation.${format}`}
+          onCommit={(u) => { onChange("url", u); if (u && format === "lottie") void loadLottie(u) }}
+        />
+      </StudioSection>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={urlDraft}
-            placeholder={format === "lottie" ? "https://…/animation.json" : "https://…/animation.gif"}
-            onChange={(e) => setUrlDraft(e.target.value)}
-            onBlur={commitUrl}
-            onKeyDown={(e) => e.key === "Enter" && commitUrl()}
-            className="flex-1 border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
-          />
-          <button
-            type="button"
-            onClick={commitUrl}
-            className="border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-[11px] font-medium text-white hover:opacity-90"
-          >
-            Load
-          </button>
-        </div>
-      </div>
-
-      {/* Player area */}
-      <div className="px-4 py-4 border-b border-neutral-100 bg-neutral-50">
+      {/* Player */}
+      <div className="shrink-0 border-b border-neutral-100 bg-neutral-50 px-4 py-4">
         {!url && (
-          <div className="flex flex-col items-center gap-3 border-2 border-dashed border-neutral-300 py-12">
-            <Film size={28} className="text-neutral-300" />
-            <p className="text-[12px] text-neutral-400">Paste a Lottie JSON URL above to preview</p>
+          <div className="flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed border-neutral-200 py-10">
+            <Film size={26} className="text-neutral-300" />
+            <p className="text-[11px] text-neutral-400">Load an animation above to preview</p>
           </div>
         )}
 
         {url && format === "lottie" && (
           <>
             {loading && (
-              <div className="flex items-center justify-center h-40 bg-neutral-100">
+              <div className="flex h-40 items-center justify-center rounded-lg bg-neutral-100">
                 <span className="text-[11px] text-neutral-400">Loading animation…</span>
               </div>
             )}
             {loadError && (
-              <div className="flex items-center justify-center h-40 border border-red-200 bg-red-50">
-                <span className="text-[11px] text-red-500">Failed to load animation. Check URL.</span>
+              <div className="flex h-40 items-center justify-center rounded-lg border border-red-200 bg-red-50">
+                <span className="text-[11px] text-red-500">Failed to load — check the URL</span>
               </div>
             )}
             {lottieData && !loading && !loadError && (
-              <div className="flex items-center justify-center bg-white border border-neutral-200" style={{ height: 200 }}>
+              <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white" style={{ aspectRatio: "4/3" }}>
                 <LottiePlayer
                   lottieRef={lottieRef as React.RefObject<never>}
                   animationData={lottieData}
                   loop={loop}
-                  autoplay={true}
-                  style={{ height: 180, width: "100%" }}
+                  autoplay
+                  style={{ width: "100%", height: "100%" }}
                 />
               </div>
             )}
             {!lottieData && !loading && !loadError && url && (
-              <div className="flex items-center justify-center h-40 bg-neutral-100">
-                <span className="text-[11px] text-neutral-400">Click Load to fetch animation</span>
+              <div className="flex h-40 items-center justify-center rounded-lg bg-neutral-100">
+                <span className="text-[11px] text-neutral-400">Click Load to fetch the animation</span>
+              </div>
+            )}
+
+            {/* Playback controls */}
+            {lottieData && (
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 transition-colors"
+                >
+                  {playing ? <Pause size={13} /> : <Play size={13} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={replay}
+                  className="flex items-center gap-1.5 rounded-md border border-neutral-200 px-2.5 py-1.5 text-[11px] font-medium text-neutral-600 hover:bg-neutral-50 transition-colors"
+                >
+                  <RotateCcw size={11} />
+                  Replay
+                </button>
               </div>
             )}
           </>
         )}
 
         {url && format === "gif" && (
-          <div className="flex items-center justify-center bg-white border border-neutral-200" style={{ height: 200 }}>
+          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white" style={{ aspectRatio: "4/3" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt="Animation preview" className="max-h-full max-w-full object-contain" />
+            <img src={url} alt="Animation preview" className="h-full w-full object-contain" />
           </div>
         )}
 
         {url && format === "svg" && (
-          <div className="flex items-center justify-center bg-white border border-neutral-200" style={{ height: 200 }}>
+          <div className="flex items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white" style={{ aspectRatio: "4/3" }}>
             <object data={url} type="image/svg+xml" className="max-h-full max-w-full" />
           </div>
         )}
       </div>
 
-      {/* Player controls */}
-      {lottieData && format === "lottie" && (
-        <div className="px-4 py-3 border-b border-neutral-100 space-y-3">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Controls</p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={togglePlay}
-              className="flex items-center gap-1.5 border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-[11px] font-medium text-white hover:opacity-90"
-            >
-              {playing ? <Pause size={11} /> : <Play size={11} />}
-              {playing ? "Pause" : "Play"}
-            </button>
-            <button
-              type="button"
-              onClick={replay}
-              className="flex items-center gap-1.5 border border-neutral-200 px-3 py-1.5 text-[11px] font-medium text-neutral-600 hover:bg-neutral-50"
-            >
-              <RotateCcw size={11} />
-              Replay
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Settings */}
-      <div className="px-4 py-3 space-y-3">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Settings</p>
-
-        <label className="block space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-neutral-600">Speed</span>
-            <span className="text-[11px] text-neutral-400">{speed}x</span>
-          </div>
-          <input
-            type="range"
-            min={0.25}
-            max={3}
-            step={0.25}
-            value={speed}
-            onChange={(e) => {
-              const s = Number(e.target.value)
-              onChange("speed", s)
-            }}
-            className="w-full accent-neutral-900"
-          />
-          <div className="flex justify-between text-[10px] text-neutral-400">
-            <span>0.25x</span>
-            <span>1x</span>
-            <span>3x</span>
-          </div>
-        </label>
-
-        <label className="flex items-center justify-between">
-          <span className="text-[11px] font-medium text-neutral-600">Loop</span>
-          <button
-            type="button"
-            onClick={() => onChange("loop", !loop)}
-            className={[
-              "h-6 w-11 border transition-colors relative",
-              loop ? "border-neutral-900 bg-neutral-900" : "border-neutral-300 bg-neutral-100",
-            ].join(" ")}
-            aria-pressed={loop}
-          >
-            <span className={[
-              "absolute top-0.5 h-5 w-5 bg-white transition-transform",
-              loop ? "translate-x-5" : "translate-x-0.5",
-            ].join(" ")} />
-          </button>
-        </label>
-      </div>
+      <StudioSection label="Playback settings" noBorder>
+        <StudioSlider
+          label="Speed"
+          value={speed}
+          min={0.25}
+          max={3}
+          step={0.25}
+          format={(v) => `${v}×`}
+          onChange={(s) => onChange("speed", s)}
+        />
+        <StudioToggle
+          label="Loop"
+          description="Restart playback when finished"
+          checked={loop}
+          onChange={(v) => onChange("loop", v)}
+        />
+      </StudioSection>
     </div>
   )
 }

@@ -2,6 +2,14 @@
 
 import type { ComponentType } from "react"
 import { Plus, Trash2, Gamepad2, ArrowUpDown, BookOpen, MousePointer, PenLine } from "lucide-react"
+import {
+  StudioSection,
+  StudioSegment,
+  StudioInput,
+  StudioTextarea,
+  StudioNumberInput,
+  StudioToggle,
+} from "./studio-primitives"
 
 interface GamesEditorProps {
   content: Record<string, unknown>
@@ -174,114 +182,67 @@ export function GamesEditor({ content, onChange }: GamesEditorProps) {
 
   return (
     <div className="flex h-full flex-col overflow-auto bg-white">
-      {/* Game type selector */}
-      <div className="shrink-0 border-b border-neutral-100 px-4 pt-4 pb-3">
-        <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Game type</p>
-        <div className="grid grid-cols-2 gap-2">
-          {GAME_TYPES.map(({ id, label, description, Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onChange("gameType", id)}
-              className={[
-                "flex items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all",
-                gameType === id
-                  ? "border-[#4a94ff]/30 bg-[#4a94ff]/5 shadow-sm"
-                  : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50",
-              ].join(" ")}
-            >
-              <Icon
-                size={14}
-                className={["mt-0.5 shrink-0", gameType === id ? "text-[#4a94ff]" : "text-neutral-400"].join(" ")}
-              />
-              <div>
-                <p className={["text-[11px] font-semibold leading-tight", gameType === id ? "text-[#4a94ff]" : "text-neutral-700"].join(" ")}>
-                  {label}
-                </p>
-                <p className="mt-0.5 text-[10px] leading-snug text-neutral-400">{description}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+
+      {/* Game type */}
+      <StudioSection className="pt-4">
+        <StudioSegment
+          label="Game type"
+          options={GAME_TYPES.map(({ id, label }) => ({ value: id, label }))}
+          value={gameType}
+          onChange={(t) => onChange("gameType", t)}
+          size="xs"
+        />
+      </StudioSection>
 
       {/* Title & instructions */}
-      <div className="shrink-0 border-b border-neutral-100 px-4 py-3 space-y-3">
-        <label className="block space-y-1.5">
-          <span className="text-[11px] font-medium text-neutral-600">Title</span>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => onChange("title", e.target.value)}
-            placeholder="e.g. Cell biology vocabulary match"
-            className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-[#4a94ff]/60 focus:ring-1 focus:ring-[#4a94ff]/10"
-          />
-        </label>
-        <label className="block space-y-1.5">
-          <span className="text-[11px] font-medium text-neutral-600">Instructions <span className="text-neutral-400 font-normal">(shown to students)</span></span>
-          <textarea
-            value={instructions}
-            rows={2}
-            onChange={(e) => onChange("instructions", e.target.value)}
-            placeholder="Match each term on the left to its definition on the right."
-            className="w-full resize-none rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-[#4a94ff]/60 focus:ring-1 focus:ring-[#4a94ff]/10"
-          />
-        </label>
-      </div>
+      <StudioSection label="Setup">
+        <StudioInput
+          label="Title"
+          value={title}
+          placeholder="e.g. Cell biology vocabulary match"
+          onChange={(e) => onChange("title", e.target.value)}
+        />
+        <StudioTextarea
+          label="Instructions"
+          badge="shown to students"
+          value={instructions}
+          rows={2}
+          placeholder="Match each term on the left to its definition on the right."
+          onChange={(e) => onChange("instructions", e.target.value)}
+        />
+      </StudioSection>
 
       {/* Game-specific content */}
       <div className="flex-1 overflow-auto px-4 py-4">
         {(gameType === "word-match" || gameType === "memory") && (
-          <WordMatchEditor
-            pairs={pairs}
-            onChange={(p) => onChange("pairs", p)}
-          />
+          <WordMatchEditor pairs={pairs} onChange={(p) => onChange("pairs", p)} />
         )}
         {gameType === "fill-blank" && (
-          <FillBlankEditor
-            text={fillText}
-            onChange={(t) => onChange("fillText", t)}
-          />
+          <FillBlankEditor text={fillText} onChange={(t) => onChange("fillText", t)} />
         )}
         {gameType === "drag-order" && (
-          <DragOrderEditor
-            items={items}
-            onChange={(i) => onChange("items", i)}
-          />
+          <DragOrderEditor items={items} onChange={(i) => onChange("items", i)} />
         )}
       </div>
 
-      {/* Settings */}
-      <div className="shrink-0 border-t border-neutral-200 bg-neutral-50 px-4 py-3 space-y-3">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Game settings</p>
+      {/* Settings footer */}
+      <div className="shrink-0 border-t border-neutral-100 bg-neutral-50 px-4 py-3 space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <label className="space-y-1.5">
-            <span className="text-[11px] font-medium text-neutral-600">Time limit (s) <span className="text-neutral-400 font-normal">0 = unlimited</span></span>
-            <input
-              type="number"
-              value={timeLimit}
-              min={0}
-              max={600}
-              step={15}
-              onChange={(e) => onChange("timeLimit", Number(e.target.value))}
-              className="w-full rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-[#4a94ff]/60"
-            />
-          </label>
-          <div className="space-y-1.5">
-            <span className="block text-[11px] font-medium text-neutral-600">Show hints</span>
-            <button
-              type="button"
-              onClick={() => onChange("showHints", !showHints)}
-              role="switch"
-              aria-checked={showHints}
-              className={[
-                "relative h-7 w-12 rounded-full border transition-colors",
-                showHints ? "border-[#4a94ff]/40 bg-[#4a94ff]" : "border-neutral-300 bg-neutral-200",
-              ].join(" ")}
-            >
-              <span className={["absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform", showHints ? "translate-x-6" : "translate-x-0.5"].join(" ")} />
-            </button>
-          </div>
+          <StudioNumberInput
+            label="Time limit (s)"
+            value={timeLimit}
+            min={0}
+            max={600}
+            step={15}
+            unit="0 = unlimited"
+            onChange={(v) => onChange("timeLimit", v)}
+          />
+          <StudioToggle
+            label="Show hints"
+            checked={showHints}
+            onChange={(v) => onChange("showHints", v)}
+            accentColor="#4a94ff"
+          />
         </div>
       </div>
     </div>

@@ -4,8 +4,11 @@ import type { BlockId, TemplateFieldState } from "./template-fields"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border border-neutral-200 bg-neutral-50"
-const TD = "px-2 py-1 border border-neutral-200 text-neutral-700 text-[11px] align-top"
+// Row-separator table styles — no grid lines, just horizontal rules
+const TH = "text-left px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-muted/30"
+const TD = "px-3 py-1.5 text-xs text-foreground align-top"
+const TR_ODD  = "border-b border-border last:border-b-0"
+const TR_EVEN = "border-b border-border last:border-b-0 bg-muted/20"
 
 function on(fieldState: TemplateFieldState, block: BlockId, key: string): boolean {
   return Boolean(fieldState[block]?.[key])
@@ -21,12 +24,12 @@ function PreviewHeader({ fieldState }: { fieldState: TemplateFieldState }) {
   const showDate = on(fieldState, "header", "schedule_date")
 
   return (
-    <header className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50/60 px-4 py-2.5">
-      <div className="min-w-0 text-[11px] font-medium text-neutral-700 truncate">
+    <header className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-2.5">
+      <div className="min-w-0 text-[11px] font-medium text-foreground truncate">
         {parts.join(" \u00b7 ")}
       </div>
       {showDate && (
-        <div className="ml-3 shrink-0 text-[11px] text-neutral-500">Date</div>
+        <div className="ml-3 shrink-0 text-[11px] text-muted-foreground">Date</div>
       )}
     </header>
   )
@@ -56,7 +59,7 @@ function PreviewProgram({
   const showSocial = on(fieldState, "program", "program_social_form")
   const showTime   = on(fieldState, "program", "program_time")
 
-  type ProgramRow = { topic: string; obj: string; task: string; method: string; social: string; time: string; bg: string }
+  type ProgramRow = { topic: string; obj: string; task: string; method: string; social: string; time: string }
   const rows: ProgramRow[] = []
   for (let t = 0; t < topicCount; t += 1) {
     for (let o = 0; o < objectiveCount; o += 1) {
@@ -69,21 +72,20 @@ function PreviewProgram({
           method: METHODS[ri % METHODS.length],
           social: SOCIALS[ri % SOCIALS.length],
           time:   DURATIONS[ri % DURATIONS.length],
-          bg:     ri % 2 === 0 ? "bg-white" : "bg-neutral-50/40",
         })
       }
     }
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-      <div className="border-b border-neutral-200 bg-neutral-50 px-3 py-1.5">
-        <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400">Program</h2>
+    <section className="overflow-hidden rounded-lg border border-border bg-background">
+      <div className="border-b border-border bg-muted/30 px-3 py-2">
+        <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Program</h2>
       </div>
-      <div className="overflow-x-auto bg-white">
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr>
+            <tr className="border-b border-border">
               {showTopic  && <th className={TH}>Topic</th>}
               {showObj    && <th className={TH}>Objective</th>}
               {showTask   && <th className={TH}>Task</th>}
@@ -95,7 +97,7 @@ function PreviewProgram({
           <tbody>
             {rows.map((row, i) => (
               // eslint-disable-next-line react/no-array-index-key
-              <tr key={i} className={row.bg}>
+              <tr key={i} className={i % 2 === 0 ? TR_ODD : TR_EVEN}>
                 {showTopic  && <td className={TD}>{row.topic}</td>}
                 {showObj    && <td className={TD}>{row.obj}</td>}
                 {showTask   && <td className={TD}>{row.task}</td>}
@@ -132,14 +134,14 @@ function PreviewResources({
   const QUALS   = ["Aligned", "Verified", "Pending", "Good"]
 
   return (
-    <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-      <div className="border-b border-neutral-200 bg-neutral-50 px-3 py-1.5">
-        <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400">Resources</h2>
+    <section className="overflow-hidden rounded-lg border border-border bg-background">
+      <div className="border-b border-border bg-muted/30 px-3 py-2">
+        <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Resources</h2>
       </div>
-      <div className="overflow-x-auto bg-white">
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr>
+            <tr className="border-b border-border">
               {showTask    && <th className={TH}>Task</th>}
               {showType    && <th className={TH}>Type</th>}
               {showOrigin  && <th className={TH}>Origin</th>}
@@ -150,7 +152,7 @@ function PreviewResources({
           <tbody>
             {Array.from({ length: taskCount }, (_, i) => (
               // eslint-disable-next-line react/no-array-index-key
-              <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-neutral-50/40"}>
+              <tr key={i} className={i % 2 === 0 ? TR_ODD : TR_EVEN}>
                 {showTask    && <td className={TD}>Task {i + 1}</td>}
                 {showType    && <td className={TD}>{TYPES[i % TYPES.length]}</td>}
                 {showOrigin  && <td className={TD}>{ORIGINS[i % ORIGINS.length]}</td>}
@@ -166,6 +168,13 @@ function PreviewResources({
 }
 
 // ─── Content / Assignment block ───────────────────────────────────────────────
+
+// Subtle left-border accent colours to differentiate content slot types
+const SLOT_ACCENTS = {
+  instruction: "border-l-2 border-l-sky-400/60",
+  practice:    "border-l-2 border-l-violet-400/60",
+  feedback:    "border-l-2 border-l-emerald-400/60",
+}
 
 /**
  * Renders topics → objectives → tasks with instruction / practice / feedback
@@ -191,36 +200,39 @@ function PreviewTaskBlock({
   const showFeedback    = on(fieldState, block, "feedback")
 
   return (
-    <section className="rounded-xl border border-neutral-200 bg-white">
-      <div className="border-b border-neutral-200 bg-neutral-50 px-3 py-1.5">
-        <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400">{label}</h2>
+    <section className="rounded-lg border border-border bg-background">
+      <div className="border-b border-border bg-muted/30 px-3 py-2">
+        <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</h2>
       </div>
-      <div className="space-y-2 p-3">
+      <div className="p-3">
         {Array.from({ length: topicCount }, (_, topicIdx) => (
           // eslint-disable-next-line react/no-array-index-key
-          <div key={topicIdx} className="rounded-lg border border-neutral-200 bg-neutral-50 p-2">
-            <p className="mb-1.5 text-[11px] font-semibold text-neutral-700">Topic {topicIdx + 1}</p>
+          <div key={topicIdx}>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-foreground/60">
+              Topic {topicIdx + 1}
+            </p>
             {Array.from({ length: objectiveCount }, (__, objIdx) => (
               // eslint-disable-next-line react/no-array-index-key
-              <div key={objIdx} className="mt-1.5 rounded-md border border-neutral-200 bg-white p-2">
-                <p className="mb-1.5 text-[10px] text-neutral-500">Objective {objIdx + 1}</p>
+              <div key={objIdx}>
                 {Array.from({ length: taskCount }, (___, taskIdx) => (
                   // eslint-disable-next-line react/no-array-index-key
-                  <div key={taskIdx} className="mt-1.5 rounded-md border border-neutral-200 bg-neutral-50 p-2">
-                    <p className="mb-1.5 text-[10px] font-medium text-neutral-500">Task {taskIdx + 1}</p>
-                    <div className="flex flex-col gap-1.5">
+                  <div key={taskIdx} className="mb-2">
+                    <p className="mb-1.5 text-[10px] text-muted-foreground">
+                      Obj. {objIdx + 1} &rsaquo; Task {taskIdx + 1}
+                    </p>
+                    <div className="flex flex-col gap-1">
                       {showInstruction && (
-                        <div className="rounded border border-dashed border-neutral-300 bg-white px-2 py-1.5 text-[10px] text-neutral-400">
+                        <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.instruction}`}>
                           Instruction
                         </div>
                       )}
                       {showPractice && (
-                        <div className="rounded border border-dashed border-neutral-300 bg-white px-2 py-1.5 text-[10px] text-neutral-400">
+                        <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.practice}`}>
                           Practice
                         </div>
                       )}
                       {showFeedback && (
-                        <div className="rounded border border-dashed border-neutral-300 bg-white px-2 py-1.5 text-[10px] text-neutral-400">
+                        <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.feedback}`}>
                           Feedback
                         </div>
                       )}
@@ -253,14 +265,14 @@ function PreviewScoring({
   if (!showCriteria && !showPoints && !showWeight && !showThreshold) return null
 
   return (
-    <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-      <div className="border-b border-neutral-200 bg-neutral-50 px-3 py-1.5">
-        <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400">Scoring</h2>
+    <section className="overflow-hidden rounded-lg border border-border bg-background">
+      <div className="border-b border-border bg-muted/30 px-3 py-2">
+        <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Scoring</h2>
       </div>
-      <div className="overflow-x-auto bg-white">
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr>
+            <tr className="border-b border-border">
               {showCriteria  && <th className={TH}>Criteria</th>}
               {showPoints    && <th className={TH}>Points</th>}
               {showWeight    && <th className={TH}>Weight</th>}
@@ -270,7 +282,7 @@ function PreviewScoring({
           <tbody>
             {Array.from({ length: taskCount }, (_, i) => (
               // eslint-disable-next-line react/no-array-index-key
-              <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-neutral-50/40"}>
+              <tr key={i} className={i % 2 === 0 ? TR_ODD : TR_EVEN}>
                 {showCriteria  && <td className={TD}>Task {i + 1}</td>}
                 {showPoints    && <td className={TD}>{(i + 1) * 5}</td>}
                 {showWeight    && <td className={TD}>{Math.round(100 / Math.max(1, taskCount))}%</td>}
@@ -293,12 +305,12 @@ function PreviewFooter({ fieldState }: { fieldState: TemplateFieldState }) {
   const showPage = on(fieldState, "footer", "page_number")
 
   return (
-    <footer className="flex h-10 items-center justify-between border-t border-neutral-200 bg-neutral-50/60 px-4">
-      <div className="min-w-0 text-[11px] font-medium text-neutral-700 truncate">
+    <footer className="flex h-10 items-center justify-between border-t border-border bg-muted/20 px-4">
+      <div className="min-w-0 text-[11px] font-medium text-foreground truncate">
         {parts.join(" \u00b7 ")}
       </div>
       {showPage && (
-        <div className="ml-3 shrink-0 text-[11px] text-neutral-500">1</div>
+        <div className="ml-3 shrink-0 text-[11px] text-muted-foreground">1</div>
       )}
     </footer>
   )
@@ -320,10 +332,10 @@ export function TemplatePreviewPanel({
   const showScoring    = blocks.includes("scoring")
 
   return (
-    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
       <PreviewHeader fieldState={fieldState} />
 
-      <div className="space-y-3 bg-neutral-50/70 p-3">
+      <div className="space-y-2.5 bg-muted/20 p-3">
         {/* All counts are fixed at 1 — this is a structural mockup showing the
             template layout, not a reflection of the curriculum dimensions.
             The canvas (coursebuilder create) renders the correct number of areas

@@ -3,8 +3,8 @@
 import type { BlockRenderProps, Topic } from "../types"
 import { useCourseStore } from "../store/courseStore"
 
-const TD = "px-2 py-1 border border-neutral-200 text-neutral-700 text-[11px] align-top"
-const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border border-neutral-200 bg-neutral-50"
+const TD = "px-2 py-1 text-[11px] text-foreground align-top"
+const TH = "text-left px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-muted/30"
 const EMPTY_TOPICS: Topic[] = []
 
 export function ResourcesBlock({ sessionId, canvasId, fieldValues, fieldEnabled }: BlockRenderProps) {
@@ -51,14 +51,14 @@ export function ResourcesBlock({ sessionId, canvasId, fieldValues, fieldEnabled 
   const visibleRows = rows.slice(rowStart, rowEnd)
 
   return (
-    <section className="overflow-hidden rounded-lg border border-neutral-200">
-      <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-1">
-        <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400">Resources</h2>
+    <section className="overflow-hidden rounded-lg border border-border">
+      <div className="border-b border-border bg-muted/30 px-2 py-1">
+        <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Resources</h2>
       </div>
-      <div className="overflow-x-auto bg-white">
+      <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr>
+          <tr className="border-b border-border">
             {showTask    && <th className={TH}>Task</th>}
             {showType    && <th className={TH}>Type</th>}
             {showOrigin  && <th className={TH}>Origin</th>}
@@ -68,14 +68,14 @@ export function ResourcesBlock({ sessionId, canvasId, fieldValues, fieldEnabled 
         </thead>
         <tbody>
           {visibleRows.length === 0 ? (
-            <tr>
-              <td colSpan={visibleColCount} className="px-2 py-2 border border-neutral-200 text-neutral-400 text-[11px] italic">
+            <tr className="border-b border-border last:border-b-0">
+              <td colSpan={visibleColCount} className="px-2 py-2 text-muted-foreground text-[11px] italic">
                 No tasks defined yet.
               </td>
             </tr>
           ) : (
             visibleRows.map((row, i) => (
-              <tr key={i} data-task-row-idx={rowStart + i}>
+              <tr key={i} data-task-row-idx={rowStart + i} className={i % 2 === 0 ? "border-b border-border last:border-b-0" : "border-b border-border last:border-b-0 bg-muted/20"}>
                 {showTask    && <td className={TD}>{row.label}</td>}
                 {showType    && <td className={TD}>{row.type}</td>}
                 {showOrigin  && <td className={TD}>{row.origin}</td>}

@@ -7,29 +7,50 @@
  *   - Narrow icon rail on the left for category switching
  *   - Search + draggable card list (single column) on the right
  *
- * Only rendered when the editor is in Curate mode.
- * Make and Fix modes have their own full-width panels.
+ * Categories mirror CARD-HIERARCHY.md:
+ *   All       — everything
+ *   Media     — Layer 2: text, image, audio, video, animation, model-3d, document
+ *   Data      — Layer 3 structured views: map, chart, diagram, table, dataset
+ *   Products  — Layer 3 assembled/passive: rich-sim
+ *   Activities — Layer 4: interactive (quiz), games, chat
  */
 
 import { useState } from "react"
 import { useDraggable } from "@dnd-kit/core"
 import {
+  AudioLines,
   BarChart2,
+  Bot,
+  Box,
+  Columns2,
+  Database,
+  FileText,
+  Film,
   FolderOpen,
   Gamepad2,
+  Grid3X3,
+  HelpCircle,
   ImageIcon,
-  Link2,
-  Music,
-  Puzzle,
-  Type,
-  Video,
+  Layout,
+  LayoutGrid,
+  Layers,
+  LineChart,
+  Map as MapIcon,
+  Network,
+  PanelLeft,
+  PlayCircle,
+  Rows2,
+  Sparkles,
+  Table2,
+  X,
 } from "lucide-react"
 import type { CardType, CardId } from "../types"
 import type { DragSourceData } from "../hooks/useCardDrop"
 import { getSampleCardContent } from "../utils/cardDefaults"
 import { CARD_TYPE_META } from "../cards/CardTypePreview"
+import { useMakeLibraryStore, type StudioCard } from "../store/makeLibraryStore"
 
-// ─── Categories ───────────────────────────────────────────────────────────────
+// ─── Categories — aligned with CARD-HIERARCHY.md ──────────────────────────────
 
 interface Category {
   id:    string
@@ -39,51 +60,140 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { id: "files",   label: "Files",   Icon: FolderOpen, types: "all"                       },
-  { id: "images",  label: "Images",  Icon: ImageIcon,  types: ["image"]                   },
-  { id: "videos",  label: "Videos",  Icon: Video,      types: ["video"]                   },
-  { id: "audio",   label: "Audio",   Icon: Music,      types: ["audio"]                   },
-  { id: "text",    label: "Text",    Icon: Type,       types: ["text", "document"]        },
-  { id: "plugins", label: "Plugins", Icon: Puzzle,     types: ["interactive", "rich-sim"] },
-  { id: "links",   label: "Links",   Icon: Link2,      types: []                          },
-  { id: "games",   label: "Games",   Icon: Gamepad2,   types: ["village-3d"]              },
-  { id: "graphs",  label: "Graphs",  Icon: BarChart2,  types: ["table"]                   },
+  {
+    id: "all",
+    label: "All",
+    Icon: FolderOpen,
+    types: "all",
+  },
+  {
+    id: "media",
+    label: "Media",
+    Icon: Layers,
+    types: ["text", "image", "audio", "video", "animation", "model-3d", "document"],
+  },
+  {
+    id: "data",
+    label: "Data",
+    Icon: BarChart2,
+    types: ["map", "chart", "diagram", "table", "dataset"],
+  },
+  {
+    id: "products",
+    label: "Products",
+    Icon: Sparkles,
+    types: ["rich-sim", "village-3d"],
+  },
+  {
+    id: "activities",
+    label: "Activities",
+    Icon: Gamepad2,
+    types: ["interactive", "games", "chat"],
+  },
+  {
+    id: "layout",
+    label: "Layout",
+    Icon: LayoutGrid,
+    types: ["layout-split", "layout-stack", "layout-feature", "layout-sidebar", "layout-quad", "layout-mosaic"],
+  },
 ]
 
-// ─── Mock library items ───────────────────────────────────────────────────────
+// ─── Library items ─────────────────────────────────────────────────────────────
+// Every item uses the real CardType that backs it. Types that don't exist as
+// cards yet (Timeline, Exercise, Profile, etc.) are not included — they will
+// appear once the cards are built.
 
 interface LibraryItem {
   id:       CardId
   cardType: CardType
-  label:    string   // small category label shown below the title
   title:    string
 }
 
-const MOCK_ITEMS: LibraryItem[] = [
-  { id: "c-dataset-1"    as CardId, cardType: "document",   label: "Dataset",               title: "Amazon Rainforest Species Dataset"        },
-  { id: "c-3d-1"         as CardId, cardType: "village-3d", label: "3D Model",              title: "Machu Picchu 3D Reconstruction"           },
-  { id: "c-timeline-1"   as CardId, cardType: "interactive",label: "Timeline",              title: "Apollo 11 Mission Timeline"              },
-  { id: "c-timeline-2"   as CardId, cardType: "interactive",label: "Timeline",              title: "Enlightenment Movement Timeline"          },
-  { id: "c-narr-1"       as CardId, cardType: "text",       label: "Narrative",             title: "Marie Curie: A Life of Discovery"         },
-  { id: "c-narr-2"       as CardId, cardType: "text",       label: "Narrative",             title: "Leonardo da Vinci: Renaissance Genius"    },
-  { id: "c-doc-1"        as CardId, cardType: "video",      label: "Documentary",           title: "Evolution: Darwin's Revolutionary Theory" },
-  { id: "c-sim-1"        as CardId, cardType: "rich-sim",   label: "Simulation",            title: "Photosynthesis Process Simulation"        },
-  { id: "c-profile-1"    as CardId, cardType: "document",   label: "Profile",               title: "United Nations: Organizational Profile"  },
-  { id: "c-game-1"       as CardId, cardType: "village-3d", label: "Game",                  title: "Printing Press Story Game"               },
-  { id: "c-exercise-1"   as CardId, cardType: "interactive",label: "Exercise",              title: "Photosynthesis Equation Practice"         },
-  { id: "c-exercise-2"   as CardId, cardType: "interactive",label: "Exercise",              title: "Relativity Problem Set"                  },
-  { id: "c-quiz-1"       as CardId, cardType: "interactive",label: "Quiz",                  title: "French Revolution Knowledge Quiz"         },
-  { id: "c-quiz-2"       as CardId, cardType: "interactive",label: "Quiz",                  title: "Marie Curie: Life and Discoveries Quiz"   },
-  { id: "c-assess-1"     as CardId, cardType: "document",   label: "Assessment",            title: "Enlightenment Movement Essay Assessment" },
-  { id: "c-assess-2"     as CardId, cardType: "document",   label: "Assessment",            title: "Theory of Evolution: Research Assessment"},
-  { id: "c-inter-1"      as CardId, cardType: "interactive",label: "Interactive Simulation", title: "Interactive Photosynthesis Lab"          },
-  { id: "c-inter-2"      as CardId, cardType: "interactive",label: "Interactive Simulation", title: "Build Your Own Printing Press"           },
-  { id: "c-game-2"       as CardId, cardType: "village-3d", label: "Game",                  title: "Apollo 11 Mission Control Game"          },
-  { id: "c-audio-1"      as CardId, cardType: "audio",      label: "Audio",                 title: "Shakespeare in Conversation"             },
-  { id: "c-img-1"        as CardId, cardType: "image",      label: "Image",                 title: "Renaissance Art Collection"             },
-  { id: "c-vid-1"        as CardId, cardType: "video",      label: "Video",                 title: "The French Revolution Explained"         },
-  { id: "c-table-1"      as CardId, cardType: "table",      label: "Data Table",            title: "Climate Data 1850–2024"                  },
-]
+const LIBRARY_ITEMS: LibraryItem[] = [
+  // ── Media — Text ────────────────────────────────────────────────────────────
+  { id: "lib-text-1"    as CardId, cardType: "text",      title: "Marie Curie: A Life of Discovery"         },
+  { id: "lib-text-2"    as CardId, cardType: "text",      title: "Leonardo da Vinci: Renaissance Genius"    },
+  { id: "lib-text-3"    as CardId, cardType: "text",      title: "The French Revolution: Causes and Effects" },
+  { id: "lib-text-4"    as CardId, cardType: "text",      title: "Natural Selection Explained"              },
+
+  // ── Media — Image ───────────────────────────────────────────────────────────
+  { id: "lib-img-1"     as CardId, cardType: "image",     title: "Renaissance Art Collection"               },
+  { id: "lib-img-2"     as CardId, cardType: "image",     title: "Cell Division Diagram"                    },
+  { id: "lib-img-3"     as CardId, cardType: "image",     title: "Ottoman Empire Territory Map (1683)"      },
+
+  // ── Media — Audio ───────────────────────────────────────────────────────────
+  { id: "lib-audio-1"   as CardId, cardType: "audio",     title: "Shakespeare in Conversation"              },
+  { id: "lib-audio-2"   as CardId, cardType: "audio",     title: "Lecture: Cell Division"                   },
+
+  // ── Media — Video ───────────────────────────────────────────────────────────
+  { id: "lib-vid-1"     as CardId, cardType: "video",     title: "The French Revolution Explained"          },
+  { id: "lib-vid-2"     as CardId, cardType: "video",     title: "Evolution: Darwin's Theory"               },
+  { id: "lib-vid-3"     as CardId, cardType: "video",     title: "Apollo 11 Launch Footage"                 },
+
+  // ── Media — Animation ───────────────────────────────────────────────────────
+  { id: "lib-anim-1"    as CardId, cardType: "animation", title: "Mitosis — Cell Division"                  },
+  { id: "lib-anim-2"    as CardId, cardType: "animation", title: "Plate Tectonics Over 250 Million Years"   },
+
+  // ── Media — 3D Model ────────────────────────────────────────────────────────
+  { id: "lib-3d-1"      as CardId, cardType: "model-3d",  title: "Machu Picchu 3D Reconstruction"           },
+  { id: "lib-3d-2"      as CardId, cardType: "model-3d",  title: "Human Skull — Anatomical Model"           },
+
+  // ── Media — Document ────────────────────────────────────────────────────────
+  { id: "lib-doc-1"     as CardId, cardType: "document",  title: "Newton's Principia Mathematica (excerpt)" },
+  { id: "lib-doc-2"     as CardId, cardType: "document",  title: "Declaration of Independence (1776)"       },
+  { id: "lib-doc-3"     as CardId, cardType: "document",  title: "Darwin's On the Origin of Species"        },
+
+  // ── Data — Map ──────────────────────────────────────────────────────────────
+  { id: "lib-map-1"     as CardId, cardType: "map",       title: "World Population Density"                 },
+  { id: "lib-map-2"     as CardId, cardType: "map",       title: "Ottoman Empire at Peak Extent"            },
+  { id: "lib-map-3"     as CardId, cardType: "map",       title: "Amazon Rainforest Coverage"               },
+
+  // ── Data — Chart ────────────────────────────────────────────────────────────
+  { id: "lib-chart-1"   as CardId, cardType: "chart",     title: "Global Temperature Anomaly 1880–2020"     },
+  { id: "lib-chart-2"   as CardId, cardType: "chart",     title: "CO₂ Emissions by Country (2023)"          },
+  { id: "lib-chart-3"   as CardId, cardType: "chart",     title: "Human Population Growth 1800–2100"        },
+
+  // ── Data — Diagram ──────────────────────────────────────────────────────────
+  { id: "lib-diag-1"    as CardId, cardType: "diagram",   title: "Krebs Cycle"                              },
+  { id: "lib-diag-2"    as CardId, cardType: "diagram",   title: "French Revolution — Cause & Effect"       },
+  { id: "lib-diag-3"    as CardId, cardType: "diagram",   title: "OSI Network Model"                        },
+
+  // ── Data — Table ────────────────────────────────────────────────────────────
+  { id: "lib-table-1"   as CardId, cardType: "table",     title: "Climate Data 1850–2024"                   },
+  { id: "lib-table-2"   as CardId, cardType: "table",     title: "Periodic Table — First 20 Elements"       },
+  { id: "lib-table-3"   as CardId, cardType: "table",     title: "WW2 Casualties by Country"                },
+
+  // ── Data — Dataset ──────────────────────────────────────────────────────────
+  { id: "lib-ds-1"      as CardId, cardType: "dataset",   title: "Amazon Rainforest Species Dataset"        },
+  { id: "lib-ds-2"      as CardId, cardType: "dataset",   title: "NASA Exoplanet Archive (CSV)"             },
+
+  // ── Products — Simulation ────────────────────────────────────────────────────
+  { id: "lib-sim-1"     as CardId, cardType: "rich-sim",  title: "Photosynthesis Process Simulation"        },
+  { id: "lib-sim-2"     as CardId, cardType: "rich-sim",  title: "Newton's Cradle — Momentum Lab"           },
+  { id: "lib-sim-3"     as CardId, cardType: "rich-sim",  title: "Wave Interference Simulator"              },
+
+  // ── Activities — Quiz ────────────────────────────────────────────────────────
+  { id: "lib-quiz-1"    as CardId, cardType: "interactive", title: "French Revolution Knowledge Quiz"        },
+  { id: "lib-quiz-2"    as CardId, cardType: "interactive", title: "Marie Curie: Life and Discoveries Quiz" },
+  { id: "lib-quiz-3"    as CardId, cardType: "interactive", title: "Photosynthesis Equation Quiz"           },
+  { id: "lib-quiz-4"    as CardId, cardType: "interactive", title: "Relativity: True or False"              },
+
+  // ── Activities — Game ────────────────────────────────────────────────────────
+  { id: "lib-game-1"    as CardId, cardType: "games",     title: "Cell Biology Vocabulary Match"            },
+  { id: "lib-game-2"    as CardId, cardType: "games",     title: "Apollo 11 Mission Sequence"               },
+  { id: "lib-game-3"    as CardId, cardType: "games",     title: "Periodic Elements Memory Game"            },
+
+  // ── Activities — AI Chat ─────────────────────────────────────────────────────
+  { id: "lib-chat-1"    as CardId, cardType: "chat",      title: "Chat with Darwin"                         },
+  { id: "lib-chat-2"    as CardId, cardType: "chat",      title: "Socratic: The French Revolution"          },
+  { id: "lib-chat-3"    as CardId, cardType: "chat",      title: "Einstein on Relativity"                   },
+  // ── Layout ──────────────────────────────────────────────────────────
+  { id: "lib-layout-split"   as CardId, cardType: "layout-split",   title: "Split — Two Equal Columns"          },
+  { id: "lib-layout-stack"   as CardId, cardType: "layout-stack",   title: "Stack — Primary / Secondary Rows"   },
+  { id: "lib-layout-feature" as CardId, cardType: "layout-feature", title: "Feature — Anchor + Content + Strip" },
+  { id: "lib-layout-sidebar" as CardId, cardType: "layout-sidebar", title: "Sidebar — 30 / 70 Columns"         },
+  { id: "lib-layout-quad"    as CardId, cardType: "layout-quad",    title: "Quad — 2 × 2 Grid"                },
+  { id: "lib-layout-mosaic"  as CardId, cardType: "layout-mosaic",  title: "Mosaic — 3 × 3 Grid"              },]
 
 // ─── Card-type colour palette ─────────────────────────────────────────────────
 
@@ -101,11 +211,118 @@ const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = {
   media:        { bg: "bg-purple-50",  text: "text-purple-500" },
   document:     { bg: "bg-slate-100",  text: "text-slate-500"  },
   table:        { bg: "bg-cyan-50",    text: "text-cyan-600"   },
-  "rich-sim":   { bg: "bg-indigo-50",  text: "text-indigo-500" },
+  "rich-sim":   { bg: "bg-amber-50",   text: "text-amber-600"  },
   "village-3d": { bg: "bg-amber-50",   text: "text-amber-500"  },
   interactive:  { bg: "bg-teal-50",    text: "text-teal-500"   },
-  games:        { bg: "bg-yellow-50",  text: "text-yellow-600" },
+  games:        { bg: "bg-violet-50",  text: "text-violet-500" },
   chat:         { bg: "bg-rose-50",    text: "text-rose-500"   },
+  // ── Layout containers ─────────────────────────────────────────────────
+  "layout-split":   { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-stack":   { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-feature": { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-sidebar": { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-quad":    { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-mosaic":  { bg: "bg-neutral-100", text: "text-neutral-500" },
+}
+
+// ─── Card type label overrides for the browser (shorter than CardTypeMeta) ────
+
+const TYPE_LABEL: Partial<Record<CardType, string>> = {
+  "rich-sim":    "Simulation",
+  "village-3d":  "3D Scene",
+  "interactive": "Quiz",
+  "layout-split":   "Split",
+  "layout-stack":   "Stack",
+  "layout-feature": "Feature",
+  "layout-sidebar": "Sidebar",
+  "layout-quad":    "Quad",
+  "layout-mosaic":  "Mosaic",
+}
+
+// ─── Card type icons for the "type" column in the browser ─────────────────────
+
+const TYPE_ICONS: Partial<Record<CardType, React.ComponentType<{ size?: number; className?: string }>>> = {
+  text:        FileText,
+  image:       ImageIcon,
+  audio:       AudioLines,
+  video:       PlayCircle,
+  animation:   Film,
+  "model-3d":  Box,
+  document:    FileText,
+  map:         MapIcon,
+  chart:       LineChart,
+  diagram:     Network,
+  table:       Table2,
+  dataset:     Database,
+  "rich-sim":  Sparkles,
+  interactive: HelpCircle,
+  games:       Gamepad2,
+  chat:        Bot,
+  // Layout containers
+  "layout-split":   Columns2,
+  "layout-stack":   Rows2,
+  "layout-feature": Layout,
+  "layout-sidebar": PanelLeft,
+  "layout-quad":    LayoutGrid,
+  "layout-mosaic":  Grid3X3,
+}
+
+// ─── Draggable user-created card (from Make studio) ──────────────────────────
+
+function DraggableUserCard({ card, onRemove }: { card: StudioCard; onRemove: () => void }) {
+  const dragData: DragSourceData = {
+    type:     "card",
+    cardId:   card.id as CardId,
+    cardType: card.cardType,
+    title:    card.title,
+    content:  card.content,
+  }
+
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id:   `drag-studio-${card.id}`,
+    data: dragData,
+  })
+
+  const meta   = CARD_TYPE_META[card.cardType]
+  const colors = CARD_TYPE_COLORS[card.cardType]
+  const Icon   = TYPE_ICONS[card.cardType] ?? meta.icon
+  const typeLabel = TYPE_LABEL[card.cardType] ?? meta.label
+
+  return (
+    <div className="relative group">
+      <div
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+        className={[
+          "flex items-center gap-2.5 rounded-lg border border-[#4a94ff]/30 bg-[#4a94ff]/5 px-2 py-2.5",
+          "cursor-grab select-none transition-all",
+          "hover:border-[#4a94ff]/50 hover:shadow-sm",
+          isDragging ? "opacity-40 shadow-md" : "",
+        ].filter(Boolean).join(" ")}
+      >
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${colors.bg}`}>
+          <Icon size={18} className={colors.text} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-medium text-neutral-800 leading-tight line-clamp-2">
+            {card.title}
+          </p>
+          <p className="mt-0.5 text-[9px] uppercase tracking-wide font-semibold text-[#4a94ff]">
+            {typeLabel}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        title="Remove card"
+        className="absolute right-1.5 top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-neutral-200 text-neutral-500 hover:bg-red-100 hover:text-red-500 group-hover:flex transition-colors"
+      >
+        <X size={10} />
+      </button>
+    </div>
+  )
 }
 
 // ─── Draggable item ───────────────────────────────────────────────────────────
@@ -126,7 +343,9 @@ function DraggableItem({ item }: { item: LibraryItem }) {
 
   const meta   = CARD_TYPE_META[item.cardType]
   const colors = CARD_TYPE_COLORS[item.cardType]
-  const Icon   = meta.icon
+  const Icon   = TYPE_ICONS[item.cardType] ?? meta.icon
+
+  const typeLabel = TYPE_LABEL[item.cardType] ?? meta.label
 
   return (
     <div
@@ -134,24 +353,25 @@ function DraggableItem({ item }: { item: LibraryItem }) {
       {...listeners}
       {...attributes}
       className={[
-        "flex items-center gap-2.5 rounded-lg border border-neutral-200 px-2 py-3",
+        "flex items-center gap-2.5 rounded-lg border border-neutral-200 px-2 py-2.5",
         "cursor-grab select-none transition-all bg-white",
         "hover:border-neutral-300 hover:shadow-sm",
         isDragging ? "opacity-40 shadow-md" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      ].filter(Boolean).join(" ")}
     >
       {/* Icon thumbnail */}
-      <div className={`flex items-center justify-center w-11 h-11 rounded-md shrink-0 ${colors.bg}`}>
-        <Icon size={22} strokeWidth={1.5} className={colors.text} />
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${colors.bg}`}>
+        <Icon size={18} className={colors.text} />
       </div>
+
       {/* Info */}
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-[11px] font-medium text-neutral-800 leading-tight line-clamp-2">
           {item.title}
         </p>
-        <p className="text-[9px] text-neutral-400 mt-0.5 uppercase tracking-wide font-medium">{item.label}</p>
+        <p className="mt-0.5 text-[9px] uppercase tracking-wide font-semibold text-neutral-400">
+          {typeLabel}
+        </p>
       </div>
     </div>
   )
@@ -179,8 +399,8 @@ function RailButton({
           : "border-transparent text-neutral-400 hover:text-neutral-700 hover:bg-neutral-50",
       ].join(" ")}
     >
-      <cat.Icon size={18} strokeWidth={1.5} />
-      <span className="text-[9px] leading-none font-medium">{cat.label}</span>
+      <cat.Icon size={17} strokeWidth={1.5} />
+      <span className="text-[8px] leading-none font-medium">{cat.label}</span>
     </button>
   )
 }
@@ -188,11 +408,21 @@ function RailButton({
 // ─── Files Browser ────────────────────────────────────────────────────────────
 
 export function FilesBrowser() {
-  const [activeCategory, setActiveCategory] = useState<string>("files")
-  const [search, setSearch]                 = useState("")
+  const [activeCategory, setActiveCategory] = useState<string>("all")
+  const [search, setSearch] = useState("")
 
-  const cat     = CATEGORIES.find((c) => c.id === activeCategory)!
-  const visible = MOCK_ITEMS.filter((item) => {
+  const studioCards  = useMakeLibraryStore((s) => s.cards)
+  const removeCard   = useMakeLibraryStore((s) => s.removeCard)
+
+  const cat = CATEGORIES.find((c) => c.id === activeCategory)!
+
+  const visibleStudio = studioCards.filter((card) => {
+    const matchesType   = cat.types === "all" || (cat.types as CardType[]).includes(card.cardType)
+    const matchesSearch = card.title.toLowerCase().includes(search.toLowerCase())
+    return matchesType && matchesSearch
+  })
+
+  const visible = LIBRARY_ITEMS.filter((item) => {
     const matchesType   = cat.types === "all" || (cat.types as CardType[]).includes(item.cardType)
     const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase())
     return matchesType && matchesSearch
@@ -201,7 +431,10 @@ export function FilesBrowser() {
   return (
     <div className="flex h-full w-full overflow-hidden border-r border-neutral-200 bg-white">
       {/* Narrow icon rail */}
-      <div className="flex flex-col w-12 shrink-0 border-r border-neutral-100 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+      <div
+        className="flex flex-col w-12 shrink-0 border-r border-neutral-100 overflow-y-auto"
+        style={{ scrollbarWidth: "none" }}
+      >
         {CATEGORIES.map((c) => (
           <RailButton
             key={c.id}
@@ -214,8 +447,12 @@ export function FilesBrowser() {
 
       {/* Content column */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        {/* Search */}
-        <div className="px-2 py-1.5 border-b border-neutral-100 shrink-0">
+        {/* Category label + search */}
+        <div className="px-2 pt-2 pb-1.5 border-b border-neutral-100 shrink-0 space-y-1.5">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 px-0.5">
+            {cat.label === "All" ? "All cards" : cat.label}
+            <span className="ml-1.5 font-normal text-neutral-300">({visibleStudio.length + visible.length})</span>
+          </p>
           <input
             type="search"
             placeholder="Search…"
@@ -225,14 +462,35 @@ export function FilesBrowser() {
           />
         </div>
 
-        {/* Items grid */}
-        <div className="flex-1 overflow-y-auto p-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+        {/* Items list */}
+        <div
+          className="flex-1 overflow-y-auto p-2"
+          style={{ scrollbarWidth: "none" }}
+        >
           <div className="flex flex-col gap-1.5">
+            {/* Studio cards (user-created) */}
+            {visibleStudio.length > 0 && (
+              <>
+                <p className="px-0.5 pt-1 pb-0.5 text-[8px] font-bold uppercase tracking-widest text-[#4a94ff]">
+                  My cards
+                </p>
+                {visibleStudio.map((card) => (
+                  <DraggableUserCard
+                    key={card.id}
+                    card={card}
+                    onRemove={() => removeCard(card.id)}
+                  />
+                ))}
+                <div className="my-1 border-t border-neutral-100" />
+              </>
+            )}
+
+            {/* Library items */}
             {visible.map((item) => (
               <DraggableItem key={item.id} item={item} />
             ))}
           </div>
-          {visible.length === 0 && (
+          {visibleStudio.length === 0 && visible.length === 0 && (
             <p className="px-3 py-4 text-xs text-neutral-400 italic">
               {search ? "No results." : "Nothing in this category yet."}
             </p>
@@ -242,4 +500,3 @@ export function FilesBrowser() {
     </div>
   )
 }
-

@@ -56,6 +56,14 @@ export interface DropTargetData {
   infiniteMode?: boolean
 }
 
+export interface LayoutSlotDropTargetData {
+  type: "layout-slot"
+  sessionId: SessionId
+  taskId: TaskId
+  layoutCardId: string
+  slotIndex: number
+}
+
 
 type CollisionWithData = {
   id: string | number
@@ -313,6 +321,7 @@ function computeDropOrderFromHints(target: DropTargetData): number | null {
 
 export function useCardDrop() {
   const addDroppedCard = useCourseStore((s) => s.addDroppedCard)
+  const addCardToLayoutSlot = useCourseStore((s) => s.addCardToLayoutSlot)
   const sessions = useCourseStore((s) => s.sessions)
 
   const onDragEnd = useCallback(
@@ -320,9 +329,33 @@ export function useCardDrop() {
       const { active } = event
 
       const source = active.data.current as DragSourceData | undefined
-      const target = resolveDropTargetWithBlockKey(event)
 
       if (!source || source.type !== "card") return
+
+      // Layout-slot drop: card dropped into a layout container's slot
+      const overData = event.over?.data.current as LayoutSlotDropTargetData | undefined
+      if (overData?.type === "layout-slot") {
+        addCardToLayoutSlot(
+          overData.sessionId,
+          overData.taskId,
+          overData.layoutCardId,
+          overData.slotIndex,
+          {
+            id:         crypto.randomUUID() as DroppedCardId,
+            cardId:     source.cardId,
+            cardType:   source.cardType,
+            taskId:     overData.taskId,
+            areaKind:   "instruction",
+            position:   { x: 0, y: 0 },
+            dimensions: getDefaultCardDimensions(source.cardType),
+            content:    source.content ?? { title: source.title ?? "" },
+            order:      Date.now(),
+          },
+        )
+        return
+      }
+
+      const target = resolveDropTargetWithBlockKey(event)
       if (!target) return
 
       const targetSession = sessions.find((session) => session.id === target.sessionId)
@@ -359,7 +392,7 @@ export function useCardDrop() {
         order:      dropOrder,
       }, targetCanvasId)
     },
-    [addDroppedCard, sessions],
+    [addDroppedCard, addCardToLayoutSlot, sessions],
   )
 
   return { onDragEnd }

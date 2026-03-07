@@ -2,6 +2,7 @@
 
 import { Play, Copy, Check } from "lucide-react"
 import { useState } from "react"
+import { SectionLabel } from "./editors/studio-primitives"
 
 type MotionPreset =
   | "fade-up" | "fade-down" | "fade-left" | "fade-right"
@@ -79,201 +80,189 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
   }
 
   return (
-    <div className="border-b border-neutral-200 bg-white">
-      <div className="border-b border-neutral-100 px-4 py-2 flex items-center justify-between gap-3">
-        <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Animation</p>
+    <div className="bg-white">
+      {/* Header bar */}
+      <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-2">
+        <SectionLabel>Motion</SectionLabel>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={copyCss}
-            title="Copy as CSS animation property"
-            className="flex items-center gap-1 border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-500 hover:bg-neutral-50 transition-colors"
+            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[9px] font-semibold text-neutral-500 transition-colors hover:bg-neutral-50"
           >
             {copied ? <Check size={10} className="text-green-600" /> : <Copy size={10} />}
             {copied ? "Copied!" : "Copy CSS"}
           </button>
           <button
             type="button"
-            onClick={() => {
-              onChange("animationScrubEnabled", false)
-              onChange("animationNonce", Date.now())
-            }}
-            className="flex items-center gap-1 border border-neutral-900 bg-neutral-900 px-2 py-1 text-[10px] font-medium text-white hover:opacity-90"
+            onClick={() => { onChange("animationScrubEnabled", false); onChange("animationNonce", Date.now()) }}
+            className="flex items-center gap-1 rounded-md border border-neutral-900 bg-neutral-900 px-2 py-1 text-[9px] font-semibold text-white transition-colors hover:bg-neutral-800"
           >
-            <Play size={9} />
-            Play
+            <Play size={9} /> Play
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto] items-end gap-2 px-4 py-2.5">
-        {/* Preset */}
-        <label className="space-y-1">
-          <span className="block text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Preset</span>
-          <select
-            value={preset}
-            onChange={(e) => onChange("animationPreset", e.target.value)}
-            className="w-full border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-700 outline-none focus:border-neutral-400"
-          >
-            {["Fade", "Zoom", "Flip", "Emphasis"].map((group) => (
-              <optgroup key={group} label={group}>
-                {PRESET_OPTIONS.filter((p) => p.group === group).map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
+      {/* Preset grid */}
+      <div className="border-b border-neutral-100 px-4 py-2.5 space-y-1.5">
+        <SectionLabel>Preset</SectionLabel>
+        <div className="grid grid-cols-4 gap-1">
+          {PRESET_OPTIONS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => onChange("animationPreset", p.value)}
+              className={[
+                "rounded-md px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-all",
+                preset === p.value
+                  ? "bg-neutral-900 text-white shadow-sm"
+                  : "border border-neutral-200 bg-neutral-50 text-neutral-500 hover:border-neutral-300 hover:bg-white hover:text-neutral-700",
+              ].join(" ")}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-        {/* Easing */}
-        <label className="space-y-1">
-          <span className="block text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Easing</span>
-          <select
-            value={easing}
-            onChange={(e) => onChange("animationEasing", e.target.value)}
-            className="w-full border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-700 outline-none focus:border-neutral-400"
-          >
-            {EASING_OPTIONS.map((e) => (
-              <option key={e} value={e}>{e}</option>
-            ))}
-          </select>
-        </label>
+      {/* Easing curve picker */}
+      <div className="border-b border-neutral-100 px-4 py-2.5 space-y-1.5">
+        <SectionLabel>Easing</SectionLabel>
+        <div className="flex gap-1.5">
+          {EASING_OPTIONS.map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => onChange("animationEasing", e)}
+              title={e}
+              className={[
+                "flex flex-1 flex-col items-center gap-1 rounded-md border p-1.5 transition-all",
+                easing === e
+                  ? "border-neutral-900 bg-neutral-900"
+                  : "border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white",
+              ].join(" ")}
+            >
+              <svg viewBox="0 0 32 24" width="32" height="20" className="overflow-visible">
+                <line x1={4} y1={20} x2={28} y2={20} stroke={easing === e ? "#ffffff33" : "#e5e7eb"} strokeWidth={0.8} />
+                <line x1={4} y1={20} x2={4} y2={4} stroke={easing === e ? "#ffffff33" : "#e5e7eb"} strokeWidth={0.8} />
+                <path
+                  d={EASING_CURVES[e]}
+                  fill="none"
+                  stroke={easing === e ? "#ffffff" : "#374151"}
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className={`text-[8px] font-semibold uppercase tracking-wider ${easing === e ? "text-white" : "text-neutral-500"}`}>
+                {e === "ease-in-out" ? "ease" : e === "spring" ? "spring" : e.replace("ease-", "")}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
 
-        {/* Duration */}
-        <label className="space-y-1">
-          <span className="block text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Duration ms</span>
-          <input
-            type="number"
-            min={100}
-            max={12000}
-            step={50}
-            value={durationMs}
-            onChange={(e) => onChange("animationDurationMs", Number(e.target.value))}
-            className="w-24 border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-700 outline-none focus:border-neutral-400"
-          />
-        </label>
-
-        {/* Delay */}
-        <label className="space-y-1">
-          <span className="block text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Delay ms</span>
-          <input
-            type="number"
-            min={0}
-            max={5000}
-            step={50}
-            value={delayMs}
-            onChange={(e) => onChange("animationDelayMs", Number(e.target.value))}
-            className="w-24 border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-700 outline-none focus:border-neutral-400"
-          />
-        </label>
-
-        {/* Autoplay toggle */}
+      {/* Timing + toggles */}
+      <div className="flex items-end gap-3 border-b border-neutral-100 px-4 py-2.5">
+        <div className="space-y-1 flex-1">
+          <SectionLabel>Duration</SectionLabel>
+          <div className="flex items-stretch overflow-hidden rounded-md border border-neutral-200 bg-white">
+            <input
+              type="number" min={100} max={12000} step={50} value={durationMs}
+              onChange={(e) => onChange("animationDurationMs", Number(e.target.value))}
+              className="min-w-0 flex-1 px-2 py-1.5 text-[11px] font-mono text-neutral-800 outline-none"
+            />
+            <span className="shrink-0 border-l border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[9px] font-semibold text-neutral-400">ms</span>
+          </div>
+        </div>
+        <div className="space-y-1 flex-1">
+          <SectionLabel>Delay</SectionLabel>
+          <div className="flex items-stretch overflow-hidden rounded-md border border-neutral-200 bg-white">
+            <input
+              type="number" min={0} max={5000} step={50} value={delayMs}
+              onChange={(e) => onChange("animationDelayMs", Number(e.target.value))}
+              className="min-w-0 flex-1 px-2 py-1.5 text-[11px] font-mono text-neutral-800 outline-none"
+            />
+            <span className="shrink-0 border-l border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[9px] font-semibold text-neutral-400">ms</span>
+          </div>
+        </div>
         <div className="space-y-1">
-          <span className="block text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Autoplay</span>
+          <SectionLabel>Auto</SectionLabel>
           <button
             type="button"
             onClick={() => onChange("autoplay", !autoplay)}
-            className={[
-              "w-16 border py-1 text-[10px] font-medium transition-colors",
-              autoplay ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-600",
-            ].join(" ")}
+            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", autoplay ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
           >
             {autoplay ? "On" : "Off"}
           </button>
         </div>
-
-        {/* Loop toggle */}
         <div className="space-y-1">
-          <span className="block text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Loop</span>
+          <SectionLabel>Loop</SectionLabel>
           <button
             type="button"
             onClick={() => onChange("loop", !loop)}
-            className={[
-              "w-16 border py-1 text-[10px] font-medium transition-colors",
-              loop ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-600",
-            ].join(" ")}
+            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", loop ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
           >
             {loop ? "On" : "Off"}
           </button>
         </div>
       </div>
 
-      {/* Scrubber row */}
-      <div className="grid grid-cols-[1fr_auto] gap-4 border-t border-neutral-100 bg-neutral-50 px-4 py-2.5">
-        <div className="space-y-1.5">
-          {/* Live / Scrub toggle */}
-          <div className="flex items-center gap-1.5">
-            {[false, true].map((isScrub) => (
-              <button
-                key={String(isScrub)}
-                type="button"
-                onClick={() => onChange("animationScrubEnabled", isScrub)}
-                className={[
-                  "border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition-colors",
-                  scrubEnabled === isScrub
-                    ? "border-neutral-900 bg-neutral-900 text-white"
-                    : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-400",
-                ].join(" ")}
-              >
-                {isScrub ? "Scrub" : "Live"}
-              </button>
-            ))}
-            <span className="ml-auto text-[10px] font-mono text-neutral-500">{scrubMs}ms</span>
-          </div>
-
-          {/* Range scrubber */}
-          <input
-            type="range"
-            min={0}
-            max={maxDuration}
-            step={10}
-            value={scrubMs}
-            onChange={(e) => {
-              onChange("animationScrubEnabled", true)
-              onChange("animationScrubMs", Number(e.target.value))
-            }}
-            className="w-full accent-neutral-900"
-          />
-
-          {/* Keyframe stops */}
-          <div className="flex items-center justify-between">
-            {keyframeStops.map((stop) => (
-              <button
-                key={stop.label}
-                type="button"
-                onClick={() => {
-                  onChange("animationScrubEnabled", true)
-                  onChange("animationScrubMs", stop.ms)
-                }}
-                className={[
-                  "border px-1.5 py-0.5 text-[9px] transition-colors",
-                  scrubEnabled && scrubMs === stop.ms
-                    ? "border-neutral-900 bg-neutral-900 text-white"
-                    : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-400",
-                ].join(" ")}
-              >
-                {stop.label}
-              </button>
-            ))}
-          </div>
+      {/* Scrubber */}
+      <div className="bg-neutral-50 px-4 py-2.5 space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          {[false, true].map((isScrub) => (
+            <button
+              key={String(isScrub)}
+              type="button"
+              onClick={() => onChange("animationScrubEnabled", isScrub)}
+              className={[
+                "rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all",
+                scrubEnabled === isScrub
+                  ? "border-neutral-900 bg-neutral-900 text-white"
+                  : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-400",
+              ].join(" ")}
+            >
+              {isScrub ? "Scrub" : "Live"}
+            </button>
+          ))}
+          <span className="ml-auto font-mono text-[10px] text-neutral-500">{scrubMs}ms</span>
         </div>
 
-        {/* Easing curve preview */}
-        <div className="flex flex-col items-end gap-1">
-          <span className="text-[9px] font-semibold uppercase tracking-wider text-neutral-400">Curve</span>
-          <div className="border border-neutral-200 bg-white px-1 py-1" style={{ width: 64, height: 52 }}>
-            <svg viewBox="0 0 32 24" width="100%" height="100%" className="overflow-visible">
-              <line x1={4} y1={20} x2={28} y2={20} stroke="#e5e7eb" strokeWidth={0.8} />
-              <line x1={4} y1={20} x2={4} y2={4} stroke="#e5e7eb" strokeWidth={0.8} />
-              <path
-                d={EASING_CURVES[easing]}
-                fill="none"
-                stroke="#171717"
-                strokeWidth={1.8}
-                strokeLinecap="round"
-              />
-            </svg>
+        {/* Track */}
+        <div className="relative flex h-4 items-center">
+          <div className="absolute inset-x-0 h-1 rounded-full bg-neutral-200">
+            <div
+              className="h-full rounded-full bg-neutral-700 transition-all"
+              style={{ width: `${Math.min(100, (scrubMs / Math.max(1, maxDuration)) * 100)}%` }}
+            />
           </div>
+          <input
+            type="range" min={0} max={maxDuration} step={10} value={scrubMs}
+            onChange={(e) => { onChange("animationScrubEnabled", true); onChange("animationScrubMs", Number(e.target.value)) }}
+            className="absolute inset-0 w-full cursor-pointer opacity-0"
+          />
+          <div
+            className="pointer-events-none absolute h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-neutral-700 bg-white shadow-sm transition-all"
+            style={{ left: `${Math.min(100, (scrubMs / Math.max(1, maxDuration)) * 100)}%` }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          {keyframeStops.map((stop) => (
+            <button
+              key={stop.label}
+              type="button"
+              onClick={() => { onChange("animationScrubEnabled", true); onChange("animationScrubMs", stop.ms) }}
+              className={[
+                "rounded px-1.5 py-0.5 text-[9px] font-semibold transition-all",
+                scrubEnabled && scrubMs === stop.ms
+                  ? "bg-neutral-900 text-white"
+                  : "text-neutral-500 hover:text-neutral-700",
+              ].join(" ")}
+            >
+              {stop.label}
+            </button>
+          ))}
         </div>
       </div>
     </div>

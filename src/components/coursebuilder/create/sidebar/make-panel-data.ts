@@ -2,16 +2,22 @@ import {
   AudioLines,
   Bot,
   Box,
+  Columns2,
   Database,
   FileText,
   Film,
   Gamepad2,
+  Grid3X3,
   HelpCircle,
   ImageIcon,
+  Layout,
+  LayoutGrid,
   LineChart,
   Map as MapIcon,
   Network,
+  PanelLeft,
   PlayCircle,
+  Rows2,
   Sparkles,
   Table2,
 } from "lucide-react"
@@ -19,13 +25,22 @@ import type { ComponentType } from "react"
 
 import type { CardType } from "../types"
 
+/**
+ * Make-panel card groups — aligned with CARD-HIERARCHY.md:
+ *   media      → Atlas Layer 2 (raw formats)
+ *   data       → Atlas Layer 3 structured views
+ *   products   → Atlas Layer 3 assembled/passive (Simulation)
+ *   activities → Atlas Layer 4 (student response required)
+ */
+export type CardGroup = "media" | "data" | "products" | "activities" | "layout"
+
 export interface CardSpec {
   cardType: CardType
   label: string
   description: string
   detail: string
   fields: string[]
-  group: "media" | "data" | "interactive"
+  group: CardGroup
   Icon: ComponentType<{ size?: number; className?: string }>
 }
 
@@ -158,6 +173,13 @@ export const SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unknown>>> 
     maxTurns: 20,
     difficulty: "intermediate",
   },
+  // ── Layout (structural containers) ──────────────────────────────────────────
+  "layout-split":   { slots: {} },
+  "layout-stack":   { slots: {} },
+  "layout-feature": { slots: {} },
+  "layout-sidebar": { slots: {} },
+  "layout-quad":    { slots: {} },
+  "layout-mosaic":  { slots: {} },
 }
 
 export const CARD_SPECS: CardSpec[] = [
@@ -259,7 +281,7 @@ export const CARD_SPECS: CardSpec[] = [
     description: "PDF, slide deck, or web article.",
     detail: "Embed PDF documents, Google Slides, or web articles with a native preview. Add structured sections with headings and body text.",
     fields: ["Document URL", "Type", "Pages", "Sections"],
-    group: "data",
+    group: "media",
     Icon: FileText,
   },
   {
@@ -271,24 +293,26 @@ export const CARD_SPECS: CardSpec[] = [
     group: "data",
     Icon: Database,
   },
-  // ─── Interactive ──────────────────────────────────────────────────────────────
+  // ─── Products (Layer 3 — assembled, passive) ──────────────────────────────────
+  {
+    cardType: "rich-sim",
+    label: "Simulation",
+    description: "Embeddable simulation or widget — passive observation.",
+    detail: "Embed any simulation via URL. Configure a starter prompt, observation checkpoints, and hint scaffolding. Student watches; no graded response.",
+    fields: ["Embed URL", "Prompt", "Checkpoints", "Hints"],
+    group: "products",
+    Icon: Sparkles,
+  },
+
+  // ─── Activities (Layer 4 — student response required) ─────────────────────────
   {
     cardType: "interactive",
     label: "Quiz",
     description: "Graded questions with per-option feedback.",
     detail: "Full quiz builder: Multiple Choice, True/False, Short Answer, and Ranking. Per-option feedback, hint text, and point scoring.",
     fields: ["Interaction type", "Question", "Options", "Feedback / hints"],
-    group: "interactive",
+    group: "activities",
     Icon: HelpCircle,
-  },
-  {
-    cardType: "rich-sim",
-    label: "Simulation",
-    description: "Embeddable interactive simulation or widget.",
-    detail: "Embed any interactive simulation via URL. Configure starter prompt, checkpoints, and hint scaffolding.",
-    fields: ["Embed URL", "Prompt", "Checkpoints", "Hints"],
-    group: "interactive",
-    Icon: Sparkles,
   },
   {
     cardType: "games",
@@ -296,22 +320,70 @@ export const CARD_SPECS: CardSpec[] = [
     description: "Vocabulary match, memory, fill-in-the-blank.",
     detail: "Gamified learning activities: Word Match, Memory Cards, Fill in the Blank, Drag & Drop ordering. Configure pairs, time limits, and scoring.",
     fields: ["Game type", "Term/definition pairs", "Time limit", "Hints"],
-    group: "interactive",
+    group: "activities",
     Icon: Gamepad2,
   },
+  // ─── Layout (structural containers) ───────────────────────────────────────────
   {
-    cardType: "chat",
-    label: "AI Chat",
-    description: "Students converse with a topic-expert AI.",
-    detail: "Configure an AI persona and knowledge domain. Students chat freely or follow guided prompts. Supports Socratic dialogue, role-play, and Q&A modes.",
-    fields: ["Topic / context", "AI persona", "Opening message", "Conversation starters"],
-    group: "interactive",
-    Icon: Bot,
+    cardType: "layout-split",
+    label: "Split",
+    description: "Two equal full-height columns. Good for side-by-side comparison.",
+    detail: "50/50 columns. Neither side is dominant. Drop any card type into each slot — the slot adapts to its content.",
+    fields: ["Left slot", "Right slot"],
+    group: "layout",
+    Icon: Columns2,
+  },
+  {
+    cardType: "layout-stack",
+    label: "Stack",
+    description: "Two full-width rows, 60% top and 40% bottom.",
+    detail: "Top slot is the primary content area, bottom is secondary. The workhorse layout: Video above, Quiz below; Timeline above, Text below.",
+    fields: ["Primary slot (top)", "Secondary slot (bottom)"],
+    group: "layout",
+    Icon: Rows2,
+  },
+  {
+    cardType: "layout-feature",
+    label: "Feature",
+    description: "Narrow left panel + large right area + thin bottom strip.",
+    detail: "Left panel runs full height as an anchor (navigation or entity reference). Right side is divided: large upper main content + thin lower caption bar. Good for Narrative or Documentary compounds.",
+    fields: ["Left anchor slot", "Main content slot", "Caption strip slot"],
+    group: "layout",
+    Icon: Layout,
+  },
+  {
+    cardType: "layout-sidebar",
+    label: "Sidebar",
+    description: "Asymmetric 30 / 70 columns.",
+    detail: "Narrow left, wide right. Use Map or Timeline as the narrow anchor, main content dominant on the right. Or flip: wide primary left, narrow right panel.",
+    fields: ["Narrow slot (30%)", "Wide slot (70%)"],
+    group: "layout",
+    Icon: PanelLeft,
+  },
+  {
+    cardType: "layout-quad",
+    label: "Quad",
+    description: "2 × 2 equal grid, four cells.",
+    detail: "Gallery use, four-way comparison, or a compound that surfaces four simultaneous data views.",
+    fields: ["Top-left", "Top-right", "Bottom-left", "Bottom-right"],
+    group: "layout",
+    Icon: LayoutGrid,
+  },
+  {
+    cardType: "layout-mosaic",
+    label: "Mosaic",
+    description: "3 × 3 equal grid, nine cells.",
+    detail: "Dense information display: image galleries, multi-dataset views, or a game board layout. High cell count means card coordination matters.",
+    fields: ["Nine equal slots"],
+    group: "layout",
+    Icon: Grid3X3,
   },
 ]
 
-export const GROUPS: { id: "media" | "data" | "interactive"; label: string }[] = [
-  { id: "media", label: "Media" },
-  { id: "data", label: "Data & Visuals" },
-  { id: "interactive", label: "Interactive" },
+export const GROUPS: { id: CardGroup; label: string }[] = [
+  { id: "media",      label: "Media"      },
+  { id: "data",       label: "Data"       },
+  { id: "products",   label: "Products"   },
+  { id: "activities", label: "Activities" },
+  { id: "layout",     label: "Layout"     },
 ]

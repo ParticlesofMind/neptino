@@ -12,13 +12,15 @@
  */
 
 import { useEffect, useState } from "react"
-import { PanelRightClose, PanelRight, Plus } from "lucide-react"
+import { PanelRightClose, PanelRight, Plus, Check } from "lucide-react"
 import type { CardType } from "../types"
 import { CardTypePreview, CARD_TYPE_META } from "../cards/CardTypePreview"
 import { MakeMotionToolbar } from "./make-motion-toolbar"
 import { buildStudioCardContent, getStudioDefaults } from "./make-studio-tools"
 import { EditorShell } from "./editors/EditorShell"
-import { CARD_SPECS, GROUPS, SAMPLE_CONTENT } from "./make-panel-data"
+import { CARD_SPECS, GROUPS, SAMPLE_CONTENT, type CardGroup } from "./make-panel-data"
+import { useMakeLibraryStore } from "../store/makeLibraryStore"
+import { useCreateModeStore } from "../store/createModeStore"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -44,10 +46,12 @@ function presetToKeyframes(preset: string): string {
 
 // ─── Group accent colours ─────────────────────────────────────────────────────
 
-const GROUP_ACCENT: Record<string, { icon: string; pill: string; pillActive: string; border: string }> = {
-  media:       { icon: "text-[#4a94ff]", pill: "text-[#4a94ff]", pillActive: "bg-[#4a94ff] text-white", border: "border-[#4a94ff]/20 bg-[#4a94ff]/5" },
-  data:        { icon: "text-[#00ccb3]", pill: "text-[#00ccb3]", pillActive: "bg-[#00ccb3] text-white", border: "border-[#00ccb3]/20 bg-[#00ccb3]/5" },
-  interactive: { icon: "text-violet-500", pill: "text-violet-600", pillActive: "bg-violet-500 text-white", border: "border-violet-200 bg-violet-50" },
+const GROUP_ACCENT: Record<string, { icon: string; pill: string; pillActive: string; border: string; dot: string }> = {
+  media:      { icon: "text-[#4a94ff]",  pill: "text-[#4a94ff]",  pillActive: "bg-[#4a94ff] text-white",  border: "border-[#4a94ff]/20 bg-[#4a94ff]/5",  dot: "bg-[#4a94ff]"  },
+  data:       { icon: "text-[#00ccb3]",  pill: "text-[#00ccb3]",  pillActive: "bg-[#00ccb3] text-white",  border: "border-[#00ccb3]/20 bg-[#00ccb3]/5",  dot: "bg-[#00ccb3]"  },
+  products:   { icon: "text-amber-500",  pill: "text-amber-600",  pillActive: "bg-amber-500 text-white",  border: "border-amber-200 bg-amber-50",         dot: "bg-amber-400"  },
+  activities: { icon: "text-violet-500", pill: "text-violet-600", pillActive: "bg-violet-500 text-white", border: "border-violet-200 bg-violet-50",        dot: "bg-violet-400" },
+  layout:     { icon: "text-neutral-600", pill: "text-neutral-600", pillActive: "bg-neutral-600 text-white", border: "border-neutral-200 bg-neutral-50",     dot: "bg-neutral-400" },
 }
 
 // ─── Preview Panel ─────────────────────────────────────────────────────────────
@@ -193,9 +197,13 @@ function PreviewPanel({
 export function MakePanel() {
   const [search, setSearch] = useState("")
   const [selected, setSelected] = useState<CardType>("text")
-  const [activeGroup, setActiveGroup] = useState<"all" | "media" | "data" | "interactive">("all")
+  const [activeGroup, setActiveGroup] = useState<"all" | CardGroup>("all")
   const [contentByType, setContentByType] = useState<Partial<Record<CardType, Record<string, unknown>>>>({})
   const [showPreview, setShowPreview] = useState(true)
+  const [addedFeedback, setAddedFeedback] = useState(false)
+
+  const addCard = useMakeLibraryStore((s) => s.addCard)
+  const setMode = useCreateModeStore((s) => s.setMode)
 
   // Seed defaults + sample content on first select
   useEffect(() => {
@@ -232,6 +240,15 @@ export function MakePanel() {
   const totalCards = CARD_SPECS.length
   const visibleCards = filtered.length
 
+  const handleAddToCanvas = () => {
+    addCard(selected, buildStudioCardContent(selected, selectedContent))
+    setAddedFeedback(true)
+    setTimeout(() => {
+      setAddedFeedback(false)
+      setMode("curate")
+    }, 800)
+  }
+
   const meta = CARD_TYPE_META[selected]
   const selectedSpec = CARD_SPECS.find((s) => s.cardType === selected)
   const accent = GROUP_ACCENT[selectedSpec?.group ?? "media"]
@@ -265,9 +282,10 @@ export function MakePanel() {
 
         {/* Group filter pills */}
         <div className="shrink-0 flex gap-1 px-3 pb-2.5">
-          {(["all", "media", "data", "interactive"] as const).map((g) => {
+          {(["all", "media", "data", "products", "activities"] as const).map((g) => {
             const isActive = activeGroup === g
             const groupAccent = g !== "all" ? GROUP_ACCENT[g] : null
+            const LABELS: Record<string, string> = { all: "All", media: "Media", data: "Data", products: "Prod", activities: "Act" }
             return (
               <button
                 key={g}
@@ -279,7 +297,7 @@ export function MakePanel() {
                     : groupAccent ? `bg-neutral-100 ${groupAccent.pill} hover:opacity-80` : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200",
                 ].join(" ")}
               >
-                {g === "all" ? "All" : g === "data" ? "Data" : g === "interactive" ? "Live" : "Media"}
+                {LABELS[g]}
               </button>
             )
           })}
@@ -293,7 +311,7 @@ export function MakePanel() {
               <div key={group.id}>
                 {/* Group header */}
                 <div className="flex items-center gap-1.5 px-4 pb-1 pt-3">
-                  <div className={["h-1.5 w-1.5 rounded-full", group.id === "media" ? "bg-[#4a94ff]" : group.id === "data" ? "bg-[#00ccb3]" : "bg-violet-400"].join(" ")} />
+                  <div className={["h-1.5 w-1.5 rounded-full", GROUP_ACCENT[group.id]?.dot ?? "bg-neutral-400"].join(" ")} />
                   <p className={["text-[9px] font-bold uppercase tracking-widest", ga.pill].join(" ")}>
                     {group.label}
                   </p>
@@ -335,7 +353,7 @@ export function MakePanel() {
                         </p>
                       </div>
                       {isActive && (
-                        <div className={["mt-1 h-1.5 w-1.5 shrink-0 rounded-full", group.id === "media" ? "bg-[#4a94ff]" : group.id === "data" ? "bg-[#00ccb3]" : "bg-violet-400"].join(" ")} />
+                        <div className={["mt-1 h-1.5 w-1.5 shrink-0 rounded-full", GROUP_ACCENT[group.id]?.dot ?? "bg-neutral-400"].join(" ")} />
                       )}
                     </button>
                   )
@@ -390,11 +408,17 @@ export function MakePanel() {
             {/* Add to canvas */}
             <button
               type="button"
+              onClick={handleAddToCanvas}
               title="Add to canvas"
-              className="flex items-center gap-1.5 rounded-lg bg-[#4a94ff] px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-all hover:bg-[#3d7de0] active:scale-[0.98]"
+              className={[
+                "flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-all active:scale-[0.98]",
+                addedFeedback
+                  ? "bg-green-500 hover:bg-green-500"
+                  : "bg-[#4a94ff] hover:bg-[#3d7de0]",
+              ].join(" ")}
             >
-              <Plus size={13} />
-              Add to canvas
+              {addedFeedback ? <Check size={13} /> : <Plus size={13} />}
+              {addedFeedback ? "Added!" : "Add to canvas"}
             </button>
           </div>
         </div>

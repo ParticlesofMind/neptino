@@ -19,6 +19,7 @@ import { TextCard }  from "./card-types/TextCard"
 import { ImageCard } from "./card-types/ImageCard"
 import { VideoCard } from "./card-types/VideoCard"
 import { RichCard }  from "./card-types/RichCard"
+import { LayoutCard } from "./card-types/LayoutCard"
 
 // ─── Shared prop contract ─────────────────────────────────────────────────────
 
@@ -56,7 +57,13 @@ export const DEFAULT_CARD_REGISTRY: CardRegistry = {
   "rich-sim":   { Editor: RichCard },
   "village-3d": { Editor: RichCard },
   interactive:  { Editor: RichCard },
-}
+  // ── Layout containers ─────────────────────────────────────────
+  "layout-split":   { Editor: LayoutCard },
+  "layout-stack":   { Editor: LayoutCard },
+  "layout-feature": { Editor: LayoutCard },
+  "layout-sidebar": { Editor: LayoutCard },
+  "layout-quad":    { Editor: LayoutCard },
+  "layout-mosaic":  { Editor: LayoutCard },}
 
 // ─── Lookup helper ────────────────────────────────────────────────────────────
 

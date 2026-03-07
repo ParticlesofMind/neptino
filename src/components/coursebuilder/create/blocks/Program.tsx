@@ -18,8 +18,8 @@ interface ProgramTableRow {
   time:          string
 }
 
-const TD = "px-2 py-1 border border-neutral-200 text-neutral-700 text-[11px] align-top"
-const TH = "text-left px-2 py-1 text-[10px] font-medium text-neutral-500 border border-neutral-200 bg-neutral-50"
+const TD = "px-2 py-1 text-[11px] text-foreground align-top"
+const TH = "text-left px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-muted/30"
 const EMPTY_TOPICS: Topic[] = []
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -113,14 +113,14 @@ export function ProgramBlock({ sessionId, canvasId, fieldValues, data, fieldEnab
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-neutral-200">
-      <div className="border-b border-neutral-200 bg-neutral-50 px-2 py-1">
-        <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-400">Program</h2>
+    <section className="overflow-hidden rounded-lg border border-border">
+      <div className="border-b border-border bg-muted/30 px-2 py-1">
+        <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Program</h2>
       </div>
-      <div className="overflow-x-auto bg-white">
+      <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr>
+          <tr className="border-b border-border">
             {showTopic      && <th className={TH}>Topic</th>}
             {showObjective  && <th className={TH}>Objective</th>}
             {showTask       && <th className={TH}>Task</th>}
@@ -131,7 +131,7 @@ export function ProgramBlock({ sessionId, canvasId, fieldValues, data, fieldEnab
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} data-task-row-idx={rowStart + i}>
+            <tr key={i} data-task-row-idx={rowStart + i} className={i % 2 === 0 ? "border-b border-border last:border-b-0" : "border-b border-border last:border-b-0 bg-muted/20"}>
               {showTopic     && row.isTopicFirst && (
                 <td className={TD} rowSpan={row.topicSpan}>{row.topicLabel}</td>
               )}

@@ -40,6 +40,21 @@ interface CourseState {
   ) => void
   removeDroppedCard: (sessionId: SessionId, taskId: TaskId, cardId: string) => void
 
+  addCardToLayoutSlot: (
+    sessionId: SessionId,
+    taskId: TaskId,
+    layoutCardId: string,
+    slotIndex: number,
+    card: DroppedCard,
+  ) => void
+  removeCardFromLayoutSlot: (
+    sessionId: SessionId,
+    taskId: TaskId,
+    layoutCardId: string,
+    slotIndex: number,
+    cardId: string,
+  ) => void
+
   appendCanvasPage: (
     sessionId: SessionId,
     contentTopicStart?: number,
@@ -253,6 +268,72 @@ export const useCourseStore = create<CourseState>()(
               canvases: normalizeCanvasCardRanges(session.canvases, totalCards),
             }
           }),
+        })),
+
+      addCardToLayoutSlot: (sessionId, taskId, layoutCardId, slotIndex, card) =>
+        set((state) => ({
+          sessions: mapSession(state.sessions, sessionId, (session) => ({
+            ...session,
+            topics: session.topics.map((topic) => ({
+              ...topic,
+              objectives: topic.objectives.map((obj) => ({
+                ...obj,
+                tasks: obj.tasks.map((task) => {
+                  if (task.id !== taskId) return task
+                  return {
+                    ...task,
+                    droppedCards: task.droppedCards.map((dc) => {
+                      if (dc.id !== layoutCardId) return dc
+                      const slots = (dc.content.slots ?? {}) as Record<string, DroppedCard[]>
+                      return {
+                        ...dc,
+                        content: {
+                          ...dc.content,
+                          slots: {
+                            ...slots,
+                            [slotIndex]: [...(slots[slotIndex] ?? []), card],
+                          },
+                        },
+                      }
+                    }),
+                  }
+                }),
+              })),
+            })),
+          })),
+        })),
+
+      removeCardFromLayoutSlot: (sessionId, taskId, layoutCardId, slotIndex, cardId) =>
+        set((state) => ({
+          sessions: mapSession(state.sessions, sessionId, (session) => ({
+            ...session,
+            topics: session.topics.map((topic) => ({
+              ...topic,
+              objectives: topic.objectives.map((obj) => ({
+                ...obj,
+                tasks: obj.tasks.map((task) => {
+                  if (task.id !== taskId) return task
+                  return {
+                    ...task,
+                    droppedCards: task.droppedCards.map((dc) => {
+                      if (dc.id !== layoutCardId) return dc
+                      const slots = (dc.content.slots ?? {}) as Record<string, DroppedCard[]>
+                      return {
+                        ...dc,
+                        content: {
+                          ...dc.content,
+                          slots: {
+                            ...slots,
+                            [slotIndex]: (slots[slotIndex] ?? []).filter((c) => c.id !== cardId),
+                          },
+                        },
+                      }
+                    }),
+                  }
+                }),
+              })),
+            })),
+          })),
         })),
 
       appendCanvasPage: (sessionId, contentTopicStart, options) =>
