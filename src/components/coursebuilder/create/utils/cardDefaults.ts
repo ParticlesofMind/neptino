@@ -21,19 +21,19 @@ export interface CardDimensions {
 export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
   const dimensionMap: Record<CardType, CardDimensions> = {
     // ── Media cards ──
-    text:       { width: 420, height: 220 },
-    image:      { width: 460, height: 240 },
+    text:       { width: 420, height: 320 },
+    image:      { width: 400, height: 300 },
     audio:      { width: 420, height: 180 },
-    video:      { width: 460, height: 240 },
-    animation:  { width: 420, height: 220 },
+    video:      { width: 480, height: 270 },
+    animation:  { width: 480, height: 270 },
     dataset:    { width: 480, height: 200 },
     "model-3d": { width: 520, height: 280 },
-    map:        { width: 480, height: 220 },
-    chart:      { width: 480, height: 200 },
-    diagram:    { width: 480, height: 240 },
+    map:        { width: 480, height: 360 },
+    chart:      { width: 480, height: 320 },
+    diagram:    { width: 480, height: 320 },
     media:      { width: 460, height: 240 },
-    document:   { width: 420, height: 280 },
-    table:      { width: 520, height: 240 },
+    document:   { width: 420, height: 560 },
+    table:      { width: 520, height: 360 },
 
     // ── Interactive cards ──
     "rich-sim":   { width: 520, height: 320 },
@@ -43,12 +43,20 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     chat:         { width: 420, height: 320 },
 
     // ── Layout cards ──
-    "layout-split":   { width: 642, height: 310 },
-    "layout-stack":   { width: 642, height: 420 },
-    "layout-feature": { width: 642, height: 400 },
-    "layout-sidebar": { width: 642, height: 310 },
-    "layout-quad":    { width: 642, height: 510 },
-    "layout-mosaic":  { width: 642, height: 630 },
+    "layout-split":     { width: 642, height: 310 },
+    "layout-stack":     { width: 642, height: 420 },
+    "layout-feature":   { width: 642, height: 400 },
+    "layout-sidebar":   { width: 642, height: 310 },
+    "layout-quad":      { width: 642, height: 510 },
+    "layout-mosaic":    { width: 642, height: 630 },
+    "layout-triptych":  { width: 780, height: 310 },
+    "layout-trirow":    { width: 642, height: 540 },
+    "layout-banner":    { width: 642, height: 440 },
+    "layout-broadside": { width: 780, height: 440 },
+    "layout-tower":     { width: 700, height: 540 },
+    "layout-pinboard":  { width: 642, height: 560 },
+    "layout-annotated": { width: 700, height: 510 },
+    "layout-sixgrid":   { width: 780, height: 510 },
   }
 
   return dimensionMap[cardType] ?? { width: 420, height: 220 }
@@ -234,6 +242,14 @@ export function getSampleCardContent(
     case "layout-sidebar":
     case "layout-quad":
     case "layout-mosaic":
+    case "layout-triptych":
+    case "layout-trirow":
+    case "layout-banner":
+    case "layout-broadside":
+    case "layout-tower":
+    case "layout-pinboard":
+    case "layout-annotated":
+    case "layout-sixgrid":
       return { slots: {} }
 
     default:

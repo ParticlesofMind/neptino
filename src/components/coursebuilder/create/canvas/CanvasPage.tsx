@@ -199,21 +199,28 @@ export function CanvasPage({
   })
 
   return (
+    // Outer wrapper: claims the scaled dimensions in document flow so that
+    // the virtualizer's measureElement sees the correct row height without
+    // any margin compensation hacks (wrapper-div pattern, per PDF spec).
     <div
       role="region"
       aria-label={`Page ${virtualIndex + 1}`}
       onClick={() => setActiveCanvas(page.id)}
       style={{
+        width:    dims.widthPx * scale,
+        height:   dims.heightPx * scale,
+      }}
+    >
+    {/* Inner canvas: canonical dimensions, visually scaled */}
+    <div
+      style={{
         width:            dims.widthPx,
         height:           dims.heightPx,
-        overflow:         "hidden",
         // Zones baked in as grid rows: header | body | footer
         display:          "grid",
         gridTemplateRows: `${dims.margins.top}px minmax(0, 1fr) ${dims.margins.bottom}px`,
         transform:        `scale(${scale})`,
-        transformOrigin:  "top center",
-        // Compensate margin collapse under scale so the virtualizer rows stay accurate
-        marginBottom:     dims.heightPx * (scale - 1),
+        transformOrigin:  "top left",
       }}
       className={[
         "bg-white shadow-md select-none",
@@ -316,6 +323,7 @@ export function CanvasPage({
         />
       </div>
 
+    </div>
     </div>
   )
 }

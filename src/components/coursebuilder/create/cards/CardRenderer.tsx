@@ -13,9 +13,12 @@
  * mode="preview"           — shown in the student-facing published view
  */
 
+import { useDraggable } from "@dnd-kit/core"
 import type { DroppedCard } from "../types"
 import { DEFAULT_CARD_REGISTRY, resolveCardRenderer } from "./CardRegistry"
 import type { CardRenderProps } from "./CardRegistry"
+import { useCanvasStore } from "../store/canvasStore"
+import type { DragSourceData } from "../hooks/useCardDrop"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -24,19 +27,70 @@ interface CardRendererProps {
   onRemove?: () => void
   /** Render mode — defaults to "editor" */
   mode?: "editor" | "preview"
+  /**
+   * When true, the card is treated as a placed canvas card and wrapped in
+   * useDraggable so it can be re-ordered by dragging.
+   * Defaults to true in editor mode; false in preview.
+   */
+  draggable?: boolean
+  /** Set when this card is rendered inside a layout slot so re-drag can remove it from the correct source. */
+  sourceLayoutCardId?: string
+  sourceSlotIndex?: number
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function CardRenderer({ card, onRemove, mode = "editor" }: CardRendererProps) {
-  const Component = resolveCardRenderer(DEFAULT_CARD_REGISTRY, card.cardType, mode)
+export function CardRenderer({ card, onRemove, mode = "editor", draggable, sourceLayoutCardId, sourceSlotIndex }: CardRendererProps) {
+  const Component   = resolveCardRenderer(DEFAULT_CARD_REGISTRY, card.cardType, mode)
+  const selectId    = useCanvasStore((s) => s.selectId)
+  const selectedIds = useCanvasStore((s) => s.selectedIds)
+  const isSelected  = selectedIds.includes(card.id)
 
-  if (Component) {
-    return <Component card={card} onRemove={onRemove} />
+  const isDraggable = draggable ?? (mode === "editor")
+
+  const dragData: DragSourceData = {
+    type:                "card",
+    cardId:              card.cardId,
+    cardType:            card.cardType,
+    title:               typeof card.content["title"] === "string" ? card.content["title"] : undefined,
+    content:             card.content,
+    droppedCardId:       card.id,
+    sourceTaskId:        card.taskId,
+    sourceOrder:         card.order,
+    sourceLayoutCardId,
+    sourceSlotIndex,
   }
 
-  // No registered renderer — use the generic fallback
-  return <GenericDomCard card={card} onRemove={onRemove} />
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id:       `placed:${card.id}`,
+    data:     dragData,
+    disabled: !isDraggable,
+  })
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    selectId(card.id, e.metaKey || e.ctrlKey)
+  }
+
+  const selectionRing = mode === "editor" && isSelected
+    ? "ring-2 ring-blue-500 ring-offset-1 rounded"
+    : undefined
+
+  const content = Component
+    ? <Component card={card} onRemove={onRemove} />
+    : <GenericDomCard card={card} onRemove={onRemove} />
+
+  return (
+    <div
+      ref={isDraggable ? setNodeRef : undefined}
+      className={[selectionRing, isDragging ? "opacity-40" : undefined].filter(Boolean).join(" ")}
+      style={{ touchAction: "none" }}
+      onClick={handleClick}
+      {...(isDraggable ? { ...attributes, ...listeners } : {})}
+    >
+      {content}
+    </div>
+  )
 }
 
 // ─── Generic DOM fallback ─────────────────────────────────────────────────────

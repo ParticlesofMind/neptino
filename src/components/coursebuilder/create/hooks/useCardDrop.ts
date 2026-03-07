@@ -37,6 +37,20 @@ export interface DragSourceData {
   cardType:  CardType
   title?:    string
   content?:  Record<string, unknown>
+  /**
+   * Set when re-dragging a card that is already placed on the canvas.
+   * Used by useCardDrop to remove the card from its original location
+   * before inserting it at the drop target.
+   */
+  droppedCardId?:   DroppedCardId
+  sourceTaskId?:    TaskId
+  sourceOrder?:     number
+  /**
+   * Set when re-dragging a card that lives inside a layout slot.
+   * Used to remove it from the source slot rather than from the task area.
+   */
+  sourceLayoutCardId?: string
+  sourceSlotIndex?:    number
 }
 
 export interface DropTargetData {
@@ -62,6 +76,12 @@ export interface LayoutSlotDropTargetData {
   taskId: TaskId
   layoutCardId: string
   slotIndex: number
+  /** Card types this slot will accept. An empty array means all types are allowed. */
+  accepts: CardType[]
+  /** Maximum number of cards allowed in this slot. undefined = unlimited. */
+  maxCards?: number
+  /** Current number of cards already in this slot. */
+  currentCardCount: number
 }
 
 
@@ -320,9 +340,11 @@ function computeDropOrderFromHints(target: DropTargetData): number | null {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useCardDrop() {
-  const addDroppedCard = useCourseStore((s) => s.addDroppedCard)
-  const addCardToLayoutSlot = useCourseStore((s) => s.addCardToLayoutSlot)
-  const sessions = useCourseStore((s) => s.sessions)
+  const addDroppedCard           = useCourseStore((s) => s.addDroppedCard)
+  const removeDroppedCard        = useCourseStore((s) => s.removeDroppedCard)
+  const addCardToLayoutSlot      = useCourseStore((s) => s.addCardToLayoutSlot)
+  const removeCardFromLayoutSlot = useCourseStore((s) => s.removeCardFromLayoutSlot)
+  const sessions                 = useCourseStore((s) => s.sessions)
 
   const onDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -332,9 +354,46 @@ export function useCardDrop() {
 
       if (!source || source.type !== "card") return
 
+      // Re-drag: a card already placed on the canvas is being moved.
+      // Remove it from its source location before routing the drop as normal.
+      if (source.droppedCardId && source.sourceTaskId) {
+        const sourceSession = sessions.find((s) =>
+          s.topics.some((t) =>
+            t.objectives.some((o) =>
+              o.tasks.some((ta) => ta.id === source.sourceTaskId),
+            ),
+          ),
+        )
+        if (sourceSession) {
+          if (source.sourceLayoutCardId != null && source.sourceSlotIndex != null) {
+            // Card came from inside a layout slot — remove from that slot
+            removeCardFromLayoutSlot(
+              sourceSession.id,
+              source.sourceTaskId,
+              source.sourceLayoutCardId,
+              source.sourceSlotIndex,
+              source.droppedCardId,
+            )
+          } else {
+            removeDroppedCard(sourceSession.id, source.sourceTaskId, source.droppedCardId)
+          }
+        }
+      }
+
       // Layout-slot drop: card dropped into a layout container's slot
       const overData = event.over?.data.current as LayoutSlotDropTargetData | undefined
       if (overData?.type === "layout-slot") {
+        // Reject the drop if the slot has type restrictions and the card isn't accepted
+        if (overData.accepts.length > 0 && !overData.accepts.includes(source.cardType)) return
+        // Capacity check using fresh store state (accounts for any removal done above)
+        const freshSlots = (() => {
+          const s = useCourseStore.getState().sessions.find((s) => s.id === overData.sessionId)
+          const dc = s?.topics.flatMap((t) => t.objectives).flatMap((o) => o.tasks)
+            .find((t) => t.id === overData.taskId)
+            ?.droppedCards.find((c) => c.id === overData.layoutCardId)
+          return ((dc?.content.slots ?? {}) as Record<string, unknown[]>)[overData.slotIndex] ?? []
+        })()
+        if (freshSlots.length >= (overData.maxCards ?? 1)) return
         addCardToLayoutSlot(
           overData.sessionId,
           overData.taskId,
@@ -359,6 +418,24 @@ export function useCardDrop() {
       if (!target) return
 
       const targetSession = sessions.find((session) => session.id === target.sessionId)
+
+      // Layout-first enforcement: non-layout cards cannot be dropped directly into
+      // a task area that has no layout container, or one that holds only layout
+      // containers (content must go through a slot, not the bare task area).
+      // Exception: re-dragging an already-placed card skips this check.
+      const isLayoutCard = source.cardType.startsWith("layout-")
+      if (!isLayoutCard && !source.droppedCardId) {
+        const targetTask = targetSession?.topics
+          .flatMap((t) => t.objectives)
+          .flatMap((o) => o.tasks)
+          .find((ta) => ta.id === target.taskId)
+        const hasOnlyLayoutCards =
+          targetTask != null &&
+          (targetTask.droppedCards.length === 0 ||
+            targetTask.droppedCards.every((c) => c.cardType.startsWith("layout-")))
+        if (hasOnlyLayoutCards) return
+      }
+
       const targetCanvasId = target.canvasId ?? null
       const visibleTaskIds = targetSession
         ? findVisibleTaskIdsForCanvas(targetSession, targetCanvasId)
@@ -392,7 +469,7 @@ export function useCardDrop() {
         order:      dropOrder,
       }, targetCanvasId)
     },
-    [addDroppedCard, addCardToLayoutSlot, sessions],
+    [addDroppedCard, removeDroppedCard, addCardToLayoutSlot, removeCardFromLayoutSlot, sessions],
   )
 
   return { onDragEnd }

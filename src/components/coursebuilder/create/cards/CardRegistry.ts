@@ -58,12 +58,20 @@ export const DEFAULT_CARD_REGISTRY: CardRegistry = {
   "village-3d": { Editor: RichCard },
   interactive:  { Editor: RichCard },
   // ── Layout containers ─────────────────────────────────────────
-  "layout-split":   { Editor: LayoutCard },
-  "layout-stack":   { Editor: LayoutCard },
-  "layout-feature": { Editor: LayoutCard },
-  "layout-sidebar": { Editor: LayoutCard },
-  "layout-quad":    { Editor: LayoutCard },
-  "layout-mosaic":  { Editor: LayoutCard },}
+  "layout-split":     { Editor: LayoutCard },
+  "layout-stack":     { Editor: LayoutCard },
+  "layout-feature":   { Editor: LayoutCard },
+  "layout-sidebar":   { Editor: LayoutCard },
+  "layout-quad":      { Editor: LayoutCard },
+  "layout-mosaic":    { Editor: LayoutCard },
+  "layout-triptych":  { Editor: LayoutCard },
+  "layout-trirow":    { Editor: LayoutCard },
+  "layout-banner":    { Editor: LayoutCard },
+  "layout-broadside": { Editor: LayoutCard },
+  "layout-tower":     { Editor: LayoutCard },
+  "layout-pinboard":  { Editor: LayoutCard },
+  "layout-annotated": { Editor: LayoutCard },
+  "layout-sixgrid":   { Editor: LayoutCard },}
 
 // ─── Lookup helper ────────────────────────────────────────────────────────────
 

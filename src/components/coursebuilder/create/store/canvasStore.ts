@@ -7,6 +7,7 @@
 
 import { create } from "zustand"
 import type { CanvasId } from "../types"
+import { appendLog } from "../canvas/debugLog"
 
 export type BuildTool =
   | "selection"
@@ -40,6 +41,12 @@ interface CanvasState {
   overflowingCanvasIds: Set<CanvasId>
   /** Whether a media drag from the sidebar is in progress */
   mediaDragActive: boolean
+  /**
+   * Base fit-to-container scale written by CanvasVirtualizer.
+   * effectiveScale = fitScale * (zoomLevel / 100)
+   * 0 until the first ResizeObserver fires.
+   */
+  fitScale: number
 
   // ── Viewport ───────────────────────────────────────────────────────────────
 
@@ -48,6 +55,7 @@ interface CanvasState {
   stepZoom:    (delta?: number) => void
   setPan:      (offset: { x: number; y: number }) => void
   resetView:   () => void
+  setFitScale: (scale: number) => void
 
   // ── Tool & selection ───────────────────────────────────────────────────────
 
@@ -76,16 +84,24 @@ export const useCanvasStore = create<CanvasState>()((set) => ({
   selectedIds: [],
   overflowingCanvasIds: new Set(),
   mediaDragActive: false,
+  fitScale: 0,
 
   setMode: (mode) => set({ mode }),
+  setFitScale: (scale) => set({ fitScale: scale }),
 
-  setZoom: (zoom) =>
-    set({ zoomLevel: Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(zoom))) }),
+  setZoom: (zoom) => {
+    const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(zoom)))
+    set({ zoomLevel: next })
+    appendLog({ level: "info", event: "zoom:set", data: { zoom: next } })
+  },
 
   stepZoom: (delta = ZOOM_STEP_DEFAULT) =>
-    set((s) => ({
-      zoomLevel: Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, s.zoomLevel + delta)),
-    })),
+    set((s) => {
+      const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, s.zoomLevel + delta))
+      appendLog({ level: "info", event: "zoom:step", data: { from: s.zoomLevel, delta, to: next } })
+      return { zoomLevel: next }
+    }),
+
 
   setPan: (offset) => set({ panOffset: offset }),
 
@@ -104,6 +120,14 @@ export const useCanvasStore = create<CanvasState>()((set) => ({
 
   markCanvasOverflow: (id, overflowing) =>
     set((s) => {
+      const wasOverflowing = s.overflowingCanvasIds.has(id)
+      if (overflowing !== wasOverflowing) {
+        appendLog({
+          level:    overflowing ? "warn" : "info",
+          event:    overflowing ? "overflow:start" : "overflow:clear",
+          canvasId: id,
+        })
+      }
       const next = new Set(s.overflowingCanvasIds)
       overflowing ? next.add(id) : next.delete(id)
       return { overflowingCanvasIds: next }

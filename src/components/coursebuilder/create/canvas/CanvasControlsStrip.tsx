@@ -3,6 +3,7 @@
 import {
   Focus,
   ZoomIn,
+  ZoomOut,
   RotateCcw,
   Hand,
   Grid3X3,
@@ -37,8 +38,12 @@ export function CanvasControlsStrip() {
         <Focus size={13} strokeWidth={1.5} />
       </ControlBtn>
 
-      <ControlBtn label="Exp." title="Explore (zoom in)" onClick={() => stepZoom(10)}>
+      <ControlBtn label="In" title="Zoom in (+10%)" onClick={() => stepZoom(10)}>
         <ZoomIn size={13} strokeWidth={1.5} />
+      </ControlBtn>
+
+      <ControlBtn label="Out" title="Zoom out (−10%)" onClick={() => stepZoom(-10)}>
+        <ZoomOut size={13} strokeWidth={1.5} />
       </ControlBtn>
 
       <ControlBtn label="Reset" title="Reset view" onClick={resetView}>

@@ -224,6 +224,10 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
           })
           if (!hasVisibleObjective) return null
 
+          // Suppress topic label when this topic started on a previous canvas
+          // (i.e. its first objective was already shown earlier in the objective range).
+          const isTopicContinuation = objsBeforeThisTopic < objStart
+
           return (
             <div
               key={topic.id}
@@ -231,8 +235,9 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
               data-topic-idx={absoluteIdx}
               className="rounded border border-border bg-muted/20 p-1.5"
             >
-              {/* Topic heading (hidden for bootstrapped/anonymous topics) */}
-              {!bootstrapped && (
+              {/* Topic heading (hidden for bootstrapped/anonymous topics, or when this topic
+                  is a mid-topic continuation from a prior canvas) */}
+              {!bootstrapped && !isTopicContinuation && (
                 <p className="text-[11px] font-semibold text-foreground mb-1.5">{topic.label}</p>
               )}
 
@@ -252,6 +257,10 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
 
                   if (!objectiveHasVisibleTask(obj.tasks.length, tasksBeforeThisObj)) return null
 
+                  // Suppress objective label when this objective started on a previous canvas
+                  // (i.e. its first task was already shown earlier in the task range).
+                  const isObjContinuation = tasksBeforeThisObj < taskStart
+
                   const hideObjLabel = bootstrapped && obj.label === ""
                   return (
                     <div
@@ -265,7 +274,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
                           : "rounded border border-border bg-background p-1.5"
                       }
                     >
-                      {!hideObjLabel && (
+                      {!hideObjLabel && !isObjContinuation && (
                         <p className="text-[10px] font-medium text-foreground/70 mb-1.5">
                           {obj.label}
                         </p>

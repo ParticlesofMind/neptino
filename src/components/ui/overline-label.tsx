@@ -1,3 +1,4 @@
+import { createElement } from "react"
 import type { ReactNode, ElementType } from "react"
 
 /**
@@ -15,9 +16,9 @@ export function OverlineLabel({
   className?: string
   as?: ElementType
 }) {
-  return (
-    <Tag className={`text-xs font-semibold uppercase tracking-widest text-muted-foreground ${className}`}>
-      {children}
-    </Tag>
+  return createElement(
+    Tag,
+    { className: `text-xs font-semibold uppercase tracking-widest text-muted-foreground ${className}` },
+    children,
   )
 }

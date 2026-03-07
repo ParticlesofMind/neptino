@@ -17,7 +17,7 @@
  * TanStack Virtual renders only the 2-3 visible rows at any time.
  */
 
-import { useRef, useMemo, useEffect, useState, useCallback } from "react"
+import { useRef, useMemo, useEffect, useCallback } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import type { CourseSession, CanvasPage, PageDimensions } from "../types"
 import { DEFAULT_PAGE_DIMENSIONS } from "../types"
@@ -139,33 +139,30 @@ export function CanvasVirtualizer({
 }: CanvasVirtualizerProps) {
   const scrollParentRef = useRef<HTMLDivElement>(null)
   const zoomLevel       = useCanvasStore((s) => s.zoomLevel)
+  const panOffset       = useCanvasStore((s) => s.panOffset)
+  const activeTool      = useCanvasStore((s) => s.activeTool)
+  const setPan          = useCanvasStore((s) => s.setPan)
+  const setFitScale     = useCanvasStore((s) => s.setFitScale)
 
-  // Track the scroll container's width so the canvas always fits it exactly at
-  // 100% zoom — the same way a browser reflows text. Initialise to the natural
-  // page width + padding so the first render uses a 1.0 fit scale before the
-  // ResizeObserver fires.
-  const [containerWidth, setContainerWidth] = useState(
-    () => dims.widthPx + PAGE_H_PADDING,
-  )
+  const clearSelection = useCanvasStore((s) => s.clearSelection)
 
+  // Pan interaction tracking refs (no re-renders)
+  const isPanningRef  = useRef(false)
+  const panStartRef   = useRef({ clientX: 0, scrollLeft: 0 })
+  const isPanTool     = activeTool === "pan"
+
+  // Canvas always renders at its natural page size; zoom is the only scale factor.
+  const effectiveScale     = zoomLevel / 100
+  const canvasDisplayWidth = Math.ceil(dims.widthPx * effectiveScale)
+  const pagePaddingLeft    = PAGE_H_PADDING / 2
+
+  // Publish fitScale=1 to the store (debug panel reads it).
   useEffect(() => {
-    const el = scrollParentRef.current
-    if (!el) return
-    setContainerWidth(el.clientWidth)
-    const ro = new ResizeObserver(([entry]) => {
-      setContainerWidth(entry.contentRect.width)
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  // fitScale: the scale at which the page exactly fills the container (minus
-  // padding). zoomLevel acts as a percentage multiplier on top of this.
-  const fitScale      = Math.max(0.1, (containerWidth - PAGE_H_PADDING) / dims.widthPx)
-  const effectiveScale = fitScale * (zoomLevel / 100)
+    setFitScale(1)
+  }, [setFitScale])
 
   const rowHeight = useMemo(
-    () => Math.round(dims.heightPx * effectiveScale + PAGE_GAP),
+    () => Math.round(dims.heightPx * effectiveScale + PAGE_GAP * 2),
     [dims.heightPx, effectiveScale],
   )
 
@@ -218,7 +215,60 @@ export function CanvasVirtualizer({
   // Re-measure rows when zoom or container width changes
   useEffect(() => {
     virtualizer.measure()
-  }, [zoomLevel, containerWidth, virtualizer])
+  }, [zoomLevel, virtualizer])
+
+  // Auto-centre the canvas horizontally whenever the zoom level changes.
+  // We store the latest centering values in a ref so the effect itself only
+  // depends on zoomLevel and doesn't re-run when unrelated state changes.
+  const scrollCenterRef = useRef<() => void>(() => {})
+  scrollCenterRef.current = () => {
+    const el = scrollParentRef.current
+    if (!el) return
+    const innerW        = canvasDisplayWidth + PAGE_H_PADDING
+    const newScrollLeft = Math.max(0, Math.round((innerW - el.clientWidth) / 2))
+    el.scrollLeft = newScrollLeft
+    setPan({ x: newScrollLeft, y: 0 })
+  }
+
+  useEffect(() => {
+    scrollCenterRef.current()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomLevel])
+
+  // Sync scrollLeft to panOffset.x when it changes externally (e.g. resetView)
+  useEffect(() => {
+    const el = scrollParentRef.current
+    if (el) el.scrollLeft = panOffset.x
+  }, [panOffset.x])
+
+  const handlePanMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isPanTool) return
+      isPanningRef.current = true
+      panStartRef.current = {
+        clientX:    e.clientX,
+        scrollLeft: scrollParentRef.current?.scrollLeft ?? 0,
+      }
+      e.preventDefault()
+    },
+    [isPanTool],
+  )
+
+  const handlePanMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isPanTool || !isPanningRef.current) return
+      const el = scrollParentRef.current
+      if (!el) return
+      el.scrollLeft = panStartRef.current.scrollLeft + (panStartRef.current.clientX - e.clientX)
+      setPan({ x: el.scrollLeft, y: 0 })
+      e.preventDefault()
+    },
+    [isPanTool, setPan],
+  )
+
+  const handlePanMouseUp = useCallback(() => {
+    isPanningRef.current = false
+  }, [])
 
   // Build a canvas-id → virtual row index map so the nav strip can trigger
   // scroll-to without needing direct access to the virtualizer.
@@ -254,13 +304,29 @@ export function CanvasVirtualizer({
         {/* Scrollable pages */}
         <div
           ref={scrollParentRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden"
-          style={{ contain: "strict", scrollbarWidth: "none" }}
+          className="flex-1 overflow-y-auto overflow-x-auto [&::-webkit-scrollbar]:hidden"
+          style={{
+            // contain: "strict" includes size-containment which collapses
+            // scrollable overflow in the inline axis — preventing the browser
+            // from recognising horizontal overflow when the canvas is wider
+            // than the viewport (zoomed in).  Downgrading to "content"
+            // (layout + paint + style, without size) preserves virtualizer
+            // isolation while restoring proper horizontal scrollWidth.
+            contain: "layout style paint",
+            scrollbarWidth: "none",
+            cursor: isPanTool ? (isPanningRef.current ? "grabbing" : "grab") : undefined,
+            userSelect: isPanTool ? "none" : undefined,
+          }}
+          onMouseDown={handlePanMouseDown}
+          onMouseMove={handlePanMouseMove}
+          onMouseUp={handlePanMouseUp}
+          onMouseLeave={handlePanMouseUp}
+          onClick={clearSelection}
         >
           <div
             style={{
               height:   virtualizer.getTotalSize(),
-              width:    "100%",
+              width:    canvasDisplayWidth + PAGE_H_PADDING,
               position: "relative",
             }}
           >
@@ -305,15 +371,14 @@ export function CanvasVirtualizer({
                   data-index={virtualRow.index}
                   ref={virtualizer.measureElement}
                   style={{
-                    position:  "absolute",
-                    top:       0,
-                    left:      0,
-                    width:     "100%",
-                    transform: `translateY(${virtualRow.start}px)`,
-                    display:   "flex",
-                    justifyContent: "center",
-                    paddingBottom:  PAGE_GAP,
-                    paddingTop:     PAGE_GAP,
+                    position:    "absolute",
+                    top:         0,
+                    left:        0,
+                    width:       "100%",
+                    transform:   `translateY(${virtualRow.start}px)`,
+                    paddingTop:  PAGE_GAP,
+                    paddingBottom: PAGE_GAP,
+                    paddingLeft: pagePaddingLeft,
                   }}
                 >
                   <CanvasPageView

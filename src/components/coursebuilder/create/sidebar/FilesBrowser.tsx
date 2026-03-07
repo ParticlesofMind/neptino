@@ -23,23 +23,31 @@ import {
   Bot,
   Box,
   Columns2,
+  Columns3,
   Database,
   FileText,
   Film,
   FolderOpen,
   Gamepad2,
   Grid3X3,
+  Grid3x2,
   HelpCircle,
   ImageIcon,
   Layout,
+  LayoutDashboard,
   LayoutGrid,
+  LayoutPanelLeft,
+  LayoutPanelTop,
+  LayoutTemplate,
   Layers,
   LineChart,
   Map as MapIcon,
   Network,
   PanelLeft,
+  PanelLeftOpen,
   PlayCircle,
   Rows2,
+  Rows3,
   Sparkles,
   Table2,
   X,
@@ -49,6 +57,7 @@ import type { DragSourceData } from "../hooks/useCardDrop"
 import { getSampleCardContent } from "../utils/cardDefaults"
 import { CARD_TYPE_META } from "../cards/CardTypePreview"
 import { useMakeLibraryStore, type StudioCard } from "../store/makeLibraryStore"
+import { useCourseStore } from "../store/courseStore"
 
 // ─── Categories — aligned with CARD-HIERARCHY.md ──────────────────────────────
 
@@ -94,7 +103,7 @@ const CATEGORIES: Category[] = [
     id: "layout",
     label: "Layout",
     Icon: LayoutGrid,
-    types: ["layout-split", "layout-stack", "layout-feature", "layout-sidebar", "layout-quad", "layout-mosaic"],
+    types: ["layout-split", "layout-stack", "layout-feature", "layout-sidebar", "layout-quad", "layout-mosaic", "layout-triptych", "layout-trirow", "layout-banner", "layout-broadside", "layout-tower", "layout-pinboard", "layout-annotated", "layout-sixgrid"],
   },
 ]
 
@@ -193,7 +202,15 @@ const LIBRARY_ITEMS: LibraryItem[] = [
   { id: "lib-layout-feature" as CardId, cardType: "layout-feature", title: "Feature — Anchor + Content + Strip" },
   { id: "lib-layout-sidebar" as CardId, cardType: "layout-sidebar", title: "Sidebar — 30 / 70 Columns"         },
   { id: "lib-layout-quad"    as CardId, cardType: "layout-quad",    title: "Quad — 2 × 2 Grid"                },
-  { id: "lib-layout-mosaic"  as CardId, cardType: "layout-mosaic",  title: "Mosaic — 3 × 3 Grid"              },]
+  { id: "lib-layout-mosaic"     as CardId, cardType: "layout-mosaic",     title: "Mosaic — 3 × 3 Grid"                        },
+  { id: "lib-layout-triptych"   as CardId, cardType: "layout-triptych",   title: "Triptych — Three Equal Columns"             },
+  { id: "lib-layout-trirow"     as CardId, cardType: "layout-trirow",     title: "Trirow — Header / Body / Footer"             },
+  { id: "lib-layout-banner"     as CardId, cardType: "layout-banner",     title: "Banner — Full-Width Header + Two Columns"   },
+  { id: "lib-layout-broadside"  as CardId, cardType: "layout-broadside",  title: "Broadside — Full-Width Header + Three Cols" },
+  { id: "lib-layout-tower"      as CardId, cardType: "layout-tower",      title: "Tower — Wide Feature + Three Side Panels"  },
+  { id: "lib-layout-pinboard"   as CardId, cardType: "layout-pinboard",   title: "Pinboard — Header + 2 × 2 Cards"           },
+  { id: "lib-layout-annotated"  as CardId, cardType: "layout-annotated",  title: "Annotated — Margin Notes + 2 × 2 Grid"     },
+  { id: "lib-layout-sixgrid"    as CardId, cardType: "layout-sixgrid",    title: "Six-Grid — 3 × 2 Storyboard"              },]
 
 // ─── Card-type colour palette ─────────────────────────────────────────────────
 
@@ -222,7 +239,15 @@ const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = {
   "layout-feature": { bg: "bg-neutral-100", text: "text-neutral-500" },
   "layout-sidebar": { bg: "bg-neutral-100", text: "text-neutral-500" },
   "layout-quad":    { bg: "bg-neutral-100", text: "text-neutral-500" },
-  "layout-mosaic":  { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-mosaic":    { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-triptych":  { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-trirow":    { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-banner":    { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-broadside": { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-tower":     { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-pinboard":  { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-annotated": { bg: "bg-neutral-100", text: "text-neutral-500" },
+  "layout-sixgrid":   { bg: "bg-neutral-100", text: "text-neutral-500" },
 }
 
 // ─── Card type label overrides for the browser (shorter than CardTypeMeta) ────
@@ -236,7 +261,15 @@ const TYPE_LABEL: Partial<Record<CardType, string>> = {
   "layout-feature": "Feature",
   "layout-sidebar": "Sidebar",
   "layout-quad":    "Quad",
-  "layout-mosaic":  "Mosaic",
+  "layout-mosaic":    "Mosaic",
+  "layout-triptych":  "Triptych",
+  "layout-trirow":    "Trirow",
+  "layout-banner":    "Banner",
+  "layout-broadside": "Broadside",
+  "layout-tower":     "Tower",
+  "layout-pinboard":  "Pinboard",
+  "layout-annotated": "Annotated",
+  "layout-sixgrid":   "Six-Grid",
 }
 
 // ─── Card type icons for the "type" column in the browser ─────────────────────
@@ -264,7 +297,15 @@ const TYPE_ICONS: Partial<Record<CardType, React.ComponentType<{ size?: number; 
   "layout-feature": Layout,
   "layout-sidebar": PanelLeft,
   "layout-quad":    LayoutGrid,
-  "layout-mosaic":  Grid3X3,
+  "layout-mosaic":    Grid3X3,
+  "layout-triptych":  Columns3,
+  "layout-trirow":    Rows3,
+  "layout-banner":    LayoutPanelTop,
+  "layout-broadside": LayoutTemplate,
+  "layout-tower":     LayoutPanelLeft,
+  "layout-pinboard":  LayoutDashboard,
+  "layout-annotated": PanelLeftOpen,
+  "layout-sixgrid":   Grid3x2,
 }
 
 // ─── Draggable user-created card (from Make studio) ──────────────────────────
@@ -382,25 +423,33 @@ function DraggableItem({ item }: { item: LibraryItem }) {
 function RailButton({
   cat,
   isActive,
+  needsLayout,
   onClick,
 }: {
   cat: Category
   isActive: boolean
+  needsLayout?: boolean
   onClick: () => void
 }) {
+  const highlight = cat.id === "layout" && needsLayout
   return (
     <button
       onClick={onClick}
       title={cat.label}
       className={[
-        "flex flex-col items-center gap-1 w-full py-2 transition-colors border-l-2",
+        "relative flex flex-col items-center gap-1 w-full py-2 transition-colors border-l-2",
         isActive
           ? "border-neutral-900 bg-neutral-100 text-neutral-900"
-          : "border-transparent text-neutral-400 hover:text-neutral-700 hover:bg-neutral-50",
+          : highlight
+            ? "border-amber-400 bg-amber-50 text-amber-600"
+            : "border-transparent text-neutral-400 hover:text-neutral-700 hover:bg-neutral-50",
       ].join(" ")}
     >
       <cat.Icon size={17} strokeWidth={1.5} />
       <span className="text-[8px] leading-none font-medium">{cat.label}</span>
+      {highlight && (
+        <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-amber-400" />
+      )}
     </button>
   )
 }
@@ -413,6 +462,17 @@ export function FilesBrowser() {
 
   const studioCards  = useMakeLibraryStore((s) => s.cards)
   const removeCard   = useMakeLibraryStore((s) => s.removeCard)
+
+  const sessions = useCourseStore((s) => s.sessions)
+  const needsLayoutHint = !sessions.some((session) =>
+    session.topics.some((topic) =>
+      topic.objectives.some((obj) =>
+        obj.tasks.some((task) =>
+          task.droppedCards.some((c) => c.cardType.startsWith("layout-"))
+        )
+      )
+    )
+  )
 
   const cat = CATEGORIES.find((c) => c.id === activeCategory)!
 
@@ -440,6 +500,7 @@ export function FilesBrowser() {
             key={c.id}
             cat={c}
             isActive={activeCategory === c.id}
+            needsLayout={needsLayoutHint}
             onClick={() => setActiveCategory(c.id)}
           />
         ))}
@@ -467,6 +528,16 @@ export function FilesBrowser() {
           className="flex-1 overflow-y-auto p-2"
           style={{ scrollbarWidth: "none" }}
         >
+          {/* Layout guidance banner ──────────────────────────────── */}
+          {needsLayoutHint && activeCategory !== "layout" && (
+            <button
+              type="button"
+              onClick={() => setActiveCategory("layout")}
+              className="mb-2 w-full rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-left text-[9px] text-amber-700 transition-colors hover:bg-amber-100"
+            >
+              Start by placing a layout container. <span className="underline">Go to Layouts</span>
+            </button>
+          )}
           <div className="flex flex-col gap-1.5">
             {/* Studio cards (user-created) */}
             {visibleStudio.length > 0 && (

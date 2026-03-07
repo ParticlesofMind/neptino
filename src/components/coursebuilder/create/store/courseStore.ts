@@ -92,6 +92,9 @@ interface CourseState {
    */
   syncPageAssignments: (sessionId: SessionId, assignments: PageAssignment[]) => void
 
+  /** Remove every droppedCard from every task in a session. */
+  clearSessionCards: (sessionId: SessionId) => void
+
   getActiveSession: () => CourseSession | undefined
 }
 
@@ -455,6 +458,21 @@ export const useCourseStore = create<CourseState>()(
             })
             return { ...session, canvases: next }
           }),
+        })),
+
+      clearSessionCards: (sessionId) =>
+        set((state) => ({
+          sessions: mapSession(state.sessions, sessionId, (session) => ({
+            ...session,
+            topics: session.topics.map((topic) => ({
+              ...topic,
+              objectives: topic.objectives.map((obj) => ({
+                ...obj,
+                tasks: obj.tasks.map((task) => ({ ...task, droppedCards: [] })),
+              })),
+            })),
+            canvases: normalizeCanvasCardRanges(session.canvases, 0),
+          })),
         })),
 
       getActiveSession: () => {

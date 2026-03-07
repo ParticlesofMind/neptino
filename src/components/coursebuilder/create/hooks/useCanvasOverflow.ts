@@ -28,6 +28,7 @@ import { useEffect, useRef, useCallback } from "react"
 import type { BlockKey, CanvasId, SessionId } from "../types"
 import { useCanvasStore } from "../store/canvasStore"
 import { useCourseStore } from "../store/courseStore"
+import { writeMeasurement } from "../canvas/debugMeasurements"
 
 /**
  * Returns the element's top position in CSS pixels relative to `ancestor` by
@@ -152,6 +153,17 @@ export function useCanvasOverflow({
     const overflow = content.scrollHeight - body.clientHeight > 2
     markCanvasOverflow(canvasId, overflow)
 
+    // Write live measurements to debug registry (dev only)
+    writeMeasurement({
+      canvasId,
+      sessionId,
+      contentH:   content.scrollHeight,
+      bodyH:      body.clientHeight,
+      overflow,
+      splitGuard: splitGuard.current,
+      timestamp:  Date.now(),
+    })
+
     if (!overflow || splitGuard.current) return
 
     // ── Topic-split logic ────────────────────────────────────────────────────
@@ -177,10 +189,18 @@ export function useCanvasOverflow({
     // a split was dispatched (in which case the check can return early).
     const trySplit = (): boolean => {
       // a) task-row-level split (program / resources tables)
+      // Guard: only enter the row-split path when a table row itself exceeds the
+      // available height.  If program/resources fully fit but a content/assignment
+      // block is the cause of overflow, splitting at the last table row would
+      // produce an empty continuation page and delay the correct topic-level split.
       const taskRowEls = Array.from(
         content.querySelectorAll<HTMLElement>("[data-task-row-idx]"),
       ).sort((a, b) => Number(a.dataset.taskRowIdx) - Number(b.dataset.taskRowIdx))
-      if (taskRowEls.length >= 1) {
+      const lastTaskRowEl = taskRowEls[taskRowEls.length - 1]
+      const lastTaskRowBottom = lastTaskRowEl
+        ? offsetTopRelativeTo(lastTaskRowEl, body) + lastTaskRowEl.offsetHeight
+        : 0
+      if (taskRowEls.length >= 1 && lastTaskRowBottom > available) {
         for (let i = taskRowEls.length - 1; i >= 0; i--) {
           const el = taskRowEls[i]
           if (!el) continue

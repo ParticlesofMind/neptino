@@ -36,12 +36,20 @@ export type CardType =
   | "interactive" // quiz / interactive — canvas-backed
   | "games"       // game-based learning card
   | "chat"        // AI-powered student chat card
-  | "layout-split"    // two equal columns
-  | "layout-stack"    // two rows (60% top / 40% bottom)
-  | "layout-feature"  // narrow-left anchor + large-right upper + thin-right lower
-  | "layout-sidebar"  // asymmetric 30/70 columns
-  | "layout-quad"     // 2×2 equal grid
-  | "layout-mosaic"   // 3×3 equal grid
+  | "layout-split"      // two equal columns
+  | "layout-stack"      // two rows (60% top / 40% bottom)
+  | "layout-feature"    // narrow-left anchor + large-right upper + thin-right lower
+  | "layout-sidebar"    // asymmetric 30/70 columns
+  | "layout-quad"       // 2×2 equal grid
+  | "layout-mosaic"     // 3×3 equal grid
+  | "layout-triptych"   // 3 equal columns
+  | "layout-trirow"     // 3 full-width horizontal bands (header / body / footer)
+  | "layout-banner"     // spanning header strip + 2 equal columns below
+  | "layout-broadside"  // spanning header strip + 3 equal columns below
+  | "layout-tower"      // wide-left spanning column + 3 stacked right cells
+  | "layout-pinboard"   // spanning header strip + 2×2 grid below
+  | "layout-annotated"  // narrow-left annotation column + 2×2 content grid
+  | "layout-sixgrid"    // 3 columns × 2 rows (storyboard / six-panel)
 
 // ─── Task area kinds ─────────────────────────────────────────────────────────
 export type TaskAreaKind = "instruction" | "practice" | "feedback"

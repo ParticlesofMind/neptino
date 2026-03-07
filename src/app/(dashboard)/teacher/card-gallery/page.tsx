@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import type { LucideIcon } from "lucide-react"
-import { AudioLines, Bot, Box, Database, FileText, Film, Gamepad2, Image as ImageIcon, Layers, LineChart, Map as MapIcon, Maximize2, Network, Pause, Play, PlayCircle, Sparkles, Table2, Volume2, VolumeX } from "lucide-react"
+import { AudioLines, Bot, Box, Columns2, Columns3, Database, FileText, Film, Gamepad2, Grid3X3, Grid3x2, Image as ImageIcon, Layout, LayoutDashboard, LayoutGrid, LayoutPanelLeft, LayoutPanelTop, LayoutTemplate, Layers, LineChart, Map as MapIcon, Maximize2, Network, PanelLeft, PanelLeftOpen, Pause, Play, PlayCircle, Rows2, Rows3, Sparkles, Table2, Volume2, VolumeX } from "lucide-react"
 
 const Model3DViewer = dynamic(
   () => import("@/components/coursebuilder/model-3d-viewer").then((m) => m.Model3DViewer),
@@ -50,6 +50,20 @@ const CARD_TYPE_META: Record<CardType, CardTypeMeta> = {
   interactive:  { label: "Interactive", icon: Sparkles   },
   games:        { label: "Game",        icon: Gamepad2   },
   chat:         { label: "AI Chat",     icon: Bot        },
+  "layout-split":     { label: "Split",     icon: Columns2        },
+  "layout-stack":     { label: "Stack",     icon: Rows2           },
+  "layout-feature":   { label: "Feature",   icon: Layout          },
+  "layout-sidebar":   { label: "Sidebar",   icon: PanelLeft       },
+  "layout-quad":      { label: "Quad",      icon: LayoutGrid      },
+  "layout-mosaic":    { label: "Mosaic",    icon: Grid3X3         },
+  "layout-triptych":  { label: "Triptych",  icon: Columns3        },
+  "layout-trirow":    { label: "Trirow",    icon: Rows3           },
+  "layout-banner":    { label: "Banner",    icon: LayoutPanelTop  },
+  "layout-broadside": { label: "Broadside", icon: LayoutTemplate  },
+  "layout-tower":     { label: "Tower",     icon: LayoutPanelLeft },
+  "layout-pinboard":  { label: "Pinboard",  icon: LayoutDashboard },
+  "layout-annotated": { label: "Annotated", icon: PanelLeftOpen   },
+  "layout-sixgrid":   { label: "Six-Grid",  icon: Grid3x2         },
 }
 
 const BAR_COUNT = 36

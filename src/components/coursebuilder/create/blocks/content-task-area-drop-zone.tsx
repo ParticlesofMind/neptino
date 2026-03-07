@@ -1,9 +1,21 @@
 "use client"
 
-import { useDroppable } from "@dnd-kit/core"
+import { useDroppable, useDndContext } from "@dnd-kit/core"
 import { CardRenderer } from "../cards/CardRenderer"
 import { useCanvasStore } from "../store/canvasStore"
-import type { BlockKey, CanvasId, DroppedCard, SessionId, TaskAreaKind, TaskId } from "../types"
+import { useCourseStore } from "../store/courseStore"
+import { getDefaultCardDimensions, getSampleCardContent } from "../utils/cardDefaults"
+import type { BlockKey, CanvasId, CardId, CardType, DroppedCard, DroppedCardId, SessionId, TaskAreaKind, TaskId } from "../types"
+import type { DragSourceData } from "../hooks/useCardDrop"
+
+// ─── Quick-pick layout chips shown in the empty state ─────────────────────────
+
+const QUICK_PICK_LAYOUTS: { cardType: CardType; label: string }[] = [
+  { cardType: "layout-split",   label: "Split" },
+  { cardType: "layout-stack",   label: "Stack" },
+  { cardType: "layout-banner",  label: "Banner" },
+  { cardType: "layout-quad",    label: "Quad" },
+]
 
 interface InsertionLineSlotProps {
   sessionId: SessionId
@@ -70,12 +82,43 @@ export function TaskAreaDropZone({
 }: TaskAreaDropZoneProps) {
   const dropId = `${sessionId}:${taskId}:${areaKind}:${blockKey ?? "content"}`
   const hasCards = cards.length > 0
+  const hasOnlyLayoutCards = hasCards && cards.every((c) => c.cardType.startsWith("layout-"))
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
     data: { sessionId, canvasId, taskId, areaKind, blockKey },
   })
 
   const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
+  const addDroppedCard  = useCourseStore((s) => s.addDroppedCard)
+
+  // Detect whether the active drag source is a non-layout card (layout-first enforcement)
+  const { active } = useDndContext()
+  const activeDragType = (active?.data?.current as DragSourceData | undefined)?.cardType
+  const dragIsNonLayout = activeDragType != null && !activeDragType.startsWith("layout-")
+  // Show the layout-first hint whenever a non-layout card is dragged over a task
+  // that has no cards at all, or whose top-level cards are only layout containers
+  // (atomic cards must go into slots, not the bare task area).
+  const showLayoutFirstHint = dragIsNonLayout && (!hasCards || hasOnlyLayoutCards)
+
+  function placeQuickLayout(cardType: CardType) {
+    addDroppedCard(
+      sessionId,
+      taskId,
+      {
+        id:         crypto.randomUUID() as DroppedCardId,
+        cardId:     crypto.randomUUID() as CardId,
+        cardType,
+        taskId,
+        areaKind,
+        blockKey,
+        position:   { x: 0, y: 0 },
+        dimensions: getDefaultCardDimensions(cardType),
+        content:    getSampleCardContent(cardType, cardType.replace("layout-", "")),
+        order:      Date.now(),
+      },
+      canvasId,
+    )
+  }
 
   return (
     <div data-testid={`task-area-${areaKind}`}>
@@ -85,7 +128,8 @@ export function TaskAreaDropZone({
         className={[
           "rounded-lg border border-border bg-background py-1 transition-colors",
           mediaDragActive ? "min-h-[2.5rem]" : "min-h-[2rem]",
-          isOver ? "border-blue-300 bg-blue-50" : "",
+          isOver && !showLayoutFirstHint ? "border-blue-300 bg-blue-50" : "",
+          showLayoutFirstHint ? "border-amber-300 bg-amber-50/40" : "",
         ].join(" ")}
       >
         <div className="space-y-1">
@@ -125,7 +169,7 @@ export function TaskAreaDropZone({
               />
             </div>
           )}
-          {isOver && (
+          {isOver && !showLayoutFirstHint && (
             <div
               className={[
                 "rounded border-2 border-dashed border-blue-300 bg-blue-50/60",
@@ -138,12 +182,38 @@ export function TaskAreaDropZone({
               </span>
             </div>
           )}
-          {!hasCards && !isOver && (
-            <div className={`flex items-center px-2 ${mediaDragActive ? "h-10" : "h-6"}`}>
-              <span className={`text-[9px] italic ${mediaDragActive ? "text-blue-300" : "text-muted-foreground/50"}`}>
-                {mediaDragActive ? "Drop here" : label}
+          {showLayoutFirstHint && (
+            <div className="flex items-center justify-center px-2 h-10">
+              <span className="text-[9px] text-amber-600 italic">
+                {hasOnlyLayoutCards
+                  ? "Drop into a slot inside the layout"
+                  : "Drop a layout container first"}
               </span>
             </div>
+          )}
+          {/* Idle empty state: quick-pick layout chips ─────────────────── */}
+          {!hasCards && !isOver && !showLayoutFirstHint && (
+            mediaDragActive ? (
+              <div className="flex items-center justify-center px-2 h-10">
+                <span className="text-[9px] italic text-blue-300">Drop here</span>
+              </div>
+            ) : (
+              <div className="px-2 py-2 space-y-1.5">
+                <span className="text-[9px] italic text-muted-foreground/40">{label}</span>
+                <div className="grid grid-cols-2 gap-1">
+                  {QUICK_PICK_LAYOUTS.map(({ cardType, label: chipLabel }) => (
+                    <button
+                      key={cardType}
+                      type="button"
+                      onClick={() => placeQuickLayout(cardType)}
+                      className="text-left truncate rounded border border-neutral-200 bg-neutral-50 px-2 py-1 text-[9px] text-neutral-500 transition-colors hover:border-neutral-400 hover:bg-neutral-100"
+                    >
+                      {chipLabel}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
           )}
         </div>
       </div>

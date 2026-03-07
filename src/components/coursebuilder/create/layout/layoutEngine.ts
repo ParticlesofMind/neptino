@@ -133,11 +133,19 @@ function computeFixedPlacement(
   }
 
   const fullFixedCost = pageCostForRows(taskRowCount, true)
+
+  // Accurate per-block height estimate using variable text-wrapping models.
+  // Used for the fit check and firstPageBudget — prevents content overflow caused
+  // by long task text underestimated by the flat TABLE_ROW_HEIGHT in pageCostForRows.
+  // (pageCostForRows is kept for the row-split path below which needs uniform row sizing.)
+  const accurateFullFixedCost = fixedKeys.reduce((sum, key, i) => {
+    return sum + estimateFixedBlockHeight(key, session) + (i < fixedKeys.length - 1 ? BLOCK_GAP : 0)
+  }, 0)
   const gapAfterFixed = fixedKeys.length > 0 ? BLOCK_GAP : 0
-  const firstPageBudget = available - fullFixedCost - gapAfterFixed
+  const firstPageBudget = available - accurateFullFixedCost - gapAfterFixed
 
   // Fits on one page (or no row-splittable fixed blocks): keep current behavior.
-  if (rowBlocksPerPage === 0 || fullFixedCost <= available) {
+  if (rowBlocksPerPage === 0 || accurateFullFixedCost <= available) {
     return {
       preludePages: [],
       firstPageFixedKeys: fixedKeys,
