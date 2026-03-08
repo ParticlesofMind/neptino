@@ -36,6 +36,8 @@ export type CardType =
   | "interactive" // quiz / interactive — canvas-backed
   | "games"       // game-based learning card
   | "chat"        // AI-powered student chat card
+  | "timeline"    // chronological event timeline
+  | "legend"      // color-coded map/chart legend
   | "layout-split"      // two equal columns
   | "layout-stack"      // two rows (60% top / 40% bottom)
   | "layout-feature"    // narrow-left anchor + large-right upper + thin-right lower

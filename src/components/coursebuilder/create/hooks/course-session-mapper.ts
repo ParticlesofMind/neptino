@@ -194,7 +194,7 @@ export function mapRowToSession(
   }
 }
 
-// ─── Saved-lesson merge ───────────────────────────────────────────────────────
+// ─── Saved-lesson reconciliation ──────────────────────────────────────────────
 
 /**
  * Restore dropped cards from a previously-saved lesson onto freshly-derived
@@ -322,11 +322,11 @@ function normaliseNonOverlappingRanges(canvases: CanvasPage[]): CanvasPage[] {
 import type { LessonRow } from "@/components/coursebuilder/course-queries"
 
 /**
- * Overlay a previously-saved lesson payload onto a freshly-derived session.
+ * Reconcile a previously-saved lesson payload with a freshly-derived session.
  * Topic structure always wins from curriculum_data; dropped cards and canvas
  * pagination come from the saved lesson payload.
  */
-export function mergeSavedLesson(
+export function reconcileSavedLesson(
   derived: CourseSession,
   saved: LessonRow,
 ): CourseSession {

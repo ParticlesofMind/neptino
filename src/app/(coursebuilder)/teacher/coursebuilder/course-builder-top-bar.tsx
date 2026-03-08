@@ -20,7 +20,7 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
         {prevView === null ? (
           <Link
             href="/teacher/courses"
-            className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition"
+            className="flex items-center gap-1.5 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Courses
@@ -29,7 +29,7 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
           <button
             type="button"
             onClick={() => setView(prevView)}
-            className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition"
+            className="flex items-center gap-1.5 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             {VIEW_LABELS[prevView]}
@@ -48,10 +48,10 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
           <button
             type="button"
             onClick={() => setView(nextView)}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
               nextView === "launch"
                 ? "bg-primary text-primary-foreground hover:opacity-90"
-                : "border border-border bg-background text-foreground hover:border-primary/30 hover:text-primary"
+                : "bg-background text-foreground hover:text-primary"
             }`}
           >
             {VIEW_LABELS[nextView]}
@@ -62,7 +62,7 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
         ) : (
           <Link
             href="/teacher/courses"
-            className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition"
+            className="flex items-center gap-1.5 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition"
           >
             Done
           </Link>

@@ -71,7 +71,7 @@ function ToolButton<T extends string>({
       className={[
         "flex flex-col items-center gap-0.5 w-9 py-1 rounded transition-colors",
         isActive
-          ? "bg-neutral-900 text-white"
+          ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
           : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700",
       ].join(" ")}
     >
@@ -104,7 +104,7 @@ export function ToolBar() {
             onClick={() => setMode("build")}
             className={[
               "flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-colors",
-              mode === "build" ? "bg-neutral-900 text-white" : "text-neutral-500 hover:bg-neutral-100",
+              mode === "build" ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "text-neutral-500 hover:bg-neutral-100",
             ].join(" ")}
           >
             Build
@@ -113,7 +113,7 @@ export function ToolBar() {
             onClick={() => setMode("animate")}
             className={[
               "flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-colors",
-              mode === "animate" ? "bg-neutral-900 text-white" : "text-neutral-500 hover:bg-neutral-100",
+              mode === "animate" ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "text-neutral-500 hover:bg-neutral-100",
             ].join(" ")}
           >
             <Play size={9} />

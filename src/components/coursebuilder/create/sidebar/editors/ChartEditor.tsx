@@ -195,7 +195,7 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
             className={[
               "flex-1 py-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
               chartType === id
-                ? "border-b-2 border-neutral-900 text-neutral-900"
+                ? "border-b-2 border-[#9eb9da] text-[#233f5d]"
                 : "text-neutral-400 hover:text-neutral-700",
             ].join(" ")}
           >
@@ -321,7 +321,7 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
                 onClick={() => { setColorScheme(name); onChange("colorScheme", name) }}
                 className={[
                   "flex items-center gap-1.5 border px-2 py-1 text-[10px] font-medium transition-colors",
-                  colorScheme === name ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
+                  colorScheme === name ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
                 ].join(" ")}
               >
                 <div className="flex gap-0.5">

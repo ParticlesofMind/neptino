@@ -92,9 +92,14 @@ export async function POST(request: NextRequest) {
     const cooldownRemainingSeconds = Math.ceil(cooldownRemainingMs / 1000)
     return NextResponse.json(
       {
+        code: "GENERATION_COOLDOWN",
+        retryAfterSeconds: cooldownRemainingSeconds,
         error: `Generation cooldown active. Please wait ${cooldownRemainingSeconds}s before starting another run.`,
       },
-      { status: 429 },
+      {
+        status: 429,
+        headers: { "Retry-After": String(cooldownRemainingSeconds) },
+      },
     )
   }
 
@@ -102,9 +107,15 @@ export async function POST(request: NextRequest) {
     const elapsedSeconds = Math.max(1, Math.floor((Date.now() - activeGenerationLock.startedAt) / 1000))
     return NextResponse.json(
       {
+        code: "GENERATION_IN_PROGRESS",
+        retryAfterSeconds: 5,
+        elapsedSeconds,
         error: `A generation job is already running (${elapsedSeconds}s elapsed). Please wait for it to finish before starting another one.`,
       },
-      { status: 429 },
+      {
+        status: 429,
+        headers: { "Retry-After": "5" },
+      },
     )
   }
 

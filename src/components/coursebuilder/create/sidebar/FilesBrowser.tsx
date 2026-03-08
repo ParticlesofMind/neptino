@@ -233,6 +233,8 @@ const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = {
   interactive:  { bg: "bg-teal-50",    text: "text-teal-500"   },
   games:        { bg: "bg-violet-50",  text: "text-violet-500" },
   chat:         { bg: "bg-rose-50",    text: "text-rose-500"   },
+  timeline:     { bg: "bg-sky-50",     text: "text-sky-600"    },
+  legend:       { bg: "bg-emerald-50", text: "text-emerald-600" },
   // ── Layout containers ─────────────────────────────────────────────────
   "layout-split":   { bg: "bg-neutral-100", text: "text-neutral-500" },
   "layout-stack":   { bg: "bg-neutral-100", text: "text-neutral-500" },
@@ -439,7 +441,7 @@ function RailButton({
       className={[
         "relative flex flex-col items-center gap-1 w-full py-2 transition-colors border-l-2",
         isActive
-          ? "border-neutral-900 bg-neutral-100 text-neutral-900"
+          ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d]"
           : highlight
             ? "border-amber-400 bg-amber-50 text-amber-600"
             : "border-transparent text-neutral-400 hover:text-neutral-700 hover:bg-neutral-50",

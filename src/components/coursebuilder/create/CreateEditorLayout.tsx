@@ -31,7 +31,6 @@ import { Wrench } from "lucide-react"
 
 import { FilesBrowser }      from "@/components/coursebuilder/create/sidebar/FilesBrowser"
 import { MakePanel }         from "@/components/coursebuilder/create/sidebar/MakePanel"
-import { LayersPanel }       from "@/components/coursebuilder/create/layers/LayersPanel"
 import { CanvasVirtualizer } from "@/components/coursebuilder/create/canvas/CanvasVirtualizer"
 import { useCardDrop }             from "@/components/coursebuilder/create/hooks/useCardDrop"
 import { useCourseSessionLoader }  from "@/components/coursebuilder/create/hooks/useCourseSessionLoader"
@@ -41,11 +40,13 @@ import { useCanvasStore }          from "@/components/coursebuilder/create/store
 import { DEFAULT_PAGE_DIMENSIONS } from "@/components/coursebuilder/create/types"
 import type { CourseId, SessionId } from "@/components/coursebuilder/create/types"
 import type { DragSourceData } from "@/components/coursebuilder/create/hooks/useCardDrop"
+import { DragOverlayCard } from "@/components/coursebuilder/create/drag/DragOverlayCard"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 import { useCreateModeStore }  from "./store/createModeStore"
 import { CanvasDebugPanel }    from "./canvas/CanvasDebugPanel"
+import { EditorNoticeBanner }  from "./notifications/EditorNoticeBanner"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -76,207 +77,6 @@ function FixView() {
       <p className="text-xs max-w-xs text-center leading-relaxed">
         Review and repair cards on the canvas. Coming soon.
       </p>
-    </div>
-  )
-}
-
-// ─── Drag overlay card ───────────────────────────────────────────────────────
-
-// Schematic grid configs for each layout kind
-const LAYOUT_SCHEMATICS = {
-  "layout-split":     { cols: 2, rows: 1 },
-  "layout-stack":     { cols: 1, rows: 2 },
-  "layout-feature":   { cols: 2, rows: 2, custom: "feature" },
-  "layout-sidebar":   { cols: 2, rows: 1, asymmetric: true },
-  "layout-quad":      { cols: 2, rows: 2 },
-  "layout-mosaic":    { cols: 3, rows: 3 },
-  // New layouts
-  "layout-triptych":  { cols: 3, rows: 1 },
-  "layout-trirow":    { cols: 1, rows: 3 },
-  "layout-banner":    { cols: 2, rows: 2, custom: "banner" },
-  "layout-broadside": { cols: 3, rows: 2, custom: "broadside" },
-  "layout-tower":     { cols: 2, rows: 3, custom: "tower" },
-  "layout-pinboard":  { cols: 2, rows: 3, custom: "pinboard" },
-  "layout-annotated": { cols: 3, rows: 2, custom: "annotated" },
-  "layout-sixgrid":   { cols: 3, rows: 2 },
-} as const
-
-type LayoutKindKey = keyof typeof LAYOUT_SCHEMATICS
-
-function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
-  const spec = LAYOUT_SCHEMATICS[cardType]
-  const label = cardType.replace("layout-", "").charAt(0).toUpperCase() +
-                cardType.replace("layout-", "").slice(1)
-
-  if (cardType === "layout-feature") {
-    // 2-col, 2-row with left spanning full height
-    return (
-      <div className="flex flex-col gap-1.5 px-3 py-2 rounded border border-neutral-200 bg-white shadow-lg cursor-grabbing min-w-[140px]">
-        <span className="text-[9px] text-neutral-400 uppercase font-semibold tracking-wide">
-          {label} layout
-        </span>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 3fr", gridTemplateRows: "2fr 1fr", gap: 2, height: 52 }}>
-          <div style={{ gridArea: "1 / 1 / 3 / 2" }} className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-100 border border-neutral-300" />
-        </div>
-      </div>
-    )
-  }
-
-  if (cardType === "layout-sidebar") {
-    return (
-      <div className="flex flex-col gap-1.5 px-3 py-2 rounded border border-neutral-200 bg-white shadow-lg cursor-grabbing min-w-[140px]">
-        <span className="text-[9px] text-neutral-400 uppercase font-semibold tracking-wide">
-          {label} layout
-        </span>
-        <div style={{ display: "grid", gridTemplateColumns: "3fr 7fr", gap: 2, height: 36 }}>
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-        </div>
-      </div>
-    )
-  }
-
-  if (cardType === "layout-banner") {
-    // Full-width header strip + 2 equal columns below
-    return (
-      <div className="flex flex-col gap-1.5 px-3 py-2 rounded border border-neutral-200 bg-white shadow-lg cursor-grabbing min-w-[140px]">
-        <span className="text-[9px] text-neutral-400 uppercase font-semibold tracking-wide">
-          {label} layout
-        </span>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "auto 1fr", gap: 2, height: 52 }}>
-          <div style={{ gridArea: "1 / 1 / 2 / 3" }} className="rounded-sm bg-neutral-300 border border-neutral-400" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-        </div>
-      </div>
-    )
-  }
-
-  if (cardType === "layout-broadside") {
-    // Full-width header strip + 3 equal columns below
-    return (
-      <div className="flex flex-col gap-1.5 px-3 py-2 rounded border border-neutral-200 bg-white shadow-lg cursor-grabbing min-w-[140px]">
-        <span className="text-[9px] text-neutral-400 uppercase font-semibold tracking-wide">
-          {label} layout
-        </span>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "auto 1fr", gap: 2, height: 52 }}>
-          <div style={{ gridArea: "1 / 1 / 2 / 4" }} className="rounded-sm bg-neutral-300 border border-neutral-400" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-        </div>
-      </div>
-    )
-  }
-
-  if (cardType === "layout-tower") {
-    // Wide left column spanning full height + 3 stacked right cells
-    return (
-      <div className="flex flex-col gap-1.5 px-3 py-2 rounded border border-neutral-200 bg-white shadow-lg cursor-grabbing min-w-[140px]">
-        <span className="text-[9px] text-neutral-400 uppercase font-semibold tracking-wide">
-          {label} layout
-        </span>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gridTemplateRows: "1fr 1fr 1fr", gap: 2, height: 56 }}>
-          <div style={{ gridArea: "1 / 1 / 4 / 2" }} className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-100 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-100 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-100 border border-neutral-300" />
-        </div>
-      </div>
-    )
-  }
-
-  if (cardType === "layout-pinboard") {
-    // Full-width header strip + 2×2 grid below
-    return (
-      <div className="flex flex-col gap-1.5 px-3 py-2 rounded border border-neutral-200 bg-white shadow-lg cursor-grabbing min-w-[140px]">
-        <span className="text-[9px] text-neutral-400 uppercase font-semibold tracking-wide">
-          {label} layout
-        </span>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "auto 1fr 1fr", gap: 2, height: 60 }}>
-          <div style={{ gridArea: "1 / 1 / 2 / 3" }} className="rounded-sm bg-neutral-300 border border-neutral-400" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-200 border border-neutral-300" />
-        </div>
-      </div>
-    )
-  }
-
-  if (cardType === "layout-annotated") {
-    // Narrow annotation column spanning full height + 2×2 content grid
-    return (
-      <div className="flex flex-col gap-1.5 px-3 py-2 rounded border border-neutral-200 bg-white shadow-lg cursor-grabbing min-w-[140px]">
-        <span className="text-[9px] text-neutral-400 uppercase font-semibold tracking-wide">
-          {label} layout
-        </span>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 2fr", gridTemplateRows: "1fr 1fr", gap: 2, height: 52 }}>
-          <div style={{ gridArea: "1 / 1 / 3 / 2" }} className="rounded-sm bg-neutral-200 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-100 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-100 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-100 border border-neutral-300" />
-          <div className="rounded-sm bg-neutral-100 border border-neutral-300" />
-        </div>
-      </div>
-    )
-  }
-
-  const cells = spec.cols * spec.rows
-  return (
-    <div className="flex flex-col gap-1.5 px-3 py-2 rounded border border-neutral-200 bg-white shadow-lg cursor-grabbing min-w-[120px]">
-      <span className="text-[9px] text-neutral-400 uppercase font-semibold tracking-wide">
-        {label} layout
-      </span>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${spec.cols}, 1fr)`,
-          gridTemplateRows: `repeat(${spec.rows}, 1fr)`,
-          gap: 2,
-          height: spec.rows === 1 ? 36 : spec.rows === 3 ? 52 : 44,
-        }}
-      >
-        {Array.from({ length: cells }).map((_, i) => (
-          <div key={i} className="rounded-sm bg-neutral-200 border border-neutral-300" />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// Card type color accents for non-layout overlay
-const CARD_TYPE_ACCENT: Partial<Record<string, string>> = {
-  text:        "bg-sky-100 text-sky-700",
-  image:       "bg-violet-100 text-violet-700",
-  video:       "bg-rose-100 text-rose-700",
-  audio:       "bg-emerald-100 text-emerald-700",
-  document:    "bg-amber-100 text-amber-700",
-  chart:       "bg-orange-100 text-orange-700",
-  diagram:     "bg-teal-100 text-teal-700",
-  table:       "bg-indigo-100 text-indigo-700",
-  map:         "bg-lime-100 text-lime-700",
-  animation:   "bg-pink-100 text-pink-700",
-  dataset:     "bg-cyan-100 text-cyan-700",
-  interactive: "bg-purple-100 text-purple-700",
-}
-
-function DragOverlayCard({ data }: { data: DragSourceData }) {
-  if (data.cardType in LAYOUT_SCHEMATICS) {
-    return <LayoutSchematicOverlay cardType={data.cardType as LayoutKindKey} />
-  }
-
-  const title = data.title ?? (data.cardType as string)
-  const accentClass = CARD_TYPE_ACCENT[data.cardType] ?? "bg-neutral-100 text-neutral-500"
-
-  return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded border border-neutral-200 bg-white shadow-lg text-xs cursor-grabbing">
-      <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-semibold tracking-wide ${accentClass}`}>
-        {data.cardType}
-      </span>
-      <span className="text-neutral-700 truncate max-w-[200px]">{title}</span>
     </div>
   )
 }
@@ -318,12 +118,6 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
   const sessions         = useCourseStore((s) => s.sessions)
   const activeSessionId  = useCourseStore((s) => s.activeSessionId)
   const setActiveSession = useCourseStore((s) => s.setActiveSession)
-
-  // Active session (first session as fallback)
-  const activeSession = useMemo(
-    () => sessions.find((s) => s.id === activeSessionId) ?? sessions[0] ?? null,
-    [sessions, activeSessionId],
-  )
 
   // Auto-select first session when none is active
   useEffect(() => {
@@ -394,43 +188,49 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className={`flex flex-col w-full h-full overflow-hidden bg-neutral-100 ${className ?? ""}`}>
+      <div className={`flex flex-col w-full h-full overflow-x-visible overflow-y-hidden bg-neutral-100 ${className ?? ""}`}>
         {/* Top mode bar */}
         {showModeBar !== false && <ModeBar />}
 
         {/* Mode bodies */}
         {mode === "curate" && (
-          <div className="flex flex-1 min-h-0">
-            {/* Left sidebar — file browser (resizable) */}
-            <div style={{ width: sidebarWidth }} className="shrink-0 flex flex-col overflow-hidden">
-              <FilesBrowser />
-            </div>
-
-            {/* Resize handle */}
-            <div
-              className="w-1 bg-neutral-200 cursor-col-resize hover:bg-neutral-400 transition-colors shrink-0"
-              onMouseDown={handleResizeStart}
-            />
-
-            {/* Center — canvas viewport */}
-            <div className="flex-1 min-w-0 flex flex-col overflow-hidden bg-neutral-200">
+          <div className="relative flex flex-1 min-h-0 overflow-hidden">
+            <EditorNoticeBanner />
+            {/* Full-width canvas viewport */}
+            <div className="flex-1 flex flex-col overflow-x-visible overflow-y-hidden bg-neutral-200">
               {sessions.length > 0 ? (
                 <CanvasVirtualizer
                   sessions={sessions}
                   dims={DEFAULT_PAGE_DIMENSIONS}
+                  leftOverlayInset={sidebarWidth + 16}
+                  rightOverlayInset={16}
                 />
               ) : (
                 <EmptyState courseId={typedCourseId} />
               )}
             </div>
 
-            {/* Resize handle */}
-            <div className="w-px bg-neutral-200 cursor-col-resize hover:bg-neutral-400 transition-colors" />
+            {/* Left overlay — file browser (resizable) */}
+            <div className="absolute inset-y-0 left-0 z-20 flex">
+              <div
+                style={{ width: sidebarWidth }}
+                className="h-full flex flex-col overflow-hidden bg-white"
+              >
+                <FilesBrowser />
+              </div>
 
-            {/* Right panel — layers */}
-            <div className="w-48 shrink-0 flex flex-col overflow-hidden">
-              <LayersPanel session={activeSession ?? undefined} />
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize file panel"
+                className="group relative -mx-1 w-3 cursor-col-resize"
+                onMouseDown={handleResizeStart}
+              >
+                <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
+                <div className="pointer-events-none absolute left-1/2 top-1/2 h-6 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-neutral-300/90 transition-colors group-hover:bg-neutral-600/80" />
+              </div>
             </div>
+
           </div>
         )}
 

@@ -293,7 +293,7 @@ export function MakePanel() {
                 className={[
                   "flex-1 rounded-md py-1 text-[9px] font-bold uppercase tracking-wider transition-all",
                   isActive
-                    ? groupAccent ? groupAccent.pillActive : "bg-neutral-900 text-white"
+                    ? groupAccent ? groupAccent.pillActive : "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                     : groupAccent ? `bg-neutral-100 ${groupAccent.pill} hover:opacity-80` : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200",
                 ].join(" ")}
               >

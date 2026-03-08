@@ -203,7 +203,7 @@ export function TableEditor({ content, onChange }: TableEditorProps) {
             onClick={() => onChange("sortable", !sortable)}
             className={[
               "h-6 w-11 border relative transition-colors",
-              sortable ? "border-neutral-900 bg-neutral-900" : "border-neutral-300 bg-neutral-100",
+              sortable ? "border-[#9eb9da] bg-[#dbe8f6]" : "border-neutral-300 bg-neutral-100",
             ].join(" ")}
             aria-pressed={sortable}
           >

@@ -121,7 +121,7 @@ function NavigationTab({ session }: { session: CourseSession }) {
           className={[
             "w-full flex items-center gap-2 px-3 py-1.5 text-[11px] transition-colors text-left",
             activeCanvasId === canvas.id
-              ? "bg-neutral-900 text-white"
+              ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
               : "text-neutral-600 hover:bg-neutral-100",
           ].join(" ")}
         >
@@ -160,7 +160,7 @@ export function LayersPanel({ session }: LayersPanelProps) {
           className={[
             "flex items-center gap-1 px-3 py-2 text-[11px] font-medium border-b-2 transition-colors",
             activeTab === "layers"
-              ? "border-neutral-900 text-neutral-900"
+              ? "border-[#9eb9da] text-[#233f5d]"
               : "border-transparent text-neutral-400 hover:text-neutral-700",
           ].join(" ")}
         >
@@ -172,7 +172,7 @@ export function LayersPanel({ session }: LayersPanelProps) {
           className={[
             "flex items-center gap-1 px-3 py-2 text-[11px] font-medium border-b-2 transition-colors",
             activeTab === "navigation"
-              ? "border-neutral-900 text-neutral-900"
+              ? "border-[#9eb9da] text-[#233f5d]"
               : "border-transparent text-neutral-400 hover:text-neutral-700",
           ].join(" ")}
         >

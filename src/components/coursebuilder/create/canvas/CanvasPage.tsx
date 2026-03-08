@@ -86,7 +86,6 @@ function InsertionLineSlot({
   prevOrder?: number
   nextOrder?: number
 }) {
-  const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
   const { isOver, setNodeRef } = useDroppable({
     id,
     data: {
@@ -105,7 +104,7 @@ function InsertionLineSlot({
       data-testid="canvas-drop-insertion-line"
       className="relative h-2"
     >
-      {(mediaDragActive || isOver) && (
+      {isOver && (
         <div className={`absolute inset-x-0 top-1/2 -translate-y-1/2 border-t ${isOver ? "border-blue-400" : "border-blue-200"}`} />
       )}
     </div>
@@ -167,7 +166,6 @@ export function CanvasPage({
     sessionId:     session.id as SessionId,
     bodyRef,
     contentRef,
-    pageBlockKeys: page.blockKeys,
     enabled:       !disableOverflow && !isTemplateFreeCanvas,
   })
   const flatDroppedCards = session.topics
@@ -301,7 +299,7 @@ export function CanvasPage({
             )}
           </section>
         ) : (
-          <div ref={contentRef}>
+          <div ref={contentRef} className="max-h-full overflow-hidden">
             <BlockRenderer
               sessionId={session.id as SessionId}
               canvasId={page.id}

@@ -138,7 +138,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
               onClick={() => setSourceTab(tab)}
               className={[
                 "rounded px-2 py-1 text-[9px] font-bold uppercase tracking-wider transition-all",
-                sourceTab === tab ? "bg-neutral-900 text-white" : "text-neutral-400 hover:bg-neutral-100",
+                sourceTab === tab ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "text-neutral-400 hover:bg-neutral-100",
               ].join(" ")}
             >
               {tab}
@@ -189,7 +189,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
                 onClick={() => onChange("fitMode", mode)}
                 className={[
                   "w-full rounded px-2 py-1 text-left text-[9px] font-bold uppercase tracking-wider transition-all",
-                  fitMode === mode ? "bg-neutral-900 text-white" : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700",
+                  fitMode === mode ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700",
                 ].join(" ")}
               >
                 {mode}
@@ -204,7 +204,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
                 type="button"
                 title="Flip horizontal"
                 onClick={() => onChange("flipH", !flipH)}
-                className={["flex flex-1 items-center justify-center rounded py-1.5 transition-all", flipH ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200"].join(" ")}
+                className={["flex flex-1 items-center justify-center rounded py-1.5 transition-all", flipH ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200"].join(" ")}
               >
                 <FlipHorizontal2 size={12} />
               </button>
@@ -212,7 +212,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
                 type="button"
                 title="Flip vertical"
                 onClick={() => onChange("flipV", !flipV)}
-                className={["flex flex-1 items-center justify-center rounded py-1.5 transition-all", flipV ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200"].join(" ")}
+                className={["flex flex-1 items-center justify-center rounded py-1.5 transition-all", flipV ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200"].join(" ")}
               >
                 <FlipVertical2 size={12} />
               </button>
@@ -253,7 +253,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
                 onClick={() => onChange("preset", p.value)}
                 className={[
                   "w-full rounded px-2 py-0.5 text-left text-[9px] font-bold uppercase tracking-wider transition-all",
-                  preset === p.value ? "bg-neutral-900 text-white" : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700",
+                  preset === p.value ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700",
                 ].join(" ")}
               >
                 {p.label}

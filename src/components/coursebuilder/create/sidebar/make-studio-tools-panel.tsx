@@ -137,7 +137,7 @@ function OptionField({
           onClick={() => onChange(field.key, !(typeof value === "boolean" ? value : false))}
           className={[
             "h-7 w-12 border transition-colors",
-            value ? "border-neutral-900 bg-neutral-900" : "border-neutral-300 bg-neutral-100",
+            value ? "border-[#9eb9da] bg-[#dbe8f6]" : "border-neutral-300 bg-neutral-100",
           ].join(" ")}
           aria-pressed={Boolean(value)}
         >
@@ -159,7 +159,7 @@ function OptionField({
               "border px-2 py-1.5 text-[11px] font-medium transition-colors",
               field.disabled
                 ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400"
-                : "border-neutral-900 bg-neutral-900 text-white hover:opacity-90",
+                : "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] hover:bg-[#cedef0]",
             ].join(" ")}
           >
             {field.actionLabel ?? field.label}
@@ -213,7 +213,7 @@ export function MakeStudioToolsPanel({ cardType, content, onChange, layout = "su
           {supportsUpload && (
             <button
               type="button"
-              className="border border-neutral-900 bg-neutral-900 px-2 py-1.5 text-[11px] font-medium text-white transition-colors hover:opacity-90"
+              className="border border-[#9eb9da] bg-[#dbe8f6] px-2 py-1.5 text-[11px] font-medium text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-colors hover:bg-[#cedef0]"
             >
               {uploadLabelFor(cardType)}
             </button>

@@ -1,6 +1,5 @@
 import {
   AudioLines,
-  Bot,
   Box,
   Columns2,
   Columns3,
@@ -19,6 +18,7 @@ import {
   LayoutPanelTop,
   LayoutTemplate,
   LineChart,
+  List,
   Map as MapIcon,
   Network,
   PanelLeft,
@@ -28,6 +28,7 @@ import {
   Rows3,
   Sparkles,
   Table2,
+  Timer,
 } from "lucide-react"
 import type { ComponentType } from "react"
 
@@ -55,7 +56,7 @@ export interface CardSpec {
 export const SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unknown>>> = {
   text: {
     title: "The Water Cycle",
-    text: "<h2>The Water Cycle</h2><p>The water cycle describes the continuous movement of water through Earth's systems — from surface bodies to the atmosphere and back again. It is driven by solar energy and the force of gravity, distributing heat and freshwater across the planet.</p><p>Evaporation converts liquid water into vapour; condensation forms clouds; precipitation returns water to the surface; infiltration recharges groundwater aquifers.</p>",
+    text: "<h2>The Water Cycle</h2><p>The water cycle — also known as the <strong>hydrological cycle</strong> — describes the continuous movement of water through Earth's interconnected systems. Driven by solar energy and the force of gravity, this cycle distributes heat and freshwater across the entire planet, making it one of the most consequential processes in Earth's climate system.</p><h3>Evaporation &amp; Transpiration</h3><p>Liquid water from oceans, lakes, and rivers absorbs solar energy and converts to water vapour — a process called <em>evaporation</em>. Plants simultaneously release vapour through their leaf pores via <em>transpiration</em>. Together, these processes account for roughly 85% of atmospheric moisture over land areas.</p><h3>Condensation &amp; Cloud Formation</h3><p>As warm, moist air rises and cools with altitude, water vapour condenses onto tiny aerosol particles to form cloud droplets. When droplet density increases sufficiently, <em>precipitation</em> occurs — rain, snow, sleet, or hail — depending on atmospheric temperature profiles at different altitudes.</p><h3>Runoff, Infiltration &amp; Groundwater</h3><p>Precipitation reaching the surface either flows overland as <em>surface runoff</em> into streams and rivers, or percolates downward through soil layers via <em>infiltration</em>, replenishing underground aquifers. Groundwater moves slowly through permeable rock strata and may re-emerge as springs or sustain wetland ecosystems thousands of years later.</p><h3>The Global Energy Budget</h3><p>The water cycle is also the planet's primary heat-transfer mechanism. Evaporation absorbs latent heat from the surface, cooling it; condensation releases that heat in the upper atmosphere, driving weather systems and moderating temperature extremes across latitudes.</p>",
   },
   image: {
     title: "Diagram: Circulatory system",
@@ -126,13 +127,22 @@ export const SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unknown>>> 
     ],
   },
   table: {
-    title: "Element properties",
-    columns: ["Element", "Symbol", "Atomic No.", "Mass (u)"],
+    title: "Periodic table — selected elements",
+    columns: ["Element", "Symbol", "Atomic No.", "Mass (u)", "Period", "Group", "State at STP"],
     rows: [
-      ["Hydrogen", "H", "1", "1.008"],
-      ["Carbon", "C", "6", "12.011"],
-      ["Oxygen", "O", "8", "15.999"],
-      ["Nitrogen", "N", "7", "14.007"],
+      ["Hydrogen",   "H",  "1",  "1.008",   "1", "1",  "Gas"    ],
+      ["Helium",     "He", "2",  "4.003",   "1", "18", "Gas"    ],
+      ["Carbon",     "C",  "6",  "12.011",  "2", "14", "Solid"  ],
+      ["Nitrogen",   "N",  "7",  "14.007",  "2", "15", "Gas"    ],
+      ["Oxygen",     "O",  "8",  "15.999",  "2", "16", "Gas"    ],
+      ["Sodium",     "Na", "11", "22.990",  "3", "1",  "Solid"  ],
+      ["Magnesium",  "Mg", "12", "24.305",  "3", "2",  "Solid"  ],
+      ["Silicon",    "Si", "14", "28.086",  "3", "14", "Solid"  ],
+      ["Chlorine",   "Cl", "17", "35.453",  "3", "17", "Gas"    ],
+      ["Iron",       "Fe", "26", "55.845",  "4", "8",  "Solid"  ],
+      ["Copper",     "Cu", "29", "63.546",  "4", "11", "Solid"  ],
+      ["Gold",       "Au", "79", "196.967", "6", "11", "Solid"  ],
+      ["Mercury",    "Hg", "80", "200.592", "6", "12", "Liquid" ],
     ],
     sortable: true,
   },
@@ -140,7 +150,21 @@ export const SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unknown>>> 
     title: "Newton's Principia Mathematica",
     documentType: "pdf",
     pages: 512,
-    excerpt: "Every body persists in its state of being at rest or of moving uniformly straight forward, except insofar as it is compelled to change its state by forces impressed.",
+    excerpt: "Every body persists in its state of being at rest or of moving uniformly straight forward, except insofar as it is compelled to change its state by forces impressed. The change of motion is proportional to the motive force impressed; and is made in the direction of the right line in which that force is impressed.",
+    sections: JSON.stringify([
+      {
+        heading: "Book I — The Motion of Bodies",
+        body: "Newton establishes the mathematical framework for mechanics, introducing absolute space and time, the three laws of motion, and deriving from these the properties of orbits under central forces — culminating in proof that inverse-square gravity produces conic-section trajectories consistent with Kepler's empirical laws.",
+      },
+      {
+        heading: "Book II — The Motion of Bodies in Resisting Mediums",
+        body: "Fluid resistance, wave propagation, and vortex motion are analysed. Newton demonstrates that Cartesian vortex theory is inconsistent with Kepler's third law, laying the groundwork for rejection of the plenum hypothesis.",
+      },
+      {
+        heading: "Book III — The System of the World",
+        body: "Applying the mathematical results of Books I and II to the solar system, Newton deduces the law of universal gravitation and uses it to account for the Moon's orbit, the tides, the precession of equinoxes, and the paths of comets.",
+      },
+    ]),
   },
   interactive: {
     title: "Photosynthesis quiz",
@@ -181,6 +205,39 @@ export const SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unknown>>> 
     maxTurns: 20,
     difficulty: "intermediate",
   },
+  // ── Timeline ─────────────────────────────────────────────────────────────────
+  timeline: {
+    title: "History of the Internet",
+    orientation: "horizontal",
+    events: [
+      { date: "1969", label: "ARPANET",         description: "First two nodes connected between UCLA and Stanford Research Institute, transmitting the letters 'LO' before a crash." },
+      { date: "1974", label: "TCP/IP proposed", description: "Vint Cerf and Bob Kahn publish 'A Protocol for Packet Network Intercommunication', the foundational paper for TCP/IP." },
+      { date: "1983", label: "Internet born",   description: "ARPANET formally switches to TCP/IP on January 1st — the modern internet begins." },
+      { date: "1991", label: "World Wide Web",  description: "Tim Berners-Lee publishes the first public website at CERN, making hyperlinked documents available over the internet." },
+      { date: "1993", label: "Mosaic browser",  description: "The first graphical web browser brings images and clickable links to mainstream users for the first time." },
+      { date: "1998", label: "Google founded",  description: "Larry Page and Sergey Brin incorporate Google in a Menlo Park garage; their PageRank algorithm transforms search." },
+      { date: "2004", label: "Web 2.0 era",     description: "Facebook launches; blogs, wikis, and social media reshape the web from passive consumption to active participation." },
+      { date: "2007", label: "iPhone launch",   description: "The smartphone era begins — mobile internet access becomes ubiquitous, fundamentally changing content and commerce." },
+      { date: "2022", label: "Generative AI",   description: "Large language models and image generators enter mainstream use, reshaping how knowledge is created and shared online." },
+    ],
+  },
+
+  // ── Legend ────────────────────────────────────────────────────────────────────
+  legend: {
+    title: "Land Use Classification",
+    layout: "list",
+    items: [
+      { color: "#15803d", label: "Dense Forest",   description: "Canopy cover ≥ 60%, primary growth"   },
+      { color: "#4ade80", label: "Open Forest",    description: "Canopy 25–60%, secondary growth"       },
+      { color: "#86efac", label: "Grassland",      description: "Herbaceous cover, <10% tree canopy"    },
+      { color: "#fbbf24", label: "Cropland",       description: "Agricultural fields, seasonal crops"   },
+      { color: "#f97316", label: "Shrubland",      description: "Woody shrubs, semi-arid transition"    },
+      { color: "#94a3b8", label: "Urban / Built",  description: "Impervious surfaces, settlements"      },
+      { color: "#7dd3fc", label: "Water Bodies",   description: "Lakes, rivers, permanent wetlands"     },
+      { color: "#e2e8f0", label: "Barren / Snow",  description: "Bare rock, sand, ice, tundra"          },
+    ],
+  },
+
   // ── Layout (structural containers) ──────────────────────────────────────────
   "layout-split":     { slots: {} },
   "layout-stack":     { slots: {} },
@@ -259,7 +316,7 @@ export const CARD_SPECS: CardSpec[] = [
     cardType: "map",
     label: "Map",
     description: "Geographic map with lat/lng and zoom.",
-    detail: "OpenStreetMap embed with full viewport controls: lat, lng, zoom slider, and style presets (Standard, Cycle, Transport).",
+    detail: "Leaflet + OpenStreetMap. Full viewport controls: lat, lng, zoom slider, style presets (Standard, Topographic, Dark), and overlay layers (Labels, Choropleth, Points).",
     fields: ["Lat / Lng", "Zoom level", "Map style", "Overlays"],
     group: "data",
     Icon: MapIcon,
@@ -308,6 +365,24 @@ export const CARD_SPECS: CardSpec[] = [
     fields: ["Source URL", "Format", "Row count", "Refresh"],
     group: "data",
     Icon: Database,
+  },
+  {
+    cardType: "timeline",
+    label: "Timeline",
+    description: "Chronological event sequence with dates and descriptions.",
+    detail: "Horizontal scrollable TimelineJS timeline. Each event has a date badge, title, and optional description paragraph. Ideal for history, process flows, and product simulations.",
+    fields: ["Events (date, label, description)", "Orientation (horizontal)", "Node colors"],
+    group: "data",
+    Icon: Timer,
+  },
+  {
+    cardType: "legend",
+    label: "Legend",
+    description: "Color-coded key for maps, charts, and simulations.",
+    detail: "List, chip, or grid layout. Each item has a color swatch, label, and optional description or value. Designed to live in narrow sidebar slots alongside a map or diagram.",
+    fields: ["Items (color, label, description)", "Layout (list / chips / grid)", "Title"],
+    group: "data",
+    Icon: List,
   },
   // ─── Products (Layer 3 — assembled, passive) ──────────────────────────────────
   {
@@ -362,8 +437,8 @@ export const CARD_SPECS: CardSpec[] = [
     cardType: "layout-feature",
     label: "Feature",
     description: "Narrow left panel + large right area + thin bottom strip.",
-    detail: "Left panel runs full height as an anchor (navigation or entity reference). Right side is divided: large upper main content + thin lower caption bar. Good for Narrative or Documentary compounds.",
-    fields: ["Left anchor slot", "Main content slot", "Caption strip slot"],
+    detail: "Product-first composition. Left panel is a persistent legend/control rail, right upper is the main map or visual, right lower is timeline/caption context. Recommended for Simulation ensembles.",
+    fields: ["Legend / controls slot", "Primary map / visual slot", "Timeline / context slot"],
     group: "layout",
     Icon: Layout,
   },
@@ -371,8 +446,8 @@ export const CARD_SPECS: CardSpec[] = [
     cardType: "layout-sidebar",
     label: "Sidebar",
     description: "Asymmetric 30 / 70 columns.",
-    detail: "Narrow left, wide right. Use Map or Timeline as the narrow anchor, main content dominant on the right. Or flip: wide primary left, narrow right panel.",
-    fields: ["Narrow slot (30%)", "Wide slot (70%)"],
+    detail: "Teacher-friendly product split: narrow column for legend/filters/guidance, wide column for the main product body (map, timeline, or simulation scene).",
+    fields: ["Legend / guidance slot", "Primary product slot"],
     group: "layout",
     Icon: PanelLeft,
   },
@@ -452,8 +527,8 @@ export const CARD_SPECS: CardSpec[] = [
     cardType: "layout-annotated",
     label: "Annotated",
     description: "Narrow annotation margin beside a 2 × 2 content grid.",
-    detail: "Textbook annotation layout: margin notes or a legend column on the left, four equal content cells on the right. Ideal for commented diagrams or multi-panel comparisons with glossary terms.",
-    fields: ["Annotation column (full height)", "Top-left cell", "Top-right cell", "Bottom-left cell", "Bottom-right cell"],
+    detail: "Product review layout: keep legend/glossary persistent in the left rail while map, chart, evidence, and prompt cards occupy the right grid. Built for teacher-led synthesis pages.",
+    fields: ["Legend / glossary rail", "Map cell", "Chart cell", "Evidence cell", "Prompt cell"],
     group: "layout",
     Icon: PanelLeftOpen,
   },

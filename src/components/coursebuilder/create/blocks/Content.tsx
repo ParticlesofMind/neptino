@@ -1,9 +1,9 @@
 "use client"
 
+import { useMemo } from "react"
 import { useDroppable } from "@dnd-kit/core"
 import type { BlockRenderProps, CanvasId, TaskAreaKind, SessionId, TaskId } from "../types"
 import { useCourseStore } from "../store/courseStore"
-import { useCanvasStore } from "../store/canvasStore"
 import type { DropTargetData } from "../hooks/useCardDrop"
 import { TaskAreaDropZone } from "./content-task-area-drop-zone"
 import {
@@ -21,9 +21,6 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
 
   // Card removal action
   const removeDroppedCard = useCourseStore((s) => s.removeDroppedCard)
-
-  // Whether a media drag is in progress — used to expand drop targets
-  const mediaDragActive = useCanvasStore((s) => s.mediaDragActive)
 
   // Resolve this page\u2019s topic slice from the course store.
   // Falls back to "show all" when no range has been set (page not yet split).
@@ -57,6 +54,16 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
     },
   )
 
+  const contentCardRange = useCourseStore(
+    (s): { start: number; end?: number } | undefined => {
+      if (!canvasId) return undefined
+      const session = s.sessions.find((sess) => sess.id === sessionId)
+      if (!session) return undefined
+      const canvas = session.canvases.find((c) => (c.id as CanvasId) === canvasId)
+      return canvas?.contentCardRange
+    },
+  )
+
   const topicStart: number = contentTopicRange?.start ?? 0
   const topicEnd:   number = contentTopicRange?.end   ?? topics.length
 
@@ -65,6 +72,24 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
 
   const taskStart: number       = contentTaskRange?.start ?? 0
   const taskEnd:   number | undefined = contentTaskRange?.end
+  const cardStart: number       = contentCardRange?.start ?? 0
+  const cardEnd:   number | undefined = contentCardRange?.end
+
+  const cardIndexById = useMemo(() => {
+    const flattened = topics
+      .flatMap((topic) => topic.objectives)
+      .flatMap((objective) => objective.tasks)
+      .flatMap((task) => task.droppedCards)
+      .sort((a, b) => a.order - b.order)
+
+    return new Map(flattened.map((card, idx) => [String(card.id), idx]))
+  }, [topics])
+
+  function isCardVisible(cardId: string): boolean {
+    const idx = cardIndexById.get(String(cardId))
+    if (idx === undefined) return false
+    return idx >= cardStart && (cardEnd === undefined || idx < cardEnd)
+  }
 
   // Catch-all droppable for the entire content block.
   // Routes drops to the first visible task on this page slice.
@@ -79,7 +104,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
     areaKind: "instruction",
     blockKey,
   }
-  const { isOver: isCatchAllOver, setNodeRef: setCatchAllRef } = useDroppable({
+  const { setNodeRef: setCatchAllRef } = useDroppable({
     id: `${sessionId}:${blockKey ?? "content"}:catchall`,
     data: catchAllDropData,
   })
@@ -90,14 +115,21 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
   // Falls back to showing all areas when no config is present.
   const resolvedBlockKey = blockKey ?? "content"
   const fe = fieldEnabled?.[resolvedBlockKey]
+  // _split: true = three labeled phases; false (or absent with template) = single generic zone.
+  // When fe is undefined (no template at all) we preserve the legacy three-phase behavior.
+  const isSplit = fe ? Boolean(fe["_split"]) : true
   const showInstruction = fe ? (fe["instruction"] ?? true) : true
   const showPractice    = fe ? (fe["practice"]    ?? true) : true
   const showFeedback    = fe ? (fe["feedback"]    ?? true) : true
-  const visibleAreas: TaskAreaKind[] = [
-    ...(showInstruction ? ["instruction" as TaskAreaKind] : []),
-    ...(showPractice    ? ["practice"    as TaskAreaKind] : []),
-    ...(showFeedback    ? ["feedback"    as TaskAreaKind] : []),
-  ]
+  const visibleAreas: TaskAreaKind[] = isSplit
+    ? [
+        ...(showInstruction ? ["instruction" as TaskAreaKind] : []),
+        ...(showPractice    ? ["practice"    as TaskAreaKind] : []),
+        ...(showFeedback    ? ["feedback"    as TaskAreaKind] : []),
+      ]
+    : ["instruction"]
+  // In single-field mode the zone carries no phase label.
+  const areaLabel = (kind: TaskAreaKind): string => isSplit ? AREA_LABELS[kind] : ""
 
   const isContinuation = topicStart > 0 || objStart > 0 || taskStart > 0
   const noTopicsAtAll  = topics.length === 0
@@ -145,20 +177,6 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
         isContinuation ? "" : "overflow-hidden rounded-lg border border-border",
       ].join(" ")}
     >
-      {/* Drag-active visual hint — shows the whole block as a drop target */}
-      {mediaDragActive && (
-        <div
-          aria-hidden
-          className={[
-            "absolute inset-0 z-10 border-2 border-dashed pointer-events-none transition-colors",
-            isContinuation ? "rounded-none" : "rounded-lg",
-            isCatchAllOver
-              ? "border-blue-400 bg-blue-50/40"
-              : "border-blue-200",
-          ].join(" ")}
-        />
-      )}
-
       {!isContinuation && (
         <div className="border-b border-border bg-muted/30 px-2 py-1 flex items-center gap-2">
           <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground flex-1">
@@ -188,7 +206,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
                       taskId={`${sessionId}${DEFAULT_TASK_SUFFIX}` as TaskId}
                       areaKind={kind}
                       blockKey={blockKey}
-                      label={AREA_LABELS[kind]}
+                      label={areaLabel(kind)}
                       onRemoveCard={() => {}}
                     />
                   ))}
@@ -295,6 +313,8 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
                           return (
                             <div
                               key={task.id}
+                              data-task-idx={flatTaskIdx}
+                              data-task-id={task.id}
                               className={
                                 hideTaskLabel
                                   ? "flex flex-col gap-2"
@@ -312,6 +332,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
                                 {visibleAreas.map((kind) => {
                                   const cards = task.droppedCards
                                     .filter((c) => c.areaKind === kind && (!c.blockKey || c.blockKey === resolvedBlockKey))
+                                    .filter((c) => isCardVisible(c.id))
                                     .sort((a, b) => a.order - b.order)
                                   return (
                                     <TaskAreaDropZone
@@ -321,7 +342,8 @@ export function ContentBlock({ sessionId, canvasId, blockKey, data, fieldEnabled
                                       taskId={task.id}
                                       areaKind={kind}
                                       blockKey={blockKey}
-                                      label={AREA_LABELS[kind]}
+                                      label={areaLabel(kind)}
+                                      cardIndexById={cardIndexById}
                                       cards={cards}
                                       onRemoveCard={(cardId) =>
                                         removeDroppedCard(sessionId, task.id, cardId)

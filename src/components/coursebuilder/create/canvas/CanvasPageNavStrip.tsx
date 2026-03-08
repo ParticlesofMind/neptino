@@ -39,7 +39,7 @@ export function PageNavStrip({ sessions, onScrollTo }: PageNavStripProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white rounded-xl shadow-sm self-center mx-2 py-3">
+    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white rounded-xl shadow-sm py-3">
       <NavBtn title="First page"    onClick={() => goTo(0)}>
         <ChevronsUp   size={13} strokeWidth={1.5} />
         <span className="text-[7px]">First</span>

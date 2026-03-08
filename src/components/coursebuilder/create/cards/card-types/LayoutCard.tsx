@@ -403,8 +403,6 @@ function LayoutSlot({
 
   const isFull = slotCards.length >= (spec.maxCards ?? 1)
 
-  // When a non-layout card is being dragged, pulse compatible empty slots to
-  // redirect the user's attention toward valid drop targets.
   const isNonLayoutDrag = isDragActive && activeCardType != null && !activeCardType.startsWith("layout-")
   const shouldPulse = isNonLayoutDrag && isCompatible && !isFull && slotCards.length === 0
 
@@ -486,7 +484,7 @@ export function LayoutCard({ card, onRemove }: CardRenderProps) {
   const slots = (card.content.slots ?? {}) as Record<string, DroppedCard[]>
 
   return (
-    <div className="group relative rounded-lg border border-neutral-200 bg-white overflow-hidden shadow-sm">
+    <div className="group relative h-full rounded-lg border border-neutral-200 bg-white overflow-hidden shadow-sm">
       {/* Remove button — absolute overlay, visible on hover */}
       {onRemove && (
         <button
@@ -500,7 +498,7 @@ export function LayoutCard({ card, onRemove }: CardRenderProps) {
       )}
 
       {/* Grid of droppable slots */}
-      <div style={def.gridStyle}>
+      <div style={def.gridStyle} className="h-full">
         {def.slots.map((spec, i) => (
           <LayoutSlot
             key={i}

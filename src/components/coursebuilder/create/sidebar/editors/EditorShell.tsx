@@ -17,6 +17,7 @@ import { DatasetEditor } from "./DatasetEditor"
 import { RichSimEditor } from "./RichSimEditor"
 import { GamesEditor } from "./GamesEditor"
 import { ChatEditor } from "./ChatEditor"
+import { TimelineEditor } from "./TimelineEditor"
 
 export interface EditorShellProps {
   cardType: CardType
@@ -83,6 +84,9 @@ export function EditorShell({ cardType, content, onChange }: EditorShellProps) {
 
     case "chat":
       return <ChatEditor content={content} onChange={onChange} />
+
+    case "timeline":
+      return <TimelineEditor content={content} onChange={onChange} />
 
     default:
       return (

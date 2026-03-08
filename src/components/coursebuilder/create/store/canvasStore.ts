@@ -47,6 +47,13 @@ interface CanvasState {
    * 0 until the first ResizeObserver fires.
    */
   fitScale: number
+  /**
+   * Debug-only switch to force the virtualizer to mount all rows so that
+   * every canvas can be measured before exporting debug data.
+   */
+  debugMountAllCanvases: boolean
+  /** Ephemeral editor notice shown in the curate viewport. */
+  editorNotice: string | null
 
   // ── Viewport ───────────────────────────────────────────────────────────────
 
@@ -56,6 +63,9 @@ interface CanvasState {
   setPan:      (offset: { x: number; y: number }) => void
   resetView:   () => void
   setFitScale: (scale: number) => void
+  setDebugMountAllCanvases: (enabled: boolean) => void
+  setEditorNotice: (message: string | null) => void
+  clearEditorNotice: () => void
 
   // ── Tool & selection ───────────────────────────────────────────────────────
 
@@ -85,9 +95,14 @@ export const useCanvasStore = create<CanvasState>()((set) => ({
   overflowingCanvasIds: new Set(),
   mediaDragActive: false,
   fitScale: 0,
+  debugMountAllCanvases: false,
+  editorNotice: null,
 
   setMode: (mode) => set({ mode }),
   setFitScale: (scale) => set({ fitScale: scale }),
+  setDebugMountAllCanvases: (enabled) => set({ debugMountAllCanvases: enabled }),
+  setEditorNotice: (message) => set({ editorNotice: message }),
+  clearEditorNotice: () => set({ editorNotice: null }),
 
   setZoom: (zoom) => {
     const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(zoom)))

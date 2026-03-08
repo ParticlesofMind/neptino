@@ -1,7 +1,8 @@
 "use client"
 
+import * as React from "react"
 import dynamic from "next/dynamic"
-import { Sparkles } from "lucide-react"
+import { Film, Pause, Play, Sparkles } from "lucide-react"
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
   ScatterChart, Scatter, PieChart, Pie, Cell,
@@ -23,15 +24,52 @@ interface AnimationPreviewProps {
   fps: number
   url?: string
   lottieData?: object
+  title?: string
 }
 
-export function AnimationPreview({ format, duration, fps, url, lottieData }: AnimationPreviewProps) {
+export function AnimationPreview({ format, duration, fps, url, lottieData, title }: AnimationPreviewProps) {
+  const [paused, setPaused] = React.useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lottieRef = React.useRef<any>(null)
+
+  const togglePlay = () => {
+    const next = !paused
+    setPaused(next)
+    if (next) {
+      lottieRef.current?.pause()
+    } else {
+      lottieRef.current?.play()
+    }
+  }
+
+  const titleBar = title ? (
+    <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-border/50">
+      <Film className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+      <span className="text-[12px] font-semibold text-foreground truncate">{title}</span>
+    </div>
+  ) : null
+
   // If we have real Lottie data, render it
   if (lottieData) {
     return (
       <div>
-        <div className="flex items-center justify-center bg-white border border-border overflow-hidden" style={{ height: 160 }}>
-          <LottiePlayer animationData={lottieData} loop autoplay style={{ height: 150, width: "100%" }} />
+        {titleBar}
+        <div className="relative flex items-center justify-center bg-white border border-border overflow-hidden" style={{ aspectRatio: "16/9" }}>
+          <LottiePlayer
+            animationData={lottieData}
+            loop
+            autoplay
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            lottieRef={lottieRef}
+            style={{ width: "100%", height: "100%" }}
+          />
+          <button
+            type="button"
+            onClick={togglePlay}
+            className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm hover:bg-black/60 transition-colors"
+          >
+            {paused ? <Play className="h-3.5 w-3.5 fill-white stroke-none ml-0.5" /> : <Pause className="h-3.5 w-3.5 fill-white stroke-none" />}
+          </button>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {format && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{format}</span>}
@@ -46,7 +84,8 @@ export function AnimationPreview({ format, duration, fps, url, lottieData }: Ani
   if (url && (format === "gif" || url.endsWith(".gif"))) {
     return (
       <div>
-        <div className="flex items-center justify-center border border-border overflow-hidden" style={{ height: 160 }}>
+        {titleBar}
+        <div className="flex items-center justify-center border border-border overflow-hidden" style={{ aspectRatio: "16/9" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="Animation" className="max-h-full max-w-full object-contain" />
         </div>
@@ -58,40 +97,55 @@ export function AnimationPreview({ format, duration, fps, url, lottieData }: Ani
     )
   }
 
-  // Fallback: SVG blob visualization (original)
+  // Fallback: SVG blob visualization with play/pause toggle
   const blobs = [
-    { cx: 80, cy: 80, r: 38, delay: "0s", op: 0.22, dur: "2.8s" },
-    { cx: 170, cy: 55, r: 28, delay: "0.4s", op: 0.38, dur: "2.8s" },
-    { cx: 245, cy: 100, r: 22, delay: "0.8s", op: 0.28, dur: "2.8s" },
-    { cx: 140, cy: 145, r: 18, delay: "1.2s", op: 0.48, dur: "2.8s" },
-    { cx: 55, cy: 150, r: 14, delay: "1.6s", op: 0.32, dur: "2.8s" },
-    { cx: 180, cy: 150, r: 32, delay: "0.6s", op: 0.14, dur: "3.4s" },
-    { cx: 65, cy: 44, r: 22, delay: "1.0s", op: 0.18, dur: "3.4s" },
-    { cx: 272, cy: 155, r: 16, delay: "1.8s", op: 0.28, dur: "3.4s" },
+    { cx: 80,  cy: 106, r: 50,  delay: "0s",   op: 0.22, dur: "2.8s" },
+    { cx: 190, cy: 73,  r: 37,  delay: "0.4s",  op: 0.38, dur: "2.8s" },
+    { cx: 300, cy: 133, r: 29,  delay: "0.8s",  op: 0.28, dur: "2.8s" },
+    { cx: 175, cy: 193, r: 24,  delay: "1.2s",  op: 0.48, dur: "2.8s" },
+    { cx: 55,  cy: 200, r: 18,  delay: "1.6s",  op: 0.32, dur: "2.8s" },
+    { cx: 240, cy: 200, r: 42,  delay: "0.6s",  op: 0.14, dur: "3.4s" },
+    { cx: 70,  cy: 58,  r: 28,  delay: "1.0s",  op: 0.18, dur: "3.4s" },
+    { cx: 355, cy: 200, r: 20,  delay: "1.8s",  op: 0.28, dur: "3.4s" },
   ]
 
   return (
     <div>
-      <svg viewBox="0 0 300 200" width="100%" className="select-none" style={{ height: 160 }}>
-        {blobs.map((b, i) => (
-          <circle
-            key={i}
-            cx={b.cx}
-            cy={b.cy}
-            r={b.r}
-            fill="hsl(var(--primary))"
-            fillOpacity={b.op}
-            style={{
-              animationName: "animFloat",
-              animationDuration: b.dur,
-              animationTimingFunction: "ease-in-out",
-              animationIterationCount: "infinite",
-              animationDirection: "alternate",
-              animationDelay: b.delay,
-            }}
-          />
-        ))}
-      </svg>
+      {titleBar}
+      <div className="relative">
+        <svg
+          viewBox="0 0 400 225"
+          width="100%"
+          className="select-none"
+          style={{ aspectRatio: "16/9", display: "block" }}
+        >
+          {blobs.map((b, i) => (
+            <circle
+              key={i}
+              cx={b.cx}
+              cy={b.cy}
+              r={b.r}
+              fill="hsl(var(--primary))"
+              fillOpacity={b.op}
+              style={paused ? {} : {
+                animationName: "animFloat",
+                animationDuration: b.dur,
+                animationTimingFunction: "ease-in-out",
+                animationIterationCount: "infinite",
+                animationDirection: "alternate",
+                animationDelay: b.delay,
+              }}
+            />
+          ))}
+        </svg>
+        <button
+          type="button"
+          onClick={togglePlay}
+          className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm hover:bg-black/40 transition-colors"
+        >
+          {paused ? <Play className="h-3.5 w-3.5 fill-white stroke-none ml-0.5" /> : <Pause className="h-3.5 w-3.5 fill-white stroke-none" />}
+        </button>
+      </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {format && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{format}</span>}
         {duration && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{duration}</span>}
@@ -106,13 +160,15 @@ export function AnimationPreview({ format, duration, fps, url, lottieData }: Ani
 
 export function MapPreview({ lat, lng, zoom, layers }: { lat: number; lng: number; zoom: number; layers: string[] }) {
   const W = 380
-  const H = 200
-  const gH = [35, 75, 105, 135, 168]
+  const H = 213  // 16:9 of 380
+
+  const gH = [37, 75, 106, 142, 178]
   const gV = [48, 100, 152, 200, 248, 296, 340]
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 160, background: "hsl(var(--muted)/0.3)" }} className="select-none">
+      <div style={{ aspectRatio: "16/9", width: "100%", overflow: "hidden" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" style={{ background: "hsl(var(--muted)/0.3)", display: "block" }} className="select-none">
         {gH.map((y, i) => <line key={`h${i}`} x1={0} y1={y} x2={W} y2={y} stroke="hsl(var(--border))" strokeWidth={0.7} />)}
         {gV.map((x, i) => <line key={`v${i}`} x1={x} y1={0} x2={x} y2={H} stroke="hsl(var(--border))" strokeWidth={0.7} />)}
         <path d="M20,62 Q55,44 90,56 Q112,68 104,90 Q88,108 62,97 Q24,88 20,62Z" fill="hsl(var(--muted-foreground)/0.18)" />
@@ -123,6 +179,7 @@ export function MapPreview({ lat, lng, zoom, layers }: { lat: number; lng: numbe
         <circle cx={W / 2} cy={H / 2} r={14} fill="hsl(var(--primary)/0.15)" />
         <circle cx={W / 2} cy={H / 2} r={5} fill="hsl(var(--primary))" />
       </svg>
+      </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground font-mono">{lat.toFixed(1)}°, {lng.toFixed(1)}°</span>
         <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">Zoom {zoom}</span>
@@ -407,6 +464,176 @@ export function RichSimPlaceholder() {
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border h-40 gap-2">
       <Sparkles className="h-7 w-7 text-muted-foreground/40" />
       <span className="text-[12px] text-muted-foreground">Paste a simulation URL to preview</span>
+    </div>
+  )
+}
+
+// ─── Timeline Preview ──────────────────────────────────────────────────────────
+
+interface TimelineEvent {
+  date: string
+  label: string
+  description?: string
+  color?: string
+}
+
+export function TimelinePreview({ events, orientation = "vertical" }: { events: TimelineEvent[]; orientation?: "horizontal" | "vertical" }) {
+  const accentColors = [
+    "#3b82f6", "#8b5cf6", "#14b8a6", "#f59e0b", "#ef4444",
+    "#10b981", "#f97316", "#6366f1", "#ec4899", "#06b6d4",
+  ]
+
+  if (orientation === "horizontal") {
+    return (
+      <div className="w-full overflow-x-auto py-6 px-2">
+        <div className="relative flex items-start" style={{ minWidth: events.length * 140 }}>
+          {/* Connecting line */}
+          <div className="absolute top-[18px] left-6 right-6 h-[2px] bg-border" />
+          {events.map((ev, i) => {
+            const color = ev.color ?? accentColors[i % accentColors.length]
+            return (
+              <div key={i} className="relative flex flex-col items-center flex-1 px-2">
+                {/* Node */}
+                <div
+                  className="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 bg-background text-[10px] font-bold text-white shadow-sm"
+                  style={{ borderColor: color, background: color }}
+                >
+                  {i + 1}
+                </div>
+                {/* Date */}
+                <span className="mt-2 text-[10px] font-semibold text-muted-foreground whitespace-nowrap">{ev.date}</span>
+                {/* Label */}
+                <span className="mt-0.5 text-[11px] font-medium text-foreground text-center leading-tight">{ev.label}</span>
+                {/* Description */}
+                {ev.description && (
+                  <p className="mt-1 text-[10px] text-muted-foreground text-center leading-relaxed line-clamp-2">{ev.description}</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // Vertical (default)
+  return (
+    <div className="relative space-y-0 pl-8">
+      {/* Vertical stem */}
+      <div className="absolute left-3 top-2 bottom-2 w-[2px] bg-border" />
+
+      {events.map((ev, i) => {
+        const color = ev.color ?? accentColors[i % accentColors.length]
+        const isLast = i === events.length - 1
+        return (
+          <div key={i} className={`relative flex items-start gap-4 ${isLast ? "pb-0" : "pb-5"}`}>
+            {/* Node */}
+            <div
+              className="absolute left-[-21px] top-0 z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 bg-background text-[9px] font-bold shadow-sm"
+              style={{ borderColor: color, color }}
+            >
+              {i + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span
+                  className="text-[10px] font-semibold rounded-sm px-1.5 py-0.5"
+                  style={{ background: color + "18", color }}
+                >
+                  {ev.date}
+                </span>
+                <span className="text-[12px] font-semibold text-foreground leading-snug">{ev.label}</span>
+              </div>
+              {ev.description && (
+                <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">{ev.description}</p>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Legend Preview ────────────────────────────────────────────────────────────
+
+interface LegendItem {
+  color: string
+  label: string
+  description?: string
+  value?: string | number
+}
+
+export function LegendPreview({
+  items,
+  title,
+  layout = "list",
+}: {
+  items: LegendItem[]
+  title?: string
+  layout?: "list" | "chips" | "grid"
+}) {
+  if (layout === "chips") {
+    return (
+      <div className="space-y-3">
+        {title && <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>}
+        <div className="flex flex-wrap gap-2">
+          {items.map((item, i) => (
+            <div key={i} className="flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1">
+              <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: item.color }} />
+              <span className="text-[11px] font-medium text-foreground">{item.label}</span>
+              {item.value !== undefined && (
+                <span className="text-[10px] text-muted-foreground">{item.value}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (layout === "grid") {
+    return (
+      <div className="space-y-3">
+        {title && <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>}
+        <div className="grid grid-cols-2 gap-2">
+          {items.map((item, i) => (
+            <div key={i} className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/10 p-2">
+              <span className="mt-0.5 h-3 w-3 shrink-0 rounded-sm" style={{ background: item.color }} />
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium text-foreground leading-tight">{item.label}</p>
+                {item.description && (
+                  <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">{item.description}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // List (default) — works great in narrow sidebar slots
+  return (
+    <div className="space-y-2">
+      {title && <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">{title}</p>}
+      {items.map((item, i) => (
+        <div key={i} className="flex items-center gap-2.5">
+          <span
+            className="h-3.5 w-3.5 shrink-0 rounded-sm"
+            style={{ background: item.color }}
+          />
+          <div className="flex flex-1 min-w-0 items-baseline gap-2">
+            <span className="text-[12px] font-medium text-foreground whitespace-nowrap">{item.label}</span>
+            {item.description && (
+              <span className="text-[11px] text-muted-foreground truncate">{item.description}</span>
+            )}
+          </div>
+          {item.value !== undefined && (
+            <span className="text-[11px] font-mono text-muted-foreground shrink-0">{item.value}</span>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

@@ -323,6 +323,92 @@ describe("computePageAssignments — topic splitting", () => {
       expect(flowKinds.slice(firstAssignment).every((k) => k === "assignment")).toBe(true)
     }
   })
+
+  it("emits deterministic card ranges for task-split pages", () => {
+    const topic = makeTopic("t1", "Topic 1", 1, 12)
+    topic.objectives[0]!.tasks = topic.objectives[0]!.tasks.map((task, i) => ({
+      ...task,
+      droppedCards: [
+        {
+          id: `${task.id}-card-a` as any,
+          cardId: `${task.id}-base-a` as any,
+          cardType: "text",
+          taskId: task.id,
+          areaKind: "instruction",
+          position: { x: 0, y: 0 },
+          dimensions: { width: 220, height: 72 },
+          content: { text: `Card ${i + 1}.A` },
+          order: i * 2,
+        },
+        {
+          id: `${task.id}-card-b` as any,
+          cardId: `${task.id}-base-b` as any,
+          cardType: "text",
+          taskId: task.id,
+          areaKind: "practice",
+          position: { x: 0, y: 0 },
+          dimensions: { width: 220, height: 72 },
+          content: { text: `Card ${i + 1}.B` },
+          order: i * 2 + 1,
+        },
+      ],
+    }))
+
+    const session = makeSession([topic])
+    const result = computePageAssignments(session, DIMS)
+
+    const taskPages = result.filter((page) => page.taskRange !== undefined)
+    expect(taskPages.length).toBeGreaterThan(1)
+    for (const page of taskPages) {
+      expect(page.cardRange).toBeDefined()
+    }
+
+    const first = taskPages[0]!
+    const second = taskPages[1]!
+    expect((second.cardRange?.start ?? 0)).toBeGreaterThanOrEqual(first.cardRange?.start ?? 0)
+  })
+
+  it("keeps task and card boundaries perfectly aligned across pages", () => {
+    const topic = makeTopic("t2", "Topic 2", 1, 10)
+    const cardCounts = [1, 3, 2, 4, 1, 5, 2, 1, 3, 2]
+    topic.objectives[0]!.tasks = topic.objectives[0]!.tasks.map((task, i) => ({
+      ...task,
+      droppedCards: Array.from({ length: cardCounts[i] ?? 1 }, (_, j) => ({
+        id: `${task.id}-card-${j}` as any,
+        cardId: `${task.id}-base-${j}` as any,
+        cardType: "text",
+        taskId: task.id,
+        areaKind: "instruction",
+        position: { x: 0, y: 0 },
+        dimensions: { width: 220, height: 72 },
+        content: { text: `Task ${i + 1} Card ${j + 1}` },
+        order: i * 10 + j,
+      })),
+    }))
+
+    const session = makeSession([topic])
+    const firstRun = computePageAssignments(session, DIMS)
+    const secondRun = computePageAssignments(session, DIMS)
+    expect(JSON.stringify(firstRun)).toBe(JSON.stringify(secondRun))
+
+    const taskToCardStart: number[] = [0]
+    for (let i = 0; i < cardCounts.length; i++) {
+      taskToCardStart.push((taskToCardStart[i] ?? 0) + (cardCounts[i] ?? 0))
+    }
+
+    const taskPages = firstRun.filter((page) => page.taskRange !== undefined)
+    expect(taskPages.length).toBeGreaterThan(0)
+
+    for (const page of taskPages) {
+      const t = page.taskRange!
+      const c = page.cardRange
+      expect(c).toBeDefined()
+      expect(c!.start).toBe(taskToCardStart[t.start])
+      if (t.end !== undefined) {
+        expect(c!.end).toBe(taskToCardStart[t.end])
+      }
+    }
+  })
 })
 
 describe("computePageAssignments — determinism", () => {

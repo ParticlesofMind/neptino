@@ -195,6 +195,7 @@ function PreviewTaskBlock({
   objectiveCount: number
   taskCount: number
 }) {
+  const isSplit         = on(fieldState, block, "_split")
   const showInstruction = on(fieldState, block, "instruction")
   const showPractice    = on(fieldState, block, "practice")
   const showFeedback    = on(fieldState, block, "feedback")
@@ -221,20 +222,28 @@ function PreviewTaskBlock({
                       Obj. {objIdx + 1} &rsaquo; Task {taskIdx + 1}
                     </p>
                     <div className="flex flex-col gap-1">
-                      {showInstruction && (
-                        <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.instruction}`}>
-                          Instruction
+                      {!isSplit ? (
+                        <div className="rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70">
+                          Content
                         </div>
-                      )}
-                      {showPractice && (
-                        <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.practice}`}>
-                          Practice
-                        </div>
-                      )}
-                      {showFeedback && (
-                        <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.feedback}`}>
-                          Feedback
-                        </div>
+                      ) : (
+                        <>
+                          {showInstruction && (
+                            <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.instruction}`}>
+                              Instruction
+                            </div>
+                          )}
+                          {showPractice && (
+                            <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.practice}`}>
+                              Practice
+                            </div>
+                          )}
+                          {showFeedback && (
+                            <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.feedback}`}>
+                              Feedback
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

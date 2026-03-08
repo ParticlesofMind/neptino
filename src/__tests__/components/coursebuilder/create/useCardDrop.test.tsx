@@ -132,7 +132,7 @@ describe("canvas drop acceptance", () => {
             current: {
               type: "card",
               cardId: "card-2" as CardId,
-              cardType: "text",
+              cardType: "layout-sixgrid",
               title: "Card 2",
               content: { title: "Card 2" },
             },
@@ -176,7 +176,7 @@ describe("canvas drop acceptance", () => {
             current: {
               type: "card",
               cardId: "card-3" as CardId,
-              cardType: "text",
+              cardType: "layout-sixgrid",
               title: "Card 3",
               content: { title: "Card 3" },
             },
@@ -225,7 +225,7 @@ describe("canvas drop acceptance", () => {
             current: {
               type: "card",
               cardId: "card-4" as CardId,
-              cardType: "text",
+              cardType: "layout-sixgrid",
               title: "Card 4",
               content: { title: "Card 4" },
             },
@@ -332,5 +332,101 @@ describe("canvas drop acceptance", () => {
     expect(cards).toHaveLength(1)
     expect(cards[0]?.cardId).toBe("card-2")
     expect(updated?.canvases[0]?.contentCardRange).toEqual({ start: 0, end: 1 })
+  })
+
+  it("accepts layout cards dropped directly into a task area", () => {
+    const { session, sessionId, taskAId } = buildSession()
+    resetStoreWithSession(session)
+
+    const { result } = renderHook(() => useCardDrop())
+
+    act(() => {
+      result.current.onDragEnd({
+        active: {
+          data: {
+            current: {
+              type: "card",
+              cardId: "card-layout-1" as CardId,
+              cardType: "layout-sixgrid",
+              title: "Large layout",
+              content: { title: "Large layout" },
+            },
+          },
+        },
+        over: {
+          id: `${sessionId}:${taskAId}:feedback`,
+          data: {
+            current: {
+              sessionId,
+              taskId: taskAId,
+              areaKind: "feedback",
+              blockKey: "content",
+            },
+          },
+        },
+        collisions: [{ id: `${sessionId}:${taskAId}:feedback:content` }],
+      } as never)
+    })
+
+    const updated = useCourseStore.getState().sessions[0]
+    const taskA = updated.topics[0].objectives[0].tasks.find((t) => t.id === taskAId)
+
+    expect(taskA?.droppedCards ?? []).toHaveLength(1)
+    expect(taskA?.droppedCards[0]?.cardType).toBe("layout-sixgrid")
+    expect(taskA?.droppedCards[0]?.areaKind).toBe("feedback")
+  })
+
+  it("rejects non-layout card drops into tasks that only contain layout cards", () => {
+    const { session, sessionId, taskAId } = buildSession()
+    session.topics[0]!.objectives[0]!.tasks[0]!.droppedCards = [
+      {
+        id: "drop-layout-existing" as DroppedCardId,
+        cardId: "card-layout-existing" as CardId,
+        cardType: "layout-sixgrid",
+        taskId: taskAId,
+        areaKind: "instruction",
+        position: { x: 0, y: 0 },
+        dimensions: { width: 0, height: 0 },
+        content: { title: "Existing layout" },
+        order: 1,
+      },
+    ]
+    resetStoreWithSession(session)
+
+    const { result } = renderHook(() => useCardDrop())
+
+    act(() => {
+      result.current.onDragEnd({
+        active: {
+          data: {
+            current: {
+              type: "card",
+              cardId: "card-text-1" as CardId,
+              cardType: "text",
+              title: "Plain text",
+              content: { title: "Plain text" },
+            },
+          },
+        },
+        over: {
+          id: `${sessionId}:${taskAId}:instruction`,
+          data: {
+            current: {
+              sessionId,
+              taskId: taskAId,
+              areaKind: "instruction",
+              blockKey: "content",
+            },
+          },
+        },
+        collisions: [{ id: `${sessionId}:${taskAId}:instruction:content` }],
+      } as never)
+    })
+
+    const updated = useCourseStore.getState().sessions[0]
+    const taskA = updated.topics[0].objectives[0].tasks.find((t) => t.id === taskAId)
+
+    expect(taskA?.droppedCards ?? []).toHaveLength(1)
+    expect(taskA?.droppedCards[0]?.cardType).toBe("layout-sixgrid")
   })
 })

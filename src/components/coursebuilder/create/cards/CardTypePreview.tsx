@@ -36,6 +36,7 @@ import {
   LayoutPanelTop,
   LayoutTemplate,
   LineChart,
+  List,
   Map as MapIcon,
   MessageSquare,
   Network,
@@ -44,8 +45,10 @@ import {
   PlayCircle,
   Rows2,
   Rows3,
+  ScrollText,
   Sparkles,
   Table2,
+  Timer,
 } from "lucide-react"
 import type { CardType } from "../types"
 import {
@@ -53,6 +56,7 @@ import {
   AudioPreview,
   ChartPreview,
   DiagramPreview,
+  LegendPreview,
   MapPreview,
   RichSimPlaceholder,
   VideoPreview,
@@ -61,6 +65,18 @@ import {
 const Model3DViewer = dynamic(
   () => import("@/components/coursebuilder/model-3d-viewer").then((m) => m.Model3DViewer),
   { ssr: false },
+)
+
+const TimelineJSPreview = dynamic(
+  () => import("./card-types/timeline-preview-inner"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center bg-neutral-50 text-[12px] text-neutral-400" style={{ height: 160 }}>
+        Loading timeline…
+      </div>
+    ),
+  },
 )
 
 // ─── Meta ─────────────────────────────────────────────────────────────────────
@@ -79,13 +95,15 @@ export const CARD_TYPE_META: Record<CardType, CardTypeMeta> = {
   chart:        { label: "Chart",       icon: LineChart   },
   diagram:      { label: "Diagram",     icon: Network     },
   media:        { label: "Media",       icon: Layers      },
-  document:     { label: "Document",    icon: FileText    },
+  document:     { label: "Document",    icon: ScrollText  },
   table:        { label: "Table",       icon: Table2      },
   "rich-sim":   { label: "Simulation",  icon: Sparkles    },
   "village-3d": { label: "3D Scene",    icon: Box         },
   interactive:  { label: "Quiz",        icon: HelpCircle  },
   games:        { label: "Game",        icon: Gamepad2    },
   chat:         { label: "AI Chat",     icon: Bot         },
+  timeline:     { label: "Timeline",    icon: Timer       },
+  legend:       { label: "Legend",      icon: List        },
   // ── Layout containers ─────────────────────────────────────────
   "layout-split":     { label: "Split",     icon: Columns2         },
   "layout-stack":     { label: "Stack",     icon: Rows2            },
@@ -124,6 +142,10 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
       const plain = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
       return (
         <div className="overflow-auto">
+          <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-border/50">
+            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+            <span className="text-[12px] font-semibold text-foreground truncate">{title}</span>
+          </div>
           <p className="text-sm leading-relaxed text-muted-foreground line-clamp-8">
             {plain || "Add your copy here."}
           </p>
@@ -139,10 +161,14 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
       return (
         <div className="rounded-xl overflow-hidden">
           {url
-            // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={url} alt={alt || "Image"} className="w-full h-full object-cover" style={{ maxHeight: 240 }} />
+            ? (
+              <div style={{ aspectRatio: "4/3", width: "100%", overflow: "hidden" }} className="rounded-xl bg-muted/20">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={alt || "Image"} className="w-full h-full object-cover" />
+              </div>
+            )
             : (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border h-36 gap-2 bg-muted/20">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border gap-2 bg-muted/20" style={{ aspectRatio: "4/3" }}>
                 <ImageIcon className="h-7 w-7 text-muted-foreground/30" />
                 <span className="text-[11px] text-muted-foreground">No image provided.</span>
               </div>
@@ -160,7 +186,7 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
 
     case "audio": {
       const url = typeof content["url"] === "string" ? content["url"] : ""
-      return <AudioPreview url={url} />
+      return <AudioPreview url={url} title={title} />
     }
 
     case "video": {
@@ -170,7 +196,7 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
           <span className="text-[11px] text-muted-foreground">No video provided.</span>
         </div>
       )
-      return <VideoPreview url={url} />
+      return <VideoPreview url={url} title={title} />
     }
 
     case "animation": {
@@ -178,7 +204,7 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
       const duration = typeof content["duration"] === "string" ? content["duration"] : ""
       const fps      = typeof content["fps"]      === "number" ? content["fps"]      : 0
       const animUrl  = typeof content["url"]      === "string" ? content["url"]      : undefined
-      return <AnimationPreview format={format} duration={duration} fps={fps} url={animUrl} />
+      return <AnimationPreview format={format} duration={duration} fps={fps} url={animUrl} title={title} />
     }
 
     case "map": {
@@ -252,22 +278,50 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
     }
 
     case "document": {
+      const fileType = typeof content["documentType"] === "string"
+        ? content["documentType"].toUpperCase()
+        : typeof content["fileType"] === "string"
+        ? content["fileType"].toUpperCase()
+        : "PDF"
+      const pages = typeof content["pages"] === "number" ? content["pages"] : 0
+      const excerpt = typeof content["excerpt"] === "string" ? content["excerpt"] : ""
       const sections: { heading: string; body: string }[] = (() => {
         try { return content["sections"] ? JSON.parse(content["sections"] as string) : [] } catch { return [] }
       })()
-      const excerpt = typeof content["excerpt"] === "string" ? content["excerpt"] : ""
       return (
         <div className="space-y-3">
-          <h3 className="text-base font-bold text-foreground leading-tight">{title}</h3>
-          {excerpt && <p className="text-[12px] text-muted-foreground leading-relaxed italic line-clamp-4">{excerpt}</p>}
+          {/* Document header */}
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-10 shrink-0 flex-col items-center justify-center rounded-lg border-2 border-border bg-muted/20 shadow-sm">
+              <ScrollText className="h-5 w-5 text-muted-foreground/70" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-foreground leading-tight line-clamp-2">{title}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                {fileType && (
+                  <span className="rounded border border-border bg-muted/30 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{fileType}</span>
+                )}
+                {pages > 0 && (
+                  <span className="text-[11px] text-muted-foreground">{pages} pages</span>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Content preview lines */}
+          {excerpt && (
+            <p className="text-[12px] text-muted-foreground leading-relaxed italic line-clamp-3">{excerpt}</p>
+          )}
           {sections.slice(0, 2).map((sec, i) => (
-            <div key={i}>
-              {sec.heading && <h4 className="text-[12px] font-semibold text-foreground mb-1">{sec.heading}</h4>}
-              <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-3">{sec.body || "Section body…"}</p>
+            <div key={i} className="border-l-2 border-border pl-3">
+              {sec.heading && <p className="text-[11px] font-semibold text-foreground mb-0.5">{sec.heading}</p>}
+              <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{sec.body || "Section body…"}</p>
             </div>
           ))}
           {sections.length === 0 && !excerpt && (
-            <p className="text-sm text-muted-foreground italic">Start writing sections to see a preview.</p>
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-6 gap-2">
+              <ScrollText className="h-6 w-6 text-muted-foreground/30" />
+              <span className="text-[11px] text-muted-foreground">Add content to preview the document.</span>
+            </div>
           )}
         </div>
       )
@@ -505,6 +559,51 @@ export function CardTypePreview({ cardType, content }: CardTypePreviewProps) {
           </div>
         </div>
       )
+    }
+
+    // ─── Timeline ─────────────────────────────────────────────────────────────────
+    case "timeline": {
+      const rawEvents = Array.isArray(content["events"])
+        ? (content["events"] as Array<{ date?: string; label?: string; description?: string; color?: string }>)
+        : []
+      const events = rawEvents.map((ev) => ({
+        date: ev.date ?? "",
+        label: ev.label ?? "",
+        description: ev.description,
+        color: ev.color,
+      }))
+      if (events.length === 0) {
+        return (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border h-40 gap-2">
+            <Timer className="h-7 w-7 text-muted-foreground/30" />
+            <span className="text-[11px] text-muted-foreground">Add events to see the timeline.</span>
+          </div>
+        )
+      }
+      return <TimelineJSPreview events={events} eventsKey={JSON.stringify(events)} />
+    }
+
+    // ─── Legend ───────────────────────────────────────────────────────────────────
+    case "legend": {
+      const rawItems = Array.isArray(content["items"])
+        ? (content["items"] as Array<{ color?: string; label?: string; description?: string; value?: string | number }>)
+        : []
+      const legendLayout = typeof content["layout"] === "string" ? content["layout"] as "list" | "chips" | "grid" : "list"
+      const items = rawItems.map((item) => ({
+        color: item.color ?? "#94a3b8",
+        label: item.label ?? "",
+        description: item.description,
+        value: item.value,
+      }))
+      if (items.length === 0) {
+        return (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border h-40 gap-2">
+            <List className="h-7 w-7 text-muted-foreground/30" />
+            <span className="text-[11px] text-muted-foreground">Add items to build the legend.</span>
+          </div>
+        )
+      }
+      return <LegendPreview items={items} title={title !== meta.label ? title : undefined} layout={legendLayout} />
     }
 
     default:

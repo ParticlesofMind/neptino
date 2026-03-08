@@ -1,5 +1,6 @@
 import { useRef, useState } from "react"
 import {
+  AudioLines,
   Pause,
   Play,
   Volume2,
@@ -9,15 +10,20 @@ import {
   AnimationPreview,
   ChartPreview,
   DiagramPreview,
+  LegendPreview,
   MapPreview,
   RichSimPlaceholder,
+  TimelinePreview,
 } from "./card-type-preview-visual-subviews"
 
 const BAR_COUNT = 36
 const BAR_SPEEDS = Array.from({ length: BAR_COUNT }, (_, i) => 280 + Math.abs(Math.sin(i * 1.4)) * 220 + (i % 7) * 55)
 const BAR_HEIGHTS = Array.from({ length: BAR_COUNT }, (_, i) => 12 + Math.abs(Math.sin(i * 0.85 + 0.6)) * 78)
 
-export function AudioPreview({ url }: { url: string }) {
+const SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const
+type PlaybackRate = typeof SPEED_STEPS[number]
+
+export function AudioPreview({ url, title }: { url: string; title?: string }) {
   const mediaRef = useRef<HTMLAudioElement>(null)
   const scrubRef = useRef<HTMLDivElement>(null)
   const [playing, setPlaying] = useState(false)
@@ -26,6 +32,7 @@ export function AudioPreview({ url }: { url: string }) {
   const [duration, setDuration] = useState(0)
   const [muted, setMuted] = useState(false)
   const [seekProg, setSeekProg] = useState<number | null>(null)
+  const [speed, setSpeed] = useState<PlaybackRate>(1)
 
   const fmt = (s: number) => {
     const m = Math.floor(s / 60)
@@ -37,6 +44,7 @@ export function AudioPreview({ url }: { url: string }) {
     const audio = mediaRef.current
     if (!audio) return
     if (audio.paused) {
+      audio.playbackRate = speed
       void audio.play()
       setPlaying(true)
     } else {
@@ -56,6 +64,11 @@ export function AudioPreview({ url }: { url: string }) {
     if (!audio) return
     audio.muted = !audio.muted
     setMuted(audio.muted)
+  }
+
+  const setPlaybackSpeed = (s: PlaybackRate) => {
+    setSpeed(s)
+    if (mediaRef.current) mediaRef.current.playbackRate = s
   }
 
   const calcRatio = (clientX: number) => {
@@ -102,6 +115,12 @@ export function AudioPreview({ url }: { url: string }) {
 
   return (
     <div className="select-none">
+      {title && (
+        <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-border/50">
+          <AudioLines className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+          <span className="text-[12px] font-semibold text-foreground truncate">{title}</span>
+        </div>
+      )}
       <audio
         ref={mediaRef}
         src={url}
@@ -117,7 +136,7 @@ export function AudioPreview({ url }: { url: string }) {
         onEnded={() => setPlaying(false)}
       />
       <div className="flex items-end gap-px h-16 mb-4">
-        {BAR_SPEEDS.map((speed, i) => (
+        {BAR_SPEEDS.map((barSpeed, i) => (
           <div
             key={i}
             className="flex-1 rounded-[2px]"
@@ -130,7 +149,7 @@ export function AudioPreview({ url }: { url: string }) {
               ...(playing
                 ? {
                     animationName: "audioBar",
-                    animationDuration: `${speed}ms`,
+                    animationDuration: `${barSpeed}ms`,
                     animationTimingFunction: "ease-in-out",
                     animationIterationCount: "infinite",
                     animationDirection: "alternate",
@@ -149,6 +168,23 @@ export function AudioPreview({ url }: { url: string }) {
       </div>
       <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-4">
         <span>{fmt(dispCur)}</span>
+        <div className="flex items-center gap-1">
+          {SPEED_STEPS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setPlaybackSpeed(s)}
+              className={[
+                "rounded px-1.5 py-0.5 text-[10px] transition-colors",
+                speed === s
+                  ? "bg-foreground/10 font-semibold text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              ].join(" ")}
+            >
+              {s === 1 ? "1×" : `${s}×`}
+            </button>
+          ))}
+        </div>
         <span>{duration ? fmt(duration) : "--:--"}</span>
       </div>
       <div className="flex items-center justify-center gap-6">
@@ -165,7 +201,7 @@ export function AudioPreview({ url }: { url: string }) {
   )
 }
 
-export function VideoPreview({ url }: { url: string }) {
+export function VideoPreview({ url, title }: { url: string; title?: string }) {
   const mediaRef = useRef<HTMLVideoElement>(null)
   const scrubRef = useRef<HTMLDivElement>(null)
   const [playing, setPlaying] = useState(false)
@@ -174,6 +210,7 @@ export function VideoPreview({ url }: { url: string }) {
   const [duration, setDuration] = useState(0)
   const [muted, setMuted] = useState(false)
   const [seekProg, setSeekProg] = useState<number | null>(null)
+  const [speed, setSpeed] = useState<PlaybackRate>(1)
 
   const fmt = (s: number) => {
     const m = Math.floor(s / 60)
@@ -185,6 +222,7 @@ export function VideoPreview({ url }: { url: string }) {
     const video = mediaRef.current
     if (!video) return
     if (video.paused) {
+      video.playbackRate = speed
       void video.play()
       setPlaying(true)
     } else {
@@ -193,11 +231,22 @@ export function VideoPreview({ url }: { url: string }) {
     }
   }
 
+  const skip = (delta: number) => {
+    const video = mediaRef.current
+    if (!video) return
+    video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + delta))
+  }
+
   const toggleMute = () => {
     const video = mediaRef.current
     if (!video) return
     video.muted = !video.muted
     setMuted(video.muted)
+  }
+
+  const setPlaybackSpeed = (s: PlaybackRate) => {
+    setSpeed(s)
+    if (mediaRef.current) mediaRef.current.playbackRate = s
   }
 
   const calcRatio = (x: number) => {
@@ -244,6 +293,12 @@ export function VideoPreview({ url }: { url: string }) {
 
   return (
     <div className="select-none">
+      {title && (
+        <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-border/50">
+          <Play className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+          <span className="text-[12px] font-semibold text-foreground truncate">{title}</span>
+        </div>
+      )}
       <div className="relative rounded-xl overflow-hidden bg-black aspect-video mb-3">
         <video
           ref={mediaRef}
@@ -275,15 +330,39 @@ export function VideoPreview({ url }: { url: string }) {
         </div>
         <div className="pointer-events-none absolute h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-foreground shadow opacity-0 group-hover:opacity-100" style={{ left: `${disp}%` }} />
       </div>
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-3">
         <span>{fmt(dispCur)}</span>
+        <div className="flex items-center gap-1">
+          {SPEED_STEPS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setPlaybackSpeed(s)}
+              className={[
+                "rounded px-1.5 py-0.5 text-[10px] transition-colors",
+                speed === s
+                  ? "bg-foreground/10 font-semibold text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              ].join(" ")}
+            >
+              {s === 1 ? "1×" : `${s}×`}
+            </button>
+          ))}
+        </div>
+        <span>{duration ? fmt(duration) : "--:--"}</span>
+      </div>
+      <div className="flex items-center justify-center gap-6">
+        <button type="button" onClick={() => skip(-10)} className="text-muted-foreground hover:text-foreground transition-colors text-[11px]">−10s</button>
+        <button type="button" onClick={toggle} className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-foreground/15 bg-foreground text-background shadow-sm hover:bg-foreground/85 transition-colors">
+          {playing ? <Pause className="h-4 w-4 fill-background stroke-none" /> : <Play className="h-4 w-4 fill-background stroke-none ml-0.5" />}
+        </button>
+        <button type="button" onClick={() => skip(10)} className="text-muted-foreground hover:text-foreground transition-colors text-[11px]">+10s</button>
         <button type="button" onClick={toggleMute} className="text-muted-foreground hover:text-foreground transition-colors">
           {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
         </button>
-        <span>{duration ? fmt(duration) : "--:--"}</span>
       </div>
     </div>
   )
 }
 
-export { AnimationPreview, ChartPreview, DiagramPreview, MapPreview, RichSimPlaceholder }
+export { AnimationPreview, ChartPreview, DiagramPreview, LegendPreview, MapPreview, RichSimPlaceholder, TimelinePreview }

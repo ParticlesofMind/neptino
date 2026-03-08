@@ -52,7 +52,7 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
               onClick={() => onChange("colorMode", m)}
               className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
                 colorMode === m
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -130,7 +130,7 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
               onClick={() => onChange("pageScaling", s)}
               className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium capitalize transition ${
                 pageScaling === s
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -164,7 +164,7 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
               onClick={() => onChange("duplex", d)}
               className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
                 duplex === d
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -185,7 +185,7 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
               onClick={() => onChange("exportQuality", q)}
               className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
                 exportQuality === q
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >

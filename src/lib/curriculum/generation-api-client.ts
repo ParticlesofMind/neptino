@@ -268,8 +268,32 @@ export async function callGenerationAPI(
     }
 
     if (!res.ok) {
-      const errorBody = await res.json().catch(() => ({ error: res.statusText }))
-      const errorMsg = (errorBody as { error?: string }).error ?? `HTTP ${res.status}`
+      const errorBody = await res.json().catch(() => ({ error: res.statusText })) as {
+        error?: string
+        code?: string
+        retryAfterSeconds?: number
+        elapsedSeconds?: number
+      }
+      const errorMsg = errorBody.error ?? `HTTP ${res.status}`
+
+      if (res.status === 429) {
+        const retryAfterHeader = Number(res.headers.get("Retry-After") ?? "")
+        const retryAfter = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+          ? retryAfterHeader
+          : (errorBody.retryAfterSeconds ?? 5)
+        const busyMessage = errorBody.code === "GENERATION_IN_PROGRESS"
+          ? `Generation already running. Please wait ${retryAfter}s and try again.`
+          : `Generation cooldown active. Please wait ${retryAfter}s and try again.`
+
+        // 429 is an expected contention state, not a transport failure.
+        console.info("[callGenerationAPI] Generation unavailable:", errorBody.code ?? "HTTP_429", errorMsg)
+        return {
+          success: false,
+          message: busyMessage,
+          error: errorMsg,
+        }
+      }
+
       console.error("[callGenerationAPI] API route returned error:", res.status, errorMsg)
       return {
         success: false,

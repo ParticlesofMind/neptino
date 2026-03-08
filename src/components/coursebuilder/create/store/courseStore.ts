@@ -58,7 +58,16 @@ interface CourseState {
   appendCanvasPage: (
     sessionId: SessionId,
     contentTopicStart?: number,
-    options?: { topicEnd?: number; objectiveStart?: number; cardStart?: number; cardEnd?: number; blockKeys?: BlockKey[]; taskStart?: number },
+    options?: {
+      topicEnd?: number
+      objectiveStart?: number
+      objectiveEnd?: number
+      taskStart?: number
+      taskEnd?: number
+      cardStart?: number
+      cardEnd?: number
+      blockKeys?: BlockKey[]
+    },
   ) => void
 
   setCanvasTopicRange: (
@@ -363,10 +372,20 @@ export const useCourseStore = create<CourseState>()(
                 : {}),
               // Objective-level split: restrict which objectives are shown on this page.
               ...(options?.objectiveStart !== undefined
-                ? { contentObjectiveRange: { start: options.objectiveStart } }
+                ? {
+                    contentObjectiveRange: {
+                      start: options.objectiveStart,
+                      ...(options?.objectiveEnd !== undefined ? { end: options.objectiveEnd } : {}),
+                    },
+                  }
                 : {}),
               ...(options?.taskStart !== undefined
-                ? { contentTaskRange: { start: options.taskStart } }
+                ? {
+                    contentTaskRange: {
+                      start: options.taskStart,
+                      ...(options?.taskEnd !== undefined ? { end: options.taskEnd } : {}),
+                    },
+                  }
                 : {}),
               ...(options?.cardStart !== undefined
                 ? {
@@ -452,6 +471,9 @@ export const useCourseStore = create<CourseState>()(
                   : {}),
                 ...(assignment.taskRange
                   ? { contentTaskRange: assignment.taskRange }
+                  : {}),
+                ...(assignment.cardRange
+                  ? { contentCardRange: assignment.cardRange }
                   : {}),
               }
               return page

@@ -19,7 +19,15 @@ import {
 } from "lucide-react"
 import { useCourseStore } from "../store/courseStore"
 import { useCanvasStore } from "../store/canvasStore"
-import { DEFAULT_PAGE_DIMENSIONS, bodyHeightPx, type CourseSession, type CanvasId } from "../types"
+import {
+  DEFAULT_PAGE_DIMENSIONS,
+  bodyHeightPx,
+  type CourseSession,
+  type CanvasId,
+  type CardId,
+  type DroppedCardId,
+  type BlockKey,
+} from "../types"
 import {
   readMeasurements,
   subscribeMeasurements,
@@ -96,6 +104,155 @@ function fmtRange(range: { start: number; end?: number } | undefined, label: str
   if (!range) return ""
   const end = range.end !== undefined ? String(range.end) : "∞"
   return `${label}[${range.start}-${end}]`
+}
+
+function normalizeRange(
+  range: { start: number; end?: number } | undefined,
+  total: number,
+): { start: number; end: number } {
+  const safeTotal = Math.max(0, total)
+  const rawStart = range?.start ?? 0
+  const rawEnd = range?.end ?? safeTotal
+  const start = Math.min(Math.max(0, rawStart), safeTotal)
+  const end = Math.min(Math.max(start, rawEnd), safeTotal)
+  return { start, end }
+}
+
+function pickDebugBlockKey(blockKeys: readonly string[] | undefined): BlockKey | undefined {
+  if (!blockKeys || blockKeys.length === 0) return undefined
+  if (blockKeys.includes("assignment")) return "assignment" as BlockKey
+  if (blockKeys.includes("content")) return "content" as BlockKey
+  if (blockKeys.includes("program")) return "program" as BlockKey
+  if (blockKeys.includes("resources")) return "resources" as BlockKey
+  return undefined
+}
+
+function findCanvasForTaskIndex(session: CourseSession, taskIdx: number, totalTasks: number): CanvasId | null {
+  const matchingCanvas = session.canvases.find((canvas) => {
+    const taskRange = normalizeRange(canvas.contentTaskRange, totalTasks)
+    return taskIdx >= taskRange.start && taskIdx < taskRange.end
+  })
+  return (matchingCanvas?.id ?? session.canvases[0]?.id ?? null) as CanvasId | null
+}
+
+function getCanvasIdSet(sessions: CourseSession[]): Set<string> {
+  return new Set(sessions.flatMap((session) => session.canvases.map((canvas) => canvas.id)))
+}
+
+function partitionMeasurements(
+  sessions: CourseSession[],
+  measurements: ReadonlyMap<string, DebugMeasurement>,
+): {
+  current: Map<string, DebugMeasurement>
+  stale: Array<[string, DebugMeasurement]>
+} {
+  const currentIds = getCanvasIdSet(sessions)
+  const current = new Map<string, DebugMeasurement>()
+  const stale: Array<[string, DebugMeasurement]> = []
+
+  for (const [canvasId, measurement] of measurements.entries()) {
+    if (currentIds.has(canvasId)) {
+      current.set(canvasId, measurement)
+      continue
+    }
+    stale.push([canvasId, measurement])
+  }
+
+  return { current, stale }
+}
+
+function countCurrentMeasurements(
+  sessions: CourseSession[],
+  measurements: ReadonlyMap<string, DebugMeasurement>,
+): number {
+  return partitionMeasurements(sessions, measurements).current.size
+}
+
+function buildDebugSummary(
+  sessions: CourseSession[],
+  measurements: ReadonlyMap<string, DebugMeasurement>,
+): Record<string, unknown> {
+  const totalSessions = sessions.length
+  const allCanvases = sessions.flatMap((s) => s.canvases.map((c) => ({ sessionId: s.id, canvas: c })))
+  const totalCanvases = allCanvases.length
+  const { current: currentMeasurements, stale: staleMeasurements } = partitionMeasurements(sessions, measurements)
+  const measuredCanvases = currentMeasurements.size
+  const missingCanvases = Math.max(0, totalCanvases - measuredCanvases)
+
+  let totalTopics = 0
+  let totalObjectives = 0
+  let totalTasks = 0
+  let totalCards = 0
+  let tasksWithCards = 0
+
+  for (const session of sessions) {
+    totalTopics += session.topics.length
+    for (const topic of session.topics) {
+      totalObjectives += topic.objectives.length
+      for (const objective of topic.objectives) {
+        totalTasks += objective.tasks.length
+        for (const task of objective.tasks) {
+          const cardCount = task.droppedCards.length
+          totalCards += cardCount
+          if (cardCount > 0) tasksWithCards += 1
+        }
+      }
+    }
+  }
+
+  const overflow = Array.from(currentMeasurements.values()).filter((m) => m.overflow)
+  const overflowWithoutSplitGuard = overflow.filter((m) => !m.splitGuard)
+
+  const prefixedIdIssues = allCanvases
+    .filter(({ sessionId, canvas }) => !canvas.id.startsWith(`${sessionId}-canvas-`))
+    .map(({ sessionId, canvas }) => ({ sessionId, canvasId: canvas.id }))
+
+  const missingMeasurementIds = allCanvases
+    .filter(({ canvas }) => !currentMeasurements.has(canvas.id))
+    .map(({ canvas }) => canvas.id)
+
+  const rawRangePresence = {
+    topic: allCanvases.filter(({ canvas }) => canvas.contentTopicRange !== undefined).length,
+    objective: allCanvases.filter(({ canvas }) => canvas.contentObjectiveRange !== undefined).length,
+    task: allCanvases.filter(({ canvas }) => canvas.contentTaskRange !== undefined).length,
+    card: allCanvases.filter(({ canvas }) => canvas.contentCardRange !== undefined).length,
+  }
+
+  return {
+    capturedAt: new Date().toISOString(),
+    totals: {
+      sessions: totalSessions,
+      canvases: totalCanvases,
+      topics: totalTopics,
+      objectives: totalObjectives,
+      tasks: totalTasks,
+      cards: totalCards,
+      tasksWithCards,
+    },
+    measurements: {
+      measuredCanvases,
+      missingCanvases,
+      coveragePct: totalCanvases > 0 ? Number(((measuredCanvases / totalCanvases) * 100).toFixed(2)) : 100,
+      overflowCount: overflow.length,
+      overflowWithoutSplitGuard: overflowWithoutSplitGuard.length,
+      staleMeasurements: staleMeasurements.length,
+      measurementStoreSize: measurements.size,
+    },
+    rangesRawPresence: {
+      topic: `${rawRangePresence.topic}/${totalCanvases}`,
+      objective: `${rawRangePresence.objective}/${totalCanvases}`,
+      task: `${rawRangePresence.task}/${totalCanvases}`,
+      card: `${rawRangePresence.card}/${totalCanvases}`,
+    },
+    anomalies: {
+      nonStandardCanvasIds: prefixedIdIssues.length,
+      missingMeasurements: missingMeasurementIds.length,
+      overflowWithoutSplitGuardCanvasIds: overflowWithoutSplitGuard.map((m) => m.canvasId),
+      nonStandardCanvasIdExamples: prefixedIdIssues.slice(0, 10),
+      missingMeasurementExamples: missingMeasurementIds.slice(0, 20),
+      staleMeasurementExamples: staleMeasurements.slice(0, 20).map(([canvasId]) => canvasId),
+    },
+  }
 }
 
 function tsAgo(ts: number): string {
@@ -1635,17 +1792,24 @@ export function CanvasDebugPanel() {
   const [logAutoScroll, setLogAutoScroll] = useLocalStorage<boolean>(LS.logAutoScroll, true)
 
   const measurements = useMeasurements()
-  const { copied: measCopied, copy: copyMeas } = useCopyToClipboard()
+  const { copied: allCopied, copy: copyAll } = useCopyToClipboard()
+  const { copied: summaryCopied, copy: copySummary } = useCopyToClipboard()
   const [clearAllConfirm, setClearAllConfirm] = useState(false)
+  const [lastSeedCount, setLastSeedCount] = useState(0)
+  const [lastHeavySeedCount, setLastHeavySeedCount] = useState(0)
+  const [lastClearedSyntheticCount, setLastClearedSyntheticCount] = useState(0)
 
   const sessions          = useCourseStore((s) => s.sessions)
   const clearSessionCards = useCourseStore((s) => s.clearSessionCards)
+  const addDroppedCard    = useCourseStore((s) => s.addDroppedCard)
+  const removeDroppedCard = useCourseStore((s) => s.removeDroppedCard)
   const zoomLevel         = useCanvasStore((s) => s.zoomLevel)
   const setZoom           = useCanvasStore((s) => s.setZoom)
   const stepZoom          = useCanvasStore((s) => s.stepZoom)
   const panOffset         = useCanvasStore((s) => s.panOffset)
   const overflowIds       = useCanvasStore((s) => s.overflowingCanvasIds)
   const fitScale          = useCanvasStore((s) => s.fitScale)
+  const setDebugMountAllCanvases = useCanvasStore((s) => s.setDebugMountAllCanvases)
 
   // Auto-expand sessions that have never been seen before (new session appears, add to expanded list)
   const sessionIds = sessions.map((s) => s.id)
@@ -1697,7 +1861,163 @@ export function CanvasDebugPanel() {
     return () => clearInterval(id)
   }, [open, tick])
 
+  // While the panel is open, mount all virtualized rows so measurement data can
+  // be populated for every canvas before export.
+  useEffect(() => {
+    if (!open) return
+    setDebugMountAllCanvases(true)
+    return () => setDebugMountAllCanvases(false)
+  }, [open, setDebugMountAllCanvases])
+
   const handleClear = useCallback(() => clearMeasurements(), [])
+
+  const totalCanvases = sessions.reduce((s, sess) => s + sess.canvases.length, 0)
+
+  const handleCopyAll = useCallback(async () => {
+    // If not all canvases have been measured yet, give ResizeObserver one tick
+    // after forcing full mount to populate the debug registry.
+    if (countCurrentMeasurements(sessions, measurements) < totalCanvases) {
+      setDebugMountAllCanvases(true)
+      await new Promise((resolve) => setTimeout(resolve, 450))
+    }
+
+    const latestMeasurements = readMeasurements()
+    const { current: currentMeasurements, stale: staleMeasurements } = partitionMeasurements(sessions, latestMeasurements)
+    const canvasSnap = useCanvasStore.getState()
+    const courseSnap = useCourseStore.getState()
+
+    const templatesData = sessions.map((session) => ({
+      sessionId:    session.id,
+      sessionOrder: session.order,
+      sessionTitle: session.title,
+      canvases: session.canvases.map((canvas, idx) => {
+        const m = currentMeasurements.get(canvas.id)
+        const totalTopics = session.topics.length
+        const totalObjectives = session.topics.reduce((sum, t) => sum + t.objectives.length, 0)
+        const totalTasks = session.topics
+          .flatMap((t) => t.objectives)
+          .reduce((sum, o) => sum + o.tasks.length, 0)
+        const totalCardsInSession = session.topics
+          .flatMap((t) => t.objectives)
+          .flatMap((o) => o.tasks)
+          .reduce((sum, task) => sum + task.droppedCards.length, 0)
+
+        const topicRangeResolved = normalizeRange(canvas.contentTopicRange, totalTopics)
+        const objectiveRangeResolved = normalizeRange(canvas.contentObjectiveRange, totalObjectives)
+        const taskRangeResolved = normalizeRange(canvas.contentTaskRange, totalTasks)
+        const cardRangeResolved = normalizeRange(canvas.contentCardRange, totalCardsInSession)
+
+        return {
+          index:      idx + 1,
+          id:         canvas.id,
+          contentH:   m?.contentH ?? null,
+          bodyH:      m?.bodyH ?? bodyH,
+          overflow:   m?.overflow ?? false,
+          splitGuard: m?.splitGuard ?? false,
+          blockKeys:  canvas.blockKeys ?? [],
+          ranges: {
+            topic: {
+              raw: canvas.contentTopicRange ?? null,
+              resolved: topicRangeResolved,
+            },
+            objective: {
+              raw: canvas.contentObjectiveRange ?? null,
+              resolved: objectiveRangeResolved,
+            },
+            task: {
+              raw: canvas.contentTaskRange ?? null,
+              resolved: taskRangeResolved,
+            },
+            card: {
+              raw: canvas.contentCardRange ?? null,
+              resolved: cardRangeResolved,
+            },
+          },
+          measuredAt: m ? tsAgo(m.timestamp) : null,
+        }
+      }),
+    }))
+
+    const perspectiveData = {
+      zoomLevel,
+      fitScale,
+      effectiveScale,
+      panOffset,
+      pageDimensions: {
+        widthPx:  dims.widthPx,
+        heightPx: dims.heightPx,
+        bodyH,
+        margins:  dims.margins,
+      },
+    }
+
+    const measurementsData = Array.from(currentMeasurements.entries()).map(([id, m]) => ({ id, ...m }))
+    const staleMeasurementsData = staleMeasurements.map(([id, m]) => ({ id, ...m }))
+
+    const canvasStoreData: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(canvasSnap) as Array<[string, unknown]>) {
+      if (typeof v !== "function") {
+        canvasStoreData[k] = v instanceof Set ? Array.from(v as Set<unknown>) : v
+      }
+    }
+    const courseStoreSummary = {
+      sessions:       courseSnap.sessions.length,
+      totalCanvases:  courseSnap.sessions.reduce((n, s) => n + s.canvases.length, 0),
+      totalTopics:    courseSnap.sessions.reduce((n, s) => n + s.topics.length, 0),
+      totalCards:     courseSnap.sessions.reduce(
+        (n, s) => n + s.topics.flatMap((t) => t.objectives).flatMap((o) => o.tasks).reduce((a, task) => a + task.droppedCards.length, 0),
+        0,
+      ),
+      activeSessionId: courseSnap.activeSessionId,
+    }
+
+    const logData = Array.from(readLog())
+
+    const layoutData = buildLayoutRows(sessions, zoomLevel / 100).map((r) => ({
+      index:  r.index,
+      kind:   r.kind,
+      session: r.sessionOrder,
+      canvas: r.canvasIndex ?? null,
+      height: r.height,
+      start:  r.start,
+      end:    r.start + r.height,
+      blocks: r.blockKeys ?? null,
+    }))
+
+    const blocksData = buildBlockEntries(sessions)
+
+    copyAll(JSON.stringify({
+      capturedAt:   new Date().toISOString(),
+      templates:    templatesData,
+      data:         sessions,
+      perspective:  perspectiveData,
+      measurements: measurementsData,
+      staleMeasurements: staleMeasurementsData,
+      store:        { canvas: canvasStoreData, course: courseStoreSummary },
+      log:          logData,
+      layout:       layoutData,
+      blocks:       blocksData,
+      measurementCoverage: {
+        measuredCanvases: measurementsData.length,
+        totalCanvases,
+        missingCanvases: Math.max(0, totalCanvases - measurementsData.length),
+        staleMeasurements: staleMeasurementsData.length,
+        measurementStoreSize: latestMeasurements.size,
+      },
+    }, null, 2))
+  }, [
+    sessions,
+    measurements,
+    bodyH,
+    zoomLevel,
+    fitScale,
+    effectiveScale,
+    panOffset,
+    dims,
+    copyAll,
+    totalCanvases,
+    setDebugMountAllCanvases,
+  ])
 
   const handleClearAllCards = useCallback(() => {
     if (!clearAllConfirm) {
@@ -1709,12 +2029,145 @@ export function CanvasDebugPanel() {
     setClearAllConfirm(false)
   }, [clearAllConfirm, sessions, clearSessionCards])
 
-  const handleCopyMeasurements = useCallback(() => {
-    const data = Array.from(measurements.entries()).map(([id, m]) => ({ id, ...m }))
-    copyMeas(JSON.stringify(data, null, 2))
-  }, [measurements, copyMeas])
+  const handleSeedCards = useCallback(() => {
+    let inserted = 0
+    let globalOrder = Date.now()
 
-  const totalCanvases = sessions.reduce((s, sess) => s + sess.canvases.length, 0)
+    for (const session of sessions) {
+      const totalTasks = session.topics
+        .flatMap((topic) => topic.objectives)
+        .reduce((sum, objective) => sum + objective.tasks.length, 0)
+
+      let taskIdx = 0
+      for (const topic of session.topics) {
+        for (const objective of topic.objectives) {
+          for (const task of objective.tasks) {
+            if (task.droppedCards.length > 0) {
+              taskIdx += 1
+              continue
+            }
+
+            const targetCanvasId = findCanvasForTaskIndex(session, taskIdx, totalTasks)
+            const targetCanvas = session.canvases.find((c) => c.id === targetCanvasId)
+            const blockKey = pickDebugBlockKey(targetCanvas?.blockKeys)
+
+            addDroppedCard(
+              session.id,
+              task.id,
+              {
+                id: crypto.randomUUID() as DroppedCardId,
+                cardId: (`debug-card-${session.id}-${task.id}`) as CardId,
+                cardType: "text",
+                taskId: task.id,
+                areaKind: "instruction",
+                blockKey,
+                position: { x: 0, y: 0 },
+                dimensions: { width: 320, height: 120 },
+                content: {
+                  title: `Debug seed card S${session.order}`,
+                  body: `Synthetic debug content for task ${task.id}`,
+                },
+                order: globalOrder++,
+              },
+              targetCanvasId,
+            )
+            inserted += 1
+            taskIdx += 1
+          }
+        }
+      }
+    }
+
+    setLastSeedCount(inserted)
+    setTimeout(() => setLastSeedCount(0), 3000)
+  }, [sessions, addDroppedCard])
+
+  const handleSeedHeavyCards = useCallback(() => {
+    const cardsPerTask = 4
+    let inserted = 0
+    let globalOrder = Date.now()
+
+    for (const session of sessions) {
+      const totalTasks = session.topics
+        .flatMap((topic) => topic.objectives)
+        .reduce((sum, objective) => sum + objective.tasks.length, 0)
+
+      let taskIdx = 0
+      for (const topic of session.topics) {
+        for (const objective of topic.objectives) {
+          for (const task of objective.tasks) {
+            const targetCanvasId = findCanvasForTaskIndex(session, taskIdx, totalTasks)
+            const targetCanvas = session.canvases.find((c) => c.id === targetCanvasId)
+            const blockKey = pickDebugBlockKey(targetCanvas?.blockKeys)
+
+            for (let i = 0; i < cardsPerTask; i += 1) {
+              addDroppedCard(
+                session.id,
+                task.id,
+                {
+                  id: crypto.randomUUID() as DroppedCardId,
+                  cardId: (`debug-heavy-card-${session.id}-${task.id}-${i}`) as CardId,
+                  cardType: "text",
+                  taskId: task.id,
+                  areaKind: "instruction",
+                  blockKey,
+                  position: { x: 0, y: 0 },
+                  dimensions: { width: 380, height: 220 },
+                  content: {
+                    title: `Heavy debug card ${i + 1}/${cardsPerTask}`,
+                    body: `Overflow stress content for session ${session.order}, task ${task.id}.`,
+                    paragraph:
+                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                      "Vivamus lacinia odio vitae vestibulum vestibulum. Cras venenatis euismod malesuada.",
+                  },
+                  order: globalOrder++,
+                },
+                targetCanvasId,
+              )
+              inserted += 1
+            }
+
+            taskIdx += 1
+          }
+        }
+      }
+    }
+
+    setLastHeavySeedCount(inserted)
+    setTimeout(() => setLastHeavySeedCount(0), 3000)
+  }, [sessions, addDroppedCard])
+
+  const handleCopySummary = useCallback(() => {
+    const latestMeasurements = readMeasurements()
+    const summary = buildDebugSummary(sessions, latestMeasurements)
+    copySummary(JSON.stringify(summary, null, 2))
+  }, [sessions, copySummary])
+
+  const handleClearSyntheticCards = useCallback(() => {
+    let removed = 0
+
+    for (const session of sessions) {
+      for (const topic of session.topics) {
+        for (const objective of topic.objectives) {
+          for (const task of objective.tasks) {
+            for (const card of task.droppedCards) {
+              const cardIdValue = String(card.cardId)
+              const isSynthetic =
+                cardIdValue.startsWith("debug-card-") ||
+                cardIdValue.startsWith("debug-heavy-card-")
+              if (!isSynthetic) continue
+              removeDroppedCard(session.id, task.id, card.id)
+              removed += 1
+            }
+          }
+        }
+      }
+    }
+
+    setLastClearedSyntheticCount(removed)
+    setTimeout(() => setLastClearedSyntheticCount(0), 3000)
+  }, [sessions, removeDroppedCard])
+
   const overflowCount = overflowIds.size
   const totalCards    = sessions.reduce(
     (sum, s) =>
@@ -1725,6 +2178,27 @@ export function CanvasDebugPanel() {
         .reduce((n, task) => n + task.droppedCards.length, 0),
     0,
   )
+  const syntheticCardCount = sessions.reduce(
+    (sum, session) =>
+      sum +
+      session.topics
+        .flatMap((topic) => topic.objectives)
+        .flatMap((objective) => objective.tasks)
+        .reduce(
+          (taskSum, task) =>
+            taskSum +
+            task.droppedCards.filter((card) => {
+              const cardIdValue = String(card.cardId)
+              return (
+                cardIdValue.startsWith("debug-card-") ||
+                cardIdValue.startsWith("debug-heavy-card-")
+              )
+            }).length,
+          0,
+        ),
+    0,
+  )
+  const canSeedHeavy = syntheticCardCount === 0
 
   const TAB_BTN = (tab: PanelTab, label: string, icon: React.ReactNode): React.ReactElement => (
     <button
@@ -1828,13 +2302,63 @@ export function CanvasDebugPanel() {
                 </button>
               )}
 
-              {/* Copy measurements JSON */}
               <button
-                onClick={handleCopyMeasurements}
-                title="Copy measurements as JSON"
+                onClick={handleSeedCards}
+                title="Add one synthetic debug card to each empty task"
+                className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/80 transition-colors"
+              >
+                <Database size={11} />
+                {lastSeedCount > 0 ? `Seeded ${lastSeedCount}` : "Seed cards"}
+              </button>
+
+              <button
+                onClick={handleSeedHeavyCards}
+                disabled={!canSeedHeavy}
+                title={
+                  canSeedHeavy
+                    ? "Add multiple large synthetic cards per task to trigger overflow"
+                    : "Clear synthetic cards before running heavy seeding again"
+                }
+                className={[
+                  "flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors",
+                  canSeedHeavy
+                    ? "bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/80"
+                    : "bg-white/5 text-white/20 cursor-not-allowed",
+                ].join(" ")}
+              >
+                <AlertTriangle size={11} />
+                {lastHeavySeedCount > 0
+                  ? `Heavy +${lastHeavySeedCount}`
+                  : canSeedHeavy
+                  ? "Seed heavy"
+                  : `Seed heavy (${syntheticCardCount})`}
+              </button>
+
+              <button
+                onClick={handleClearSyntheticCards}
+                title="Remove only debug-seeded cards"
+                className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-300 transition-colors"
+              >
+                <Trash2 size={11} />
+                {lastClearedSyntheticCount > 0 ? `Cleared ${lastClearedSyntheticCount}` : "Clear synthetic"}
+              </button>
+
+              <button
+                onClick={handleCopySummary}
+                title="Copy compact debug summary as JSON"
+                className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/80 transition-colors"
+              >
+                {summaryCopied ? <Check size={11} className="text-green-400" /> : <BarChart2 size={11} />}
+                Summary
+              </button>
+
+              {/* Copy all tabs as JSON */}
+              <button
+                onClick={handleCopyAll}
+                title="Copy all debug data (templates, data, perspective, measurements, store, log, layout, blocks) as JSON"
                 className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white/70 transition-colors"
               >
-                {measCopied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                {allCopied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
               </button>
 
               <button

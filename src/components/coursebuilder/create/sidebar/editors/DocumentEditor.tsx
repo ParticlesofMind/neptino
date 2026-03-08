@@ -57,7 +57,7 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
               onClick={() => onChange("documentType", t)}
               className={[
                 "px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors",
-                documentType === t ? "bg-neutral-900 text-white" : "bg-white text-neutral-500 hover:bg-neutral-50",
+                documentType === t ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "bg-white text-neutral-500 hover:bg-neutral-50",
               ].join(" ")}
             >
               {t === "pdf" ? "PDF" : t === "slides" ? "Slides" : "Web"}

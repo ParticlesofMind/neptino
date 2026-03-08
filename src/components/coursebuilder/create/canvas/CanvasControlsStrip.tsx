@@ -22,7 +22,7 @@ export function CanvasControlsStrip() {
   const setActiveTool  = useCanvasStore((s) => s.setActiveTool)
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white rounded-xl shadow-sm self-center mx-2 py-3 overflow-y-auto">
+    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white rounded-xl shadow-sm py-3 overflow-y-auto">
       {/* Zoom % */}
       <button
         onClick={() => setZoom(100)}
@@ -90,7 +90,7 @@ function ControlBtn({
       className={[
         "flex flex-col items-center gap-0.5 w-10 py-1.5 rounded transition-colors",
         active
-          ? "bg-neutral-900 text-white"
+          ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
           : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700",
       ].join(" ")}
     >

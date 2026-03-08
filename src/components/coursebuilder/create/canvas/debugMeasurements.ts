@@ -47,3 +47,8 @@ export function clearMeasurements(): void {
   measurements.clear()
   listeners.forEach((fn) => fn())
 }
+
+export function deleteMeasurement(canvasId: string): void {
+  if (!measurements.delete(canvasId)) return
+  listeners.forEach((fn) => fn())
+}

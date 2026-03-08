@@ -115,7 +115,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
               className={[
                 "rounded-md px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-all",
                 preset === p.value
-                  ? "bg-neutral-900 text-white shadow-sm"
+                  ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                   : "border border-neutral-200 bg-neutral-50 text-neutral-500 hover:border-neutral-300 hover:bg-white hover:text-neutral-700",
               ].join(" ")}
             >
@@ -138,22 +138,22 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
               className={[
                 "flex flex-1 flex-col items-center gap-1 rounded-md border p-1.5 transition-all",
                 easing === e
-                  ? "border-neutral-900 bg-neutral-900"
+                  ? "border-[#9eb9da] bg-[#dbe8f6]"
                   : "border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white",
               ].join(" ")}
             >
               <svg viewBox="0 0 32 24" width="32" height="20" className="overflow-visible">
-                <line x1={4} y1={20} x2={28} y2={20} stroke={easing === e ? "#ffffff33" : "#e5e7eb"} strokeWidth={0.8} />
-                <line x1={4} y1={20} x2={4} y2={4} stroke={easing === e ? "#ffffff33" : "#e5e7eb"} strokeWidth={0.8} />
+                <line x1={4} y1={20} x2={28} y2={20} stroke={easing === e ? "#8ea9c8" : "#e5e7eb"} strokeWidth={0.8} />
+                <line x1={4} y1={20} x2={4} y2={4} stroke={easing === e ? "#8ea9c8" : "#e5e7eb"} strokeWidth={0.8} />
                 <path
                   d={EASING_CURVES[e]}
                   fill="none"
-                  stroke={easing === e ? "#ffffff" : "#374151"}
+                  stroke={easing === e ? "#233f5d" : "#374151"}
                   strokeWidth={1.8}
                   strokeLinecap="round"
                 />
               </svg>
-              <span className={`text-[8px] font-semibold uppercase tracking-wider ${easing === e ? "text-white" : "text-neutral-500"}`}>
+              <span className={`text-[8px] font-semibold uppercase tracking-wider ${easing === e ? "text-[#233f5d]" : "text-neutral-500"}`}>
                 {e === "ease-in-out" ? "ease" : e === "spring" ? "spring" : e.replace("ease-", "")}
               </span>
             </button>
@@ -190,7 +190,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
           <button
             type="button"
             onClick={() => onChange("autoplay", !autoplay)}
-            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", autoplay ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
+            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", autoplay ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
           >
             {autoplay ? "On" : "Off"}
           </button>
@@ -200,7 +200,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
           <button
             type="button"
             onClick={() => onChange("loop", !loop)}
-            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", loop ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
+            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", loop ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
           >
             {loop ? "On" : "Off"}
           </button>
@@ -218,7 +218,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
               className={[
                 "rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all",
                 scrubEnabled === isScrub
-                  ? "border-neutral-900 bg-neutral-900 text-white"
+                  ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                   : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-400",
               ].join(" ")}
             >
@@ -256,7 +256,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
               className={[
                 "rounded px-1.5 py-0.5 text-[9px] font-semibold transition-all",
                 scrubEnabled && scrubMs === stop.ms
-                  ? "bg-neutral-900 text-white"
+                  ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                   : "text-neutral-500 hover:text-neutral-700",
               ].join(" ")}
             >

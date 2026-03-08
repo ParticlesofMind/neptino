@@ -81,8 +81,16 @@ export function useLayoutEngine({
 
   useEffect(() => {
     if (disabled) return
+
     if (assignmentsKey === prevKeyRef.current) return
+
     prevKeyRef.current = assignmentsKey
     syncPageAssignments(session.id, assignments)
-  }, [disabled, assignmentsKey, assignments, session.id, syncPageAssignments])
+  }, [
+    disabled,
+    assignmentsKey,
+    assignments,
+    session.id,
+    syncPageAssignments,
+  ])
 }

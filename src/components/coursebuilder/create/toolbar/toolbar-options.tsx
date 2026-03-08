@@ -26,7 +26,7 @@ function OptionPill({ label, active, onClick }: { label: string; active?: boolea
       className={[
         "px-2 py-0.5 text-[10px] rounded transition-colors border",
         active
-          ? "bg-neutral-900 text-white border-neutral-900"
+            ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] border-[#9eb9da]"
           : "bg-white text-neutral-600 border-neutral-200 hover:border-neutral-400",
       ].join(" ")}
     >

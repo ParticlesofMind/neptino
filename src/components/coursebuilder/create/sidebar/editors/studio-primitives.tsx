@@ -347,7 +347,7 @@ export interface SegmentOption<T extends string = string> {
 type SegmentVariant = "dark" | "blue" | "teal" | "amber" | "violet"
 
 const SEGMENT_ACTIVE: Record<SegmentVariant, string> = {
-  dark:   "bg-neutral-900 text-white",
+  dark:   "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]",
   blue:   "bg-[#4a94ff] text-white",
   teal:   "bg-[#00ccb3] text-white",
   amber:  "bg-amber-500 text-white",
@@ -582,7 +582,7 @@ export function StudioIconButton({ onClick, active, title, children, danger, sma
         "flex items-center justify-center rounded-md transition-colors",
         small ? "h-6 w-6" : "h-7 w-7",
         active
-          ? "bg-neutral-900 text-white"
+          ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
           : danger
           ? "text-neutral-400 hover:bg-red-50 hover:text-red-500"
           : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700",
@@ -617,7 +617,7 @@ export function StudioActionButton({
   const variantClass = {
     ghost:   "text-neutral-600 hover:bg-neutral-100",
     outline: "border border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300",
-    primary: "border border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-800",
+    primary: "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] hover:bg-[#cedef0]",
     danger:  "border border-red-200 text-red-600 hover:bg-red-50",
   }[variant]
 

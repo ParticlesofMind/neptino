@@ -41,6 +41,8 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     interactive:  { width: 480, height: 280 },
     games:        { width: 560, height: 360 },
     chat:         { width: 420, height: 320 },
+    timeline:     { width: 420, height: 480 },
+    legend:       { width: 240, height: 320 },
 
     // ── Layout cards ──
     "layout-split":     { width: 642, height: 310 },
@@ -234,6 +236,28 @@ export function getSampleCardContent(
         ],
         maxTurns: 20,
         difficulty: "intermediate",
+      }
+
+    case "timeline":
+      return {
+        title,
+        orientation: "vertical",
+        events: [
+          { date: "Step 1", label: "Start", description: "Beginning of the sequence." },
+          { date: "Step 2", label: "Process", description: "The main action takes place." },
+          { date: "Step 3", label: "Outcome", description: "The result or conclusion." },
+        ],
+      }
+
+    case "legend":
+      return {
+        title,
+        layout: "list",
+        items: [
+          { color: "#3b82f6", label: "Category A", description: "First category" },
+          { color: "#8b5cf6", label: "Category B", description: "Second category" },
+          { color: "#14b8a6", label: "Category C", description: "Third category" },
+        ],
       }
 
     case "layout-split":

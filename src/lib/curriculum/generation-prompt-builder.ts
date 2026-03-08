@@ -245,6 +245,14 @@ ${structureInfo}${sequencingInfo}
 ${sessionInfo}
 ${namingInfo}
 
+### Indexing Contract (critical)
+- For each session, topics length must equal that session's topic count.
+- For each session, objectives must be a FLATTENED array of length: topicsPerLesson * objectivesPerTopic.
+- Objective order must be: all objectives for Topic 1, then Topic 2, etc.
+- For each session, tasks must be a FLATTENED array of length: topicsPerLesson * objectivesPerTopic * tasksPerObjective.
+- Task order must be: for each topic, for each objective, list all tasks in order.
+- Do NOT provide only per-objective task templates (e.g. 2 tasks total) when the required flattened length is larger.
+
 Action requested: ${action}
 ${outputInstructionByAction[action]}
 

@@ -64,7 +64,7 @@ function ToolbarButton({
       className={[
         "flex h-7 w-7 items-center justify-center transition-colors",
         active
-          ? "bg-neutral-900 text-white"
+          ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
           : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900",
       ].join(" ")}
     >

@@ -18,15 +18,15 @@ export function HeaderBlock({ fieldValues, fieldEnabled }: BlockRenderProps) {
   const teacher     = showTeacher     ? (fieldValues.teacher_name || "") : ""
 
   return (
-    <header className="flex h-full items-center justify-between border-b border-border bg-background">
-      <div className="flex items-center overflow-x-hidden divide-x divide-border">
+    <header className="flex h-full min-w-0 items-center justify-between border-b border-border bg-background">
+      <div className="flex min-w-0 flex-1 items-center overflow-hidden divide-x divide-border">
         {title ? (
-          <span className="px-3 py-2 text-xs font-semibold text-foreground whitespace-nowrap">
+          <span className="min-w-0 truncate px-3 py-2 text-xs font-semibold text-foreground whitespace-nowrap">
             {title}
           </span>
         ) : null}
         {institution ? (
-          <span className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
+          <span className="min-w-0 truncate px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
             {institution}
           </span>
         ) : null}

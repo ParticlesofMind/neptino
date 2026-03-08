@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   mapRowToSession,
-  mergeSavedLesson,
+  reconcileSavedLesson,
   type RawSessionRow,
   type CourseMeta,
 } from "@/components/coursebuilder/create/hooks/course-session-mapper"
@@ -117,10 +117,10 @@ describe("mapRowToSession — template_type → blockKeys", () => {
 })
 
 // ---------------------------------------------------------------------------
-// mergeSavedLesson — blockKeys re-derived from derived.templateType
+// reconcileSavedLesson — blockKeys re-derived from derived.templateType
 // ---------------------------------------------------------------------------
 
-describe("mergeSavedLesson — blockKeys follow derived templateType", () => {
+describe("reconcileSavedLesson — blockKeys follow derived templateType", () => {
   function makeSavedLesson(lessonNumber: number): LessonRow {
     return {
       lesson_number: lessonNumber,
@@ -139,24 +139,24 @@ describe("mergeSavedLesson — blockKeys follow derived templateType", () => {
     }
   }
 
-  it("re-applies lesson blockKeys after merge, replacing saved undefined blockKeys", () => {
+  it("re-applies lesson blockKeys after reconciliation, replacing saved undefined blockKeys", () => {
     const row: RawSessionRow = { id: "s1", session_number: 1, template_type: "lesson" }
     const derived = mapRowToSession(row, 0, COURSE_ID, META)
-    const merged = mergeSavedLesson(derived, makeSavedLesson(1))
+    const reconciled = reconcileSavedLesson(derived, makeSavedLesson(1))
 
-    expect(merged.templateType).toBe("lesson")
-    merged.canvases.forEach((canvas) => {
+    expect(reconciled.templateType).toBe("lesson")
+    reconciled.canvases.forEach((canvas) => {
       expect(canvas.blockKeys).toEqual(getDefaultBlocksForType("lesson"))
     })
   })
 
-  it("re-applies quiz blockKeys after merge", () => {
+  it("re-applies quiz blockKeys after reconciliation", () => {
     const row: RawSessionRow = { id: "s2", session_number: 2, template_type: "quiz" }
     const derived = mapRowToSession(row, 1, COURSE_ID, META)
-    const merged = mergeSavedLesson(derived, makeSavedLesson(2))
+    const reconciled = reconcileSavedLesson(derived, makeSavedLesson(2))
 
-    expect(merged.templateType).toBe("quiz")
-    merged.canvases.forEach((canvas) => {
+    expect(reconciled.templateType).toBe("quiz")
+    reconciled.canvases.forEach((canvas) => {
       expect(canvas.blockKeys).toEqual(getDefaultBlocksForType("quiz"))
       expect(canvas.blockKeys).toContain("scoring")
       expect(canvas.blockKeys).not.toContain("content")
@@ -166,20 +166,20 @@ describe("mergeSavedLesson — blockKeys follow derived templateType", () => {
   it("re-anchors canvas IDs to the derived session while keeping correct blockKeys", () => {
     const row: RawSessionRow = { id: "new-session-id", session_number: 3, template_type: "assessment" }
     const derived = mapRowToSession(row, 2, COURSE_ID, META)
-    const merged = mergeSavedLesson(derived, makeSavedLesson(3))
+    const reconciled = reconcileSavedLesson(derived, makeSavedLesson(3))
 
     // Canvas IDs should be anchored to the new session
-    expect(merged.canvases[0]!.id).toBe("new-session-id-canvas-1")
+    expect(reconciled.canvases[0]!.id).toBe("new-session-id-canvas-1")
     // Block keys should be assessment blocks
-    expect(merged.canvases[0]!.blockKeys).toEqual(getDefaultBlocksForType("assessment"))
+    expect(reconciled.canvases[0]!.blockKeys).toEqual(getDefaultBlocksForType("assessment"))
   })
 })
 
 // ---------------------------------------------------------------------------
-// mergeSavedLesson — continuation page range enforcement (card-duplication fix)
+// reconcileSavedLesson — continuation page range enforcement (card-duplication fix)
 // ---------------------------------------------------------------------------
 
-describe("mergeSavedLesson — continuation page range enforcement", () => {
+describe("reconcileSavedLesson — continuation page range enforcement", () => {
   const ROW_4T: RawSessionRow = { id: "s1", session_number: 1, template_type: "lesson" }
 
   it("drops a continuation page that has no range set (old broken save)", () => {
@@ -196,8 +196,8 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
-    expect(merged.canvases).toHaveLength(1)
+    const reconciled = reconcileSavedLesson(derived, saved)
+    expect(reconciled.canvases).toHaveLength(1)
   })
 
   it("keeps a continuation page that has contentTopicRange", () => {
@@ -213,8 +213,8 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
-    expect(merged.canvases).toHaveLength(2)
+    const reconciled = reconcileSavedLesson(derived, saved)
+    expect(reconciled.canvases).toHaveLength(2)
   })
 
   it("keeps a continuation page that has contentObjectiveRange (objective-level split)", () => {
@@ -230,8 +230,8 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
-    expect(merged.canvases).toHaveLength(2)
+    const reconciled = reconcileSavedLesson(derived, saved)
+    expect(reconciled.canvases).toHaveLength(2)
   })
 
   it("re-anchors continuation canvas IDs to the derived session ID", () => {
@@ -247,9 +247,9 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
-    expect(merged.canvases[0]!.id).toBe("new-sid-canvas-1")
-    expect(merged.canvases[1]!.id).toBe("new-sid-canvas-2")
+    const reconciled = reconcileSavedLesson(derived, saved)
+    expect(reconciled.canvases[0]!.id).toBe("new-sid-canvas-1")
+    expect(reconciled.canvases[1]!.id).toBe("new-sid-canvas-2")
   })
 
   it("continuation pages keep only content-type block keys (no fixed header/footer blocks)", () => {
@@ -272,13 +272,13 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
-    expect(merged.canvases[0]!.blockKeys).toEqual(getDefaultBlocksForType("lesson"))
-    expect(merged.canvases[1]!.blockKeys).toEqual(expect.arrayContaining(["content"]))
-    expect(merged.canvases[1]!.blockKeys).not.toContain("header")
-    expect(merged.canvases[1]!.blockKeys).not.toContain("program")
-    expect(merged.canvases[1]!.blockKeys).not.toContain("resources")
-    expect(merged.canvases[1]!.blockKeys).not.toContain("footer")
+    const reconciled = reconcileSavedLesson(derived, saved)
+    expect(reconciled.canvases[0]!.blockKeys).toEqual(getDefaultBlocksForType("lesson"))
+    expect(reconciled.canvases[1]!.blockKeys).toEqual(expect.arrayContaining(["content"]))
+    expect(reconciled.canvases[1]!.blockKeys).not.toContain("header")
+    expect(reconciled.canvases[1]!.blockKeys).not.toContain("program")
+    expect(reconciled.canvases[1]!.blockKeys).not.toContain("resources")
+    expect(reconciled.canvases[1]!.blockKeys).not.toContain("footer")
   })
 
   // ── Backward fill: missing-end normalisation (card-duplication bug fix) ──
@@ -300,12 +300,12 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
-    expect(merged.canvases).toHaveLength(2)
+    const reconciled = reconcileSavedLesson(derived, saved)
+    expect(reconciled.canvases).toHaveLength(2)
     // After backward fill page 1 must be capped at topic 2 to avoid overlap
-    expect(merged.canvases[0]!.contentTopicRange).toEqual({ start: 0, end: 2 })
+    expect(reconciled.canvases[0]!.contentTopicRange).toEqual({ start: 0, end: 2 })
     // Page 2 retains its start (end still open — shows remaining topics)
-    expect(merged.canvases[1]!.contentTopicRange?.start).toBe(2)
+    expect(reconciled.canvases[1]!.contentTopicRange?.start).toBe(2)
   })
 
   it("backward fill: page 1 with open-ended contentTopicRange gets its end filled", () => {
@@ -322,9 +322,9 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
-    expect(merged.canvases[0]!.contentTopicRange).toEqual({ start: 0, end: 2 })
-    expect(merged.canvases[1]!.contentTopicRange?.start).toBe(2)
+    const reconciled = reconcileSavedLesson(derived, saved)
+    expect(reconciled.canvases[0]!.contentTopicRange).toEqual({ start: 0, end: 2 })
+    expect(reconciled.canvases[1]!.contentTopicRange?.start).toBe(2)
   })
 
   it("backward fill: page 1 with correct end range is unchanged", () => {
@@ -341,8 +341,8 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
-    expect(merged.canvases[0]!.contentTopicRange).toEqual({ start: 0, end: 2 })
+    const reconciled = reconcileSavedLesson(derived, saved)
+    expect(reconciled.canvases[0]!.contentTopicRange).toEqual({ start: 0, end: 2 })
   })
 
   it("backward fill: objective-level split — page 1 missing obj end gets filled", () => {
@@ -367,9 +367,9 @@ describe("mergeSavedLesson — continuation page range enforcement", () => {
         ],
       },
     }
-    const merged = mergeSavedLesson(derived, saved)
+    const reconciled = reconcileSavedLesson(derived, saved)
     // After backward fill page 1 must be capped at objective 4
-    expect(merged.canvases[0]!.contentObjectiveRange).toEqual({ start: 0, end: 4 })
-    expect(merged.canvases[1]!.contentObjectiveRange?.start).toBe(4)
+    expect(reconciled.canvases[0]!.contentObjectiveRange).toEqual({ start: 0, end: 4 })
+    expect(reconciled.canvases[1]!.contentObjectiveRange?.start).toBe(4)
   })
 })

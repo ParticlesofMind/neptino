@@ -14,8 +14,14 @@ import type { TemplateType } from "@/lib/curriculum/template-blocks"
 import { selectCourseById, updateCourseById } from "@/components/coursebuilder"
 import type { ResourcePreference } from "@/lib/curriculum/resources"
 import { createRowId, type CurriculumSessionRow, type ScheduleGeneratedEntry } from "./curriculum-section-utils"
+import { getGenerationCompletenessIssues } from "./curriculum-generation-completeness"
+import {
+  buildModuleNamesFromGeneration,
+  buildScopedObjectiveNames,
+  buildScopedTaskNames,
+  buildScopedTopicNames,
+} from "./curriculum-generation-name-builders"
 import type React from "react"
-
 export interface GenerationRunnerParams {
   courseId: string
   courseInfo: { name: string; description?: string; goals?: string }
@@ -53,6 +59,12 @@ export interface GenerationRunnerResult {
   success: boolean
   elapsedMs: number
 }
+export {
+  buildModuleNamesFromGeneration,
+  buildScopedObjectiveNames,
+  buildScopedTaskNames,
+  buildScopedTopicNames,
+} from "./curriculum-generation-name-builders"
 
 export async function runGenerationAction(
   action: GenerationAction,
@@ -136,6 +148,12 @@ export async function runGenerationAction(
 
   const generatedRows = response.content?.sessions ?? []
   const generatedModules = response.content?.modules ?? []
+  const generatedBySessionNumber = new Map(
+    generatedRows.map((session) => [session.sessionNumber, session]),
+  )
+  const previousBySessionNumber = new Map(
+    p.sessionRows.map((row, idx) => [row.session_number ?? idx + 1, row]),
+  )
 
   if (action !== "modules" && generatedRows.length === 0) {
     setRunStatus("Generation returned no session data. Please try again.")
@@ -166,40 +184,107 @@ export async function runGenerationAction(
       }))
 
   const updatedSessionRows = seedRows.map((row, index) => {
-    const gen = generatedRows[index]
-    if (!gen) return row
+    const sessionNumber = row.session_number ?? index + 1
+    const gen = generatedBySessionNumber.get(sessionNumber) ?? generatedRows[index]
+    const previous = previousBySessionNumber.get(sessionNumber) ?? p.sessionRows[index]
     const norm = normalizeContentLoadConfig(
       { topicsPerLesson: row.topics ?? p.topics, objectivesPerTopic: row.objectives ?? p.objectives, tasksPerObjective: row.tasks ?? p.tasks },
       row.duration_minutes ?? null,
     )
+    if (!gen) {
+      const updates: Partial<CurriculumSessionRow> = {}
+      if (action === "all" || action === "sessions") updates.title = previous?.title || row.title || `Session ${sessionNumber}`
+      if (action === "all" || action === "topics") {
+        updates.topics = norm.topicsPerLesson
+        updates.topic_names = buildScopedTopicNames({
+          generated: undefined,
+          existing: previous?.topic_names ?? row.topic_names,
+          topicCount: norm.topicsPerLesson,
+        })
+      }
+      if (action === "all" || action === "objectives") {
+        updates.objectives = norm.objectivesPerTopic
+        updates.objective_names = buildScopedObjectiveNames({
+          generated: undefined,
+          existing: previous?.objective_names ?? row.objective_names,
+          topicCount: norm.topicsPerLesson,
+          objectivesPerTopic: norm.objectivesPerTopic,
+        })
+      }
+      if (action === "all" || action === "tasks") {
+        updates.tasks = norm.tasksPerObjective
+        updates.task_names = buildScopedTaskNames({
+          generated: undefined,
+          existing: previous?.task_names ?? row.task_names,
+          topicCount: norm.topicsPerLesson,
+          objectivesPerTopic: norm.objectivesPerTopic,
+          tasksPerObjective: norm.tasksPerObjective,
+        })
+      }
+      return { ...row, ...updates }
+    }
     const updates: Partial<CurriculumSessionRow> = {}
-    if (action === "all" || action === "sessions") updates.title = gen.sessionTitle
+    if (action === "all" || action === "sessions") {
+      updates.title = gen.sessionTitle || previous?.title || row.title
+    }
     if (action === "all" || action === "topics") {
       updates.topics = norm.topicsPerLesson
-      updates.topic_names = Array.from({ length: norm.topicsPerLesson }, (_, i) => gen.topics?.[i] ?? row.topic_names?.[i] ?? "")
+      updates.topic_names = buildScopedTopicNames({
+        generated: gen.topics,
+        existing: previous?.topic_names ?? row.topic_names,
+        topicCount: norm.topicsPerLesson,
+      })
     }
     if (action === "all" || action === "objectives") {
       updates.objectives = norm.objectivesPerTopic
-      const fullObjectives = norm.topicsPerLesson * norm.objectivesPerTopic
-      updates.objective_names = Array.from({ length: fullObjectives }, (_, i) => {
-        const objectiveSlot = i % norm.objectivesPerTopic
-        return gen.objectives?.[objectiveSlot] ?? row.objective_names?.[i] ?? row.objective_names?.[objectiveSlot] ?? ""
+      updates.objective_names = buildScopedObjectiveNames({
+        generated: gen.objectives,
+        existing: previous?.objective_names ?? row.objective_names,
+        topicCount: norm.topicsPerLesson,
+        objectivesPerTopic: norm.objectivesPerTopic,
       })
     }
     if (action === "all" || action === "tasks") {
       updates.tasks = norm.tasksPerObjective
-      const fullTasks = norm.topicsPerLesson * norm.objectivesPerTopic * norm.tasksPerObjective
-      updates.task_names = Array.from({ length: fullTasks }, (_, i) => {
-        const taskSlot = i % norm.tasksPerObjective
-        return gen.tasks?.[taskSlot] ?? row.task_names?.[i] ?? row.task_names?.[taskSlot] ?? ""
+      updates.task_names = buildScopedTaskNames({
+        generated: gen.tasks,
+        existing: previous?.task_names ?? row.task_names,
+        topicCount: norm.topicsPerLesson,
+        objectivesPerTopic: norm.objectivesPerTopic,
+        tasksPerObjective: norm.tasksPerObjective,
       })
     }
     return { ...row, ...updates }
   })
 
-  const generatedModuleNames = generatedModules.length > 0
-    ? generatedModules.sort((a, b) => a.moduleNumber - b.moduleNumber).map((m) => m.moduleTitle)
-    : p.moduleNames
+  const generatedModuleNames = buildModuleNamesFromGeneration({
+    generatedModules,
+    persistedModuleNames: p.moduleNames,
+    desiredCount: Math.max(p.moduleCount, p.moduleNames.length),
+  })
+
+  const completenessIssues = getGenerationCompletenessIssues({
+    action,
+    moduleNames: generatedModuleNames,
+    moduleCount: p.moduleCount,
+    rows: updatedSessionRows,
+    defaultTopics: p.topics,
+    defaultObjectives: p.objectives,
+    defaultTasks: p.tasks,
+  })
+
+  if (completenessIssues.length > 0) {
+    await updateCourseById(p.courseId, {
+      curriculum_data: snapData,
+      updated_at: new Date().toISOString(),
+    })
+    p.setSessionRows(p.sessionRows)
+    p.setModuleNames(p.moduleNames)
+    const details = completenessIssues.slice(0, 3).join("; ")
+    setRunStatus(`Generation incomplete: ${details}. No partial data was saved.`)
+    setTimeout(() => setRunStatus(null), 8000)
+    return { success: false, elapsedMs: Date.now() - startedAt }
+  }
 
   const { error } = await updateCourseById(p.courseId, {
     curriculum_data: {

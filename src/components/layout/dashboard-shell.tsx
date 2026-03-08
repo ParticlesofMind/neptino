@@ -25,8 +25,8 @@ export function DashboardShell({
     <div className="flex min-h-screen flex-col bg-background">
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-border bg-background">
-        <div className="mx-auto grid h-12 w-full max-w-[1400px] grid-cols-[auto_1fr_auto] items-center px-4 lg:px-6">
-          <Link href={brandHref} className="flex items-center shrink-0">
+        <div className="grid h-12 w-full grid-cols-[auto_1fr_auto] items-center px-4 lg:px-6">
+          <Link href={brandHref} className="flex items-center justify-self-start shrink-0">
             <Image
               src="/octopus-logo.png"
               alt="Neptino"
@@ -36,13 +36,13 @@ export function DashboardShell({
             />
           </Link>
 
-          <nav className="hidden items-center justify-center gap-0.5 md:flex">
+          <nav className="hidden items-center justify-center gap-2 md:flex lg:gap-3">
             {headerItems.map((item) => (
               <NavLink key={item.href} href={item.href} label={item.label} variant="header" />
             ))}
           </nav>
 
-          {actions ? <div className="flex items-center gap-2">{actions}</div> : <div />}
+          {actions ? <div className="flex items-center justify-self-end gap-2">{actions}</div> : <div />}
         </div>
       </header>
 

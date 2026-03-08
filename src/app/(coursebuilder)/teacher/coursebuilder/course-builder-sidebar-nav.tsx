@@ -16,7 +16,7 @@ export function CourseBuilderSidebarNav({
 }: CourseBuilderSidebarNavProps) {
   return (
     <aside className="no-scrollbar hidden w-60 shrink-0 overflow-y-auto md:block">
-      <div className="h-full rounded-2xl border border-border bg-background p-3">
+      <div className="min-h-full bg-background p-3">
         <nav className="space-y-4">
           {SECTIONS.map((group) => (
             <div key={group.heading}>

@@ -20,6 +20,8 @@ import { ImageCard } from "./card-types/ImageCard"
 import { VideoCard } from "./card-types/VideoCard"
 import { RichCard }  from "./card-types/RichCard"
 import { LayoutCard } from "./card-types/LayoutCard"
+import { TimelineCard } from "./card-types/TimelineCard"
+import { MapCard } from "./card-types/MapCard"
 
 // ─── Shared prop contract ─────────────────────────────────────────────────────
 
@@ -50,6 +52,8 @@ export const DEFAULT_CARD_REGISTRY: CardRegistry = {
   text:       { Editor: TextCard  },
   image:      { Editor: ImageCard },
   video:      { Editor: VideoCard },
+  map:        { Editor: MapCard   },
+  timeline:   { Editor: TimelineCard },
   // audio / document / table use the generic fallback in CardRenderer
 
   // ── Canvas-backed types ────────────────────────────────────────────────────

@@ -11,16 +11,12 @@ function makeCard(idx: number, top: number, height: number): HTMLElement {
 }
 
 describe("findCardSplitPoint helper", () => {
-  it("returns null when there are fewer than two card elements", () => {
+  it("returns null when there are no card elements", () => {
     const body = document.createElement("div")
     const content = document.createElement("div")
     body.appendChild(content)
 
     // no cards
-    expect(findCardSplitPoint(body, content, 100)).toBeNull()
-
-    // one card only
-    content.appendChild(makeCard(0, 0, 20))
     expect(findCardSplitPoint(body, content, 100)).toBeNull()
   })
 
@@ -55,9 +51,21 @@ describe("findCardSplitPoint helper", () => {
     const content = document.createElement("div")
     body.appendChild(content)
 
-    // two cards but even the first card is too tall for available height
+    // first card starts at top and is too tall for a page: guarded as unsplittable
     content.appendChild(makeCard(0, 0, 120))
     content.appendChild(makeCard(1, 120, 10))
     expect(findCardSplitPoint(body, content, 100)).toBeNull()
+  })
+
+  it("falls back to splitting at the first overflowing card when none fully fit", () => {
+    const body = document.createElement("div")
+    const content = document.createElement("div")
+    body.appendChild(content)
+
+    // neither card fully fits; split should move the first overflowing card
+    content.appendChild(makeCard(0, 90, 40))
+    content.appendChild(makeCard(1, 130, 40))
+
+    expect(findCardSplitPoint(body, content, 100)).toBe(0)
   })
 })

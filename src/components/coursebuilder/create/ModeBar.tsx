@@ -18,16 +18,16 @@ export function ModeBar() {
 
   return (
     <>
-      <div className="flex items-center shrink-0 h-9 px-3 border-b border-neutral-200 bg-white gap-1">
+      <div className="flex items-end shrink-0 h-9 px-3 border-b border-neutral-200 bg-white gap-1">
         {(["curate", "make", "fix"] as EditorMode[]).map((m) => (
           <button
             key={m}
             onClick={handleClick(m)}
             className={
-              `px-3 py-1 rounded text-[11px] font-semibold capitalize transition-colors ${
+              `px-3 py-1 text-[11px] font-semibold capitalize transition-colors ${
                 mode === m
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100"
+                  ? "-mb-px rounded-t-md rounded-b-none border border-[#9eb9da] border-b-white bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+                  : "rounded-md text-neutral-400 hover:text-[#355575] hover:bg-[#edf3fb]"
               }`
             }
           >
@@ -41,7 +41,7 @@ export function ModeBar() {
             type="button"
             onClick={() => setDrawerOpen(true)}
             title="Open Nachschlagewerk (course reference)"
-            className="flex items-center gap-1.5 rounded px-2 py-1 text-[11px] font-semibold text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
           >
             <BookOpen size={13} />
             Reference

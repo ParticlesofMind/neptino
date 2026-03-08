@@ -68,12 +68,19 @@ export function createDefaultTemplateFieldState(type: TemplateType): TemplateFie
   const blocks = getDefaultBlocksForType(type)
   return blocks.reduce<TemplateFieldState>((acc, block) => {
     const defs = BLOCK_FIELDS[block] ?? []
-    acc[block] = defs
+    const fieldMap = defs
       .filter((field) => field.forTypes.includes(type))
       .reduce<Record<string, boolean>>((fieldAcc, field) => {
         fieldAcc[field.key] = field.required
         return fieldAcc
       }, {})
+    // Default to single-area mode for content/assignment blocks.
+    // _split: true = three labeled phases (Instruction / Practice / Feedback)
+    // _split: false = one generic drop zone per task
+    if (block === "content" || block === "assignment") {
+      fieldMap._split = false
+    }
+    acc[block] = fieldMap
     return acc
   }, {})
 }

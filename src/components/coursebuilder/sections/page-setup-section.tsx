@@ -127,7 +127,7 @@ export function PageSetupSection({
                   onClick={() => setUnits(u)}
                   className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
                     units === u
-                      ? "bg-background text-foreground shadow-sm"
+                      ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -148,7 +148,7 @@ export function PageSetupSection({
                   onClick={() => setSize(s)}
                   className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
                     size === s
-                      ? "bg-background text-foreground shadow-sm"
+                      ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -170,7 +170,7 @@ export function PageSetupSection({
                   onClick={() => setOrientation(o)}
                   className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition ${
                     orientation === o
-                      ? "bg-background text-foreground shadow-sm"
+                      ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >

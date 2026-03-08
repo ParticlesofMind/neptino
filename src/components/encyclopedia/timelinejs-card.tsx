@@ -13,16 +13,6 @@ type TimelineJsCardProps = {
   events: TimelineEvent[]
 }
 
-declare global {
-  interface Window {
-    TL?: {
-      Timeline: new (target: string | HTMLElement, data: unknown, options?: Record<string, unknown>) => unknown
-    }
-    __timelineJsPromise?: Promise<void>
-    __timelineJsCssLoaded?: boolean
-  }
-}
-
 function loadTimelineJs(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.resolve()
@@ -79,7 +69,7 @@ export function TimelineJsCard({ itemId, events }: TimelineJsCardProps) {
 
       const data = {
         events: events.map((event) => ({
-          start_date: { year: event.year },
+          start_date: { year: String(event.year) },
           text: {
             headline: event.headline,
             text: event.text ?? "",

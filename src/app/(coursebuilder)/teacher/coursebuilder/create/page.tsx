@@ -15,7 +15,7 @@ function CreatePageInner() {
   const courseId = useSearchParams().get("courseId")
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-x-visible overflow-y-hidden">
       <CreateEditorLayout courseId={courseId} />
     </div>
   )

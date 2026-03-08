@@ -19,7 +19,7 @@ import {
   type CourseMeta,
   type LoaderState,
   mapRowToSession,
-  mergeSavedLesson,
+  reconcileSavedLesson,
 } from "./course-session-mapper"
 
 export function useCourseSessionLoader(courseId: string | null): LoaderState {
@@ -87,10 +87,10 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
         ? (curriculum.session_rows as RawSessionRow[])
         : []
 
-      // Merge schedule dates from generated entries into session rows.
+      // Reconcile schedule dates from generated entries into session rows.
       // curriculum_data.session_rows does not store schedule dates directly;
       // the authoritative date values live in schedule_settings.generated_entries.
-      // Without this merge, schedule_date is always empty on the canvas even
+      // Without this reconciliation, schedule_date is always empty on the canvas even
       // when the template has the Date field enabled.
       const generatedEntries: RawScheduleEntry[] = Array.isArray(scheduleSettings.generated_entries)
         ? (scheduleSettings.generated_entries as RawScheduleEntry[])
@@ -153,12 +153,12 @@ export function useCourseSessionLoader(courseId: string | null): LoaderState {
         fieldStateByType,
       }
 
-      // ── Build + merge sessions ───────────────────────────────────────────
+      // ── Build + reconcile sessions ───────────────────────────────────────
       const sessions = rowsRaw.map((row, i) => {
         const derived    = mapRowToSession(row, i, courseId, meta)
         const sessionNum = derived.order
         const saved      = lessonsMap.get(sessionNum)
-        return saved ? mergeSavedLesson(derived, saved) : derived
+        return saved ? reconcileSavedLesson(derived, saved) : derived
       })
 
       hydrateSessions(sessions)

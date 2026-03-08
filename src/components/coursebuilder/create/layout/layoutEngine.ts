@@ -69,6 +69,12 @@ export interface PageAssignment {
    * undefined = all tasks in the objective slice.
    */
   taskRange?: { start: number; end?: number }
+  /**
+   * Card range derived from task boundaries. Bounds are session-global flat
+   * card indices (0-based, inclusive start, exclusive end) over dropped cards
+   * in topic -> objective -> task traversal order.
+   */
+  cardRange?: { start: number; end?: number }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -341,6 +347,29 @@ function computeFlatTaskOffset(
   return offset
 }
 
+function computeFlatCardOffset(
+  session: CourseSession,
+  topicIdx: number,
+  objIdx: number,
+  taskIdx: number,
+): number {
+  let offset = 0
+  for (let ti = 0; ti < topicIdx; ti++) {
+    for (const obj of session.topics[ti]!.objectives) {
+      for (const task of obj.tasks) offset += task.droppedCards.length
+    }
+  }
+  for (let oi = 0; oi < objIdx; oi++) {
+    for (const task of session.topics[topicIdx]!.objectives[oi]!.tasks) {
+      offset += task.droppedCards.length
+    }
+  }
+  for (let ki = 0; ki < taskIdx; ki++) {
+    offset += session.topics[topicIdx]!.objectives[objIdx]!.tasks[ki]!.droppedCards.length
+  }
+  return offset
+}
+
 // ─── Engine ───────────────────────────────────────────────────────────────────
 
 /**
@@ -420,6 +449,10 @@ export function computePageAssignments(
         const isLastTopic  = topicIdx + 1 >= session.topics.length
         const isLastPage   = allTasksDone && isLastObj && isLastTopic
         const flatAbsObj   = flatObjOffset + objStartWithinTopic
+        const flatCardStart = computeFlatCardOffset(session, topicIdx, objStartWithinTopic, taskStartWithinObj)
+        const flatCardEnd = allTasksDone
+          ? undefined
+          : computeFlatCardOffset(session, topicIdx, objStartWithinTopic, newTaskEnd)
 
         pages.push({
           blockKeys:     [...activeContentKeys],
@@ -428,6 +461,10 @@ export function computePageAssignments(
           taskRange:      {
             start: flatTaskBase + taskStartWithinObj,
             end:   allTasksDone ? undefined : flatTaskBase + newTaskEnd,
+          },
+          cardRange: {
+            start: flatCardStart,
+            ...(flatCardEnd !== undefined ? { end: flatCardEnd } : {}),
           },
         })
         hasEmittedFirstPage = true
@@ -466,12 +503,20 @@ export function computePageAssignments(
           const isLastObj    = objStartWithinTopic + 1 >= topic.objectives.length
           const isLastTopic  = topicIdx + 1 >= session.topics.length
           const isLastPage   = allTasksDone && isLastObj && isLastTopic
+          const flatCardStart = computeFlatCardOffset(session, topicIdx, objStartWithinTopic, 0)
+          const flatCardEnd = allTasksDone
+            ? undefined
+            : computeFlatCardOffset(session, topicIdx, objStartWithinTopic, newTaskEnd)
 
           pages.push({
             blockKeys:     [...activeContentKeys],
             topicRange:     { start: topicIdx, end: isLastPage ? undefined : topicIdx + 1 },
             objectiveRange: { start: flatAbsObj, end: flatAbsObj + 1 },
             taskRange:      { start: flatTaskBase, end: allTasksDone ? undefined : flatTaskBase + newTaskEnd },
+            cardRange: {
+              start: flatCardStart,
+              ...(flatCardEnd !== undefined ? { end: flatCardEnd } : {}),
+            },
           })
           hasEmittedFirstPage = true
 
@@ -546,12 +591,20 @@ export function computePageAssignments(
             const isLastObj    = topic.objectives.length <= 1
             const isLastTopic  = topicIdx + 1 >= session.topics.length
             const isLastPage   = allTasksDone && isLastObj && isLastTopic
+            const flatCardStart = computeFlatCardOffset(session, topicIdx, 0, 0)
+            const flatCardEnd = allTasksDone
+              ? undefined
+              : computeFlatCardOffset(session, topicIdx, 0, newTaskEnd)
 
             pages.push({
               blockKeys:     !hasEmittedFirstPage ? [...firstPageFixedKeys, flowKey] : [...activeContentKeys],
               topicRange:     { start: topicIdx, end: isLastPage ? undefined : topicIdx + 1 },
               objectiveRange: { start: flatObjOffset, end: flatObjOffset + 1 },
               taskRange:      { start: flatTaskBase, end: allTasksDone ? undefined : flatTaskBase + newTaskEnd },
+              cardRange: {
+                start: flatCardStart,
+                ...(flatCardEnd !== undefined ? { end: flatCardEnd } : {}),
+              },
             })
             hasEmittedFirstPage = true
 

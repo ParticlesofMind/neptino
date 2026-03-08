@@ -17,7 +17,7 @@
  * TanStack Virtual renders only the 2-3 visible rows at any time.
  */
 
-import { useRef, useMemo, useEffect, useCallback } from "react"
+import { useRef, useMemo, useEffect, useCallback, useState } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import type { CourseSession, CanvasPage, PageDimensions } from "../types"
 import { DEFAULT_PAGE_DIMENSIONS } from "../types"
@@ -32,6 +32,8 @@ import { useLayoutEngine } from "../hooks/useLayoutEngine"
 const PAGE_GAP = 32
 // Horizontal breathing room kept around the page when computing fit scale.
 const PAGE_H_PADDING = 32
+const OVERLAY_STRIP_WIDTH = 56
+const OVERLAY_PAGE_GAP = 16
 // Render enough extra rows so continuation canvas pages (created dynamically by
 // useCanvasOverflow splits) are mounted and measured before the user scrolls to
 // them.  Each session may need several overflow splits to converge, so keeping
@@ -46,6 +48,10 @@ interface CanvasVirtualizerProps {
   bodyData?: Record<string, Record<string, unknown>>
   /** If true, disable automatic overflow detection and page splitting */
   disableOverflow?: boolean
+  /** Left-side overlay inset in px (e.g. file browser width + gap) */
+  leftOverlayInset?: number
+  /** Right-side overlay inset in px (e.g. layers panel width + gap) */
+  rightOverlayInset?: number
 }
 
 // ─── Field values helper ───────────────────────────────────────────────────────
@@ -136,9 +142,13 @@ export function CanvasVirtualizer({
   dims = DEFAULT_PAGE_DIMENSIONS,
   bodyData = {},
   disableOverflow = false,
+  leftOverlayInset = 16,
+  rightOverlayInset = 8,
 }: CanvasVirtualizerProps) {
   const scrollParentRef = useRef<HTMLDivElement>(null)
+  const prevZoomRef = useRef<number | null>(null)
   const zoomLevel       = useCanvasStore((s) => s.zoomLevel)
+  const debugMountAllCanvases = useCanvasStore((s) => s.debugMountAllCanvases)
   const panOffset       = useCanvasStore((s) => s.panOffset)
   const activeTool      = useCanvasStore((s) => s.activeTool)
   const setPan          = useCanvasStore((s) => s.setPan)
@@ -147,24 +157,104 @@ export function CanvasVirtualizer({
   const clearSelection = useCanvasStore((s) => s.clearSelection)
 
   // Pan interaction tracking refs (no re-renders)
-  const isPanningRef  = useRef(false)
-  const panStartRef   = useRef({ clientX: 0, scrollLeft: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+  const [viewportWidth, setViewportWidth] = useState(0)
+  const panStartRef   = useRef({ clientX: 0, panX: 0 })
+  const suppressScrollSyncRef = useRef(false)
   const isPanTool     = activeTool === "pan"
 
-  // Canvas always renders at its natural page size; zoom is the only scale factor.
-  const effectiveScale     = zoomLevel / 100
-  const canvasDisplayWidth = Math.ceil(dims.widthPx * effectiveScale)
-  const pagePaddingLeft    = PAGE_H_PADDING / 2
+  // At 100%, fit the page between the left/right overlay strips so the
+  // default perspective uses canvas space better.
+  const fitScale = useMemo(() => {
+    if (!viewportWidth) return 1
 
-  // Publish fitScale=1 to the store (debug panel reads it).
+    const reserved =
+      leftOverlayInset + OVERLAY_STRIP_WIDTH + OVERLAY_PAGE_GAP +
+      rightOverlayInset + OVERLAY_STRIP_WIDTH + OVERLAY_PAGE_GAP +
+      PAGE_H_PADDING
+
+    const availableWidth = Math.max(320, viewportWidth - reserved)
+    return Math.max(0.5, availableWidth / dims.widthPx)
+  }, [dims.widthPx, leftOverlayInset, rightOverlayInset, viewportWidth])
+
   useEffect(() => {
-    setFitScale(1)
-  }, [setFitScale])
+    setFitScale(fitScale)
+  }, [fitScale, setFitScale])
+
+  const effectiveScale     = fitScale * (zoomLevel / 100)
+  const canvasDisplayWidth = Math.ceil(dims.widthPx * effectiveScale)
+  const baseContentWidth = canvasDisplayWidth + PAGE_H_PADDING
+
+  const leftLaneInset = leftOverlayInset + OVERLAY_STRIP_WIDTH + OVERLAY_PAGE_GAP
+  const rightLaneInset = rightOverlayInset + OVERLAY_STRIP_WIDTH + OVERLAY_PAGE_GAP
+
+  const contentWidth = useMemo(
+    () => Math.max(baseContentWidth + leftLaneInset + rightLaneInset, viewportWidth || 0),
+    [baseContentWidth, leftLaneInset, rightLaneInset, viewportWidth],
+  )
+
+  const pagePaddingLeft = useMemo(() => {
+    const laneWidth = Math.max(0, contentWidth - leftLaneInset - rightLaneInset)
+    return leftLaneInset + Math.max(PAGE_H_PADDING / 2, Math.floor((laneWidth - canvasDisplayWidth) / 2))
+  }, [canvasDisplayWidth, contentWidth, leftLaneInset, rightLaneInset])
 
   const rowHeight = useMemo(
     () => Math.round(dims.heightPx * effectiveScale + PAGE_GAP * 2),
     [dims.heightPx, effectiveScale],
   )
+
+  const sessionLabelHeight = useMemo(
+    () => Math.round(SESSION_LABEL_HEIGHT * Math.max(0.9, Math.min(1.2, effectiveScale))),
+    [effectiveScale],
+  )
+
+  const sessionLabelPaddingX = useMemo(
+    () => Math.round(16 * Math.max(0.9, Math.min(1.2, effectiveScale))),
+    [effectiveScale],
+  )
+
+  const sessionLabelFontSize = useMemo(
+    () => Math.round(11 * Math.max(0.95, Math.min(1.15, effectiveScale))),
+    [effectiveScale],
+  )
+
+  // Keep perspective controls close to the left panel edge by default.
+  const leftControlsInset = useMemo(() => leftOverlayInset + 6, [leftOverlayInset])
+
+  // Track viewport width so we can center the page when there is free space.
+  useEffect(() => {
+    const el = scrollParentRef.current
+    if (!el) return
+
+    const syncWidth = () => setViewportWidth(el.clientWidth)
+    syncWidth()
+
+    const ro = new ResizeObserver(syncWidth)
+    ro.observe(el)
+
+    return () => ro.disconnect()
+  }, [])
+
+  // Keep zoom changes visually centered so the page does not feel pinned left.
+  useEffect(() => {
+    const el = scrollParentRef.current
+    if (!el) return
+
+    if (prevZoomRef.current === null) {
+      prevZoomRef.current = zoomLevel
+      return
+    }
+
+    if (prevZoomRef.current !== zoomLevel) {
+      const maxPanX = Math.max(0, contentWidth - el.clientWidth)
+      const centeredPanX = Math.round(maxPanX / 2)
+      suppressScrollSyncRef.current = true
+      el.scrollLeft = centeredPanX
+      setPan({ x: centeredPanX, y: 0 })
+    }
+
+    prevZoomRef.current = zoomLevel
+  }, [contentWidth, setPan, zoomLevel])
 
   // Build flat virtual rows: session-label header + canvases per session.
   // Duplicate canvas IDs are filtered within each session as a defensive guard
@@ -194,15 +284,16 @@ export function CanvasVirtualizer({
   }, [sessions])
 
   const count = allRows.length
+  const overscan = debugMountAllCanvases ? Math.max(count, OVERSCAN) : OVERSCAN
 
   const virtualizer = useVirtualizer({
     count,
     getScrollElement: () => scrollParentRef.current,
     estimateSize: (idx) => {
       const row = allRows[idx]
-      return row?.kind === "session-label" ? SESSION_LABEL_HEIGHT : rowHeight
+      return row?.kind === "session-label" ? sessionLabelHeight : rowHeight
     },
-    overscan: OVERSCAN,
+    overscan,
     // Disable flushSync: TanStack Virtual calls flushSync(rerender) inside
     // instance.setOptions() which runs during React's own render pass. In
     // React 18/19 concurrent mode this creates a nested synchronous re-render
@@ -212,63 +303,83 @@ export function CanvasVirtualizer({
     useFlushSync: false,
   })
 
-  // Re-measure rows when zoom or container width changes
+  // Re-measure rows whenever effective page scale changes.
   useEffect(() => {
     virtualizer.measure()
-  }, [zoomLevel, virtualizer])
+  }, [effectiveScale, sessionLabelHeight, virtualizer])
 
-  // Auto-centre the canvas horizontally whenever the zoom level changes.
-  // We store the latest centering values in a ref so the effect itself only
-  // depends on zoomLevel and doesn't re-run when unrelated state changes.
-  const scrollCenterRef = useRef<() => void>(() => {})
-  scrollCenterRef.current = () => {
+  // Clamp horizontal pan whenever scale changes.
+  // We intentionally do not auto-recenter on zoom; preserving the user's
+  // current horizontal position prevents the viewport from jumping to a
+  // clipped middle slice that can make zoom widening look broken.
+  useEffect(() => {
     const el = scrollParentRef.current
     if (!el) return
-    const innerW        = canvasDisplayWidth + PAGE_H_PADDING
-    const newScrollLeft = Math.max(0, Math.round((innerW - el.clientWidth) / 2))
-    el.scrollLeft = newScrollLeft
-    setPan({ x: newScrollLeft, y: 0 })
-  }
 
-  useEffect(() => {
-    scrollCenterRef.current()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoomLevel])
+    const maxPanX = Math.max(0, contentWidth - el.clientWidth)
+    const clampedPanX = Math.min(Math.max(0, el.scrollLeft), maxPanX)
 
-  // Sync scrollLeft to panOffset.x when it changes externally (e.g. resetView)
-  useEffect(() => {
-    const el = scrollParentRef.current
-    if (el) el.scrollLeft = panOffset.x
-  }, [panOffset.x])
+    if (el.scrollLeft !== clampedPanX) {
+      suppressScrollSyncRef.current = true
+      el.scrollLeft = clampedPanX
+    }
+    if (panOffset.x !== clampedPanX) {
+      setPan({ x: clampedPanX, y: 0 })
+    }
+  }, [contentWidth, panOffset.x, setPan])
 
-  const handlePanMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePanPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
       if (!isPanTool) return
-      isPanningRef.current = true
+      const el = scrollParentRef.current
+      if (!el) return
+      setIsPanning(true)
       panStartRef.current = {
-        clientX:    e.clientX,
-        scrollLeft: scrollParentRef.current?.scrollLeft ?? 0,
+        clientX: e.clientX,
+        panX: el.scrollLeft,
       }
+      el.setPointerCapture(e.pointerId)
       e.preventDefault()
     },
     [isPanTool],
   )
 
-  const handlePanMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!isPanTool || !isPanningRef.current) return
+  const handlePanPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isPanTool || !isPanning) return
       const el = scrollParentRef.current
       if (!el) return
-      el.scrollLeft = panStartRef.current.scrollLeft + (panStartRef.current.clientX - e.clientX)
-      setPan({ x: el.scrollLeft, y: 0 })
+
+      const maxPanX = Math.max(0, contentWidth - el.clientWidth)
+      const nextPanXUnclamped = panStartRef.current.panX + (panStartRef.current.clientX - e.clientX)
+      const nextPanX = Math.min(Math.max(0, nextPanXUnclamped), maxPanX)
+
+      suppressScrollSyncRef.current = true
+      el.scrollLeft = nextPanX
+      setPan({ x: nextPanX, y: 0 })
       e.preventDefault()
     },
-    [isPanTool, setPan],
+    [contentWidth, isPanTool, isPanning, setPan],
   )
 
-  const handlePanMouseUp = useCallback(() => {
-    isPanningRef.current = false
+  const handlePanPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = scrollParentRef.current
+    if (el && el.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId)
+    }
+    setIsPanning(false)
   }, [])
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const nextPanX = e.currentTarget.scrollLeft
+    if (suppressScrollSyncRef.current) {
+      suppressScrollSyncRef.current = false
+      return
+    }
+    if (panOffset.x !== nextPanX) {
+      setPan({ x: nextPanX, y: 0 })
+    }
+  }, [panOffset.x, setPan])
 
   // Build a canvas-id → virtual row index map so the nav strip can trigger
   // scroll-to without needing direct access to the virtualizer.
@@ -297,14 +408,13 @@ export function CanvasVirtualizer({
         <SessionLayoutSyncer key={session.id} session={session} dims={dims} disableOverflow={disableOverflow} />
       ))}
 
-      {/* Canvas area: controls | pages | nav */}
-      <div className="flex flex-1 min-h-0 overflow-hidden bg-neutral-200">
-        <CanvasControlsStrip />
-
-        {/* Scrollable pages */}
+      {/* Canvas area: full-width scroll viewport with overlay controls */}
+      <div className="relative flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden bg-neutral-200">
+        {/* Vertically scrollable pages; horizontal movement can be done via
+          grab-tool panning (panOffset.x) and native horizontal scroll (hidden). */}
         <div
           ref={scrollParentRef}
-          className="flex-1 overflow-y-auto overflow-x-auto [&::-webkit-scrollbar]:hidden"
+          className="no-scrollbar flex-1 overflow-y-auto overflow-x-auto"
           style={{
             // contain: "strict" includes size-containment which collapses
             // scrollable overflow in the inline axis — preventing the browser
@@ -313,20 +423,21 @@ export function CanvasVirtualizer({
             // (layout + paint + style, without size) preserves virtualizer
             // isolation while restoring proper horizontal scrollWidth.
             contain: "layout style paint",
-            scrollbarWidth: "none",
-            cursor: isPanTool ? (isPanningRef.current ? "grabbing" : "grab") : undefined,
+            cursor: isPanTool ? (isPanning ? "grabbing" : "grab") : undefined,
             userSelect: isPanTool ? "none" : undefined,
+            touchAction: isPanTool ? "none" : undefined,
           }}
-          onMouseDown={handlePanMouseDown}
-          onMouseMove={handlePanMouseMove}
-          onMouseUp={handlePanMouseUp}
-          onMouseLeave={handlePanMouseUp}
+          onPointerDown={handlePanPointerDown}
+          onPointerMove={handlePanPointerMove}
+          onPointerUp={handlePanPointerUp}
+          onPointerCancel={handlePanPointerUp}
+          onScroll={handleScroll}
           onClick={clearSelection}
         >
           <div
             style={{
               height:   virtualizer.getTotalSize(),
-              width:    canvasDisplayWidth + PAGE_H_PADDING,
+              width:    contentWidth,
               position: "relative",
             }}
           >
@@ -344,18 +455,21 @@ export function CanvasVirtualizer({
                     style={{
                       position:    "absolute",
                       top:         0,
-                      left:        0,
-                      width:       "100%",
-                      height:      SESSION_LABEL_HEIGHT,
+                      left:        pagePaddingLeft,
+                      width:       canvasDisplayWidth,
+                      height:      sessionLabelHeight,
                       transform:   `translateY(${virtualRow.start}px)`,
                       display:     "flex",
                       alignItems:  "center",
-                      paddingLeft:  16,
-                      paddingRight: 16,
+                      paddingLeft:  sessionLabelPaddingX,
+                      paddingRight: sessionLabelPaddingX,
                     }}
-                    className="bg-neutral-300 border-b border-neutral-400"
+                    className="rounded-lg border border-neutral-200 bg-gradient-to-r from-white to-neutral-50 shadow-sm"
                   >
-                    <span className="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider">
+                    <span
+                      className="font-semibold text-neutral-700 uppercase tracking-[0.08em]"
+                      style={{ fontSize: `${sessionLabelFontSize}px` }}
+                    >
                       {row.session.title}
                     </span>
                   </div>
@@ -398,7 +512,24 @@ export function CanvasVirtualizer({
           </div>
         </div>
 
-        <PageNavStrip sessions={sessions} onScrollTo={scrollToCanvasId} />
+        {/* Fixed overlay strips — not affected by horizontal canvas growth */}
+        <div
+          className="absolute inset-y-0 z-30 flex items-center pointer-events-none"
+          style={{ left: leftControlsInset }}
+        >
+          <div className="pointer-events-auto">
+            <CanvasControlsStrip />
+          </div>
+        </div>
+
+        <div
+          className="absolute inset-y-0 z-30 flex items-center pointer-events-none"
+          style={{ right: rightOverlayInset }}
+        >
+          <div className="pointer-events-auto">
+            <PageNavStrip sessions={sessions} onScrollTo={scrollToCanvasId} />
+          </div>
+        </div>
       </div>
     </div>
   )
