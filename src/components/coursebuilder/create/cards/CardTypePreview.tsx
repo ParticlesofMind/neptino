@@ -189,6 +189,11 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
 
     case "audio": {
       const url = typeof content["url"] === "string" ? content["url"] : ""
+        if (!url) return (
+          <div className="flex items-center justify-center rounded-xl border border-dashed border-border h-32 bg-muted/20">
+            <span className="text-[11px] text-muted-foreground">No audio provided.</span>
+          </div>
+        )
       return <AudioPreview url={url} />
     }
 
