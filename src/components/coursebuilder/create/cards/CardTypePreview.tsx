@@ -18,6 +18,7 @@ import {
   Bot,
   Box,
   Check,
+  Code2,
   Columns2,
   Columns3,
   Database,
@@ -42,6 +43,7 @@ import {
   Network,
   PanelLeft,
   PanelLeftOpen,
+  PenTool,
   PlayCircle,
   Rows2,
   Rows3,
@@ -102,6 +104,9 @@ export const CARD_TYPE_META: Record<CardType, CardTypeMeta> = {
   interactive:  { label: "Quiz",        icon: HelpCircle  },
   games:        { label: "Game",        icon: Gamepad2    },
   chat:         { label: "Chat with character", icon: Bot },  
+  "text-editor": { label: "Text editor", icon: FileText },
+  "code-editor": { label: "Code editor", icon: Code2 },
+  whiteboard:   { label: "Whiteboard",  icon: PenTool },
   timeline:     { label: "Timeline",    icon: Timer       },
   legend:       { label: "Legend",      icon: List        },
   // ── Layout containers ─────────────────────────────────────────
@@ -127,28 +132,23 @@ export interface CardTypePreviewProps {
   cardType:  CardType
   content:   Record<string, unknown>
   hideTitle?: boolean
+  onTitleChange?: (title: string) => void
 }
 
 /**
  * Renders a gallery-quality visual preview for a given card type and content.
  */
-export function CardTypePreview({ cardType, content, hideTitle }: CardTypePreviewProps) {
+export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }: CardTypePreviewProps) {
   const meta  = CARD_TYPE_META[cardType]
   const title = typeof content["title"] === "string" ? content["title"] : ""
 
-  switch (cardType) {
+  const body = (() => { switch (cardType) {
     case "text": {
       const html = typeof content["text"] === "string" ? content["text"] : ""
       // Strip HTML tags for plain-text preview (safe — teacher-authored only)
       const plain = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
       return (
         <div className="overflow-auto">
-          {!hideTitle && title && (
-            <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-border/50">
-              <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-              <span className="text-[12px] font-semibold text-foreground truncate">{title}</span>
-            </div>
-          )}
           <p className="text-sm leading-relaxed text-muted-foreground line-clamp-8">
             {plain || "Add your copy here."}
           </p>
@@ -189,7 +189,7 @@ export function CardTypePreview({ cardType, content, hideTitle }: CardTypePrevie
 
     case "audio": {
       const url = typeof content["url"] === "string" ? content["url"] : ""
-      return <AudioPreview url={url} title={hideTitle ? undefined : title} />
+      return <AudioPreview url={url} />
     }
 
     case "video": {
@@ -199,7 +199,7 @@ export function CardTypePreview({ cardType, content, hideTitle }: CardTypePrevie
           <span className="text-[11px] text-muted-foreground">No video provided.</span>
         </div>
       )
-      return <VideoPreview url={url} title={hideTitle ? undefined : title} />
+      return <VideoPreview url={url} />
     }
 
     case "animation": {
@@ -207,7 +207,7 @@ export function CardTypePreview({ cardType, content, hideTitle }: CardTypePrevie
       const duration = typeof content["duration"] === "string" ? content["duration"] : ""
       const fps      = typeof content["fps"]      === "number" ? content["fps"]      : 0
       const animUrl  = typeof content["url"]      === "string" ? content["url"]      : undefined
-      return <AnimationPreview format={format} duration={duration} fps={fps} url={animUrl} title={hideTitle ? undefined : title} />
+      return <AnimationPreview format={format} duration={duration} fps={fps} url={animUrl} />
     }
 
     case "map": {
@@ -449,12 +449,6 @@ export function CardTypePreview({ cardType, content, hideTitle }: CardTypePrevie
       const sources = Array.isArray(content["sources"]) ? content["sources"] as string[] : []
       return (
         <div>
-          {!hideTitle && title && (
-            <div className="flex items-center gap-2 mb-2.5 pb-2 border-b border-border/50">
-              <Layers className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-              <span className="text-[12px] font-semibold text-foreground truncate">{title}</span>
-            </div>
-          )}
           <div className="flex flex-col items-center justify-center rounded-xl bg-muted/20 border border-dashed border-border h-32 gap-2">
             <Layers className="h-6 w-6 text-muted-foreground/30" />
             {sources.length > 0 && (
@@ -505,7 +499,7 @@ export function CardTypePreview({ cardType, content, hideTitle }: CardTypePrevie
 
           {gameType === "fill-blank" && fillText && (
             <div className="rounded-lg bg-muted/20 border border-border px-3 py-2.5 text-[12px] text-foreground/80 leading-relaxed">
-              {fillText.replace(/\[([^\]]+)\]/g, (_, word) => `___`).slice(0, 120)}
+              {fillText.replace(/\[[^\]]+\]/g, "___").slice(0, 120)}
               {fillText.length > 120 && "…"}
             </div>
           )}
@@ -571,6 +565,71 @@ export function CardTypePreview({ cardType, content, hideTitle }: CardTypePrevie
       )
     }
 
+    case "text-editor": {
+      const html = typeof content["document"] === "string" ? content["document"] : ""
+      const plain = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+
+      return (
+        <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center gap-1 border-b border-border bg-muted/20 px-3 py-2">
+            <span className="h-2 w-2 rounded-full bg-rose-300" />
+            <span className="h-2 w-2 rounded-full bg-amber-300" />
+            <span className="h-2 w-2 rounded-full bg-emerald-300" />
+            <span className="ml-2 text-[10px] font-medium text-muted-foreground">TipTap workspace</span>
+          </div>
+          <div className="space-y-2 px-4 py-3">
+            <div className="h-3 w-24 rounded bg-sky-100" />
+            <p className="text-[12px] leading-6 text-muted-foreground line-clamp-5">
+              {plain || "A barebones rich-text writing area for notes, drafting, and guided responses."}
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    case "code-editor": {
+      const code = typeof content["code"] === "string" ? content["code"] : ""
+      const lines = code.split("\n").filter(Boolean).slice(0, 5)
+      const language = typeof content["language"] === "string" ? content["language"] : "javascript"
+
+      return (
+        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-3 py-2">
+            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">CodeMirror</span>
+            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-medium text-emerald-200">
+              {language}
+            </span>
+          </div>
+          <div className="space-y-1.5 px-3 py-3 font-mono text-[11px] leading-5 text-slate-200">
+            {lines.length > 0 ? lines.map((line, index) => (
+              <div key={index} className="flex gap-3">
+                <span className="w-4 text-right text-slate-500">{index + 1}</span>
+                <span className="truncate">{line}</span>
+              </div>
+            )) : (
+              <p className="text-slate-400">Add starter code to preview the editor.</p>
+            )}
+          </div>
+        </div>
+      )
+    }
+
+    case "whiteboard": {
+      return (
+        <div className="overflow-hidden rounded-xl border border-border bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-sm">
+          <div className="flex items-center justify-between border-b border-border bg-white/80 px-3 py-2">
+            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">tldraw</span>
+            <span className="text-[10px] text-muted-foreground">Infinite canvas</span>
+          </div>
+          <div className="relative h-40 overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.08),transparent_35%),linear-gradient(rgba(148,163,184,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.15)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px]">
+            <div className="absolute left-6 top-6 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] text-sky-800 shadow-sm">Main idea</div>
+            <div className="absolute right-8 top-10 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800 shadow-sm">Sketch</div>
+            <div className="absolute bottom-6 left-1/3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 shadow-sm">Notes</div>
+          </div>
+        </div>
+      )
+    }
+
     // ─── Timeline ─────────────────────────────────────────────────────────────────
     case "timeline": {
       const rawEvents = Array.isArray(content["events"])
@@ -613,10 +672,36 @@ export function CardTypePreview({ cardType, content, hideTitle }: CardTypePrevie
           </div>
         )
       }
-      return <LegendPreview items={items} title={title || undefined} layout={legendLayout} />
+      return <LegendPreview items={items} layout={legendLayout} />
     }
 
     default:
       return <p className="text-sm text-muted-foreground">Preview not available for this type yet.</p>
-  }
+  } })();
+
+  return (
+    <div>
+      {!hideTitle && (
+        <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-border/40">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted/30">
+            <meta.icon className="h-3.5 w-3.5 text-muted-foreground/60" />
+          </div>
+          {onTitleChange ? (
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => onTitleChange(e.target.value)}
+              className="flex-1 min-w-0 bg-transparent text-[13px] font-semibold text-foreground placeholder:text-muted-foreground/40 outline-none"
+              placeholder={meta.label}
+            />
+          ) : (
+            <span className="flex-1 min-w-0 text-[13px] font-semibold text-foreground truncate">
+              {title || meta.label}
+            </span>
+          )}
+        </div>
+      )}
+      {body}
+    </div>
+  )
 }

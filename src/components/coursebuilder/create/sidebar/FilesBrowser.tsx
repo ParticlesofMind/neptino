@@ -11,8 +11,8 @@
  *   All       — everything
  *   Media     — Layer 2: text, image, audio, video, animation, model-3d, document
  *   Data      — Layer 3 structured views: map, chart, diagram, table, dataset
- *   Products  — Layer 3 assembled/passive: rich-sim
- *   Activities — Layer 4: interactive (quiz), games, chat
+ *   Products  — Layer 3 assembled/passive: chat, text-editor, code-editor, whiteboard, rich-sim
+ *   Activities — Layer 4: interactive (quiz), games
  */
 
 import { useState } from "react"
@@ -22,6 +22,7 @@ import {
   BarChart2,
   Bot,
   Box,
+  Code2,
   Columns2,
   Columns3,
   Database,
@@ -45,6 +46,7 @@ import {
   Network,
   PanelLeft,
   PanelLeftOpen,
+  PenTool,
   PlayCircle,
   Rows2,
   Rows3,
@@ -91,13 +93,13 @@ const CATEGORIES: Category[] = [
     id: "products",
     label: "Products",
     Icon: Sparkles,
-    types: ["rich-sim", "village-3d"],
+    types: ["chat", "text-editor", "code-editor", "whiteboard", "rich-sim", "village-3d"],
   },
   {
     id: "activities",
     label: "Activities",
     Icon: Gamepad2,
-    types: ["interactive", "games", "chat"],
+    types: ["interactive", "games"],
   },
   {
     id: "layout",
@@ -177,6 +179,11 @@ const LIBRARY_ITEMS: LibraryItem[] = [
   { id: "lib-ds-2"      as CardId, cardType: "dataset",   title: "NASA Exoplanet Archive (CSV)"             },
 
   // ── Products — Simulation ────────────────────────────────────────────────────
+  { id: "lib-chat-product-1" as CardId, cardType: "chat",        title: "Chat with Darwin"                         },
+  { id: "lib-chat-product-2" as CardId, cardType: "chat",        title: "Ada Lovelace Coding Mentor"              },
+  { id: "lib-text-editor-1"  as CardId, cardType: "text-editor", title: "Writing studio"                           },
+  { id: "lib-code-editor-1"  as CardId, cardType: "code-editor", title: "Code lab"                                 },
+  { id: "lib-whiteboard-1"   as CardId, cardType: "whiteboard",  title: "Systems whiteboard"                       },
   { id: "lib-sim-1"     as CardId, cardType: "rich-sim",  title: "Photosynthesis Process Simulation"        },
   { id: "lib-sim-2"     as CardId, cardType: "rich-sim",  title: "Newton's Cradle — Momentum Lab"           },
   { id: "lib-sim-3"     as CardId, cardType: "rich-sim",  title: "Wave Interference Simulator"              },
@@ -192,10 +199,6 @@ const LIBRARY_ITEMS: LibraryItem[] = [
   { id: "lib-game-2"    as CardId, cardType: "games",     title: "Apollo 11 Mission Sequence"               },
   { id: "lib-game-3"    as CardId, cardType: "games",     title: "Periodic Elements Memory Game"            },
 
-  // ── Activities — AI Chat ─────────────────────────────────────────────────────
-  { id: "lib-chat-1"    as CardId, cardType: "chat",      title: "Chat with Darwin"                         },
-  { id: "lib-chat-2"    as CardId, cardType: "chat",      title: "Socratic: The French Revolution"          },
-  { id: "lib-chat-3"    as CardId, cardType: "chat",      title: "Einstein on Relativity"                   },
   // ── Layout ──────────────────────────────────────────────────────────
   { id: "lib-layout-split"   as CardId, cardType: "layout-split",   title: "Split — Two Equal Columns"          },
   { id: "lib-layout-stack"   as CardId, cardType: "layout-stack",   title: "Stack — Primary / Secondary Rows"   },
@@ -233,6 +236,9 @@ const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = {
   interactive:  { bg: "bg-teal-50",    text: "text-teal-500"   },
   games:        { bg: "bg-violet-50",  text: "text-violet-500" },
   chat:         { bg: "bg-rose-50",    text: "text-rose-500"   },
+  "text-editor": { bg: "bg-sky-50",  text: "text-sky-600"    },
+  "code-editor": { bg: "bg-slate-100", text: "text-slate-700" },
+  whiteboard:   { bg: "bg-emerald-50", text: "text-emerald-600" },
   timeline:     { bg: "bg-sky-50",     text: "text-sky-600"    },
   legend:       { bg: "bg-emerald-50", text: "text-emerald-600" },
   // ── Layout containers ─────────────────────────────────────────────────
@@ -258,6 +264,9 @@ const TYPE_LABEL: Partial<Record<CardType, string>> = {
   "rich-sim":    "Simulation",
   "village-3d":  "3D Scene",
   "interactive": "Quiz",
+  "text-editor": "Text Editor",
+  "code-editor": "Code Editor",
+  whiteboard: "Whiteboard",
   "layout-split":   "Split",
   "layout-stack":   "Stack",
   "layout-feature": "Feature",
@@ -293,6 +302,9 @@ const TYPE_ICONS: Partial<Record<CardType, React.ComponentType<{ size?: number; 
   interactive: HelpCircle,
   games:       Gamepad2,
   chat:        Bot,
+  "text-editor": FileText,
+  "code-editor": Code2,
+  whiteboard: PenTool,
   // Layout containers
   "layout-split":   Columns2,
   "layout-stack":   Rows2,

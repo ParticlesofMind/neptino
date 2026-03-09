@@ -41,6 +41,9 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     interactive:  { width: 480, height: 280 },
     games:        { width: 560, height: 360 },
     chat:         { width: 420, height: 320 },
+    "text-editor": { width: 520, height: 360 },
+    "code-editor": { width: 560, height: 380 },
+    whiteboard:   { width: 640, height: 420 },
     timeline:     { width: 420, height: 480 },
     legend:       { width: 240, height: 320 },
 
@@ -225,6 +228,7 @@ export function getSampleCardContent(
       return {
         title,
         chatMode: "qa",
+        model: "gemma3:4b",
         topic: "Educational topic",
         aiPersona: "AI Tutor",
         openingMessage: "Hello! I'm here to help you learn. What would you like to explore?",
@@ -236,6 +240,29 @@ export function getSampleCardContent(
         ],
         maxTurns: 20,
         difficulty: "intermediate",
+      }
+
+    case "text-editor":
+      return {
+        title,
+        document: "<h2>Draft workspace</h2><p>Use this area for guided writing, annotation, or collaborative note-taking.</p><ul><li>Introduce the core concept.</li><li>Add evidence or examples.</li><li>Close with a short reflection.</li></ul>",
+        placeholder: "Start writing...",
+        mode: "document",
+      }
+
+    case "code-editor":
+      return {
+        title,
+        language: "javascript",
+        code: "function greet(name) {\n  return `Hello, ${name}!`;\n}\n\nconsole.log(greet('Neptino'))\n",
+        prompt: "Edit the snippet, run it externally, or use it as a live coding reference.",
+      }
+
+    case "whiteboard":
+      return {
+        title,
+        boardKey: "whiteboard-sample",
+        prompt: "Sketch a concept map, diagram a process, or collect quick visual notes.",
       }
 
     case "timeline":

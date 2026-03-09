@@ -36,6 +36,10 @@ const CARD_TYPE_COLORS: Partial<Record<string, { bg: string; text: string }>> = 
   animation:   { bg: "bg-pink-100",    text: "text-pink-700" },
   dataset:     { bg: "bg-cyan-100",    text: "text-cyan-700" },
   interactive: { bg: "bg-purple-100",  text: "text-purple-700" },
+  chat:        { bg: "bg-rose-100",    text: "text-rose-700" },
+  "text-editor": { bg: "bg-sky-100", text: "text-sky-700" },
+  "code-editor": { bg: "bg-slate-200", text: "text-slate-700" },
+  whiteboard:  { bg: "bg-emerald-100", text: "text-emerald-700" },
 }
 
 function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {

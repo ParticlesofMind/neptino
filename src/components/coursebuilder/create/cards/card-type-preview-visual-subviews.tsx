@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import dynamic from "next/dynamic"
-import { Film, Pause, Play, Sparkles } from "lucide-react"
+import { Pause, Play, RefreshCw, SkipBack, SkipForward, Sparkles } from "lucide-react"
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
   ScatterChart, Scatter, PieChart, Pie, Cell,
@@ -27,68 +27,312 @@ interface AnimationPreviewProps {
   title?: string
 }
 
-export function AnimationPreview({ format, duration, fps, url, lottieData, title }: AnimationPreviewProps) {
-  const [paused, setPaused] = React.useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const lottieRef = React.useRef<any>(null)
+const ANIM_SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
+type AnimPlaybackRate = typeof ANIM_SPEED_STEPS[number]
+const SVG_LOOP_DURATION = 3.2 // seconds — matches longest blob animation
 
-  const togglePlay = () => {
-    const next = !paused
-    setPaused(next)
-    if (next) {
-      lottieRef.current?.pause()
-    } else {
-      lottieRef.current?.play()
-    }
+// ─── Shared animation transport bar ───────────────────────────────────────────
+
+function AnimTransportBar({
+  playing, progress, seekProg, currentTime, totalTime, speed, loop,
+  onTogglePlay, onSkip, onSpeedChange, onLoopToggle,
+  onScrubDown, onScrubMove, onScrubUp, scrubRef,
+}: {
+  playing: boolean
+  progress: number
+  seekProg: number | null
+  currentTime: number
+  totalTime: number
+  speed: AnimPlaybackRate
+  loop: boolean
+  onTogglePlay: () => void
+  onSkip: (delta: number) => void
+  onSpeedChange: (s: AnimPlaybackRate) => void
+  onLoopToggle: () => void
+  onScrubDown: (e: React.PointerEvent<HTMLDivElement>) => void
+  onScrubMove: (e: React.PointerEvent<HTMLDivElement>) => void
+  onScrubUp: (e: React.PointerEvent<HTMLDivElement>) => void
+  scrubRef: React.RefObject<HTMLDivElement | null>
+}) {
+  const disp = seekProg ?? progress
+  const dispCur = seekProg !== null && totalTime ? (seekProg / 100) * totalTime : currentTime
+  const fmt = (s: number) => {
+    const m = Math.floor(s / 60)
+    const sec = Math.floor(s % 60)
+    return `${m}:${sec.toString().padStart(2, "0")}`
   }
-
-  const titleBar = title ? (
-    <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-border/50">
-      <Film className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-      <span className="text-[12px] font-semibold text-foreground truncate">{title}</span>
-    </div>
-  ) : null
-
-  // If we have real Lottie data, render it
-  if (lottieData) {
-    return (
-      <div>
-        {titleBar}
-        <div className="relative flex items-center justify-center bg-white border border-border overflow-hidden" style={{ aspectRatio: "16/9" }}>
-          <LottiePlayer
-            animationData={lottieData}
-            loop
-            autoplay
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            lottieRef={lottieRef}
-            style={{ width: "100%", height: "100%" }}
+  return (
+    <div className="mt-2">
+      {/* Scrubber */}
+      <div
+        ref={scrubRef}
+        className="relative flex h-5 cursor-pointer items-center touch-none group"
+        onPointerDown={onScrubDown}
+        onPointerMove={onScrubMove}
+        onPointerUp={onScrubUp}
+      >
+        <div className="h-1.5 w-full rounded-full bg-muted group-hover:h-2.5 transition-[height] duration-150">
+          <div
+            className="h-full rounded-full bg-foreground/70"
+            style={{ width: `${disp}%`, transition: seekProg !== null ? "none" : "width 100ms" }}
           />
-          <button
-            type="button"
-            onClick={togglePlay}
-            className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm hover:bg-black/60 transition-colors"
-          >
-            {paused ? <Play className="h-3.5 w-3.5 fill-white stroke-none ml-0.5" /> : <Pause className="h-3.5 w-3.5 fill-white stroke-none" />}
+        </div>
+        <div
+          className="pointer-events-none absolute h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-foreground shadow opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ left: `${disp}%` }}
+        />
+      </div>
+      {/* Timestamps */}
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-3">
+        <span>{fmt(dispCur)}</span>
+        <span>{totalTime > 0 ? fmt(totalTime) : "--:--"}</span>
+      </div>
+      {/* Transport row */}
+      <div className="relative flex items-center justify-center mb-2">
+        <div className="flex items-center gap-1 mr-6">
+          <span className="shrink-0 w-6 text-[10px] text-muted-foreground tabular-nums">{speed}×</span>
+          <input
+            type="range" min={0.5} max={2} step={0.25} value={speed}
+            onChange={(e) => onSpeedChange(parseFloat(e.target.value) as AnimPlaybackRate)}
+            className="w-24 cursor-pointer touch-none"
+            style={{ accentColor: "var(--foreground)" }}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => onSkip(-10)} title="Skip back 10s"
+            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-foreground/15 bg-foreground shadow-sm hover:bg-foreground/85 transition-colors">
+            <SkipBack className="h-4 w-4 fill-background stroke-none" />
+          </button>
+          <button type="button" onClick={onTogglePlay}
+            className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-foreground/15 bg-foreground shadow-sm hover:bg-foreground/85 transition-colors">
+            {playing
+              ? <Pause className="h-4 w-4 fill-background stroke-none" />
+              : <Play className="h-4 w-4 fill-background stroke-none ml-0.5" />}
+          </button>
+          <button type="button" onClick={() => onSkip(10)} title="Skip forward 10s"
+            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-foreground/15 bg-foreground shadow-sm hover:bg-foreground/85 transition-colors">
+            <SkipForward className="h-4 w-4 fill-background stroke-none" />
+          </button>
+        </div>
+        <div className="ml-6">
+          <button type="button" onClick={onLoopToggle} title="Loop"
+            className={["transition-colors", loop ? "text-foreground" : "text-muted-foreground hover:text-foreground"].join(" ")}>
+            <RefreshCw className="h-4 w-4" />
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+export function AnimationPreview({ format, fps: _fps, url, lottieData }: AnimationPreviewProps) {
+  const [playing, setPlaying] = React.useState(true)
+  const [progress, setProgress] = React.useState(0)
+  const [currentTime, setCurrentTime] = React.useState(0)
+  const [totalTime, setTotalTime] = React.useState(0)
+  const [speed, setSpeed] = React.useState<AnimPlaybackRate>(1)
+  const [loop, setLoop] = React.useState(true)
+  const [seekProg, setSeekProg] = React.useState<number | null>(null)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lottieRef = React.useRef<any>(null)
+  const scrubRef = React.useRef<HTMLDivElement | null>(null)
+  const scrubbingRef = React.useRef(false)
+  const rafRef = React.useRef<number | undefined>(undefined)
+
+  // SVG fallback synthetic clock
+  const svgElapsedRef = React.useRef(0)
+  const svgLastTsRef = React.useRef<number | null>(null)
+  const playingRef = React.useRef(true)
+  const speedRef = React.useRef<number>(1)
+  const loopRef = React.useRef(true)
+  React.useEffect(() => { playingRef.current = playing }, [playing])
+  React.useEffect(() => { speedRef.current = speed }, [speed])
+  React.useEffect(() => { loopRef.current = loop }, [loop])
+
+  // ── Lottie RAF tracking ─────────────────────────────────────────────────────
+  React.useEffect(() => {
+    if (!lottieData) return
+    const tick = () => {
+      const anim = lottieRef.current?.animationItem
+      if (anim && (anim.totalFrames as number) > 0) {
+        const cf = anim.currentFrame as number
+        const tf = anim.totalFrames as number
+        const dur = (anim.getDuration?.() as number) ?? 0
+        setCurrentTime((cf / tf) * dur)
+        setTotalTime(dur)
+        setProgress((cf / tf) * 100)
+        if (!anim.isPaused && !playingRef.current) setPlaying(true)
+        if (anim.isPaused && playingRef.current) {/* let lottie drive */}
+      }
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current !== undefined) cancelAnimationFrame(rafRef.current) }
+  }, [lottieData])
+
+  // Keep Lottie loop property in sync without restarting the animation
+  React.useEffect(() => {
+    if (!lottieData || !lottieRef.current?.animationItem) return
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    lottieRef.current.animationItem.loop = loop
+  }, [loop, lottieData])
+
+  // ── SVG fallback RAF clock ──────────────────────────────────────────────────
+  React.useEffect(() => {
+    if (lottieData || (url && (format === "gif" || url.endsWith(".gif")))) return
+    setTotalTime(SVG_LOOP_DURATION)
+    const tick = (ts: number) => {
+      if (playingRef.current) {
+        if (svgLastTsRef.current !== null) {
+          const dt = ((ts - svgLastTsRef.current) / 1000) * speedRef.current
+          const next = svgElapsedRef.current + dt
+          if (!loopRef.current && next >= SVG_LOOP_DURATION) {
+            svgElapsedRef.current = SVG_LOOP_DURATION
+            setPlaying(false)
+          } else {
+            svgElapsedRef.current = loopRef.current
+              ? next % SVG_LOOP_DURATION
+              : Math.min(next, SVG_LOOP_DURATION)
+          }
+        }
+        svgLastTsRef.current = ts
+      } else {
+        svgLastTsRef.current = null
+      }
+      setCurrentTime(svgElapsedRef.current)
+      setProgress((svgElapsedRef.current / SVG_LOOP_DURATION) * 100)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current !== undefined) cancelAnimationFrame(rafRef.current) }
+  }, [lottieData, url, format])
+
+  // ── Scrubber helpers ────────────────────────────────────────────────────────
+  const getScrubRatio = (clientX: number) => {
+    const el = scrubRef.current
+    if (!el) return 0
+    const r = el.getBoundingClientRect()
+    return Math.max(0, Math.min(1, (clientX - r.left) / r.width))
+  }
+
+  const seekTo = (ratio: number) => {
+    if (lottieData) {
+      const anim = lottieRef.current?.animationItem
+      if (!anim?.totalFrames) return
+      const frame = ratio * (anim.totalFrames as number)
+      if (playing) lottieRef.current.goToAndPlay(frame, true)
+      else lottieRef.current.goToAndStop(frame, true)
+    } else {
+      svgElapsedRef.current = ratio * SVG_LOOP_DURATION
+    }
+  }
+
+  const onScrubDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    scrubbingRef.current = true
+    const r = getScrubRatio(e.clientX)
+    setSeekProg(r * 100)
+    seekTo(r)
+  }
+
+  const onScrubMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrubbingRef.current) return
+    const r = getScrubRatio(e.clientX)
+    setSeekProg(r * 100)
+    seekTo(r)
+  }
+
+  const onScrubUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrubbingRef.current) return
+    scrubbingRef.current = false
+    seekTo(getScrubRatio(e.clientX))
+    setSeekProg(null)
+  }
+
+  const skip = (delta: number) => {
+    if (lottieData) {
+      const anim = lottieRef.current?.animationItem
+      if (!anim?.totalFrames) return
+      const dur = (anim.getDuration?.() as number) ?? 0
+      if (!dur) return
+      const newTime = Math.max(0, Math.min(dur, currentTime + delta))
+      const newFrame = (newTime / dur) * (anim.totalFrames as number)
+      if (playing) lottieRef.current.goToAndPlay(newFrame, true)
+      else lottieRef.current.goToAndStop(newFrame, true)
+    } else {
+      svgElapsedRef.current = Math.max(
+        0,
+        loopRef.current
+          ? (svgElapsedRef.current + delta + SVG_LOOP_DURATION) % SVG_LOOP_DURATION
+          : Math.min(svgElapsedRef.current + delta, SVG_LOOP_DURATION),
+      )
+    }
+  }
+
+  const togglePlay = () => {
+    const next = !playing
+    if (lottieData) {
+      if (next) lottieRef.current?.play()
+      else lottieRef.current?.pause()
+    }
+    setPlaying(next)
+  }
+
+  const handleSpeedChange = (s: AnimPlaybackRate) => {
+    setSpeed(s)
+    if (lottieData) lottieRef.current?.setSpeed(s)
+  }
+
+  const handleLoopToggle = () => setLoop((l) => !l)
+
+  const transportProps = {
+    playing, progress, seekProg, currentTime, totalTime, speed, loop,
+    onTogglePlay: togglePlay,
+    onSkip: skip,
+    onSpeedChange: handleSpeedChange,
+    onLoopToggle: handleLoopToggle,
+    onScrubDown,
+    onScrubMove,
+    onScrubUp,
+    scrubRef,
+  }
+
+  // ── Lottie ──────────────────────────────────────────────────────────────────
+  if (lottieData) {
+    return (
+      <div>
+        <div className="relative flex items-center justify-center bg-white border border-border overflow-hidden" style={{ aspectRatio: "16/9" }}>
+          <LottiePlayer
+            animationData={lottieData}
+            loop={loop}
+            autoplay
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            lottieRef={lottieRef}
+            onComplete={() => { if (!loop) setPlaying(false) }}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
+        <AnimTransportBar {...transportProps} />
+      </div>
     )
   }
 
-  // If URL is a GIF
+  // ── GIF ─────────────────────────────────────────────────────────────────────
   if (url && (format === "gif" || url.endsWith(".gif"))) {
     return (
       <div>
-        {titleBar}
-        <div className="flex items-center justify-center border border-border overflow-hidden" style={{ aspectRatio: "16/9" }}>
+        <div className="relative flex items-center justify-center border border-border overflow-hidden" style={{ aspectRatio: "16/9" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="Animation" className="max-h-full max-w-full object-contain" />
+          <span className="absolute bottom-2 right-2 rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">GIF</span>
         </div>
       </div>
     )
   }
 
-  // Fallback: SVG blob visualization with play/pause toggle
+  // ── SVG fallback blob visualization ─────────────────────────────────────────
   const blobs = [
     { cx: 80,  cy: 106, r: 50,  delay: "0s",   op: 0.22, dur: "2.8s" },
     { cx: 190, cy: 73,  r: 37,  delay: "0.4s",  op: 0.38, dur: "2.8s" },
@@ -102,7 +346,6 @@ export function AnimationPreview({ format, duration, fps, url, lottieData, title
 
   return (
     <div>
-      {titleBar}
       <div className="relative">
         <svg
           viewBox="0 0 400 225"
@@ -110,33 +353,42 @@ export function AnimationPreview({ format, duration, fps, url, lottieData, title
           className="select-none"
           style={{ aspectRatio: "16/9", display: "block" }}
         >
-          {blobs.map((b, i) => (
-            <circle
-              key={i}
-              cx={b.cx}
-              cy={b.cy}
-              r={b.r}
-              fill="hsl(var(--primary))"
-              fillOpacity={b.op}
-              style={paused ? {} : {
-                animationName: "animFloat",
-                animationDuration: b.dur,
-                animationTimingFunction: "ease-in-out",
-                animationIterationCount: "infinite",
-                animationDirection: "alternate",
-                animationDelay: b.delay,
-              }}
-            />
-          ))}
+          {blobs.map((b, i) => {
+            const blobDur = parseFloat(b.dur)
+            const blobDelay = parseFloat(b.delay)
+            // When paused: freeze by computing where the blob should be at currentTime
+            const frozenDelay = -((currentTime * speed + blobDelay) % blobDur + blobDur) % blobDur
+            return (
+              <circle
+                key={i}
+                cx={b.cx}
+                cy={b.cy}
+                r={b.r}
+                fill="hsl(var(--primary))"
+                fillOpacity={b.op}
+                style={playing ? {
+                  animationName: "animFloat",
+                  animationDuration: `${blobDur / speed}s`,
+                  animationTimingFunction: "ease-in-out",
+                  animationIterationCount: "infinite",
+                  animationDirection: "alternate",
+                  animationDelay: b.delay,
+                  animationPlayState: "running",
+                } : {
+                  animationName: "animFloat",
+                  animationDuration: `${blobDur / speed}s`,
+                  animationTimingFunction: "ease-in-out",
+                  animationIterationCount: "infinite",
+                  animationDirection: "alternate",
+                  animationDelay: `${frozenDelay}s`,
+                  animationPlayState: "paused",
+                }}
+              />
+            )
+          })}
         </svg>
-        <button
-          type="button"
-          onClick={togglePlay}
-          className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm hover:bg-black/40 transition-colors"
-        >
-          {paused ? <Play className="h-3.5 w-3.5 fill-white stroke-none ml-0.5" /> : <Pause className="h-3.5 w-3.5 fill-white stroke-none" />}
-        </button>
       </div>
+      <AnimTransportBar {...transportProps} />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { Plus, Trash2, Bot, MessageSquare, Target } from "lucide-react"
+import { AVAILABLE_MODELS, DEFAULT_MODEL } from "@/lib/ollama/models"
 import {
   StudioSection,
   StudioSegment,
@@ -39,6 +40,7 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
   const learningObjectives = typeof content.learningObjectives === "string" ? content.learningObjectives : ""
   const chatMode = (typeof content.chatMode === "string" ? content.chatMode : "qa") as ChatMode
   const difficulty = (typeof content.difficulty === "string" ? content.difficulty : "intermediate") as typeof DIFFICULTY_LEVELS[number]
+  const model = typeof content.model === "string" ? content.model : DEFAULT_MODEL
   const maxTurns = typeof content.maxTurns === "number" ? content.maxTurns : 20
   const starters = parseStarters(content.conversationStarters)
 
@@ -85,6 +87,11 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
           placeholder="Charles Darwin, Amelia Earhart, Science Tutor…"
           onChange={(e) => onChange("aiPersona", e.target.value)}
         />
+        <StudioSelect label="Ollama model" value={model} onChange={(e) => onChange("model", e.target.value)}>
+          {AVAILABLE_MODELS.map((entry) => (
+            <option key={entry.name} value={entry.name}>{entry.displayName}</option>
+          ))}
+        </StudioSelect>
       </StudioSection>
 
       {/* Topic */}

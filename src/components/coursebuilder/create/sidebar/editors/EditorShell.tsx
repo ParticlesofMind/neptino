@@ -18,6 +18,9 @@ import { RichSimEditor } from "./RichSimEditor"
 import { GamesEditor } from "./GamesEditor"
 import { ChatEditor } from "./ChatEditor"
 import { TimelineEditor } from "./TimelineEditor"
+import { TextProductEditor } from "./TextProductEditor"
+import { CodeProductEditor } from "./CodeProductEditor"
+import { WhiteboardEditor } from "./WhiteboardEditor"
 
 export interface EditorShellProps {
   cardType: CardType
@@ -84,6 +87,15 @@ export function EditorShell({ cardType, content, onChange }: EditorShellProps) {
 
     case "chat":
       return <ChatEditor content={content} onChange={onChange} />
+
+    case "text-editor":
+      return <TextProductEditor content={content} onChange={onChange} />
+
+    case "code-editor":
+      return <CodeProductEditor content={content} onChange={onChange} />
+
+    case "whiteboard":
+      return <WhiteboardEditor content={content} onChange={onChange} />
 
     case "timeline":
       return <TimelineEditor content={content} onChange={onChange} />

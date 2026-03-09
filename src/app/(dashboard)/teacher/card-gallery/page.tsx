@@ -42,6 +42,7 @@ export default function CardGalleryPage() {
   const [activeType, setActiveType] = useState<CardType>("text")
   const [viewMode, setViewMode] = useState<ViewMode>("single")
   const [showApprovedOnly, setShowApprovedOnly] = useState(false)
+  const [titleOverrides, setTitleOverrides] = useState<Partial<Record<CardType, string>>>({})
   const [approvedTypes, setApprovedTypes] = useState<CardType[]>(() => {
     if (typeof window === "undefined") return []
     const raw = window.localStorage.getItem(APPROVED_STORAGE_KEY)
@@ -95,6 +96,14 @@ export default function CardGalleryPage() {
   const toggleApproved = (cardType: CardType) => setApprovedTypes((prev) =>
     prev.includes(cardType) ? prev.filter((t) => t !== cardType) : [...prev, cardType],
   )
+
+  const effectiveContent = (item: GalleryItem): Record<string, unknown> =>
+    titleOverrides[item.cardType] !== undefined
+      ? { ...item.content, title: titleOverrides[item.cardType] }
+      : item.content
+
+  const handleTitleChange = (cardType: CardType, title: string) =>
+    setTitleOverrides((prev) => ({ ...prev, [cardType]: title }))
 
   return (
     <div className="min-h-[520px] h-[calc(100dvh-96px)] overflow-hidden">
@@ -247,24 +256,25 @@ export default function CardGalleryPage() {
                   </div>
                 ) : (
                   <div className="mx-auto" style={{ width: PREVIEW_FRAME.width, minHeight: PREVIEW_FRAME.height }}>
-                    <CardTypePreview cardType={activeItem.cardType} content={activeItem.content} />
+                    <CardTypePreview
+                      cardType={activeItem.cardType}
+                      content={effectiveContent(activeItem)}
+                      onTitleChange={(t) => handleTitleChange(activeItem.cardType, t)}
+                    />
                   </div>
                 )
               ) : (
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {gridItems.map((item) => (
                     <article key={item.cardType} className="rounded-xl border border-border bg-background p-3 shadow-sm">
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{typeof item.content["title"] === "string" && item.content["title"] ? item.content["title"] : item.label}</p>
-                          <div className="flex items-center gap-2">
-                            <p className="text-[10px] text-muted-foreground">{GROUP_LABELS[item.group]}</p>
-                            {!item.cardType.startsWith("layout-") && CARD_MIN_SLOT_WIDTH_PX[item.cardType] != null && (
-                              <span className="rounded border border-border px-1 py-px text-[10px] text-muted-foreground">
-                                min {CARD_MIN_SLOT_WIDTH_PX[item.cardType]}px
-                              </span>
-                            )}
-                          </div>
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-[10px] text-muted-foreground">{GROUP_LABELS[item.group]}</p>
+                          {!item.cardType.startsWith("layout-") && CARD_MIN_SLOT_WIDTH_PX[item.cardType] != null && (
+                            <span className="rounded border border-border px-1 py-px text-[10px] text-muted-foreground">
+                              min {CARD_MIN_SLOT_WIDTH_PX[item.cardType]}px
+                            </span>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -282,7 +292,11 @@ export default function CardGalleryPage() {
                         <LayoutSpecThumbnail layoutType={item.cardType} />
                       ) : (
                         <div style={{ minHeight: PREVIEW_FRAME.height }}>
-                          <CardTypePreview cardType={item.cardType} content={item.content} hideTitle />
+                          <CardTypePreview
+                            cardType={item.cardType}
+                            content={effectiveContent(item)}
+                            onTitleChange={(t) => handleTitleChange(item.cardType, t)}
+                          />
                         </div>
                       )}
                     </article>
