@@ -1,5 +1,6 @@
 import {
   AudioLines,
+  Bot,
   Box,
   Columns2,
   Columns3,
@@ -192,7 +193,7 @@ export const SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unknown>>> 
     showHints: true,
   },
   chat: {
-    title: "Chat with Darwin",
+    title: "Chat with character",
     topic: "Charles Darwin's theory of evolution by natural selection, including concepts of variation, inheritance, selection pressure, and adaptation.",
     aiPersona: "Charles Darwin",
     openingMessage: "Ah, a curious student! I am Charles Darwin. What would you like to know about evolution and natural selection?",
@@ -385,6 +386,15 @@ export const CARD_SPECS: CardSpec[] = [
     Icon: List,
   },
   // ─── Products (Layer 3 — assembled, passive) ──────────────────────────────────
+  {
+    cardType: "chat",
+    label: "Chat with character",
+    description: "AI-powered character chat — guided conversation with a persona.",
+    detail: "Configure an AI persona, opening message, learning objectives, and conversation starters. Students chat with the character to explore a topic.",
+    fields: ["AI persona", "Topic", "Opening message", "Conversation starters", "Max turns"],
+    group: "products",
+    Icon: Bot,
+  },
   {
     cardType: "rich-sim",
     label: "Simulation",

@@ -115,13 +115,12 @@ function PreviewPanel({
       {/* Preview header */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-neutral-100 px-4 py-2.5">
         <div className="flex items-center gap-2 min-w-0">
-          <div className={["flex h-6 w-6 shrink-0 items-center justify-center rounded-md", accent.border].join(" ")}>
-            <meta.icon size={12} className={accent.icon} />
+          <div className={["flex h-5 w-5 shrink-0 items-center justify-center rounded-md", accent.border].join(" ")}>
+            <meta.icon size={11} className={accent.icon} />
           </div>
-          <div className="min-w-0">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Live preview</p>
-            <p className="text-[12px] font-semibold text-neutral-800 truncate">{meta.label}</p>
-          </div>
+          <span className="text-[12px] font-semibold text-neutral-800 truncate">
+            {typeof content.title === "string" && content.title ? content.title : meta.label}
+          </span>
         </div>
         <button
           type="button"
@@ -136,7 +135,7 @@ function PreviewPanel({
       {/* Preview body */}
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4">
         <div key={playbackToken} style={animationStyle}>
-          <CardTypePreview cardType={cardType} content={cardContent} />
+          <CardTypePreview cardType={cardType} content={cardContent} hideTitle />
         </div>
       </div>
 

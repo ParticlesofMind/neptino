@@ -4,7 +4,8 @@ import { useCallback, useRef, useState } from "react"
 import type { CardType } from "@/components/coursebuilder/create/types"
 import { CARD_TYPE_META, CardTypePreview } from "@/components/coursebuilder/create/cards/CardTypePreview"
 import { SAMPLE_CONTENT } from "@/components/coursebuilder/create/sidebar/make-panel-data"
-import { LAYOUT_SYSTEM_SPECS } from "./layout-system-specs"
+import { CARD_MIN_SLOT_HEIGHT_PX, CARD_MIN_SLOT_WIDTH_PX, LAYOUT_SYSTEM_SPECS } from "./layout-system-specs"
+import type { LayoutPanelSpec } from "./layout-system-specs"
 
 const LAYOUT_PREVIEW_GRID: Partial<Record<CardType, { className: string; slots: number; slotClasses?: string[] }>> = {
   "layout-split": { className: "grid-cols-2 grid-rows-1", slots: 2 },
@@ -24,7 +25,8 @@ const LAYOUT_PREVIEW_GRID: Partial<Record<CardType, { className: string; slots: 
 }
 
 const DRAG_MIME = "text/x-neptino-card-type"
-const MIN_FRAC = 0.1
+// Absolute minimum fraction used when no card constraint applies
+const BASE_MIN_FRAC = 0.08
 
 function isLayoutType(cardType: CardType): boolean {
   return cardType.startsWith("layout-")
@@ -57,15 +59,82 @@ function fracsToTemplate(fracs: number[]): string {
   return fracs.map((f) => `${Math.round(f * 10000) / 100}fr`).join(" ")
 }
 
-function clampFracsAtDivider(fracs: number[], dividerIndex: number, delta: number): number[] {
+function clampFracsAtDivider(
+  fracs: number[],
+  dividerIndex: number,
+  delta: number,
+  minA = BASE_MIN_FRAC,
+  minB = BASE_MIN_FRAC,
+): number[] {
   const updated = [...fracs]
   let a = updated[dividerIndex] + delta
   let b = updated[dividerIndex + 1] - delta
-  if (a < MIN_FRAC) { b += a - MIN_FRAC; a = MIN_FRAC }
-  if (b < MIN_FRAC) { a += b - MIN_FRAC; b = MIN_FRAC }
+  if (a < minA) { b += a - minA; a = minA }
+  if (b < minB) { a += b - minB; b = minB }
   updated[dividerIndex] = a
   updated[dividerIndex + 1] = b
   return updated
+}
+
+/**
+ * Parse a CSS grid-column/row value like "2 / 4" into { start, end } (1-indexed line numbers).
+ */
+function parseGridLine(spec: string): { start: number; end: number } | null {
+  const m = /^(\d+)\s*\/\s*(\d+)$/.exec(spec.trim())
+  if (!m) return null
+  return { start: parseInt(m[1], 10), end: parseInt(m[2], 10) }
+}
+
+/**
+ * Computes [minFracA, minFracB] for a resize divider based on the cards currently
+ * placed in the surrounding slots.
+ *
+ * dividerIndex: 0-indexed divider — between track[dividerIndex] and track[dividerIndex+1].
+ * totalSizePx:  pixel size of the full grid container on this axis.
+ * panels:       panel spec array for the active layout.
+ * slotCards:    map of slotIndex -> CardType for currently placed cards.
+ *
+ * Only single-track slots (span = 1) are evaluated; spanning slots are skipped.
+ */
+function computeMinFracsForDivider(
+  axis: "col" | "row",
+  dividerIndex: number,
+  totalSizePx: number,
+  panels: LayoutPanelSpec[],
+  slotCards: Record<number, CardType>,
+): [number, number] {
+  let minA = BASE_MIN_FRAC
+  let minB = BASE_MIN_FRAC
+
+  for (let slotIndex = 0; slotIndex < panels.length; slotIndex++) {
+    const cardType = slotCards[slotIndex]
+    if (!cardType) continue
+
+    const panel = panels[slotIndex]
+    const trackSpec = axis === "col" ? panel.col : panel.row
+    if (!trackSpec) continue
+
+    const span = parseGridLine(trackSpec)
+    if (!span) continue
+    // Only handle single-track slots; multi-span distribution is left to future work
+    if (span.end - span.start !== 1) continue
+
+    const trackIndex = span.start - 1 // convert to 0-indexed
+    const minPx =
+      axis === "col"
+        ? (CARD_MIN_SLOT_WIDTH_PX[cardType] ?? 100)
+        : (CARD_MIN_SLOT_HEIGHT_PX[cardType] ?? 60)
+    // Cap at 80% so the opposing side always has at least 20%
+    const minFrac = Math.min(minPx / totalSizePx, 0.8)
+
+    if (trackIndex === dividerIndex) {
+      minA = Math.max(minA, minFrac)
+    } else if (trackIndex === dividerIndex + 1) {
+      minB = Math.max(minB, minFrac)
+    }
+  }
+
+  return [minA, minB]
 }
 
 // ─── Resize handle ─────────────────────────────────────────────────────────────
@@ -80,13 +149,25 @@ interface ResizeHandleProps {
   onDragEnd: () => void
   isActiveDrag: boolean
   anyDragging: boolean
+  /** Returns [minA, minB] minimums given the container pixel size at drag start */
+  computeMinFracs?: (containerSizePx: number) => [number, number]
 }
 
-function ResizeHandle({ axis, dividerIndex, fractions, containerRef, onUpdate, onDragStart, onDragEnd, isActiveDrag, anyDragging }: ResizeHandleProps) {
-  const pct = fractions.slice(0, dividerIndex + 1).reduce((a, b) => a + b, 0) * 100
+function ResizeHandle({ axis, dividerIndex, fractions, containerRef, onUpdate, onDragStart, onDragEnd, isActiveDrag, anyDragging, computeMinFracs }: ResizeHandleProps) {
+  const [isHovered, setIsHovered] = useState(false)
   const isCol = axis === "col"
   // Suppress all other handles while one is being dragged to prevent visual conflicts
   const suppressed = anyDragging && !isActiveDrag
+
+  // The grid uses gap-2 (8px). Tracks are fractions of (container - nGaps * 8px).
+  // The center of gap[i] is at: fracSum * (W - nGaps*8) + (i+1)*8 - 4
+  // In CSS: calc(fracSum * 100% + offsetPx) where offsetPx = 8*(i + 0.5 - fracSum*nGaps)
+  const fracSum = fractions.slice(0, dividerIndex + 1).reduce((a, b) => a + b, 0)
+  const pct = fracSum * 100
+  const nGaps = fractions.length - 1
+  const gapPx = 8
+  const offsetPx = gapPx * (dividerIndex + 0.5 - fracSum * nGaps)
+  const pos = `calc(${pct}% + ${offsetPx.toFixed(2)}px)`
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -98,13 +179,15 @@ function ResizeHandle({ axis, dividerIndex, fractions, containerRef, onUpdate, o
       const totalSize = isCol ? rect.width : rect.height
       const startPos = isCol ? e.clientX : e.clientY
       const startFracs = fractions
+      // Capture card-based constraints once at drag start
+      const [minA, minB] = computeMinFracs ? computeMinFracs(totalSize) : [BASE_MIN_FRAC, BASE_MIN_FRAC]
 
       onDragStart()
 
       const onMove = (me: MouseEvent) => {
         const pos = isCol ? me.clientX : me.clientY
         const delta = (pos - startPos) / totalSize
-        onUpdate(clampFracsAtDivider(startFracs, dividerIndex, delta))
+        onUpdate(clampFracsAtDivider(startFracs, dividerIndex, delta, minA, minB))
       }
       const onUp = () => {
         document.removeEventListener("mousemove", onMove)
@@ -120,22 +203,21 @@ function ResizeHandle({ axis, dividerIndex, fractions, containerRef, onUpdate, o
   return (
     <div
       onMouseDown={handleMouseDown}
-      className="group/rh absolute z-[1]"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="absolute z-[3]"
       style={{
         cursor: isCol ? "col-resize" : "row-resize",
         pointerEvents: suppressed ? "none" : undefined,
-        // Inset by 8px (gap-2) from the outer edges so the resize cursor and indicator
-        // never appear at the layout's outer boundary — only on internal dividers.
         ...(isCol
-          ? { left: `${pct}%`, top: 8, bottom: 8, width: 12, transform: "translateX(-50%)" }
-          : { top: `${pct}%`, left: 8, right: 8, height: 12, transform: "translateY(-50%)" }),
+          ? { left: pos, top: 8, bottom: 8, width: 20, transform: "translateX(-50%)" }
+          : { top: pos, left: 8, right: 8, height: 20, transform: "translateY(-50%)" }),
       }}
     >
       <div
-        className="absolute opacity-0 transition-opacity group-hover/rh:opacity-100"
+        className="absolute transition-opacity"
         style={{
-          // When this handle is actively being dragged, force the line visible regardless of hover state
-          opacity: isActiveDrag ? 1 : undefined,
+          opacity: (isHovered || isActiveDrag) ? 1 : 0,
           borderRadius: 2,
           backgroundColor: "#60a5fa",
           ...(isCol
@@ -184,11 +266,28 @@ export function LayoutSandboxPreview({ layoutType }: { layoutType: CardType }) {
     setSlotCards((prev) => ({ ...prev, [slotIndex]: nextType }))
   }
 
+  const header = spec?.header
+  const [headerText, setHeaderText] = useState(() => header?.label ?? "")
+
   return (
-    <div className="h-full">
+    <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+      {header && (
+        <div
+          className="flex shrink-0 items-center border border-dashed border-border px-3"
+          style={{ height: header.height ?? "40px", borderColor: "#55555555" }}
+        >
+          <input
+            type="text"
+            value={headerText}
+            onChange={(e) => setHeaderText(e.target.value)}
+            placeholder={header.note}
+            className="min-w-0 flex-1 bg-transparent text-[11px] font-medium text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+        </div>
+      )}
       <div
         ref={gridRef}
-        className={spec ? "relative grid h-full gap-2" : `relative grid h-full gap-2 ${cfg.className}`}
+        className={spec ? "relative grid min-h-0 flex-1 gap-2 overflow-hidden" : `relative grid min-h-0 flex-1 gap-2 overflow-hidden ${cfg.className}`}
         style={spec ? { gridTemplateColumns: gridCols, gridTemplateRows: gridRows } : undefined}
       >
         {cells.map((slotIndex) => {
@@ -259,6 +358,9 @@ export function LayoutSandboxPreview({ layoutType }: { layoutType: CardType }) {
             onDragEnd={() => setDraggingKey(null)}
             isActiveDrag={draggingKey === `col-${i}`}
             anyDragging={draggingKey !== null}
+            computeMinFracs={(px) =>
+              computeMinFracsForDivider("col", i, px, spec?.panels ?? [], slotCards)
+            }
           />
         ))}
 
@@ -275,6 +377,9 @@ export function LayoutSandboxPreview({ layoutType }: { layoutType: CardType }) {
             onDragEnd={() => setDraggingKey(null)}
             isActiveDrag={draggingKey === `row-${i}`}
             anyDragging={draggingKey !== null}
+            computeMinFracs={(px) =>
+              computeMinFracsForDivider("row", i, px, spec?.panels ?? [], slotCards)
+            }
           />
         ))}
       </div>

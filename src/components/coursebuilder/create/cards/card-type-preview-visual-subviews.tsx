@@ -71,11 +71,6 @@ export function AnimationPreview({ format, duration, fps, url, lottieData, title
             {paused ? <Play className="h-3.5 w-3.5 fill-white stroke-none ml-0.5" /> : <Pause className="h-3.5 w-3.5 fill-white stroke-none" />}
           </button>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {format && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{format}</span>}
-          {duration && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{duration}</span>}
-          {fps > 0 && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{fps} fps</span>}
-        </div>
       </div>
     )
   }
@@ -88,10 +83,6 @@ export function AnimationPreview({ format, duration, fps, url, lottieData, title
         <div className="flex items-center justify-center border border-border overflow-hidden" style={{ aspectRatio: "16/9" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="Animation" className="max-h-full max-w-full object-contain" />
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">GIF</span>
-          {duration && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{duration}</span>}
         </div>
       </div>
     )
@@ -145,12 +136,6 @@ export function AnimationPreview({ format, duration, fps, url, lottieData, title
         >
           {paused ? <Play className="h-3.5 w-3.5 fill-white stroke-none ml-0.5" /> : <Pause className="h-3.5 w-3.5 fill-white stroke-none" />}
         </button>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {format && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{format}</span>}
-        {duration && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{duration}</span>}
-        {fps > 0 && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{fps} fps</span>}
-        <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">Loop</span>
       </div>
     </div>
   )
