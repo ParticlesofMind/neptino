@@ -172,8 +172,8 @@ function PreviewResources({
 // Subtle left-border accent colours to differentiate content slot types
 const SLOT_ACCENTS = {
   instruction: "border-l-2 border-l-sky-400/60",
-  practice:    "border-l-2 border-l-violet-400/60",
-  feedback:    "border-l-2 border-l-emerald-400/60",
+  practice:    "border-l-2 border-l-[#6b8fc4]/60",
+  feedback:    "border-l-2 border-l-[#5c9970]/60",
 }
 
 /**

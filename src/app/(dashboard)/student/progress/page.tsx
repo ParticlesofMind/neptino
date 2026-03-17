@@ -5,7 +5,7 @@ export default function StudentProgressPage() {
     <div className="space-y-8">
       {/* Summary metrics */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Overview</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Overview</h2>
         <div className="grid gap-4 md:grid-cols-3">
           <MetricCard label="Courses In Progress" value="3" />
           <MetricCard label="Lessons Completed" value="24" />

@@ -90,17 +90,17 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-background">
       {/* Header bar */}
-      <div className={["border-b border-neutral-100 px-4", compact ? "py-2.5 space-y-2" : "flex items-center justify-between gap-3 py-2"].join(" ")}>
+      <div className={["border-b border-border/50 px-4", compact ? "py-2.5 space-y-2" : "flex items-center justify-between gap-3 py-2"].join(" ")}>
         <SectionLabel>Motion</SectionLabel>
         <div className={[compact ? "grid grid-cols-2 gap-1.5" : "flex items-center gap-1.5"].join(" ")}>
           <button
             type="button"
             onClick={copyCss}
-            className="flex items-center justify-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[9px] font-semibold text-neutral-500 transition-colors hover:bg-neutral-50"
+            className="flex items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-[9px] font-semibold text-muted-foreground transition-colors hover:bg-muted/40"
           >
-            {copied ? <Check size={10} className="text-green-600" /> : <Copy size={10} />}
+            {copied ? <Check size={10} className="text-[#5c9970]" /> : <Copy size={10} />}
             {copied ? "Copied!" : "Copy CSS"}
           </button>
           <button
@@ -114,7 +114,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
       </div>
 
       {/* Preset grid */}
-      <div className="border-b border-neutral-100 px-4 py-2.5 space-y-1.5">
+      <div className="border-b border-border/50 px-4 py-2.5 space-y-1.5">
         <SectionLabel>Preset</SectionLabel>
         <div className={["gap-1", compact ? "grid grid-cols-2" : "grid grid-cols-4"].join(" ")}>
           {PRESET_OPTIONS.map((p) => (
@@ -126,7 +126,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
                 "rounded-md px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-all",
                 preset === p.value
                   ? MAKE_BLUE_ACTIVE_SOFT
-                  : "border border-neutral-200 bg-neutral-50 text-neutral-500 hover:border-neutral-300 hover:bg-white hover:text-neutral-700",
+                  : "border border-border bg-muted/40 text-muted-foreground hover:border-border/70 hover:bg-background hover:text-foreground",
               ].join(" ")}
             >
               {p.label}
@@ -136,7 +136,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
       </div>
 
       {/* Easing curve picker */}
-      <div className="border-b border-neutral-100 px-4 py-2.5 space-y-1.5">
+      <div className="border-b border-border/50 px-4 py-2.5 space-y-1.5">
         <SectionLabel>Easing</SectionLabel>
         <div className={[compact ? "grid grid-cols-3 gap-1.5" : "flex gap-1.5"].join(" ")}>
           {EASING_OPTIONS.map((e) => (
@@ -150,21 +150,21 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
                 !compact && "flex-1",
                 easing === e
                   ? `border ${MAKE_BLUE_ACTIVE_SOFT}`
-                  : "border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white",
+                  : "border-border bg-muted/40 hover:border-border/70 hover:bg-background",
               ].filter(Boolean).join(" ")}
             >
               <svg viewBox="0 0 32 24" width="32" height="20" className="overflow-visible">
-                <line x1={4} y1={20} x2={28} y2={20} stroke={easing === e ? MAKE_BLUE_AXIS_HEX : "#e5e7eb"} strokeWidth={0.8} />
-                <line x1={4} y1={20} x2={4} y2={4} stroke={easing === e ? MAKE_BLUE_AXIS_HEX : "#e5e7eb"} strokeWidth={0.8} />
+                <line x1={4} y1={20} x2={28} y2={20} stroke={easing === e ? MAKE_BLUE_AXIS_HEX : "#e5e5e5"} strokeWidth={0.8} />
+                <line x1={4} y1={20} x2={4} y2={4} stroke={easing === e ? MAKE_BLUE_AXIS_HEX : "#e5e5e5"} strokeWidth={0.8} />
                 <path
                   d={EASING_CURVES[e]}
                   fill="none"
-                  stroke={easing === e ? MAKE_BLUE_TEXT_HEX : "#374151"}
+                  stroke={easing === e ? MAKE_BLUE_TEXT_HEX : "#525252"}
                   strokeWidth={1.8}
                   strokeLinecap="round"
                 />
               </svg>
-              <span className={`text-[8px] font-semibold uppercase tracking-wider ${easing === e ? "text-[#233f5d]" : "text-neutral-500"}`}>
+              <span className={`text-[8px] font-semibold uppercase tracking-wider ${easing === e ? "text-[#233f5d]" : "text-muted-foreground"}`}>
                 {e === "ease-in-out" ? "ease" : e === "spring" ? "spring" : e.replace("ease-", "")}
               </span>
             </button>
@@ -173,27 +173,27 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
       </div>
 
       {/* Timing + toggles */}
-      <div className={["border-b border-neutral-100 px-4 py-2.5", compact ? "grid grid-cols-2 gap-3" : "flex items-end gap-3"].join(" ")}>
+      <div className={["border-b border-border/50 px-4 py-2.5", compact ? "grid grid-cols-2 gap-3" : "flex items-end gap-3"].join(" ")}>
         <div className="space-y-1 flex-1 min-w-0">
           <SectionLabel>Duration</SectionLabel>
-          <div className="flex items-stretch overflow-hidden rounded-md border border-neutral-200 bg-white">
+          <div className="flex items-stretch overflow-hidden rounded-md border border-border bg-background">
             <input
               type="number" min={100} max={12000} step={50} value={durationMs}
               onChange={(e) => onChange("animationDurationMs", Number(e.target.value))}
-              className="min-w-0 flex-1 px-2 py-1.5 text-[11px] font-mono text-neutral-800 outline-none"
+              className="min-w-0 flex-1 px-2 py-1.5 text-[11px] font-mono text-foreground outline-none"
             />
-            <span className="shrink-0 border-l border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[9px] font-semibold text-neutral-400">ms</span>
+            <span className="shrink-0 border-l border-border bg-muted/40 px-2 py-1.5 text-[9px] font-semibold text-muted-foreground/70">ms</span>
           </div>
         </div>
         <div className="space-y-1 flex-1 min-w-0">
           <SectionLabel>Delay</SectionLabel>
-          <div className="flex items-stretch overflow-hidden rounded-md border border-neutral-200 bg-white">
+          <div className="flex items-stretch overflow-hidden rounded-md border border-border bg-background">
             <input
               type="number" min={0} max={5000} step={50} value={delayMs}
               onChange={(e) => onChange("animationDelayMs", Number(e.target.value))}
-              className="min-w-0 flex-1 px-2 py-1.5 text-[11px] font-mono text-neutral-800 outline-none"
+              className="min-w-0 flex-1 px-2 py-1.5 text-[11px] font-mono text-foreground outline-none"
             />
-            <span className="shrink-0 border-l border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[9px] font-semibold text-neutral-400">ms</span>
+            <span className="shrink-0 border-l border-border bg-muted/40 px-2 py-1.5 text-[9px] font-semibold text-muted-foreground/70">ms</span>
           </div>
         </div>
         <div className="space-y-1">
@@ -201,7 +201,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
           <button
             type="button"
             onClick={() => onChange("autoplay", !autoplay)}
-            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", autoplay ? MAKE_BLUE_ACTIVE : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
+            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", autoplay ? MAKE_BLUE_ACTIVE : "border-border bg-background text-muted-foreground"].join(" ")}
           >
             {autoplay ? "On" : "Off"}
           </button>
@@ -211,7 +211,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
           <button
             type="button"
             onClick={() => onChange("loop", !loop)}
-            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", loop ? MAKE_BLUE_ACTIVE : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
+            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", loop ? MAKE_BLUE_ACTIVE : "border-border bg-background text-muted-foreground"].join(" ")}
           >
             {loop ? "On" : "Off"}
           </button>
@@ -219,7 +219,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
       </div>
 
       {/* Scrubber */}
-      <div className="bg-neutral-50 px-4 py-2.5 space-y-1.5">
+      <div className="bg-muted/30 px-4 py-2.5 space-y-1.5">
         <div className="flex items-center gap-1.5">
           {[false, true].map((isScrub) => (
             <button
@@ -230,20 +230,20 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
                 "rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all",
                 scrubEnabled === isScrub
                   ? MAKE_BLUE_ACTIVE
-                  : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-400",
+                  : "border-border bg-background text-muted-foreground hover:border-border/70",
               ].join(" ")}
             >
               {isScrub ? "Scrub" : "Live"}
             </button>
           ))}
-          <span className="ml-auto font-mono text-[10px] text-neutral-500">{scrubMs}ms</span>
+          <span className="ml-auto font-mono text-[10px] text-muted-foreground">{scrubMs}ms</span>
         </div>
 
         {/* Track */}
         <div className="relative flex h-4 items-center">
-          <div className="absolute inset-x-0 h-1 rounded-full bg-neutral-200">
+          <div className="absolute inset-x-0 h-1 rounded-full bg-border/50">
             <div
-              className="h-full rounded-full bg-neutral-700 transition-all"
+              className="h-full rounded-full bg-foreground transition-all"
               style={{ width: `${Math.min(100, (scrubMs / Math.max(1, maxDuration)) * 100)}%` }}
             />
           </div>
@@ -254,7 +254,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
             className="absolute inset-0 w-full cursor-pointer opacity-0"
           />
           <div
-            className="pointer-events-none absolute h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-neutral-700 bg-white shadow-sm transition-all"
+            className="pointer-events-none absolute h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-foreground bg-background shadow-sm transition-all"
             style={{ left: `${Math.min(100, (scrubMs / Math.max(1, maxDuration)) * 100)}%` }}
           />
         </div>
@@ -269,7 +269,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
                 "rounded px-1.5 py-0.5 text-[9px] font-semibold transition-all",
                 scrubEnabled && scrubMs === stop.ms
                   ? MAKE_BLUE_ACTIVE_SOFT
-                  : "text-neutral-500 hover:text-neutral-700",
+                  : "text-muted-foreground hover:text-foreground",
               ].join(" ")}
             >
               {stop.label}

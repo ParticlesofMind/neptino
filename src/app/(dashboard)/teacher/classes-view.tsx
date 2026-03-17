@@ -19,9 +19,9 @@ const submissions = [
 ]
 
 const sessionStatusStyle: Record<string, string> = {
-  "Starting soon": "border-emerald-200 bg-emerald-50 text-emerald-700",
-  Scheduled:       "border-blue-200 bg-blue-50 text-blue-700",
-  Draft:           "border-amber-200 bg-amber-50 text-amber-700",
+  "Starting soon": "border-[#5c9970]/30 bg-[#5c9970]/10 text-[#5c9970]",
+  Scheduled:       "border-primary/20 bg-primary/10 text-primary",
+  Draft:           "border-[#a89450]/30 bg-[#a89450]/10 text-[#a89450]",
 }
 
 export function ClassesView() {
@@ -93,7 +93,7 @@ export function ClassesView() {
                   Review
                 </button>
               ) : (
-                <span className="flex items-center gap-1 text-xs text-emerald-600">
+                <span className="flex items-center gap-1 text-xs text-[#5c9970]">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Done
                 </span>
               )}

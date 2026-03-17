@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { PublicShell } from '@/components/layout/public-shell'
 import { AuthErrorBanner, AuthInput, AuthSubmitButton } from '@/components/ui/auth-primitives'
+import { buttonVariants } from '@/components/ui/button'
 
 type Role = 'student' | 'teacher' | 'administrator'
 
@@ -130,28 +131,25 @@ export default function SignupPage() {
   if (success) {
     return (
       <PublicShell hideNavActions navActions={
-        <Link href="/login" className="px-4 py-2 rounded-lg border border-[#d4d4d4] bg-white text-sm font-medium text-[#404040] hover:border-[#4a94ff] hover:text-[#4a94ff] transition-all duration-150">
+        <Link href="/login" className={buttonVariants({ variant: "outline", size: "sm" })}>
           Sign In
         </Link>
       }>
-        <div
-          className="flex min-h-[calc(100vh-3.75rem-56px)] items-center justify-center px-4 py-16"
-          style={{ background: "linear-gradient(180deg,#f3f4f8 0%,#ffffff 60%)" }}
-        >
-          <div className="w-full max-w-[22rem] rounded-2xl border border-[#e5e5e5] bg-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] p-8 text-center space-y-5">
+        <div className="flex min-h-[calc(100vh-3.75rem-56px)] items-center justify-center px-4 py-16 bg-gradient-to-b from-muted to-background">
+          <div className="w-full max-w-[22rem] rounded-2xl border border-border bg-background shadow-[0_2px_20px_rgba(0,0,0,0.06)] p-8 text-center space-y-5">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#f0fdf4] border border-[#dcfce7]">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-[#171717] mb-1.5">Check your email</h1>
-              <p className="text-sm text-[#737373] leading-relaxed">
+              <h1 className="text-lg font-bold text-foreground mb-1.5">Check your email</h1>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 A confirmation link has been sent to{' '}
-                <span className="font-semibold text-[#404040]">{email}</span>. Click it to activate your <span className="font-semibold">{role}</span> account.
+                <span className="font-semibold text-foreground/80">{email}</span>. Click it to activate your <span className="font-semibold">{role}</span> account.
               </p>
             </div>
-            <Link href="/login" className="block w-full rounded-xl bg-[#4a94ff] py-2.5 text-center text-sm font-semibold text-white hover:bg-[#2f7de0] transition-all duration-150 shadow-sm">
+            <Link href="/login" className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}>
               Go to Sign In
             </Link>
           </div>
@@ -162,20 +160,17 @@ export default function SignupPage() {
 
   return (
     <PublicShell hideNavActions navActions={
-      <Link href="/login" className="px-4 py-2 rounded-lg border border-[#d4d4d4] bg-white text-sm font-medium text-[#404040] hover:border-[#4a94ff] hover:text-[#4a94ff] transition-all duration-150">
+      <Link href="/login" className={buttonVariants({ variant: "outline", size: "sm" })}>
         Sign In
       </Link>
     }>
-      <div
-        className="flex min-h-[calc(100vh-3.75rem-56px)] items-center justify-center px-4 py-16"
-        style={{ background: "linear-gradient(180deg,#f3f4f8 0%,#ffffff 60%)" }}
-      >
+      <div className="flex min-h-[calc(100vh-3.75rem-56px)] items-center justify-center px-4 py-16 bg-gradient-to-b from-muted to-background">
         <div className="w-full max-w-[27rem]">
-          <div className="rounded-2xl border border-[#e5e5e5] bg-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
+          <div className="rounded-2xl border border-border bg-background shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
             {/* Header */}
-            <div className="px-8 pt-8 pb-6 border-b border-[#f5f5f5]">
-              <h1 className="text-xl font-bold text-[#171717] mb-1">Join Neptino</h1>
-              <p className="text-sm text-[#737373]">Create your account to get started</p>
+            <div className="px-8 pt-8 pb-6 border-b border-muted">
+              <h1 className="text-xl font-bold text-foreground mb-1">Join Neptino</h1>
+              <p className="text-sm text-muted-foreground">Create your account to get started</p>
             </div>
 
             <form onSubmit={handleSignup} className="px-8 py-6 space-y-3.5">
@@ -183,7 +178,7 @@ export default function SignupPage() {
 
               {/* Role picker */}
               <div>
-                <p className="mb-2 text-xs font-medium text-[#737373] uppercase tracking-wide">I am a</p>
+                <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">I am a</p>
                 <div className="grid grid-cols-3 gap-2">
                   {ROLES.map(({ value, label }) => (
                     <button
@@ -193,15 +188,15 @@ export default function SignupPage() {
                       disabled={loading}
                       className={`rounded-xl border px-3 py-2 text-center text-sm font-medium transition-all duration-150 disabled:opacity-50 ${
                         role === value
-                          ? 'border-[#4a94ff] bg-[#f0f7ff] text-[#4a94ff] ring-2 ring-[#4a94ff]/15'
-                          : 'border-[#d4d4d4] bg-[#fafafa] text-[#171717] hover:border-[#a3a3a3] hover:bg-white'
+                          ? 'border-primary bg-accent text-primary ring-2 ring-primary/15'
+                          : 'border-border bg-muted text-foreground hover:border-muted-foreground/40 hover:bg-background'
                       }`}
                     >
                       {label}
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-xs text-[#737373] leading-snug min-h-[1rem]">
+                <p className="mt-2 text-xs text-muted-foreground leading-snug min-h-[1rem]">
                   {ROLES.find(r => r.value === role)?.description}
                 </p>
               </div>
@@ -241,7 +236,7 @@ export default function SignupPage() {
 
               {/* Password with show/hide and generator */}
               <div className="relative">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary">
                   {LockIcon}
                 </span>
                 <input
@@ -252,14 +247,14 @@ export default function SignupPage() {
                   required
                   disabled={loading}
                   autoComplete="new-password"
-                  className="w-full rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 pl-10 pr-10 text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150"
+                  className="w-full rounded-xl border border-border bg-muted py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:bg-background focus:outline-none focus:ring-3 focus:ring-primary/15 disabled:opacity-50 transition-all duration-150"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setShowPassword(v => !v)}
                     disabled={loading}
-                    className="flex items-center justify-center rounded-lg p-1.5 text-[#a3a3a3] hover:text-[#737373] transition-colors duration-150"
+                    className="flex items-center justify-center rounded-lg p-1.5 text-muted-foreground/60 hover:text-muted-foreground transition-colors duration-150"
                     tabIndex={-1}
                   >
                     {showPassword ? EyeOffIcon : EyeIcon}
@@ -272,18 +267,18 @@ export default function SignupPage() {
                 Create Account
               </AuthSubmitButton>
 
-              <p className="text-[11px] text-[#a3a3a3] leading-relaxed text-center">
+              <p className="text-[11px] text-muted-foreground/60 leading-relaxed text-center">
                 By clicking Create Account, you are creating a Neptino account and you agree to Neptino&apos;s{' '}
-                <a href="/terms" className="text-[#4a94ff] hover:text-[#2f7de0] transition-colors duration-150">Terms of Use</a>
+                <a href="/terms" className="text-primary hover:text-primary/80 transition-colors duration-150">Terms of Use</a>
                 {' '}and{' '}
-                <a href="/privacy" className="text-[#4a94ff] hover:text-[#2f7de0] transition-colors duration-150">Privacy Policy</a>.
+                <a href="/privacy" className="text-primary hover:text-primary/80 transition-colors duration-150">Privacy Policy</a>.
               </p>
             </form>
 
             <div className="px-8 pb-7 text-center">
-              <p className="text-sm text-[#737373]">
+              <p className="text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <Link href="/login" className="font-semibold text-[#4a94ff] hover:text-[#2f7de0] transition-colors duration-150">
+                <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150">
                   Sign in
                 </Link>
               </p>

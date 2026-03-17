@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Cormorant_Garamond, Instrument_Sans } from "next/font/google";
+import { Geist, Geist_Mono, Open_Sans } from "next/font/google";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeTokensProvider } from "@/components/providers/ThemeTokensProvider";
 import "./globals.css";
@@ -16,17 +16,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const cormorantGaramond = Cormorant_Garamond({
-  variable: "--font-cormorant",
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-});
-
-const instrumentSans = Instrument_Sans({
-  variable: "--font-instrument",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -42,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cormorantGaramond.variable} ${instrumentSans.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${openSans.variable} antialiased`}
       >
         <ThemeTokensProvider />
         <QueryProvider>

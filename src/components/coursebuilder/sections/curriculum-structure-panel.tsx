@@ -193,7 +193,7 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className={`rounded-md border px-2 py-1 text-[11px] font-medium ${
           props.ollamaHealthy === null ? "border-border bg-muted/40 text-muted-foreground"
-          : props.ollamaHealthy ? "border-emerald-300/70 bg-emerald-100/60 text-emerald-800 dark:border-emerald-600/50 dark:bg-emerald-900/30 dark:text-emerald-200"
+          : props.ollamaHealthy ? "border-[#5c9970]/30 bg-[#5c9970]/10 text-[#5c9970]"
           : "border-destructive/30 bg-destructive/10 text-destructive"}`}>
           {props.ollamaHealthy === null ? "Checking Ollama…" : props.ollamaHealthy ? "Ollama Connected" : "Ollama Disconnected"}
         </span>
@@ -203,18 +203,18 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
           </span>
         )}
         {props.highLoadModelActive && (
-          <span className="rounded-md border border-amber-300/70 bg-amber-100/70 px-2 py-1 text-[11px] font-medium text-amber-800 dark:border-amber-600/50 dark:bg-amber-900/30 dark:text-amber-200">
+          <span className="rounded-md border border-[#a89450]/30 bg-[#a89450]/10 px-2 py-1 text-[11px] font-medium text-[#a89450]">
             High-load model active
           </span>
         )}
       </div>
 
       {!props.isGenerationReady && (
-        <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-50 px-3 py-3 dark:bg-amber-950/20">
-          <p className="text-xs font-medium text-amber-700 dark:text-amber-300">Generation is locked until setup is complete.</p>
+        <div className="mt-3 rounded-lg border border-[#a89450]/40 bg-[#a89450]/10 px-3 py-3">
+          <p className="text-xs font-medium text-[#a89450]">Generation is locked until setup is complete.</p>
           <ul className="mt-1 space-y-1">
             {props.readinessIssues.map((issue) => (
-              <li key={issue} className="text-xs text-amber-700/90 dark:text-amber-300/90">• {issue}</li>
+              <li key={issue} className="text-xs text-[#a89450]/90">• {issue}</li>
             ))}
           </ul>
           <div className="mt-2 flex flex-wrap gap-1.5">

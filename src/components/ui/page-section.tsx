@@ -35,18 +35,18 @@ export function MetricCard({ label, value }: MetricCardProps) {
 type WelcomeBannerProps = {
   title: string
   description: string
-  variant?: "emerald" | "amber"
+  variant?: "primary" | "secondary"
 }
 
-export function WelcomeBanner({ title, description, variant = "emerald" }: WelcomeBannerProps) {
+export function WelcomeBanner({ title, description, variant = "primary" }: WelcomeBannerProps) {
   const variants = {
-    emerald: "from-green-50 to-emerald-50 border-green-200",
-    amber: "from-amber-50 to-orange-50 border-amber-200"
+    primary: "bg-accent border-primary/20",
+    secondary: "bg-secondary/5 border-secondary/20",
   }
   return (
-    <div className={`rounded-xl bg-gradient-to-r ${variants[variant]} border p-6`}>
+    <div className={`rounded-xl border p-6 ${variants[variant]}`}>
       <h1 className="text-2xl font-bold text-foreground mb-2">{title}</h1>
-      <p className="text-foreground/80">{description}</p>
+      <p className="text-muted-foreground">{description}</p>
     </div>
   )
 }

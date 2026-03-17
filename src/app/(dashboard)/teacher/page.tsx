@@ -144,7 +144,7 @@ export default function TeacherHomePage() {
                   <p className="mt-0.5 text-xs text-muted-foreground">{course.meta}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{course.updated}</p>
                 </div>
-                <span className={course.status === "Live" ? "mt-0.5 shrink-0 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700" : "mt-0.5 shrink-0 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700"}>
+                <span className={course.status === "Live" ? "mt-0.5 shrink-0 rounded-md border border-[#5c9970]/30 bg-[#5c9970]/10 px-2 py-0.5 text-[11px] font-medium text-[#5c9970]" : "mt-0.5 shrink-0 rounded-md border border-[#a89450]/30 bg-[#a89450]/10 px-2 py-0.5 text-[11px] font-medium text-[#a89450]"}>
                   {course.status}
                 </span>
               </Link>

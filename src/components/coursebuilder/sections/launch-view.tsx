@@ -56,7 +56,7 @@ export function LaunchView({
         {checks.map(({ label, ok }) => (
           <div key={label} className="flex items-center gap-3 px-5 py-3">
             <div className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 ${
-              ok ? "bg-emerald-500" : "bg-muted border border-border"
+              ok ? "bg-[#5c9970]" : "bg-muted border border-border"
             }`}>
               {ok && (
                 <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 8 8">
@@ -85,11 +85,11 @@ export function LaunchView({
       )}
 
       {launched ? (
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 px-5 py-4 space-y-1">
-          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+        <div className="rounded-md border border-[#5c9970]/30 bg-[#5c9970]/10 px-5 py-4 space-y-1">
+          <p className="text-sm font-semibold text-[#5c9970]">
             Course launched successfully!
           </p>
-          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">
+          <p className="text-xs text-[#5c9970]/80">
             Your course is now visible and open for enrollment.
           </p>
         </div>

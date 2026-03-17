@@ -63,17 +63,14 @@ export default function LoginPage() {
 
   return (
     <PublicShell hideNavActions>
-      <div
-        className="flex min-h-[calc(100vh-3.75rem-56px)] items-center justify-center px-4 py-16"
-        style={{ background: "linear-gradient(180deg,#f3f4f8 0%,#ffffff 60%)" }}
-      >
+      <div className="flex min-h-[calc(100vh-3.75rem-56px)] items-center justify-center px-4 py-16 bg-gradient-to-b from-muted to-background">
         <div className="w-full max-w-[22rem]">
           {/* Card */}
-          <div className="rounded-2xl border border-[#e5e5e5] bg-white shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
+          <div className="rounded-2xl border border-border bg-background shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
             {/* Card header */}
-            <div className="px-8 pt-8 pb-6 border-b border-[#f5f5f5]">
-              <h1 className="text-xl font-bold text-[#171717] mb-1">Welcome back</h1>
-              <p className="text-sm text-[#737373]">Sign in to your Neptino account</p>
+            <div className="px-8 pt-8 pb-6 border-b border-muted">
+              <h1 className="text-xl font-bold text-foreground mb-1">Welcome back</h1>
+              <p className="text-sm text-muted-foreground">Sign in to your Neptino account</p>
             </div>
 
             {/* Form */}
@@ -105,7 +102,7 @@ export default function LoginPage() {
               <div className="flex justify-end -mt-1">
                 <Link
                   href="/forgot-password"
-                  className="text-xs text-[#4a94ff] hover:text-[#2f7de0] transition-colors duration-150"
+                  className="text-xs text-primary hover:text-primary/80 transition-colors duration-150"
                 >
                   Forgot your password?
                 </Link>
@@ -118,9 +115,9 @@ export default function LoginPage() {
 
             {/* Card footer */}
             <div className="px-8 pb-7 text-center">
-              <p className="text-sm text-[#737373]">
+              <p className="text-sm text-muted-foreground">
                 Don&apos;t have an account?{' '}
-                <Link href="/signup" className="font-semibold text-[#4a94ff] hover:text-[#2f7de0] transition-colors duration-150">
+                <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150">
                   Sign up
                 </Link>
               </p>

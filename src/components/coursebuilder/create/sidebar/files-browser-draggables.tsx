@@ -93,9 +93,9 @@ export function DraggableItem({ item }: { item: LibraryItem }) {
       {...listeners}
       {...attributes}
       className={[
-        "flex items-center gap-2.5 rounded-lg border border-neutral-200 px-2 py-2.5",
-        "cursor-grab select-none transition-all bg-white",
-        "hover:border-neutral-300 hover:shadow-sm",
+        "flex items-center gap-2.5 rounded-lg border border-border px-2 py-2.5",
+        "cursor-grab select-none transition-all bg-background",
+        "hover:border-border/70 hover:shadow-sm",
         isDragging ? "opacity-40 shadow-md" : "",
       ].filter(Boolean).join(" ")}
     >
@@ -103,8 +103,8 @@ export function DraggableItem({ item }: { item: LibraryItem }) {
         <Icon size={18} className={colors.text} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-neutral-800 leading-tight line-clamp-2">{item.title}</p>
-        <p className="mt-0.5 text-[9px] uppercase tracking-wide font-semibold text-neutral-400">{typeLabel}</p>
+        <p className="text-[11px] font-medium text-foreground leading-tight line-clamp-2">{item.title}</p>
+        <p className="mt-0.5 text-[9px] uppercase tracking-wide font-semibold text-muted-foreground/70">{typeLabel}</p>
       </div>
     </div>
   )

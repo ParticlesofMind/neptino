@@ -11,8 +11,8 @@ import { MAKE_BLUE_ACTIVE_SOFT, MAKE_BLUE_BADGE, MAKE_BLUE_INPUT_FOCUS, MAKE_RES
 const GROUP_ACCENT: Record<string, { pill: string; pillActive: string; border: string; dot: string }> = {
   resources: MAKE_RESOURCE_ACCENT,
   tools: { pill: "text-[#00ccb3]", pillActive: "bg-[#00ccb3] text-white", border: "border-[#00ccb3]/20 bg-[#00ccb3]/5", dot: "bg-[#00ccb3]" },
-  experiences: { pill: "text-amber-600", pillActive: "bg-amber-500 text-white", border: "border-amber-200 bg-amber-50", dot: "bg-amber-400" },
-  layout: { pill: "text-neutral-600", pillActive: "bg-neutral-600 text-white", border: "border-neutral-200 bg-neutral-50", dot: "bg-neutral-400" },
+  experiences: { pill: "text-[#a89450]", pillActive: "bg-[#a89450] text-white", border: "border-[#a89450]/20 bg-[#a89450]/10", dot: "bg-[#a89450]" },
+  layout: { pill: "text-muted-foreground", pillActive: "bg-foreground/80 text-white", border: "border-border bg-muted/40", dot: "bg-muted-foreground/60" },
 }
 
 const FILTER_LABELS: Record<string, string> = {
@@ -100,19 +100,19 @@ export function MakePanelSidebar({
 
   if (!showSidebar) {
     return (
-      <div className="flex w-12 shrink-0 flex-col items-center border-r border-neutral-200 bg-white/90 py-3">
+      <div className="flex w-12 shrink-0 flex-col items-center border-r border-border bg-background/90 py-3">
         <button
           type="button"
           onClick={() => onToggleSidebar(true)}
           title="Expand block library"
-          className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
         >
           <ChevronRight size={16} className="rotate-180" />
         </button>
         <button
           type="button"
           onClick={() => onToggleSidebar(true)}
-          className="mt-3 rounded-md px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 [writing-mode:vertical-rl] [text-orientation:mixed]"
+          className="mt-3 rounded-md px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground [writing-mode:vertical-rl] [text-orientation:mixed]"
         >
           Blocks
         </button>
@@ -123,12 +123,12 @@ export function MakePanelSidebar({
   const isLibraryView = activeFilter === "library"
 
   return (
-    <div className="flex w-72 shrink-0 flex-col overflow-hidden border-r border-neutral-200 bg-white">
-      <div className="shrink-0 border-b border-neutral-100 px-4 pb-3 pt-4">
+    <div className="flex w-72 shrink-0 flex-col overflow-hidden border-r border-border bg-background">
+      <div className="shrink-0 border-b border-border/50 px-4 pb-3 pt-4">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="text-[11px] font-bold tracking-tight text-neutral-900">Block library</p>
-            <p className="mt-0.5 text-[10px] text-neutral-400">
+            <p className="text-[11px] font-bold tracking-tight text-foreground">Block library</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground/70">
               {isLibraryView ? "Browse saved blocks by project" : "Choose a block to configure"}
             </p>
           </div>
@@ -136,7 +136,7 @@ export function MakePanelSidebar({
             type="button"
             onClick={() => onToggleSidebar(false)}
             title="Collapse block library"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted/60 hover:text-foreground"
           >
             <ChevronRight size={15} className="rotate-180" />
           </button>
@@ -145,7 +145,7 @@ export function MakePanelSidebar({
           <span className={["rounded px-2 py-1 text-[9px] font-semibold", MAKE_BLUE_BADGE].join(" ")}>
             {isLibraryView ? libraryVisibleCount : visibleCards} visible
           </span>
-          <span className="rounded bg-neutral-100 px-2 py-1 text-[9px] font-semibold text-neutral-500">
+          <span className="rounded bg-muted/60 px-2 py-1 text-[9px] font-semibold text-muted-foreground">
             {isLibraryView ? libraryTotalCount : totalCards} total
           </span>
         </div>
@@ -157,7 +157,7 @@ export function MakePanelSidebar({
           placeholder={isLibraryView ? "Search saved blocks…" : "Search block types…"}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          className={`min-h-10 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-700 outline-none transition-colors placeholder:text-neutral-400 ${MAKE_BLUE_INPUT_FOCUS}`}
+          className={`min-h-10 w-full rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-[12px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 ${MAKE_BLUE_INPUT_FOCUS}`}
         />
       </div>
 
@@ -179,10 +179,10 @@ export function MakePanelSidebar({
                       ? "bg-neutral-900 text-white"
                       : MAKE_BLUE_ACTIVE_SOFT
                   : groupAccent
-                    ? `bg-neutral-100 ${groupAccent.pill} hover:opacity-80`
+                    ? `bg-muted/60 ${groupAccent.pill} hover:opacity-80`
                     : filter === "library"
-                      ? "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-                      : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200",
+                      ? "bg-muted/60 text-foreground/70 hover:bg-muted"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted",
               ].join(" ")}
             >
               {FILTER_LABELS[filter]}
@@ -197,29 +197,29 @@ export function MakePanelSidebar({
             {libraryGroups.map((group) => {
               const isExpanded = expandedProjects[group.id] ?? group.isCurrent
               return (
-                <section key={group.id} className="mb-2 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50/60">
+                <section key={group.id} className="mb-2 overflow-hidden rounded-xl border border-border bg-muted/30">
                   <button
                     type="button"
                     onClick={() => setExpandedProjects((prev) => ({ ...prev, [group.id]: !isExpanded }))}
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-white"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-background"
                   >
-                    {isExpanded ? <ChevronDown size={14} className="shrink-0 text-neutral-500" /> : <ChevronRight size={14} className="shrink-0 text-neutral-500" />}
-                    <FolderOpen size={14} className="shrink-0 text-neutral-400" />
+                    {isExpanded ? <ChevronDown size={14} className="shrink-0 text-muted-foreground" /> : <ChevronRight size={14} className="shrink-0 text-muted-foreground" />}
+                    <FolderOpen size={14} className="shrink-0 text-muted-foreground/70" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="truncate text-[12px] font-semibold text-neutral-900">{group.title}</p>
-                        <span className="rounded-full bg-neutral-200 px-1.5 py-0.5 text-[9px] font-semibold text-neutral-600">
+                        <p className="truncate text-[12px] font-semibold text-foreground">{group.title}</p>
+                        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
                           {group.cards.length}
                         </span>
                       </div>
-                      <p className="mt-0.5 text-[10px] text-neutral-400">
+                      <p className="mt-0.5 text-[10px] text-muted-foreground/70">
                         {group.isCurrent ? "Current project" : "Saved project"}
                       </p>
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="border-t border-neutral-200 bg-white px-1.5 py-1.5">
+                    <div className="border-t border-border bg-background px-1.5 py-1.5">
                       {group.cardTypeGroups.map((cardTypeGroup) => (
                         <div key={cardTypeGroup.id} className="mb-2 last:mb-0">
                           <button
@@ -228,15 +228,15 @@ export function MakePanelSidebar({
                               const key = `${group.id}:${cardTypeGroup.id}`
                               setExpandedTypeGroups((prev) => ({ ...prev, [key]: !(prev[key] ?? true) }))
                             }}
-                            className="mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-neutral-50"
+                            className="mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/30"
                           >
                             {(expandedTypeGroups[`${group.id}:${cardTypeGroup.id}`] ?? true)
-                              ? <ChevronDown size={12} className="shrink-0 text-neutral-400" />
-                              : <ChevronRight size={12} className="shrink-0 text-neutral-400" />}
-                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+                              ? <ChevronDown size={12} className="shrink-0 text-muted-foreground/70" />
+                              : <ChevronRight size={12} className="shrink-0 text-muted-foreground/70" />}
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
                               {cardTypeGroup.label}
                             </p>
-                            <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[9px] font-semibold text-neutral-500">
+                            <span className="rounded-full bg-muted/60 px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
                               {cardTypeGroup.cards.length}
                             </span>
                           </button>
@@ -251,20 +251,20 @@ export function MakePanelSidebar({
                                 onClick={() => onSelectLibraryCard(card)}
                                 className={[
                                   "mb-1 flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left transition-all last:mb-0",
-                                  isSelected ? "bg-neutral-900 text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)]" : "hover:bg-neutral-50",
+                                  isSelected ? "bg-neutral-900 text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)]" : "hover:bg-muted/30",
                                 ].join(" ")}
                               >
                                 <div className={[
                                   "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border",
-                                  isSelected ? "border-white/15 bg-white/10" : "border-neutral-200 bg-neutral-50",
+                                  isSelected ? "border-white/15 bg-white/10" : "border-border bg-muted/40",
                                 ].join(" ")}>
-                                  <meta.icon size={13} className={isSelected ? "text-white" : "text-neutral-500"} />
+                                  <meta.icon size={13} className={isSelected ? "text-white" : "text-muted-foreground"} />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className={["truncate text-[12px] font-semibold", isSelected ? "text-white" : "text-neutral-800"].join(" ")}>
+                                  <p className={["truncate text-[12px] font-semibold", isSelected ? "text-white" : "text-foreground"].join(" ")}>
                                     {card.title}
                                   </p>
-                                  <p className={["mt-0.5 text-[10px]", isSelected ? "text-white/70" : "text-neutral-400"].join(" ")}>
+                                  <p className={["mt-0.5 text-[10px]", isSelected ? "text-white/70" : "text-muted-foreground/70"].join(" ")}>
                                     {meta.label}
                                   </p>
                                 </div>
@@ -281,7 +281,7 @@ export function MakePanelSidebar({
 
             {libraryGroups.length === 0 && (
               <div className="px-3 py-8 text-center">
-                <p className="text-[12px] text-neutral-400">
+                <p className="text-[12px] text-muted-foreground/70">
                   {libraryTotalCount > 0 ? "No saved blocks match your search." : "No saved blocks yet."}
                 </p>
               </div>
@@ -306,19 +306,19 @@ export function MakePanelSidebar({
                       key={spec.cardType}
                       type="button"
                       onClick={() => onSelectCardType(spec.cardType)}
-                      className={["mx-auto flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all", isActive ? "" : "hover:bg-neutral-50"].join(" ")}
+                      className={["mx-auto flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all", isActive ? "" : "hover:bg-muted/30"].join(" ")}
                     >
                       <div className={[
                         "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-all",
-                        isActive ? [accent.border, "shadow-sm"].join(" ") : "bg-neutral-100",
+                        isActive ? [accent.border, "shadow-sm"].join(" ") : "bg-muted/40",
                       ].join(" ")}>
-                        <spec.Icon size={12} className={isActive ? spec.accent : "text-neutral-400"} />
+                        <spec.Icon size={12} className={isActive ? spec.accent : "text-muted-foreground/70"} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className={["text-[12px] font-semibold leading-tight", isActive ? "text-neutral-900" : "text-neutral-600"].join(" ")}>
+                        <p className={["text-[12px] font-semibold leading-tight", isActive ? "text-foreground" : "text-foreground/70"].join(" ")}>
                           {spec.label}
                         </p>
-                        <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-neutral-400">
+                        <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-muted-foreground/70">
                           {spec.description}
                         </p>
                       </div>
@@ -333,7 +333,7 @@ export function MakePanelSidebar({
 
         {!isLibraryView && filteredGroups.length === 0 && (
           <div className="px-4 py-8 text-center">
-            <p className="text-[12px] text-neutral-400">No block types match your search.</p>
+            <p className="text-[12px] text-muted-foreground/70">No block types match your search.</p>
           </div>
         )}
       </div>

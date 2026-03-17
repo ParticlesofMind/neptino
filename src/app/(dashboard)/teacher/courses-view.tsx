@@ -13,9 +13,9 @@ const courses = [
 ]
 
 const statusStyle: Record<string, string> = {
-  Live:   "border-emerald-200 bg-emerald-50 text-emerald-700",
-  Draft:  "border-amber-200 bg-amber-50 text-amber-700",
-  Review: "border-blue-200 bg-blue-50 text-blue-700",
+  Live:   "border-[#5c9970]/30 bg-[#5c9970]/10 text-[#5c9970]",
+  Draft:  "border-[#a89450]/30 bg-[#a89450]/10 text-[#a89450]",
+  Review: "border-primary/20 bg-primary/10 text-primary",
 }
 
 export function CoursesView() {

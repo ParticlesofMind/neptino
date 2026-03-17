@@ -7,7 +7,7 @@ export default function AdminHomePage() {
       <WelcomeBanner
         title="Platform Administration"
         description="Monitor system health, manage users, and oversee platform operations."
-        variant="amber"
+        variant="secondary"
       />
 
       {/* Key Metrics */}

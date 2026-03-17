@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react"
 
 const INPUT_CLASS =
-  "w-full rounded-xl border border-[#d4d4d4] bg-[#fafafa] py-2.5 text-sm text-[#171717] placeholder:text-[#a3a3a3] focus:border-[#4a94ff] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#4a94ff]/15 disabled:opacity-50 transition-all duration-150"
+  "w-full rounded-xl border border-input bg-muted/30 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus:outline-none focus:ring-[3px] focus:ring-primary/15 disabled:opacity-50 transition-all duration-150"
 
 /** Wrapper for an icon-prefixed auth input field. */
 export function AuthInputWrapper({ children }: { children: ReactNode }) {
@@ -20,7 +20,7 @@ export function AuthInput({
   return (
     <div className="relative">
       {icon && (
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary">
           {icon}
         </span>
       )}
@@ -41,7 +41,7 @@ export function AuthSelect({
   return (
     <div className="relative">
       {icon && (
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#4a94ff]">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary">
           {icon}
         </span>
       )}
@@ -52,7 +52,7 @@ export function AuthSelect({
         {children}
       </select>
       <svg
-        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#a3a3a3]"
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
         width="14"
         height="14"
         viewBox="0 0 24 24"
@@ -78,7 +78,7 @@ export function AuthSubmitButton({
     <button
       type="submit"
       disabled={loading}
-      className="mt-1 w-full rounded-xl bg-[#4a94ff] py-2.5 text-sm font-semibold text-white hover:bg-[#2f7de0] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a94ff]"
+      className="mt-1 w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       {loading ? loadingLabel : children}
     </button>
@@ -88,7 +88,7 @@ export function AuthSubmitButton({
 /** Error banner rendered when an auth operation fails. */
 export function AuthErrorBanner({ message }: { message: string }) {
   return (
-    <div className="rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-4 py-3 text-sm text-[#b91c1c]">
+    <div className="rounded-lg bg-destructive/5 border border-destructive/20 px-4 py-3 text-sm text-destructive">
       {message}
     </div>
   )

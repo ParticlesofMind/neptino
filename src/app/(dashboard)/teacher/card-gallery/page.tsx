@@ -30,7 +30,7 @@ const GROUP_LABELS: Record<VisibleGroup, string> = {
   layout: "Layouts",
 }
 const GROUP_DOT_CLASS: Record<VisibleGroup, string> = {
-  media: "bg-emerald-500", products: "bg-amber-500", layout: "bg-slate-500",
+  media: "bg-[#5c9970]", products: "bg-[#b87c5c]", layout: "bg-[#737373]",
 }
 function buildFallbackContent(cardType: CardType, label: string): Record<string, unknown> {
   if (cardType.startsWith("layout-")) return { title: `${label} layout`, slots: {} }

@@ -95,8 +95,8 @@ export function TaskAreaDropZone({
         className={[
           "min-h-[2rem] rounded-lg border border-border bg-background",
           hasSingleLayoutCard ? "py-0" : "py-1",
-          isOver && !showLayoutFirstHint ? "border-blue-300 bg-blue-50" : "",
-          showLayoutFirstHint ? "border-amber-300 bg-amber-50/40" : "",
+          isOver && !showLayoutFirstHint ? "border-primary/30 bg-primary/5" : "",
+          showLayoutFirstHint ? "border-[#a89450]/30 bg-[#a89450]/5" : "",
         ].join(" ")}
       >
         <div className={hasSingleLayoutCard ? "space-y-0" : "space-y-1"}>
@@ -149,7 +149,7 @@ export function TaskAreaDropZone({
           {/* Hover feedback is border-only to avoid reflow/jump while dragging. */}
           {showLayoutFirstHint && (
             <div className="flex items-center justify-center px-2 h-10">
-              <span className="text-[9px] text-amber-600 italic">
+              <span className="text-[9px] text-[#a89450] italic">
                 {hasOnlyLayoutCards
                   ? "Drop into a slot inside the layout block"
                   : "Drop a layout block first"}
