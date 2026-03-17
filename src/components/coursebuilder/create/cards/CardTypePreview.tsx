@@ -12,47 +12,21 @@
  */
 
 import dynamic from "next/dynamic"
-import type { LucideIcon } from "lucide-react"
 import {
-  AudioLines,
   Bot,
   Box,
   Check,
-  Code2,
-  Columns2,
-  Columns3,
   Database,
-  FileText,
-  Film,
   Gamepad2,
-  Grid3X3,
-  Grid3x2,
-  HelpCircle,
   Image as ImageIcon,
-  Layout,
-  LayoutDashboard,
   Layers,
-  LayoutGrid,
-  LayoutPanelLeft,
-  LayoutPanelTop,
-  LayoutTemplate,
-  LineChart,
   List,
-  Map as MapIcon,
   MessageSquare,
-  Network,
-  PanelLeft,
-  PanelLeftOpen,
-  PenTool,
-  PlayCircle,
-  Rows2,
-  Rows3,
   ScrollText,
-  Sparkles,
-  Table2,
   Timer,
 } from "lucide-react"
 import type { CardType } from "../types"
+import { CARD_TYPE_META } from "./card-type-registry"
 import {
   AnimationPreview,
   AudioPreview,
@@ -81,50 +55,8 @@ const TimelineJSPreview = dynamic(
   },
 )
 
-// ─── Meta ─────────────────────────────────────────────────────────────────────
-
-export interface CardTypeMeta { label: string; icon: LucideIcon }
-
-export const CARD_TYPE_META: Record<CardType, CardTypeMeta> = {
-  text:         { label: "Text",        icon: FileText    },
-  image:        { label: "Image",       icon: ImageIcon   },
-  audio:        { label: "Audio",       icon: AudioLines  },
-  video:        { label: "Video",       icon: PlayCircle  },
-  animation:    { label: "Animation",   icon: Film        },
-  dataset:      { label: "Dataset",     icon: Database    },
-  "model-3d":   { label: "3D Model",    icon: Box         },
-  map:          { label: "Map",         icon: MapIcon     },
-  chart:        { label: "Chart",       icon: LineChart   },
-  diagram:      { label: "Diagram",     icon: Network     },
-  media:        { label: "Media",       icon: Layers      },
-  document:     { label: "Document",    icon: ScrollText  },
-  table:        { label: "Table",       icon: Table2      },
-  "rich-sim":   { label: "Simulation",  icon: Sparkles    },
-  "village-3d": { label: "3D Scene",    icon: Box         },
-  interactive:  { label: "Quiz",        icon: HelpCircle  },
-  games:        { label: "Game",        icon: Gamepad2    },
-  chat:         { label: "Chat with character", icon: Bot },  
-  "text-editor": { label: "Text editor", icon: FileText },
-  "code-editor": { label: "Code editor", icon: Code2 },
-  whiteboard:   { label: "Whiteboard",  icon: PenTool },
-  timeline:     { label: "Timeline",    icon: Timer       },
-  legend:       { label: "Legend",      icon: List        },
-  // ── Layout containers ─────────────────────────────────────────
-  "layout-split":     { label: "Split",     icon: Columns2         },
-  "layout-stack":     { label: "Stack",     icon: Rows2            },
-  "layout-feature":   { label: "Feature",   icon: Layout           },
-  "layout-sidebar":   { label: "Sidebar",   icon: PanelLeft        },
-  "layout-quad":      { label: "Quad",      icon: LayoutGrid       },
-  "layout-mosaic":    { label: "Mosaic",    icon: Grid3X3          },
-  "layout-triptych":  { label: "Triptych",  icon: Columns3         },
-  "layout-trirow":    { label: "Trirow",    icon: Rows3            },
-  "layout-banner":    { label: "Banner",    icon: LayoutPanelTop   },
-  "layout-broadside": { label: "Broadside", icon: LayoutTemplate   },
-  "layout-tower":     { label: "Tower",     icon: LayoutPanelLeft  },
-  "layout-pinboard":  { label: "Pinboard",  icon: LayoutDashboard  },
-  "layout-annotated": { label: "Annotated", icon: PanelLeftOpen    },
-  "layout-sixgrid":   { label: "Six-Grid",  icon: Grid3x2          },
-}
+export { CARD_TYPE_META } from "./card-type-registry"
+export type { CardTypeMeta } from "./card-type-registry"
 
 // ─── Main exported component ──────────────────────────────────────────────────
 
@@ -255,7 +187,7 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
     }
 
     case "model-3d":
-      return <Model3DViewer />
+      return <Model3DViewer content={content} />
 
     case "table": {
       const rawCols = content["columns"]

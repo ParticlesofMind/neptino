@@ -35,7 +35,12 @@ const CARD_TYPE_COLORS: Partial<Record<string, { bg: string; text: string }>> = 
   map:         { bg: "bg-lime-100",    text: "text-lime-700" },
   animation:   { bg: "bg-pink-100",    text: "text-pink-700" },
   dataset:     { bg: "bg-cyan-100",    text: "text-cyan-700" },
+  timeline:    { bg: "bg-sky-100",     text: "text-sky-700" },
+  legend:      { bg: "bg-emerald-100", text: "text-emerald-700" },
   interactive: { bg: "bg-purple-100",  text: "text-purple-700" },
+  games:       { bg: "bg-violet-100",  text: "text-violet-700" },
+  "rich-sim":   { bg: "bg-amber-100",   text: "text-amber-700" },
+  "village-3d": { bg: "bg-amber-100",   text: "text-amber-700" },
   chat:        { bg: "bg-rose-100",    text: "text-rose-700" },
   "text-editor": { bg: "bg-sky-100", text: "text-sky-700" },
   "code-editor": { bg: "bg-slate-200", text: "text-slate-700" },
@@ -51,7 +56,7 @@ function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-lg cursor-grabbing">
         <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
-          {label} layout
+          {label} layout block
         </span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 3fr", gridTemplateRows: "2fr 1fr", gap: 2, height: 52 }}>
           <div style={{ gridArea: "1 / 1 / 3 / 2" }} className="rounded-sm border border-neutral-300 bg-neutral-200" />
@@ -66,7 +71,7 @@ function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-lg cursor-grabbing">
         <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
-          {label} layout
+          {label} layout block
         </span>
         <div style={{ display: "grid", gridTemplateColumns: "3fr 7fr", gap: 2, height: 36 }}>
           <div className="rounded-sm border border-neutral-300 bg-neutral-200" />
@@ -80,7 +85,7 @@ function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-lg cursor-grabbing">
         <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
-          {label} layout
+          {label} layout block
         </span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "auto 1fr", gap: 2, height: 52 }}>
           <div style={{ gridArea: "1 / 1 / 2 / 3" }} className="rounded-sm border border-neutral-400 bg-neutral-300" />
@@ -95,7 +100,7 @@ function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-lg cursor-grabbing">
         <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
-          {label} layout
+          {label} layout block
         </span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "auto 1fr", gap: 2, height: 52 }}>
           <div style={{ gridArea: "1 / 1 / 2 / 4" }} className="rounded-sm border border-neutral-400 bg-neutral-300" />
@@ -111,7 +116,7 @@ function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-lg cursor-grabbing">
         <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
-          {label} layout
+          {label} layout block
         </span>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gridTemplateRows: "1fr 1fr 1fr", gap: 2, height: 56 }}>
           <div style={{ gridArea: "1 / 1 / 4 / 2" }} className="rounded-sm border border-neutral-300 bg-neutral-200" />
@@ -127,7 +132,7 @@ function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-lg cursor-grabbing">
         <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
-          {label} layout
+          {label} layout block
         </span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "auto 1fr 1fr", gap: 2, height: 60 }}>
           <div style={{ gridArea: "1 / 1 / 2 / 3" }} className="rounded-sm border border-neutral-400 bg-neutral-300" />
@@ -144,7 +149,7 @@ function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-lg cursor-grabbing">
         <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
-          {label} layout
+          {label} layout block
         </span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 2fr", gridTemplateRows: "1fr 1fr", gap: 2, height: 52 }}>
           <div style={{ gridArea: "1 / 1 / 3 / 2" }} className="rounded-sm border border-neutral-300 bg-neutral-200" />
@@ -161,7 +166,7 @@ function LayoutSchematicOverlay({ cardType }: { cardType: LayoutKindKey }) {
   return (
     <div className="flex flex-col gap-1.5 min-w-[160px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-lg cursor-grabbing">
       <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
-        {label} layout
+        {label} layout block
       </span>
       <div
         style={{

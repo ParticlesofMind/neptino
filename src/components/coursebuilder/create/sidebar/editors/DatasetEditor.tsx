@@ -1,6 +1,14 @@
 "use client"
 
-import { Database } from "lucide-react"
+import { EditorSplitLayout } from "./editor-split-layout"
+import { GenericEditorPreview } from "./generic-editor-preview"
+import {
+  StudioInput,
+  StudioNumberInput,
+  StudioSection,
+  StudioSelect,
+  StudioTextarea,
+} from "./studio-primitives"
 
 interface DatasetEditorProps {
   content: Record<string, unknown>
@@ -18,80 +26,78 @@ export function DatasetEditor({ content, onChange }: DatasetEditorProps) {
   const description = typeof content.description === "string" ? content.description : ""
 
   return (
-    <div className="flex h-full flex-col overflow-auto bg-white">
-      <div className="flex items-center justify-center gap-3 border-b border-neutral-100 bg-neutral-50 py-10">
-        <Database size={36} className="text-neutral-300" />
-        <div>
-          <p className="text-[13px] font-semibold text-neutral-700">{title || "Dataset"}</p>
-          {rows > 0 && <p className="text-[11px] text-neutral-400">{rows.toLocaleString()} rows · {columns} columns</p>}
+    <EditorSplitLayout
+      sidebar={(
+        <div className="flex h-full flex-col overflow-auto bg-white">
+          <StudioSection className="pt-4" noBorder>
+            <StudioInput
+              label="Title"
+              value={title}
+              onChange={(e) => onChange("title", e.target.value)}
+            />
+            <StudioTextarea
+              label="Description"
+              value={description}
+              rows={3}
+              placeholder="What does this dataset contain?"
+              onChange={(e) => onChange("description", e.target.value)}
+            />
+            <StudioInput
+              label="Source URL or table name"
+              value={source}
+              placeholder="https://... or database.table_name"
+              onChange={(e) => onChange("source", e.target.value)}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <StudioSelect
+                label="Format"
+                value={format}
+                onChange={(e) => onChange("format", e.target.value)}
+              >
+                <option value="csv">CSV</option>
+                <option value="json">JSON</option>
+                <option value="parquet">Parquet</option>
+                <option value="sql">SQL table</option>
+                <option value="api">API endpoint</option>
+              </StudioSelect>
+              <StudioInput
+                label="Schema version"
+                value={schemaVersion}
+                placeholder="v1"
+                onChange={(e) => onChange("schemaVersion", e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <StudioNumberInput
+                label="Row count"
+                value={rows}
+                min={0}
+                onChange={(value) => onChange("rows", value)}
+              />
+              <StudioNumberInput
+                label="Columns"
+                value={columns}
+                min={0}
+                onChange={(value) => onChange("columns", value)}
+              />
+            </div>
+
+            <StudioSelect
+              label="Refresh cadence"
+              value={refreshCadence}
+              onChange={(e) => onChange("refreshCadence", e.target.value)}
+            >
+              <option value="manual">Manual</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </StudioSelect>
+          </StudioSection>
         </div>
-      </div>
-
-      <div className="px-4 py-4 space-y-3">
-        <label className="block space-y-1">
-          <span className="text-[11px] font-medium text-neutral-600">Title</span>
-          <input type="text" value={title} onChange={(e) => onChange("title", e.target.value)}
-            className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400" />
-        </label>
-
-        <label className="block space-y-1">
-          <span className="text-[11px] font-medium text-neutral-600">Description</span>
-          <textarea value={description} rows={3} onChange={(e) => onChange("description", e.target.value)}
-            placeholder="What does this dataset contain?"
-            className="w-full resize-none border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400" />
-        </label>
-
-        <label className="block space-y-1">
-          <span className="text-[11px] font-medium text-neutral-600">Source URL or table name</span>
-          <input type="text" value={source} onChange={(e) => onChange("source", e.target.value)}
-            placeholder="https://… or database.table_name"
-            className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400" />
-        </label>
-
-        <div className="grid grid-cols-2 gap-3">
-          <label className="space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Format</span>
-            <select value={format} onChange={(e) => onChange("format", e.target.value)}
-              className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none">
-              <option value="csv">CSV</option>
-              <option value="json">JSON</option>
-              <option value="parquet">Parquet</option>
-              <option value="sql">SQL table</option>
-              <option value="api">API endpoint</option>
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Schema version</span>
-            <input type="text" value={schemaVersion} onChange={(e) => onChange("schemaVersion", e.target.value)}
-              placeholder="v1"
-              className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400" />
-          </label>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <label className="space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Row count</span>
-            <input type="number" value={rows} min={0} onChange={(e) => onChange("rows", Number(e.target.value))}
-              className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400" />
-          </label>
-          <label className="space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Columns</span>
-            <input type="number" value={columns} min={0} onChange={(e) => onChange("columns", Number(e.target.value))}
-              className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400" />
-          </label>
-        </div>
-
-        <label className="block space-y-1">
-          <span className="text-[11px] font-medium text-neutral-600">Refresh cadence</span>
-          <select value={refreshCadence} onChange={(e) => onChange("refreshCadence", e.target.value)}
-            className="w-full border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-700 outline-none">
-            <option value="manual">Manual</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </label>
-      </div>
-    </div>
+      )}
+      preview={<GenericEditorPreview cardType="dataset" content={content} onTitleChange={(next) => onChange("title", next)} />}
+    />
   )
 }

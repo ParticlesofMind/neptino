@@ -1,4 +1,4 @@
-import type { StudioProfile } from "./make-studio-tools"
+import type { StudioProfile } from "./studio-profile-types"
 
 export const DATASET_PROFILE: StudioProfile = {
   mediaType: "Structured Data",

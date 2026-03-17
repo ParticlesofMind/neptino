@@ -100,7 +100,8 @@ body {
 }
 
 /* ═══ Atlas Knowledge System Styles ═══ */
-.atlas-page {
+.atlas-page,
+.atlas-scope {
   --atlas-ink: #1a1a1a;
   --atlas-bg: #ffffff;
   --atlas-bg-elevated: #fafafa;
@@ -122,6 +123,10 @@ body {
   --atlas-glow-media: rgba(91, 168, 127, 0.1);
   --atlas-glow-product: rgba(212, 144, 90, 0.1);
   --atlas-glow-activity: rgba(168, 85, 199, 0.1);
+}
+
+.atlas-scope {
+  color: var(--atlas-text);
 }
 
 .atlas-page {

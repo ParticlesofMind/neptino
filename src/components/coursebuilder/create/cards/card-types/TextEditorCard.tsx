@@ -3,7 +3,6 @@
 import { useEffect } from "react"
 import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
-import Underline from "@tiptap/extension-underline"
 import Placeholder from "@tiptap/extension-placeholder"
 import { Bold, Heading2, Italic, List, ListOrdered, Underline as UnderlineIcon } from "lucide-react"
 import type { CardRenderProps } from "../CardRegistry"
@@ -44,7 +43,6 @@ export function TextEditorCard({ card, onRemove }: CardRenderProps) {
     immediatelyRender: false,
     extensions: [
       StarterKit,
-      Underline,
       Placeholder.configure({ placeholder }),
     ],
     content: initialDocument,

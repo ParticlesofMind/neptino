@@ -439,7 +439,7 @@ export function useCanvasOverflow({
       if (cardId && taskId) {
         splitGuard.current = true
         removeDroppedCard(sessionId, taskId as TaskId, cardId)
-        setEditorNotice("Card could not fit between header and footer and was removed.")
+        setEditorNotice("Block could not fit between header and footer and was removed.")
         setTimeout(() => { splitGuard.current = false }, SPLIT_GUARD_MS)
       }
     }

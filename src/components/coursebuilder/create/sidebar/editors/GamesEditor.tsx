@@ -10,6 +10,9 @@ import {
   StudioNumberInput,
   StudioToggle,
 } from "./studio-primitives"
+import { EditorSplitLayout } from "./editor-split-layout"
+import { GenericEditorPreview } from "./generic-editor-preview"
+import { MAKE_BLUE_BADGE, MAKE_BLUE_INPUT_FOCUS, MAKE_BLUE_TEXT } from "../make-theme"
 
 interface GamesEditorProps {
   content: Record<string, unknown>
@@ -61,7 +64,7 @@ function WordMatchEditor({ pairs, onChange }: { pairs: Pair[]; onChange: (p: Pai
           type="button"
           onClick={addPair}
           disabled={pairs.length >= 16}
-          className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 hover:border-[#4a94ff]/40 hover:text-[#4a94ff] disabled:opacity-40 transition-colors"
+          className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-medium text-neutral-600 transition-colors hover:border-[#9eb9da] hover:bg-[#dbe8f6]/45 hover:text-[#233f5d] disabled:opacity-40"
         >
           <Plus size={10} /> Add pair
         </button>
@@ -76,7 +79,7 @@ function WordMatchEditor({ pairs, onChange }: { pairs: Pair[]; onChange: (p: Pai
               value={pair.term}
               onChange={(e) => updatePair(i, "term", e.target.value)}
               placeholder="Term"
-              className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-[#4a94ff]/60 focus:ring-1 focus:ring-[#4a94ff]/10"
+              className={`min-h-10 flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
             />
             <span className="text-neutral-300">↔</span>
             <input
@@ -84,9 +87,9 @@ function WordMatchEditor({ pairs, onChange }: { pairs: Pair[]; onChange: (p: Pai
               value={pair.match}
               onChange={(e) => updatePair(i, "match", e.target.value)}
               placeholder="Definition / match"
-              className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-[#4a94ff]/60 focus:ring-1 focus:ring-[#4a94ff]/10"
+              className={`min-h-10 flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
             />
-            <button type="button" onClick={() => removePair(i)} disabled={pairs.length <= 1} className="shrink-0 text-neutral-400 hover:text-red-500 disabled:opacity-30 transition-colors">
+            <button type="button" onClick={() => removePair(i)} disabled={pairs.length <= 1} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-30">
               <Trash2 size={13} />
             </button>
           </div>
@@ -105,9 +108,9 @@ function FillBlankEditor({ text, onChange }: { text: string; onChange: (t: strin
         rows={6}
         placeholder="The mitochondria is the [powerhouse] of the cell. It produces [ATP] through [cellular respiration]."
         onChange={(e) => onChange(e.target.value)}
-        className="w-full resize-none rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[13px] text-neutral-700 leading-relaxed outline-none focus:border-[#4a94ff]/60 focus:ring-1 focus:ring-[#4a94ff]/10"
+        className={`w-full resize-none rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[13px] text-neutral-700 leading-relaxed outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
       />
-      <p className="rounded-lg bg-[#4a94ff]/5 border border-[#4a94ff]/10 px-3 py-2 text-[11px] text-[#4a94ff]">
+      <p className={["rounded-lg border px-3 py-2 text-[11px]", MAKE_BLUE_BADGE].join(" ")}>
         Wrap blank words in <span className="font-mono font-bold">[square brackets]</span> — students will fill them in.
       </p>
     </div>
@@ -137,7 +140,7 @@ function DragOrderEditor({ items, onChange }: { items: string[]; onChange: (item
           type="button"
           onClick={addItem}
           disabled={items.length >= 12}
-          className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-medium text-neutral-600 hover:border-[#4a94ff]/40 hover:text-[#4a94ff] disabled:opacity-40 transition-colors"
+          className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-medium text-neutral-600 transition-colors hover:border-[#9eb9da] hover:bg-[#dbe8f6]/45 hover:text-[#233f5d] disabled:opacity-40"
         >
           <Plus size={10} /> Add
         </button>
@@ -145,16 +148,16 @@ function DragOrderEditor({ items, onChange }: { items: string[]; onChange: (item
       <div className="space-y-2">
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold text-neutral-500">{i + 1}</span>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold text-neutral-500">{i + 1}</span>
             <MousePointer size={12} className="shrink-0 text-neutral-300" />
             <input
               type="text"
               value={item}
               onChange={(e) => updateItem(i, e.target.value)}
               placeholder={`Step ${i + 1}`}
-              className="flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-[#4a94ff]/60 focus:ring-1 focus:ring-[#4a94ff]/10"
+              className={`min-h-10 flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
             />
-            <button type="button" onClick={() => removeItem(i)} disabled={items.length <= 2} className="shrink-0 text-neutral-400 hover:text-red-500 disabled:opacity-30 transition-colors">
+            <button type="button" onClick={() => removeItem(i)} disabled={items.length <= 2} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-30">
               <Trash2 size={13} />
             </button>
           </div>
@@ -181,21 +184,21 @@ export function GamesEditor({ content, onChange }: GamesEditorProps) {
   const items = parseItems(content.items)
 
   return (
-    <div className="flex h-full flex-col overflow-auto bg-white">
+    <EditorSplitLayout
+      sidebar={(
+        <div className="flex h-full flex-col overflow-auto bg-white">
 
-      {/* Game type */}
-      <StudioSection className="pt-4">
-        <StudioSegment
-          label="Game type"
-          options={GAME_TYPES.map(({ id, label }) => ({ value: id, label }))}
-          value={gameType}
-          onChange={(t) => onChange("gameType", t)}
-          size="xs"
-        />
-      </StudioSection>
+          <StudioSection className="pt-4">
+            <StudioSegment
+              label="Game type"
+              options={GAME_TYPES.map(({ id, label }) => ({ value: id, label }))}
+              value={gameType}
+              onChange={(t) => onChange("gameType", t)}
+              size="xs"
+            />
+          </StudioSection>
 
-      {/* Title & instructions */}
-      <StudioSection label="Setup">
+          <StudioSection label="Setup">
         <StudioInput
           label="Title"
           value={title}
@@ -210,41 +213,41 @@ export function GamesEditor({ content, onChange }: GamesEditorProps) {
           placeholder="Match each term on the left to its definition on the right."
           onChange={(e) => onChange("instructions", e.target.value)}
         />
-      </StudioSection>
+          </StudioSection>
 
-      {/* Game-specific content */}
-      <div className="flex-1 overflow-auto px-4 py-4">
-        {(gameType === "word-match" || gameType === "memory") && (
-          <WordMatchEditor pairs={pairs} onChange={(p) => onChange("pairs", p)} />
-        )}
-        {gameType === "fill-blank" && (
-          <FillBlankEditor text={fillText} onChange={(t) => onChange("fillText", t)} />
-        )}
-        {gameType === "drag-order" && (
-          <DragOrderEditor items={items} onChange={(i) => onChange("items", i)} />
-        )}
-      </div>
+          <div className="flex-1 overflow-auto px-4 py-4">
+            {(gameType === "word-match" || gameType === "memory") && (
+              <WordMatchEditor pairs={pairs} onChange={(p) => onChange("pairs", p)} />
+            )}
+            {gameType === "fill-blank" && (
+              <FillBlankEditor text={fillText} onChange={(t) => onChange("fillText", t)} />
+            )}
+            {gameType === "drag-order" && (
+              <DragOrderEditor items={items} onChange={(i) => onChange("items", i)} />
+            )}
+          </div>
 
-      {/* Settings footer */}
-      <div className="shrink-0 border-t border-neutral-100 bg-neutral-50 px-4 py-3 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <StudioNumberInput
-            label="Time limit (s)"
-            value={timeLimit}
-            min={0}
-            max={600}
-            step={15}
-            unit="0 = unlimited"
-            onChange={(v) => onChange("timeLimit", v)}
-          />
-          <StudioToggle
-            label="Show hints"
-            checked={showHints}
-            onChange={(v) => onChange("showHints", v)}
-            accentColor="#4a94ff"
-          />
+          <div className="shrink-0 border-t border-neutral-100 bg-neutral-50 px-4 py-3 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <StudioNumberInput
+                label="Time limit (s)"
+                value={timeLimit}
+                min={0}
+                max={600}
+                step={15}
+                unit="0 = unlimited"
+                onChange={(v) => onChange("timeLimit", v)}
+              />
+              <StudioToggle
+                label="Show hints"
+                checked={showHints}
+                onChange={(v) => onChange("showHints", v)}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+      preview={<GenericEditorPreview cardType="games" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-4xl" />}
+    />
   )
 }

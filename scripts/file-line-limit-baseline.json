@@ -1,0 +1,46 @@
+{
+  "limit": 350,
+  "roots": [
+    "src",
+    "chrome-extension/src",
+    "e2e",
+    "scripts"
+  ],
+  "extensions": [
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs"
+  ],
+  "baseline": {
+    "e2e/course-setup-continued.spec.ts": 439,
+    "src/__tests__/components/coursebuilder/create/course-session-mapper.test.ts": 375,
+    "src/__tests__/components/coursebuilder/create/layout/layoutEngine.test.ts": 424,
+    "src/__tests__/components/coursebuilder/create/useCardDrop.test.tsx": 432,
+    "src/app/(dashboard)/teacher/atlas/atlas-page-utils.ts": 366,
+    "src/app/(dashboard)/teacher/card-gallery/layout-sandbox-preview.tsx": 388,
+    "src/app/(dashboard)/teacher/style-guide/page.tsx": 730,
+    "src/app/api/generate-curriculum/route.ts": 381,
+    "src/components/coursebuilder/create/blocks/Content.tsx": 370,
+    "src/components/coursebuilder/create/canvas/CanvasDebugPanel.tsx": 2530,
+    "src/components/coursebuilder/create/canvas/CanvasVirtualizer.tsx": 537,
+    "src/components/coursebuilder/create/cards/card-type-preview-subviews.tsx": 426,
+    "src/components/coursebuilder/create/cards/card-type-preview-visual-subviews.tsx": 876,
+    "src/components/coursebuilder/create/cards/card-types/LayoutCard.tsx": 515,
+    "src/components/coursebuilder/create/cards/CardTypePreview.tsx": 644,
+    "src/components/coursebuilder/create/hooks/course-session-mapper.ts": 399,
+    "src/components/coursebuilder/create/hooks/useCanvasOverflow.ts": 490,
+    "src/components/coursebuilder/create/hooks/useCardDrop.ts": 476,
+    "src/components/coursebuilder/sections/classification-section.tsx": 361,
+    "src/components/coursebuilder/sections/essentials-section.tsx": 391,
+    "src/components/coursebuilder/sections/template-preview-panel.tsx": 387,
+    "src/components/coursebuilder/sections/templates-section.tsx": 403,
+    "src/components/encyclopedia/sort-content-drilldown.tsx": 388,
+    "src/components/nachschlagewerk/NachschlageDrawer.tsx": 563,
+    "src/components/ui/dropdown.tsx": 352,
+    "src/data/isced-f-2013.ts": 391,
+    "src/lib/curriculum/generation-api-client.ts": 353,
+    "src/types/atlas.ts": 437
+  }
+}

@@ -17,6 +17,7 @@ import { useDraggable } from "@dnd-kit/core"
 import type { DroppedCard } from "../types"
 import { DEFAULT_CARD_REGISTRY, resolveCardRenderer } from "./CardRegistry"
 import type { CardRenderProps } from "./CardRegistry"
+import { CARD_TYPE_META, CardTypePreview } from "./CardTypePreview"
 import { useCanvasStore } from "../store/canvasStore"
 import type { DragSourceData } from "../hooks/useCardDrop"
 
@@ -93,27 +94,37 @@ export function CardRenderer({ card, onRemove, mode = "editor", draggable, sourc
   )
 }
 
-// ─── Generic DOM fallback ─────────────────────────────────────────────────────
-// Used for card types not yet in the registry (audio, document, table, etc.)
+// ─── Generic preview fallback ─────────────────────────────────────────────────
+// Reuses the gallery-quality preview for types not yet backed by a dedicated
+// canvas renderer (audio, document, table, etc.) so curate stays aligned.
 
 function GenericDomCard({ card, onRemove }: CardRenderProps) {
-  const title = typeof card.content["title"] === "string" ? card.content["title"] : card.cardType
+  const meta = CARD_TYPE_META[card.cardType]
+  const title = typeof card.content["title"] === "string" && card.content["title"]
+    ? card.content["title"]
+    : meta.label
 
   return (
-    <div className="group relative flex items-center gap-2 rounded border border-neutral-200 bg-white px-2 py-1.5 text-xs shadow-sm">
+    <div className="group relative rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       {onRemove && (
         <button
           onClick={onRemove}
-          className="absolute right-1 top-1 hidden h-4 w-4 items-center justify-center rounded text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 group-hover:flex"
-          aria-label="Remove"
+          className="absolute right-2 top-2 z-10 hidden h-5 w-5 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 group-hover:flex"
+          aria-label="Remove block"
         >
           &times;
         </button>
       )}
-      <span className="text-[10px] px-1 py-0.5 rounded bg-neutral-100 text-neutral-500 uppercase font-medium">
-        {card.cardType}
-      </span>
-      <span className="text-neutral-700 truncate">{title}</span>
+      <div className="mb-3 flex items-center gap-2 pr-5">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
+          <meta.icon size={14} />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[11px] font-semibold text-neutral-900">{title}</p>
+          <p className="text-[9px] uppercase tracking-wide text-neutral-400">{meta.label}</p>
+        </div>
+      </div>
+      <CardTypePreview cardType={card.cardType} content={card.content} hideTitle />
     </div>
   )
 }

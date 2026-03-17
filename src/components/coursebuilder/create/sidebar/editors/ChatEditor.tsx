@@ -10,6 +10,8 @@ import {
   StudioSelect,
   StudioNumberInput,
 } from "./studio-primitives"
+import { EditorSplitLayout } from "./editor-split-layout"
+import { GenericEditorPreview } from "./generic-editor-preview"
 
 interface ChatEditorProps {
   content: Record<string, unknown>
@@ -58,22 +60,22 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-auto bg-white">
+    <EditorSplitLayout
+      sidebar={(
+        <div className="flex h-full flex-col overflow-auto bg-white">
 
-      {/* Chat mode */}
-      <StudioSection className="pt-4">
-        <StudioSegment
-          label="Chat mode"
-          options={CHAT_MODES.map(({ id, label }) => ({ value: id, label }))}
-          value={chatMode}
-          onChange={(m) => onChange("chatMode", m)}
-          variant="teal"
-          size="xs"
-        />
-      </StudioSection>
+          <StudioSection className="pt-4">
+            <StudioSegment
+              label="Chat mode"
+              options={CHAT_MODES.map(({ id, label }) => ({ value: id, label }))}
+              value={chatMode}
+              onChange={(m) => onChange("chatMode", m)}
+              variant="teal"
+              size="xs"
+            />
+          </StudioSection>
 
-      {/* Identity */}
-      <StudioSection label="Identity">
+          <StudioSection label="Identity">
         <StudioInput
           label="Card title"
           value={title}
@@ -92,10 +94,9 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
             <option key={entry.name} value={entry.name}>{entry.displayName}</option>
           ))}
         </StudioSelect>
-      </StudioSection>
+          </StudioSection>
 
-      {/* Topic */}
-      <StudioSection label="Topic context">
+          <StudioSection label="Topic context">
         <StudioTextarea
           value={topic}
           rows={4}
@@ -103,10 +104,9 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
           onChange={(e) => onChange("topic", e.target.value)}
           hint="This becomes the AI's knowledge scope — be precise."
         />
-      </StudioSection>
+          </StudioSection>
 
-      {/* Opening message */}
-      <StudioSection label="Opening message">
+          <StudioSection label="Opening message">
         <StudioTextarea
           icon={<MessageSquare size={11} />}
           value={openingMessage}
@@ -114,10 +114,9 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
           placeholder="The first message students see when the chat opens…"
           onChange={(e) => onChange("openingMessage", e.target.value)}
         />
-      </StudioSection>
+          </StudioSection>
 
-      {/* Learning objectives */}
-      <StudioSection label="Learning objectives">
+          <StudioSection label="Learning objectives">
         <StudioTextarea
           icon={<Target size={11} />}
           value={learningObjectives}
@@ -126,17 +125,16 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
           onChange={(e) => onChange("learningObjectives", e.target.value)}
           hint="The AI uses these to guide and assess the conversation."
         />
-      </StudioSection>
+          </StudioSection>
 
-      {/* Conversation starters */}
-      <StudioSection
+          <StudioSection
         label="Conversation starters"
         action={
           <button
             type="button"
             onClick={addStarter}
             disabled={starters.length >= 8}
-            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-all hover:border-neutral-300 hover:bg-neutral-50 disabled:opacity-40"
+            className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-semibold text-neutral-600 transition-all hover:border-neutral-300 hover:bg-neutral-50 disabled:opacity-40"
           >
             <Plus size={10} /> Add
           </button>
@@ -153,39 +151,41 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
                 value={s}
                 onChange={(e) => updateStarter(i, e.target.value)}
                 placeholder={`Starter ${i + 1}`}
-                className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-[12px] text-neutral-800 placeholder:text-neutral-400 outline-none transition-all focus:border-[#00ccb3]/60 focus:bg-white"
+                className="min-h-10 min-w-0 flex-1 rounded-md border border-neutral-200 bg-neutral-50/80 px-3 py-2.5 text-[12px] text-neutral-800 placeholder:text-neutral-400 outline-none transition-all focus:border-[#00ccb3]/60 focus:bg-white"
               />
-              <button type="button" onClick={() => removeStarter(i)} className="shrink-0 text-neutral-400 transition-colors hover:text-red-500">
+              <button type="button" onClick={() => removeStarter(i)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500">
                 <Trash2 size={13} />
               </button>
             </div>
           ))}
         </div>
-      </StudioSection>
+          </StudioSection>
 
-      {/* Settings */}
-      <div className="shrink-0 border-t border-neutral-100 bg-neutral-50 px-4 py-3">
-        <div className="grid grid-cols-2 gap-3">
-          <StudioNumberInput
-            label="Max turns"
-            value={maxTurns}
-            min={0}
-            max={100}
-            step={5}
-            unit="0 = unlimited"
-            onChange={(v) => onChange("maxTurns", v)}
-          />
-          <StudioSelect
-            label="Difficulty"
-            value={difficulty}
-            onChange={(e) => onChange("difficulty", e.target.value)}
-          >
-            {DIFFICULTY_LEVELS.map((d) => (
-              <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
-            ))}
-          </StudioSelect>
+          <div className="shrink-0 border-t border-neutral-100 bg-neutral-50 px-4 py-3">
+            <div className="grid grid-cols-2 gap-3">
+              <StudioNumberInput
+                label="Max turns"
+                value={maxTurns}
+                min={0}
+                max={100}
+                step={5}
+                unit="0 = unlimited"
+                onChange={(v) => onChange("maxTurns", v)}
+              />
+              <StudioSelect
+                label="Difficulty"
+                value={difficulty}
+                onChange={(e) => onChange("difficulty", e.target.value)}
+              >
+                {DIFFICULTY_LEVELS.map((d) => (
+                  <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
+                ))}
+              </StudioSelect>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+      preview={<GenericEditorPreview cardType="chat" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-4xl" />}
+    />
   )
 }

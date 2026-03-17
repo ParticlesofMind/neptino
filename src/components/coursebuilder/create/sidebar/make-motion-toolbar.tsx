@@ -2,6 +2,15 @@
 
 import { Play, Copy, Check } from "lucide-react"
 import { useState } from "react"
+import {
+  MAKE_BLUE_ACTIVE,
+  MAKE_BLUE_ACTIVE_SOFT,
+  MAKE_BLUE_AXIS_HEX,
+  MAKE_BLUE_BORDER_HEX,
+  MAKE_BLUE_BUTTON,
+  MAKE_BLUE_SURFACE_HEX,
+  MAKE_BLUE_TEXT_HEX,
+} from "./make-theme"
 import { SectionLabel } from "./editors/studio-primitives"
 
 type MotionPreset =
@@ -47,9 +56,10 @@ function asNumber(value: unknown, fallback: number): number {
 interface MakeMotionToolbarProps {
   content: Record<string, unknown>
   onChange: (key: string, value: unknown) => void
+  compact?: boolean
 }
 
-export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps) {
+export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMotionToolbarProps) {
   const [copied, setCopied] = useState(false)
 
   const durationMs = asNumber(content.animationDurationMs, 1200)
@@ -82,13 +92,13 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
   return (
     <div className="bg-white">
       {/* Header bar */}
-      <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-2">
+      <div className={["border-b border-neutral-100 px-4", compact ? "py-2.5 space-y-2" : "flex items-center justify-between gap-3 py-2"].join(" ")}>
         <SectionLabel>Motion</SectionLabel>
-        <div className="flex items-center gap-1.5">
+        <div className={[compact ? "grid grid-cols-2 gap-1.5" : "flex items-center gap-1.5"].join(" ")}>
           <button
             type="button"
             onClick={copyCss}
-            className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[9px] font-semibold text-neutral-500 transition-colors hover:bg-neutral-50"
+            className="flex items-center justify-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[9px] font-semibold text-neutral-500 transition-colors hover:bg-neutral-50"
           >
             {copied ? <Check size={10} className="text-green-600" /> : <Copy size={10} />}
             {copied ? "Copied!" : "Copy CSS"}
@@ -96,9 +106,9 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
           <button
             type="button"
             onClick={() => { onChange("animationScrubEnabled", false); onChange("animationNonce", Date.now()) }}
-            className="flex items-center gap-1 rounded-md border border-neutral-900 bg-neutral-900 px-2 py-1 text-[9px] font-semibold text-white transition-colors hover:bg-neutral-800"
+            className={`flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-[9px] font-semibold transition-colors ${MAKE_BLUE_BUTTON}`}
           >
-            <Play size={9} /> Play
+            <Play size={9} /> Play once
           </button>
         </div>
       </div>
@@ -106,7 +116,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
       {/* Preset grid */}
       <div className="border-b border-neutral-100 px-4 py-2.5 space-y-1.5">
         <SectionLabel>Preset</SectionLabel>
-        <div className="grid grid-cols-4 gap-1">
+        <div className={["gap-1", compact ? "grid grid-cols-2" : "grid grid-cols-4"].join(" ")}>
           {PRESET_OPTIONS.map((p) => (
             <button
               key={p.value}
@@ -115,7 +125,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
               className={[
                 "rounded-md px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wider transition-all",
                 preset === p.value
-                  ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+                  ? MAKE_BLUE_ACTIVE_SOFT
                   : "border border-neutral-200 bg-neutral-50 text-neutral-500 hover:border-neutral-300 hover:bg-white hover:text-neutral-700",
               ].join(" ")}
             >
@@ -128,7 +138,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
       {/* Easing curve picker */}
       <div className="border-b border-neutral-100 px-4 py-2.5 space-y-1.5">
         <SectionLabel>Easing</SectionLabel>
-        <div className="flex gap-1.5">
+        <div className={[compact ? "grid grid-cols-3 gap-1.5" : "flex gap-1.5"].join(" ")}>
           {EASING_OPTIONS.map((e) => (
             <button
               key={e}
@@ -136,19 +146,20 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
               onClick={() => onChange("animationEasing", e)}
               title={e}
               className={[
-                "flex flex-1 flex-col items-center gap-1 rounded-md border p-1.5 transition-all",
+                "flex flex-col items-center gap-1 rounded-md border p-1.5 transition-all",
+                !compact && "flex-1",
                 easing === e
-                  ? "border-[#9eb9da] bg-[#dbe8f6]"
+                  ? `border ${MAKE_BLUE_ACTIVE_SOFT}`
                   : "border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white",
-              ].join(" ")}
+              ].filter(Boolean).join(" ")}
             >
               <svg viewBox="0 0 32 24" width="32" height="20" className="overflow-visible">
-                <line x1={4} y1={20} x2={28} y2={20} stroke={easing === e ? "#8ea9c8" : "#e5e7eb"} strokeWidth={0.8} />
-                <line x1={4} y1={20} x2={4} y2={4} stroke={easing === e ? "#8ea9c8" : "#e5e7eb"} strokeWidth={0.8} />
+                <line x1={4} y1={20} x2={28} y2={20} stroke={easing === e ? MAKE_BLUE_AXIS_HEX : "#e5e7eb"} strokeWidth={0.8} />
+                <line x1={4} y1={20} x2={4} y2={4} stroke={easing === e ? MAKE_BLUE_AXIS_HEX : "#e5e7eb"} strokeWidth={0.8} />
                 <path
                   d={EASING_CURVES[e]}
                   fill="none"
-                  stroke={easing === e ? "#233f5d" : "#374151"}
+                  stroke={easing === e ? MAKE_BLUE_TEXT_HEX : "#374151"}
                   strokeWidth={1.8}
                   strokeLinecap="round"
                 />
@@ -162,8 +173,8 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
       </div>
 
       {/* Timing + toggles */}
-      <div className="flex items-end gap-3 border-b border-neutral-100 px-4 py-2.5">
-        <div className="space-y-1 flex-1">
+      <div className={["border-b border-neutral-100 px-4 py-2.5", compact ? "grid grid-cols-2 gap-3" : "flex items-end gap-3"].join(" ")}>
+        <div className="space-y-1 flex-1 min-w-0">
           <SectionLabel>Duration</SectionLabel>
           <div className="flex items-stretch overflow-hidden rounded-md border border-neutral-200 bg-white">
             <input
@@ -174,7 +185,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
             <span className="shrink-0 border-l border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[9px] font-semibold text-neutral-400">ms</span>
           </div>
         </div>
-        <div className="space-y-1 flex-1">
+        <div className="space-y-1 flex-1 min-w-0">
           <SectionLabel>Delay</SectionLabel>
           <div className="flex items-stretch overflow-hidden rounded-md border border-neutral-200 bg-white">
             <input
@@ -190,7 +201,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
           <button
             type="button"
             onClick={() => onChange("autoplay", !autoplay)}
-            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", autoplay ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
+            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", autoplay ? MAKE_BLUE_ACTIVE : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
           >
             {autoplay ? "On" : "Off"}
           </button>
@@ -200,7 +211,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
           <button
             type="button"
             onClick={() => onChange("loop", !loop)}
-            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", loop ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
+            className={["rounded-md border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all", loop ? MAKE_BLUE_ACTIVE : "border-neutral-200 bg-white text-neutral-500"].join(" ")}
           >
             {loop ? "On" : "Off"}
           </button>
@@ -218,7 +229,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
               className={[
                 "rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all",
                 scrubEnabled === isScrub
-                  ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+                  ? MAKE_BLUE_ACTIVE
                   : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-400",
               ].join(" ")}
             >
@@ -238,6 +249,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
           </div>
           <input
             type="range" min={0} max={maxDuration} step={10} value={scrubMs}
+            aria-label="Animation scrub"
             onChange={(e) => { onChange("animationScrubEnabled", true); onChange("animationScrubMs", Number(e.target.value)) }}
             className="absolute inset-0 w-full cursor-pointer opacity-0"
           />
@@ -256,7 +268,7 @@ export function MakeMotionToolbar({ content, onChange }: MakeMotionToolbarProps)
               className={[
                 "rounded px-1.5 py-0.5 text-[9px] font-semibold transition-all",
                 scrubEnabled && scrubMs === stop.ms
-                  ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+                  ? MAKE_BLUE_ACTIVE_SOFT
                   : "text-neutral-500 hover:text-neutral-700",
               ].join(" ")}
             >

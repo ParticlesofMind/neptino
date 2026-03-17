@@ -1,0 +1,130 @@
+import type { CardType } from "../types"
+import { DEFAULT_POLY_PIZZA_MODEL } from "@/lib/poly-pizza-models"
+
+export const MEDIA_SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unknown>>> = {
+  text: {
+    title: "The Water Cycle",
+    text: "<h2>The Water Cycle</h2><p>The water cycle — also known as the <strong>hydrological cycle</strong> — describes the continuous movement of water through Earth's interconnected systems. Driven by solar energy and the force of gravity, this cycle distributes heat and freshwater across the entire planet, making it one of the most consequential processes in Earth's climate system.</p><h3>Evaporation &amp; Transpiration</h3><p>Liquid water from oceans, lakes, and rivers absorbs solar energy and converts to water vapour — a process called <em>evaporation</em>. Plants simultaneously release vapour through their leaf pores via <em>transpiration</em>. Together, these processes account for roughly 85% of atmospheric moisture over land areas.</p><h3>Condensation &amp; Cloud Formation</h3><p>As warm, moist air rises and cools with altitude, water vapour condenses onto tiny aerosol particles to form cloud droplets. When droplet density increases sufficiently, <em>precipitation</em> occurs — rain, snow, sleet, or hail — depending on atmospheric temperature profiles at different altitudes.</p><h3>Runoff, Infiltration &amp; Groundwater</h3><p>Precipitation reaching the surface either flows overland as <em>surface runoff</em> into streams and rivers, or percolates downward through soil layers via <em>infiltration</em>, replenishing underground aquifers. Groundwater moves slowly through permeable rock strata and may re-emerge as springs or sustain wetland ecosystems thousands of years later.</p><h3>The Global Energy Budget</h3><p>The water cycle is also the planet's primary heat-transfer mechanism. Evaporation absorbs latent heat from the surface, cooling it; condensation releases that heat in the upper atmosphere, driving weather systems and moderating temperature extremes across latitudes.</p>",
+  },
+  image: {
+    title: "Diagram: Circulatory system",
+    url: "https://picsum.photos/seed/anatomy/800/600",
+    alt: "Medical illustration of the circulatory system",
+    caption: "The human circulatory system showing major arteries and veins.",
+    attribution: "Public domain medical illustration",
+  },
+  audio: {
+    title: "Lecture excerpt — Cell division",
+    url: "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3",
+    transcript: "[0:00] Welcome to today's lecture on cell division.\n[0:30] We will cover mitosis and meiosis…",
+    transcriptSegments: [
+      { id: "audio-sample-1", start: 0, end: 30, text: "Welcome to today's lecture on cell division." },
+      { id: "audio-sample-2", start: 30, end: 54, text: "We will cover mitosis and meiosis." },
+    ],
+  },
+  video: {
+    title: "Introduction to photosynthesis",
+    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+  },
+  animation: {
+    title: "Mitosis — cell division",
+    format: "Lottie / JSON",
+    duration: "8s",
+    fps: 30,
+  },
+  "model-3d": {
+    title: DEFAULT_POLY_PIZZA_MODEL.title,
+    modelId: DEFAULT_POLY_PIZZA_MODEL.id,
+    format: "glb",
+    url: DEFAULT_POLY_PIZZA_MODEL.assetUrl,
+  },
+  map: {
+    title: "World population density",
+    lat: 20,
+    lng: 10,
+    zoom: 2,
+    layers: ["Choropleth", "Labels"],
+    mapLayer: "Standard",
+  },
+  chart: {
+    title: "Global temperature anomaly 1880–2020",
+    chartType: "line",
+    xLabel: "Year",
+    yLabel: "°C anomaly",
+    colorScheme: "Blue",
+    showLegend: true,
+    showGrid: true,
+    columns: ["Year", "Anomaly"],
+    rows: [
+      ["1900", "-0.08"],
+      ["1920", "-0.28"],
+      ["1940", "-0.03"],
+      ["1960", "-0.01"],
+      ["1980", "0.27"],
+      ["2000", "0.42"],
+      ["2020", "1.02"],
+    ],
+  },
+  diagram: {
+    title: "Krebs cycle overview",
+    diagramType: "cycle",
+    nodes: [
+      { id: "a", label: "Acetyl CoA", x: 175, y: 10, shape: "rect" },
+      { id: "b", label: "Citrate", x: 305, y: 70, shape: "rect" },
+      { id: "c", label: "Isocitrate", x: 315, y: 145, shape: "rect" },
+      { id: "d", label: "α-Ketoglut.", x: 205, y: 200, shape: "rect" },
+      { id: "e", label: "Malate", x: 95, y: 200, shape: "rect" },
+      { id: "f", label: "Fumarate", x: 10, y: 145, shape: "rect" },
+      { id: "g", label: "Oxaloacet.", x: 20, y: 70, shape: "rect" },
+    ],
+    edges: [
+      { from: "g", to: "a" },
+      { from: "a", to: "b" },
+      { from: "b", to: "c" },
+      { from: "c", to: "d" },
+      { from: "d", to: "e" },
+      { from: "e", to: "f" },
+      { from: "f", to: "g" },
+    ],
+  },
+  table: {
+    title: "Periodic table — selected elements",
+    columns: ["Element", "Symbol", "Atomic No.", "Mass (u)", "Period", "Group", "State at STP"],
+    rows: [
+      ["Hydrogen", "H", "1", "1.008", "1", "1", "Gas"],
+      ["Helium", "He", "2", "4.003", "1", "18", "Gas"],
+      ["Carbon", "C", "6", "12.011", "2", "14", "Solid"],
+      ["Nitrogen", "N", "7", "14.007", "2", "15", "Gas"],
+      ["Oxygen", "O", "8", "15.999", "2", "16", "Gas"],
+      ["Sodium", "Na", "11", "22.990", "3", "1", "Solid"],
+      ["Magnesium", "Mg", "12", "24.305", "3", "2", "Solid"],
+      ["Silicon", "Si", "14", "28.086", "3", "14", "Solid"],
+      ["Chlorine", "Cl", "17", "35.453", "3", "17", "Gas"],
+      ["Iron", "Fe", "26", "55.845", "4", "8", "Solid"],
+      ["Copper", "Cu", "29", "63.546", "4", "11", "Solid"],
+      ["Gold", "Au", "79", "196.967", "6", "11", "Solid"],
+      ["Mercury", "Hg", "80", "200.592", "6", "12", "Liquid"],
+    ],
+    sortable: true,
+  },
+  document: {
+    title: "Newton's Principia Mathematica",
+    documentType: "pdf",
+    pages: 512,
+    excerpt: "Every body persists in its state of being at rest or of moving uniformly straight forward, except insofar as it is compelled to change its state by forces impressed. The change of motion is proportional to the motive force impressed; and is made in the direction of the right line in which that force is impressed.",
+    sections: JSON.stringify([
+      {
+        heading: "Book I — The Motion of Bodies",
+        body: "Newton establishes the mathematical framework for mechanics, introducing absolute space and time, the three laws of motion, and deriving from these the properties of orbits under central forces — culminating in proof that inverse-square gravity produces conic-section trajectories consistent with Kepler's empirical laws.",
+      },
+      {
+        heading: "Book II — The Motion of Bodies in Resisting Mediums",
+        body: "Fluid resistance, wave propagation, and vortex motion are analysed. Newton demonstrates that Cartesian vortex theory is inconsistent with Kepler's third law, laying the groundwork for rejection of the plenum hypothesis.",
+      },
+      {
+        heading: "Book III — The System of the World",
+        body: "Applying the mathematical results of Books I and II to the solar system, Newton deduces the law of universal gravitation and uses it to account for the Moon's orbit, the tides, the precession of equinoxes, and the paths of comets.",
+      },
+    ]),
+  },
+}

@@ -26,6 +26,39 @@ export const TILE_LAYERS: Record<MapStyleName, TileLayerConfig> = {
 
 export const OVERLAY_LAYERS: OverlayLayer[] = ["Labels", "Choropleth", "Points"]
 
+const OVERLAY_ALIASES: Record<string, OverlayLayer> = {
+  label: "Labels",
+  labels: "Labels",
+  "city label": "Labels",
+  "city labels": "Labels",
+  choropleth: "Choropleth",
+  point: "Points",
+  points: "Points",
+  marker: "Points",
+  markers: "Points",
+}
+
+export function normalizeOverlayLayer(value: string): OverlayLayer | null {
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) return null
+  return OVERLAY_ALIASES[normalized] ?? null
+}
+
+export function normalizeOverlayLayers(raw: unknown): OverlayLayer[] {
+  const values = Array.isArray(raw)
+    ? raw
+    : typeof raw === "string"
+      ? raw.split(",")
+      : []
+
+  const layers = values
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => normalizeOverlayLayer(value))
+    .filter((value): value is OverlayLayer => value !== null)
+
+  return [...new Set(layers)]
+}
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }

@@ -151,8 +151,8 @@ export function TaskAreaDropZone({
             <div className="flex items-center justify-center px-2 h-10">
               <span className="text-[9px] text-amber-600 italic">
                 {hasOnlyLayoutCards
-                  ? "Drop into a slot inside the layout"
-                  : "Drop a layout container first"}
+                  ? "Drop into a slot inside the layout block"
+                  : "Drop a layout block first"}
               </span>
             </div>
           )}

@@ -1,0 +1,90 @@
+import type { CardType } from "../types"
+
+export const PRODUCT_SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unknown>>> = {
+  interactive: {
+    title: "Photosynthesis quiz",
+    interactionType: "multiple-choice",
+    prompt: "Which organelle is responsible for photosynthesis in plant cells?",
+    options: [
+      { text: "Mitochondria", correct: false, feedback: "Mitochondria handle cellular respiration, not photosynthesis." },
+      { text: "Chloroplast", correct: true, feedback: "Correct! Chloroplasts contain chlorophyll and drive photosynthesis." },
+      { text: "Nucleus", correct: false, feedback: "The nucleus stores DNA — it doesn't carry out photosynthesis." },
+      { text: "Ribosome", correct: false, feedback: "Ribosomes build proteins, not carbohydrates from sunlight." },
+    ],
+    points: 1,
+  },
+  games: {
+    title: "Cell biology vocabulary match",
+    gameType: "word-match",
+    instructions: "Match each cell organelle to its primary function.",
+    pairs: [
+      { term: "Mitochondria", match: "Energy production (ATP)" },
+      { term: "Ribosome", match: "Protein synthesis" },
+      { term: "Nucleus", match: "DNA storage & gene regulation" },
+      { term: "Chloroplast", match: "Photosynthesis" },
+    ],
+    timeLimit: 120,
+    showHints: true,
+  },
+  chat: {
+    title: "Chat with character",
+    model: "gemma3:4b",
+    topic: "Charles Darwin's theory of evolution by natural selection, including concepts of variation, inheritance, selection pressure, and adaptation.",
+    aiPersona: "Charles Darwin",
+    openingMessage: "Ah, a curious student! I am Charles Darwin. What would you like to know about evolution and natural selection?",
+    learningObjectives: "Understand how natural selection drives evolution; explain the role of variation and environment; describe key evidence for evolutionary theory.",
+    conversationStarters: [
+      "How did you develop the theory of natural selection?",
+      "What is the role of variation in evolution?",
+      "Can you explain the Galapagos finches example?",
+    ],
+    maxTurns: 20,
+    difficulty: "intermediate",
+  },
+  "text-editor": {
+    title: "Writing studio",
+    mode: "document",
+    placeholder: "Start drafting...",
+    document: "<h2>Writing Studio</h2><p>This embedded editor gives students a focused writing space directly inside the lesson layout.</p><p>Use it for guided summaries, evidence gathering, or drafting a short response before discussion.</p><ul><li>State the main idea.</li><li>Add a concrete example.</li><li>Finish with one reflection question.</li></ul>",
+  },
+  "code-editor": {
+    title: "Code lab",
+    language: "javascript",
+    prompt: "Students can inspect, modify, and discuss code directly inside this lesson product.",
+    code: "const temperatures = [12, 15, 19, 21]\nconst average = temperatures.reduce((sum, value) => sum + value, 0) / temperatures.length\n\nconsole.log(`Average: ${average.toFixed(1)}°C`)\n",
+  },
+  whiteboard: {
+    title: "Whiteboard",
+    boardKey: "internet-history-board",
+    prompt: "Use the board to sketch systems, annotate concepts, or collect quick visual notes.",
+  },
+  timeline: {
+    title: "History of the Internet",
+    orientation: "horizontal",
+    events: [
+      { date: "1969", label: "ARPANET", description: "First two nodes connected between UCLA and Stanford Research Institute, transmitting the letters 'LO' before a crash." },
+      { date: "1974", label: "TCP/IP proposed", description: "Vint Cerf and Bob Kahn publish 'A Protocol for Packet Network Intercommunication', the foundational paper for TCP/IP." },
+      { date: "1983", label: "Internet born", description: "ARPANET formally switches to TCP/IP on January 1st — the modern internet begins." },
+      { date: "1991", label: "World Wide Web", description: "Tim Berners-Lee publishes the first public website at CERN, making hyperlinked documents available over the internet." },
+      { date: "1993", label: "Mosaic browser", description: "The first graphical web browser brings images and clickable links to mainstream users for the first time." },
+      { date: "1998", label: "Google founded", description: "Larry Page and Sergey Brin incorporate Google in a Menlo Park garage; their PageRank algorithm transforms search." },
+      { date: "2004", label: "Web 2.0 era", description: "Facebook launches; blogs, wikis, and social media reshape the web from passive consumption to active participation." },
+      { date: "2007", label: "iPhone launch", description: "The smartphone era begins — mobile internet access becomes ubiquitous, fundamentally changing content and commerce." },
+      { date: "2022", label: "Generative AI", description: "Large language models and image generators enter mainstream use, reshaping how knowledge is created and shared online." },
+    ],
+  },
+  legend: {
+    title: "Land Use Classification",
+    layout: "list",
+    items: [
+      { color: "#15803d", label: "Dense Forest", description: "Canopy cover ≥ 60%, primary growth" },
+      { color: "#4ade80", label: "Open Forest", description: "Canopy 25–60%, secondary growth" },
+      { color: "#86efac", label: "Grassland", description: "Herbaceous cover, <10% tree canopy" },
+      { color: "#fbbf24", label: "Cropland", description: "Agricultural fields, seasonal crops" },
+      { color: "#f97316", label: "Shrubland", description: "Woody shrubs, semi-arid transition" },
+      { color: "#94a3b8", label: "Urban / Built", description: "Impervious surfaces, settlements" },
+      { color: "#7dd3fc", label: "Water Bodies", description: "Lakes, rivers, permanent wetlands" },
+      { color: "#e2e8f0", label: "Barren / Snow", description: "Bare rock, sand, ice, tundra" },
+    ],
+  },
+}

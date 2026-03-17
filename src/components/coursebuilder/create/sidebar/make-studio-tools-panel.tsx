@@ -1,6 +1,14 @@
 "use client"
 
 import type { CardType } from "../types"
+import {
+  MAKE_BLUE_ACTIVE,
+  MAKE_BLUE_BORDER_HEX,
+  MAKE_BLUE_BUTTON,
+  MAKE_BLUE_INPUT_FOCUS,
+  MAKE_BLUE_SURFACE_HEX,
+  MAKE_BLUE_TEXT_HEX,
+} from "./make-theme"
 import { getStudioProfile, type StudioField } from "./make-studio-tools"
 
 interface MakeStudioToolsPanelProps {
@@ -15,7 +23,6 @@ const UPLOAD_ENABLED_TYPES = new Set<CardType>([
   "audio",
   "video",
   "animation",
-  "model-3d",
   "document",
   "media",
 ])
@@ -25,7 +32,6 @@ function uploadLabelFor(cardType: CardType): string {
   if (cardType === "audio") return "Upload audio"
   if (cardType === "video") return "Upload video"
   if (cardType === "animation") return "Upload animation"
-  if (cardType === "model-3d") return "Upload 3D model"
   if (cardType === "document" || cardType === "media") return "Upload file"
   return "Upload"
 }
@@ -45,7 +51,7 @@ function TextInput({
       value={value}
       placeholder={placeholder}
       onChange={(event) => onChange(event.target.value)}
-      className="w-full border border-neutral-200 bg-white px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+      className={`min-h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
     />
   )
 }
@@ -71,7 +77,7 @@ function NumberInput({
       max={max}
       step={step}
       onChange={(event) => onChange(Number(event.target.value))}
-      className="w-full border border-neutral-200 bg-white px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+      className={`min-h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
     />
   )
 }
@@ -103,7 +109,7 @@ function OptionField({
           rows={field.rows ?? 4}
           placeholder={field.placeholder}
           onChange={(event) => onChange(field.key, event.target.value)}
-          className="w-full border border-neutral-200 bg-white px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+          className={`w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
         />
       )}
 
@@ -121,7 +127,7 @@ function OptionField({
         <select
           value={typeof value === "string" ? value : (field.options?.[0]?.value ?? "")}
           onChange={(event) => onChange(field.key, event.target.value)}
-          className="w-full border border-neutral-200 bg-white px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+          className={`min-h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
         >
           {(field.options ?? []).map((option) => (
             <option key={option.value} value={option.value}>
@@ -135,16 +141,18 @@ function OptionField({
         <button
           type="button"
           onClick={() => onChange(field.key, !(typeof value === "boolean" ? value : false))}
+          role="switch"
+          aria-checked={Boolean(value)}
+          aria-label={field.label}
           className={[
-            "h-7 w-12 border transition-colors",
-            value ? "border-[#9eb9da] bg-[#dbe8f6]" : "border-neutral-300 bg-neutral-100",
+            "relative inline-flex h-7 w-12 shrink-0 items-center overflow-hidden rounded-full border p-[2px] transition-all",
+            value ? MAKE_BLUE_ACTIVE : "border-neutral-300 bg-neutral-100",
           ].join(" ")}
-          aria-pressed={Boolean(value)}
         >
           <span
             className={[
-              "block h-5 w-5 bg-white transition-transform",
-              value ? "translate-x-6" : "translate-x-1",
+              "block h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
+              value ? "translate-x-5" : "translate-x-0",
             ].join(" ")}
           />
         </button>
@@ -156,10 +164,10 @@ function OptionField({
             type="button"
             disabled={field.disabled}
             className={[
-              "border px-2 py-1.5 text-[11px] font-medium transition-colors",
+              "min-h-10 rounded-md border px-3 py-2.5 text-[11px] font-medium transition-colors",
               field.disabled
                 ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400"
-                : "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] hover:bg-[#cedef0]",
+                : MAKE_BLUE_BUTTON,
             ].join(" ")}
           >
             {field.actionLabel ?? field.label}
@@ -207,13 +215,13 @@ export function MakeStudioToolsPanel({ cardType, content, onChange, layout = "su
               rows={3}
               placeholder="Description"
               onChange={(event) => onChange("description", event.target.value)}
-              className="w-full border border-neutral-200 bg-white px-2 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
             />
           </label>
           {supportsUpload && (
             <button
               type="button"
-              className="border border-[#9eb9da] bg-[#dbe8f6] px-2 py-1.5 text-[11px] font-medium text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-colors hover:bg-[#cedef0]"
+              className={`min-h-10 rounded-md border px-3 py-2.5 text-[11px] font-medium transition-colors ${MAKE_BLUE_BUTTON}`}
             >
               {uploadLabelFor(cardType)}
             </button>

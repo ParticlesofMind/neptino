@@ -338,16 +338,16 @@ function SessionSection({
           <span className="text-[10px] text-white/40 shrink-0 mr-2">
             {session.canvases.length} canvas{session.canvases.length !== 1 ? "es" : ""}
             {totalCards > 0 && (
-              <span className="ml-1.5 text-cyan-300/80">{totalCards} card{totalCards !== 1 ? "s" : ""}</span>
+              <span className="ml-1.5 text-cyan-300/80">{totalCards} block{totalCards !== 1 ? "s" : ""}</span>
             )}
           </span>
         </button>
 
-        {/* Clear cards button */}
+        {/* Clear blocks button */}
         {totalCards > 0 && (
           <button
             onClick={handleClearCards}
-            title="Remove all cards from this session"
+            title="Remove all blocks from this session"
             className={[
               "flex items-center gap-1 px-2 py-1 mr-1 rounded text-[10px] font-medium transition-colors shrink-0",
               clearing
@@ -356,7 +356,7 @@ function SessionSection({
             ].join(" ")}
           >
             <Trash2 size={10} />
-            {clearing ? "Cleared" : "Clear cards"}
+            {clearing ? "Cleared" : "Clear blocks"}
           </button>
         )}
       </div>
@@ -373,7 +373,7 @@ function SessionSection({
                 <th className="px-2 py-1 text-right font-medium">Body</th>
                 <th className="px-2 py-1 text-right font-medium">Vis.Body</th>
                 <th className="px-2 py-1 text-right font-medium">Delta</th>
-                <th className="px-2 py-1 text-right font-medium w-12">Cards</th>
+                <th className="px-2 py-1 text-right font-medium w-12">Blocks</th>
                 <th className="px-2 py-1 text-left font-medium">Blocks</th>
                 <th className="px-2 py-1 text-left font-medium">Ranges</th>
                 <th className="px-2 py-1 text-right font-medium w-16">Meas.</th>
@@ -585,7 +585,7 @@ function SessionDataTab({
       {/* Summary + controls */}
       <div className="flex items-center gap-2 px-1 pb-1 flex-wrap">
         <span className="text-[10px] text-white/40 font-mono">
-          {sessions.length} session{sessions.length !== 1 ? "s" : ""} · {totalCards} card{totalCards !== 1 ? "s" : ""} total
+          {sessions.length} session{sessions.length !== 1 ? "s" : ""} · {totalCards} block{totalCards !== 1 ? "s" : ""} total
         </span>
         <div className="flex items-center gap-1 ml-auto">
           <button
@@ -652,7 +652,7 @@ function SessionDataTab({
                   {sessionCards > 0 && (
                     <>
                       <span>·</span>
-                      <span className="text-cyan-300/70">{sessionCards} cards</span>
+                      <span className="text-cyan-300/70">{sessionCards} blocks</span>
                     </>
                   )}
                 </div>
@@ -2264,7 +2264,7 @@ export function CanvasDebugPanel() {
             {/* Summary chips */}
             <span className="text-[10px] text-white/40">
               {sessions.length} session{sessions.length !== 1 ? "s" : ""} · {totalCanvases} canvas{totalCanvases !== 1 ? "es" : ""}
-              {totalCards > 0 && ` · ${totalCards} cards`}
+              {totalCards > 0 && ` · ${totalCards} blocks`}
             </span>
 
             {/* Zoom chip — always visible in header */}
@@ -2285,11 +2285,11 @@ export function CanvasDebugPanel() {
             )}
 
             <div className="ml-auto flex items-center gap-1">
-              {/* Clear all cards */}
+              {/* Clear all blocks */}
               {totalCards > 0 && (
                 <button
                   onClick={handleClearAllCards}
-                  title={clearAllConfirm ? "Click again to confirm clear all cards" : "Clear all cards from all sessions"}
+                  title={clearAllConfirm ? "Click again to confirm clear all blocks" : "Clear all blocks from all sessions"}
                   className={[
                     "flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors",
                     clearAllConfirm
@@ -2304,11 +2304,11 @@ export function CanvasDebugPanel() {
 
               <button
                 onClick={handleSeedCards}
-                title="Add one synthetic debug card to each empty task"
+                title="Add one synthetic debug block to each empty task"
                 className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/80 transition-colors"
               >
                 <Database size={11} />
-                {lastSeedCount > 0 ? `Seeded ${lastSeedCount}` : "Seed cards"}
+                {lastSeedCount > 0 ? `Seeded ${lastSeedCount}` : "Seed blocks"}
               </button>
 
               <button
@@ -2316,8 +2316,8 @@ export function CanvasDebugPanel() {
                 disabled={!canSeedHeavy}
                 title={
                   canSeedHeavy
-                    ? "Add multiple large synthetic cards per task to trigger overflow"
-                    : "Clear synthetic cards before running heavy seeding again"
+                    ? "Add multiple large synthetic blocks per task to trigger overflow"
+                    : "Clear synthetic blocks before running heavy seeding again"
                 }
                 className={[
                   "flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors",
@@ -2336,7 +2336,7 @@ export function CanvasDebugPanel() {
 
               <button
                 onClick={handleClearSyntheticCards}
-                title="Remove only debug-seeded cards"
+                title="Remove only debug-seeded blocks"
                 className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-300 transition-colors"
               >
                 <Trash2 size={11} />
@@ -2470,7 +2470,7 @@ export function CanvasDebugPanel() {
                 <span>T[n-m] = topic range</span>
                 <span>O[n-m] = objective range</span>
                 <span>K[n-m] = task range</span>
-                <span>C[n-m] = card range</span>
+                <span>C[n-m] = block range</span>
                 <span className="ml-auto">Click a row to focus that canvas</span>
               </div>
             </>

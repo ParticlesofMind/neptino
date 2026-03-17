@@ -100,8 +100,11 @@ export function getSampleCardContent(
         title,
         url: "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3",
         duration: "04:12",
-        transcript: "Audio clip with narration and explanation of key concepts.",
-        playbackSpeed: "1x",
+        transcript: "[0:00] Audio clip with narration and explanation of key concepts.",
+        transcriptSegments: [
+          { id: "audio-default-1", start: 0, end: 12, text: "Audio clip with narration and explanation of key concepts." },
+        ],
+        playback: "1x",
       }
 
     case "video":

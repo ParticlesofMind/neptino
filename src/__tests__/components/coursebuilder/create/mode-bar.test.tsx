@@ -14,9 +14,11 @@ describe("ModeBar", () => {
     const make = screen.getByRole("button", { name: /make/i })
     const fix = screen.getByRole("button", { name: /fix/i })
 
-    expect(curate).toHaveClass("bg-neutral-900")
-    expect(make).not.toHaveClass("bg-neutral-900")
-    expect(fix).not.toHaveClass("bg-neutral-900")
+    expect(curate).toHaveClass("rounded-md")
+    expect(curate).toHaveClass("border")
+    expect(curate).toHaveClass("bg-[#dbe8f6]")
+    expect(make).not.toHaveClass("border")
+    expect(fix).not.toHaveClass("border")
   })
 
   it("updates the store when a different mode is clicked", () => {

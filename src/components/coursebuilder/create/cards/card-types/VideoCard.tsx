@@ -1,6 +1,12 @@
 "use client"
 
 import type { DroppedCard } from "../../types"
+import {
+  getAspectRatioPadding,
+  resolveVideoEmbedUrl,
+  type VideoAspectRatio,
+  type VideoFitMode,
+} from "../../sidebar/editors/video-utils"
 
 interface VideoCardProps {
   card: DroppedCard
@@ -8,11 +14,26 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ card, onRemove }: VideoCardProps) {
-  const url   = typeof card.content["url"]   === "string" ? card.content["url"]   : ""
+  const url = typeof card.content["url"] === "string" ? card.content["url"] : ""
   const title = typeof card.content["title"] === "string" ? card.content["title"] : ""
+  const poster = typeof card.content["poster"] === "string" ? card.content["poster"] : ""
+  const captionsUrl = typeof card.content["captionsUrl"] === "string" ? card.content["captionsUrl"] : ""
+  const startAtSeconds = typeof card.content["startAtSeconds"] === "number" ? card.content["startAtSeconds"] : 0
+  const aspectRatio = (typeof card.content["aspectRatio"] === "string" ? card.content["aspectRatio"] : "16:9") as VideoAspectRatio
+  const fitMode = (typeof card.content["fitMode"] === "string" ? card.content["fitMode"] : "contain") as VideoFitMode
+  const autoplay = typeof card.content["autoplay"] === "boolean" ? card.content["autoplay"] : false
+  const muted = typeof card.content["muted"] === "boolean" ? card.content["muted"] : false
+  const loop = typeof card.content["loop"] === "boolean" ? card.content["loop"] : false
+  const showControls = typeof card.content["showControls"] === "boolean" ? card.content["showControls"] : true
 
-  // Detect embed-able URL (YouTube, Vimeo, etc.)
-  const embedUrl = resolveEmbedUrl(url)
+  const embedUrl = resolveVideoEmbedUrl(url, {
+    startAtSeconds,
+    autoplay,
+    muted,
+    loop,
+    showControls,
+  })
+  const ratioPadding = getAspectRatioPadding(aspectRatio)
 
   return (
     <div className="group relative rounded border border-neutral-200 bg-white shadow-sm overflow-hidden">
@@ -26,7 +47,7 @@ export function VideoCard({ card, onRemove }: VideoCardProps) {
         </button>
       )}
       {embedUrl ? (
-        <div className="relative" style={{ paddingTop: "56.25%" /* 16:9 */ }}>
+        <div className="relative" style={{ paddingTop: ratioPadding }}>
           <iframe
             src={embedUrl}
             className="absolute inset-0 w-full h-full border-0"
@@ -36,12 +57,25 @@ export function VideoCard({ card, onRemove }: VideoCardProps) {
           />
         </div>
       ) : url ? (
-        <div className="relative" style={{ paddingTop: "56.25%" /* 16:9 */ }}>
+        <div className="relative" style={{ paddingTop: ratioPadding }}>
           <video
             src={url}
-            controls
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+            controls={showControls}
+            autoPlay={autoplay}
+            muted={muted}
+            loop={loop}
+            playsInline
+            poster={poster || undefined}
+            className={[
+              "absolute inset-0 h-full w-full bg-black",
+              fitMode === "cover" ? "object-cover" : "object-contain",
+            ].join(" ")}
+            onLoadedMetadata={(event) => {
+              if (startAtSeconds > 0) event.currentTarget.currentTime = startAtSeconds
+            }}
+          >
+            {captionsUrl && <track kind="captions" src={captionsUrl} default />}
+          </video>
         </div>
       ) : (
         <div className="flex h-20 items-center justify-center bg-neutral-100 text-xs italic text-neutral-400">
@@ -55,18 +89,4 @@ export function VideoCard({ card, onRemove }: VideoCardProps) {
       )}
     </div>
   )
-}
-
-function resolveEmbedUrl(url: string): string | null {
-  if (!url) return null
-
-  // YouTube
-  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
-  if (yt) return `https://www.youtube.com/embed/${yt[1]}`
-
-  // Vimeo
-  const vm = url.match(/vimeo\.com\/(\d+)/)
-  if (vm) return `https://player.vimeo.com/video/${vm[1]}`
-
-  return null
 }

@@ -10,6 +10,8 @@ import {
   StudioNumberInput,
   StudioToggle,
 } from "./studio-primitives"
+import { EditorSplitLayout } from "./editor-split-layout"
+import { EditorPreviewFrame } from "./editor-preview-frame"
 
 interface RichSimEditorProps {
   content: Record<string, unknown>
@@ -35,92 +37,102 @@ export function RichSimEditor({ content, onChange, variant = "rich-sim" }: RichS
   const meta = labels[variant]
 
   return (
-    <div className="flex h-full flex-col overflow-auto bg-white">
-
-      {/* Embed URL */}
-      <StudioSection label="Embed source" className="pt-4">
-        <StudioUrlInput
-          value={url}
-          placeholder="https://embed.example.com/simulation"
-          onCommit={(u) => onChange("url", u)}
-          hint="Paste an embeddable URL — the experience renders in a sandboxed frame."
-        />
-      </StudioSection>
-
-      {/* Preview */}
-      {url ? (
-        <div className="shrink-0 border-b border-neutral-100 bg-neutral-950 px-4 py-3">
-          <div className="relative w-full overflow-hidden rounded-lg border border-neutral-800 bg-black" style={{ paddingTop: "56.25%" }}>
-            <iframe
-              src={url}
-              className="absolute inset-0 h-full w-full border-0"
-              title={`${meta.name} preview`}
-              sandbox="allow-scripts allow-same-origin allow-forms"
-              allow="accelerometer; camera; fullscreen; gyroscope; microphone"
+    <EditorSplitLayout
+      sidebar={(
+        <>
+          <StudioSection label="Embed source" className="pt-4">
+            <StudioUrlInput
+              value={url}
+              placeholder="https://embed.example.com/simulation"
+              onCommit={(u) => onChange("url", u)}
+              hint="Paste an embeddable URL — the experience renders in a sandboxed frame."
             />
-          </div>
-        </div>
-      ) : (
-        <div className="mx-4 my-3 flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 py-10">
-          <Sparkles size={26} className="text-neutral-300" />
-          <div className="text-center">
-            <p className="text-[12px] font-medium text-neutral-500">{meta.name}</p>
-            <p className="text-[10px] text-neutral-400">Paste an embed URL above to preview</p>
-          </div>
+          </StudioSection>
+
+          <StudioSection label="Content">
+            <StudioInput
+              label="Title"
+              value={title}
+              onChange={(e) => onChange("title", e.target.value)}
+            />
+            <StudioTextarea
+              label="Description"
+              value={description}
+              rows={2}
+              onChange={(e) => onChange("description", e.target.value)}
+            />
+            <StudioTextarea
+              label="Starter instruction / prompt"
+              value={prompt}
+              rows={3}
+              placeholder="What should students do or explore?"
+              onChange={(e) => onChange("prompt", e.target.value)}
+            />
+            {variant !== "village-3d" && (
+              <StudioSelect
+                label="Interaction type"
+                value={interactionType}
+                onChange={(e) => onChange("interactionType", e.target.value)}
+              >
+                <option value="sandbox">Sandbox</option>
+                <option value="scenario">Scenario</option>
+                <option value="guided">Guided</option>
+                <option value="challenge">Challenge</option>
+              </StudioSelect>
+            )}
+          </StudioSection>
+
+          <StudioSection label="Scaffolding" noBorder>
+            <div className="grid grid-cols-2 gap-3">
+              <StudioNumberInput
+                label="Checkpoints"
+                value={checkpoints}
+                min={0}
+                max={20}
+                onChange={(v) => onChange("checkpoints", v)}
+              />
+              <StudioToggle
+                label="Hint scaffolding"
+                checked={hintsEnabled}
+                onChange={(v) => onChange("hintsEnabled", v)}
+              />
+            </div>
+          </StudioSection>
+        </>
+      )}
+      preview={(
+        <div className="flex h-full min-h-0 items-center justify-center px-6 py-6 md:px-8">
+          {!url ? (
+            <EditorPreviewFrame
+              cardType={variant === "village-3d" ? "village-3d" : "rich-sim"}
+              title={title}
+              onTitleChange={(next) => onChange("title", next)}
+              className="w-full max-w-5xl"
+              bodyClassName="flex aspect-video flex-col items-center justify-center gap-3 bg-white/75 px-8 text-center"
+            >
+              <Sparkles size={28} className="text-neutral-300" />
+              <p className="text-[13px] font-medium text-neutral-700">No experience loaded</p>
+              <p className="text-[11px] text-neutral-400">Paste an embed URL in the settings panel to preview it here.</p>
+            </EditorPreviewFrame>
+          ) : (
+            <EditorPreviewFrame
+              cardType={variant === "village-3d" ? "village-3d" : "rich-sim"}
+              title={title}
+              onTitleChange={(next) => onChange("title", next)}
+              className="w-full max-w-5xl"
+              bodyClassName="relative aspect-video overflow-hidden bg-white"
+            >
+              <iframe
+                src={url}
+                className="absolute inset-0 h-full w-full border-0"
+                title={`${meta.name} preview`}
+                sandbox="allow-scripts allow-same-origin allow-forms"
+                allow="accelerometer; camera; fullscreen; gyroscope; microphone"
+              />
+            </EditorPreviewFrame>
+          )}
         </div>
       )}
-
-      {/* Content */}
-      <StudioSection label="Content">
-        <StudioInput
-          label="Title"
-          value={title}
-          onChange={(e) => onChange("title", e.target.value)}
-        />
-        <StudioTextarea
-          label="Description"
-          value={description}
-          rows={2}
-          onChange={(e) => onChange("description", e.target.value)}
-        />
-        <StudioTextarea
-          label="Starter instruction / prompt"
-          value={prompt}
-          rows={3}
-          placeholder="What should students do or explore?"
-          onChange={(e) => onChange("prompt", e.target.value)}
-        />
-        {variant !== "village-3d" && (
-          <StudioSelect
-            label="Interaction type"
-            value={interactionType}
-            onChange={(e) => onChange("interactionType", e.target.value)}
-          >
-            <option value="sandbox">Sandbox</option>
-            <option value="scenario">Scenario</option>
-            <option value="guided">Guided</option>
-            <option value="challenge">Challenge</option>
-          </StudioSelect>
-        )}
-      </StudioSection>
-
-      {/* Scaffolding */}
-      <StudioSection label="Scaffolding" noBorder>
-        <div className="grid grid-cols-2 gap-3">
-          <StudioNumberInput
-            label="Checkpoints"
-            value={checkpoints}
-            min={0}
-            max={20}
-            onChange={(v) => onChange("checkpoints", v)}
-          />
-          <StudioToggle
-            label="Hint scaffolding"
-            checked={hintsEnabled}
-            onChange={(v) => onChange("hintsEnabled", v)}
-          />
-        </div>
-      </StudioSection>
-    </div>
+    />
   )
 }

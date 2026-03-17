@@ -29,9 +29,12 @@ import {
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core"
 import { Wrench } from "lucide-react"
 
-import { FilesBrowser }      from "@/components/coursebuilder/create/sidebar/FilesBrowser"
 import { MakePanel }         from "@/components/coursebuilder/create/sidebar/MakePanel"
 import { CanvasVirtualizer } from "@/components/coursebuilder/create/canvas/CanvasVirtualizer"
+import {
+  CurateOverlayPanels,
+  getCurateOverlayInset,
+} from "@/components/coursebuilder/create/sidebar/curate-overlay-panels"
 import { useCardDrop }             from "@/components/coursebuilder/create/hooks/useCardDrop"
 import { useCourseSessionLoader }  from "@/components/coursebuilder/create/hooks/useCourseSessionLoader"
 import { useCanvasPersistence }    from "@/components/coursebuilder/create/hooks/useCanvasPersistence"
@@ -75,7 +78,7 @@ function FixView() {
       <Wrench size={24} strokeWidth={1.5} />
       <p className="text-sm font-medium text-neutral-500">Fix mode</p>
       <p className="text-xs max-w-xs text-center leading-relaxed">
-        Review and repair cards on the canvas. Coming soon.
+        Review and repair blocks on the canvas. Coming soon.
       </p>
     </div>
   )
@@ -89,17 +92,35 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
   // editor mode state lives in a global store so that the header can read it
   const mode = useCreateModeStore((s) => s.mode)
 
-  // Resizable file-browser sidebar
-  const [sidebarWidth, setSidebarWidth] = useState(360)
-  const sidebarWidthRef = useRef(sidebarWidth)
-  sidebarWidthRef.current = sidebarWidth
+  const [cardsPanelWidth, setCardsPanelWidth] = useState(360)
+  const cardsPanelWidthRef = useRef(cardsPanelWidth)
+  cardsPanelWidthRef.current = cardsPanelWidth
 
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+  const [atlasWidth, setAtlasWidth] = useState(360)
+  const atlasWidthRef = useRef(atlasWidth)
+  atlasWidthRef.current = atlasWidth
+
+  const handleCardsResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
-    const startX     = e.clientX
-    const startWidth = sidebarWidthRef.current
+    const startX = e.clientX
+    const startWidth = cardsPanelWidthRef.current
     const onMove = (ev: MouseEvent) => {
-      setSidebarWidth(Math.max(160, Math.min(520, startWidth + ev.clientX - startX)))
+      setCardsPanelWidth(Math.max(0, Math.min(520, startWidth + ev.clientX - startX)))
+    }
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+    }
+    document.addEventListener("mousemove", onMove)
+    document.addEventListener("mouseup", onUp)
+  }, [])
+
+  const handleAtlasResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = atlasWidthRef.current
+    const onMove = (ev: MouseEvent) => {
+      setAtlasWidth(Math.max(0, Math.min(520, startWidth - (ev.clientX - startX))))
     }
     const onUp = () => {
       document.removeEventListener("mousemove", onMove)
@@ -202,34 +223,20 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
                 <CanvasVirtualizer
                   sessions={sessions}
                   dims={DEFAULT_PAGE_DIMENSIONS}
-                  leftOverlayInset={sidebarWidth + 16}
-                  rightOverlayInset={16}
+                  leftOverlayInset={getCurateOverlayInset(cardsPanelWidth)}
+                  rightOverlayInset={getCurateOverlayInset(atlasWidth)}
                 />
               ) : (
                 <EmptyState courseId={typedCourseId} />
               )}
             </div>
 
-            {/* Left overlay — file browser (resizable) */}
-            <div className="absolute inset-y-0 left-0 z-20 flex">
-              <div
-                style={{ width: sidebarWidth }}
-                className="h-full flex flex-col overflow-hidden bg-white"
-              >
-                <FilesBrowser />
-              </div>
-
-              <div
-                role="separator"
-                aria-orientation="vertical"
-                aria-label="Resize file panel"
-                className="group relative -mx-1 w-3 cursor-col-resize"
-                onMouseDown={handleResizeStart}
-              >
-                <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
-                <div className="pointer-events-none absolute left-1/2 top-1/2 h-6 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-neutral-300/90 transition-colors group-hover:bg-neutral-600/80" />
-              </div>
-            </div>
+            <CurateOverlayPanels
+              filesWidth={cardsPanelWidth}
+              atlasWidth={atlasWidth}
+              onResizeFilesStart={handleCardsResizeStart}
+              onResizeAtlasStart={handleAtlasResizeStart}
+            />
 
           </div>
         )}

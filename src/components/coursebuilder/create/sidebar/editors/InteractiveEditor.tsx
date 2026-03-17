@@ -8,6 +8,9 @@ import {
   StudioInput,
   StudioNumberInput,
 } from "./studio-primitives"
+import { EditorSplitLayout } from "./editor-split-layout"
+import { GenericEditorPreview } from "./generic-editor-preview"
+import { MAKE_BLUE_INPUT_FOCUS } from "../make-theme"
 
 interface Option {
   text: string
@@ -86,21 +89,21 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
   const promptMax = 500
 
   return (
-    <div className="flex h-full flex-col overflow-auto bg-white">
+    <EditorSplitLayout
+      sidebar={(
+        <div className="flex h-full flex-col overflow-auto bg-white">
 
-      {/* Interaction type */}
-      <StudioSection className="pt-4">
-        <StudioSegment
-          label="Interaction type"
-          options={INTERACTION_TYPES.map(({ id, label }) => ({ value: id, label }))}
-          value={interactionType}
-          onChange={(t) => onChange("interactionType", t)}
-          size="xs"
-        />
-      </StudioSection>
+          <StudioSection className="pt-4">
+            <StudioSegment
+              label="Interaction type"
+              options={INTERACTION_TYPES.map(({ id, label }) => ({ value: id, label }))}
+              value={interactionType}
+              onChange={(t) => onChange("interactionType", t)}
+              size="xs"
+            />
+          </StudioSection>
 
-      {/* Question prompt */}
-      <StudioSection label="Question">
+          <StudioSection label="Question">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Prompt</span>
@@ -114,21 +117,21 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
             maxLength={promptMax}
             placeholder="Enter your question here…"
             onChange={(e) => onChange("prompt", e.target.value)}
-            className="w-full resize-none rounded-md border border-neutral-200 bg-neutral-50/80 px-2.5 py-2 text-[13px] leading-relaxed text-neutral-800 placeholder:text-neutral-400 outline-none transition-all focus:border-[#4a94ff]/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(74,148,255,0.06)]"
+            className={`w-full resize-none rounded-md border border-neutral-200 bg-neutral-50/80 px-3 py-2.5 text-[12px] leading-relaxed text-neutral-800 placeholder:text-neutral-400 outline-none transition-all ${MAKE_BLUE_INPUT_FOCUS}`}
           />
         </div>
-      </StudioSection>
+          </StudioSection>
 
       {/* Options (MC / Ranking) */}
-      {(interactionType === "multiple-choice" || interactionType === "ranking") && (
-        <StudioSection
+          {(interactionType === "multiple-choice" || interactionType === "ranking") && (
+            <StudioSection
           label={interactionType === "ranking" ? "Items to rank" : "Answer choices"}
           action={
             <button
               type="button"
               onClick={addOption}
               disabled={options.length >= 8}
-              className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-all hover:bg-neutral-50 disabled:opacity-40"
+              className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-semibold text-neutral-600 transition-all hover:bg-neutral-50 disabled:opacity-40"
             >
               <Plus size={10} /> Add
             </button>
@@ -144,7 +147,7 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
                       title={opt.correct ? "Correct answer" : "Mark as correct"}
                       onClick={() => toggleCorrect(i)}
                       className={[
-                        "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors",
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors",
                         opt.correct
                           ? "border-green-500 bg-green-500 text-white"
                           : "border-neutral-300 text-transparent hover:border-green-400 hover:text-green-400",
@@ -158,15 +161,15 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
                     value={opt.text}
                     onChange={(e) => updateOption(i, "text", e.target.value)}
                     placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                    className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-[12px] text-neutral-800 placeholder:text-neutral-400 outline-none focus:border-[#4a94ff]/60 focus:bg-white"
+                    className={`min-w-0 flex-1 rounded-md border border-neutral-200 bg-neutral-50/80 px-3 py-2.5 text-[12px] text-neutral-800 placeholder:text-neutral-400 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
                   />
-                  <button type="button" onClick={() => moveOption(i, -1)} className="text-neutral-400 hover:text-neutral-700 transition-colors">
+                  <button type="button" onClick={() => moveOption(i, -1)} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700">
                     <ChevronUp size={13} />
                   </button>
-                  <button type="button" onClick={() => moveOption(i, 1)} className="text-neutral-400 hover:text-neutral-700 transition-colors">
+                  <button type="button" onClick={() => moveOption(i, 1)} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700">
                     <ChevronDown size={13} />
                   </button>
-                  <button type="button" onClick={() => removeOption(i)} disabled={options.length <= 1} className="text-neutral-400 hover:text-red-500 disabled:opacity-30 transition-colors">
+                  <button type="button" onClick={() => removeOption(i)} disabled={options.length <= 1} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-30">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -176,18 +179,18 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
                     value={opt.feedback}
                     onChange={(e) => updateOption(i, "feedback", e.target.value)}
                     placeholder={`Feedback when student picks ${String.fromCharCode(65 + i)}…`}
-                    className="ml-8 w-[calc(100%-2rem)] rounded border border-dashed border-neutral-200 bg-white px-2 py-1 text-[11px] italic text-neutral-500 outline-none focus:border-neutral-400"
+                    className="ml-11 w-[calc(100%-2.75rem)] rounded-md border border-dashed border-neutral-200 bg-white px-3 py-2 text-[11px] italic text-neutral-500 outline-none focus:border-neutral-400"
                   />
                 )}
               </div>
             ))}
           </div>
-        </StudioSection>
-      )}
+            </StudioSection>
+          )}
 
       {/* True / False */}
-      {interactionType === "true-false" && (
-        <StudioSection label="Correct answer">
+          {interactionType === "true-false" && (
+            <StudioSection label="Correct answer">
           <div className="flex gap-2">
             {([true, false] as const).map((val) => (
               <button
@@ -207,12 +210,12 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
               </button>
             ))}
           </div>
-        </StudioSection>
-      )}
+            </StudioSection>
+          )}
 
       {/* Short answer */}
-      {interactionType === "short-answer" && (
-        <StudioSection label="Sample answer & keywords">
+          {interactionType === "short-answer" && (
+            <StudioSection label="Sample answer & keywords">
           <StudioTextarea
             label="Sample answer"
             value={sampleAnswer}
@@ -227,28 +230,30 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
             hint="Comma-separated — used for auto-grading hints"
             onChange={(e) => onChange("keywords", e.target.value)}
           />
-        </StudioSection>
-      )}
+            </StudioSection>
+          )}
 
-      {/* Hint & scoring */}
-      <StudioSection label="Hint & scoring" noBorder>
-        <StudioInput
-          label="Hint"
-          badge="optional"
-          badgeVariant="optional"
-          value={hint}
-          placeholder="Shown when student requests help"
-          onChange={(e) => onChange("hint", e.target.value)}
-        />
-        <StudioNumberInput
-          label="Points"
-          value={points}
-          min={0}
-          max={100}
-          step={0.5}
-          onChange={(v) => onChange("points", v)}
-        />
-      </StudioSection>
-    </div>
+          <StudioSection label="Hint & scoring" noBorder>
+            <StudioInput
+              label="Hint"
+              badge="optional"
+              badgeVariant="optional"
+              value={hint}
+              placeholder="Shown when student requests help"
+              onChange={(e) => onChange("hint", e.target.value)}
+            />
+            <StudioNumberInput
+              label="Points"
+              value={points}
+              min={0}
+              max={100}
+              step={0.5}
+              onChange={(v) => onChange("points", v)}
+            />
+          </StudioSection>
+        </div>
+      )}
+      preview={<GenericEditorPreview cardType="interactive" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-3xl" />}
+    />
   )
 }
