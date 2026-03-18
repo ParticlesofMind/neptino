@@ -172,7 +172,7 @@ type FilterChipProps = {
 
 function FilterChip({ name, label, activeLabel, onClear, onToggle, isOpen, children }: FilterChipProps) {
   const isActive = !!activeLabel
-  const chipBase = "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors"
+  const chipBase = "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60"
   const chipClass = isActive
     ? "border-primary/30 bg-primary/10 text-primary"
     : "border-border text-foreground hover:border-primary/30"
@@ -282,7 +282,7 @@ export default function StudentCoursesPage() {
   )
 
   return (
-    <div className="space-y-5">
+    <div className="animate-fade-up space-y-5">
 
       {/* Top bar: search + count + view toggle */}
       <div className="flex items-center gap-3">
@@ -304,7 +304,7 @@ export default function StudentCoursesPage() {
             type="button"
             onClick={() => setView("list")}
             title="List view"
-            className={`p-2 transition-colors ${view === "list" ? "bg-muted text-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+            className={`p-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-1px] focus-visible:outline-primary/60 ${view === "list" ? "bg-muted text-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
           >
             <List className="h-4 w-4" />
           </button>
@@ -312,7 +312,7 @@ export default function StudentCoursesPage() {
             type="button"
             onClick={() => setView("grid")}
             title="Grid view"
-            className={`border-l border-border p-2 transition-colors ${view === "grid" ? "bg-muted text-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+            className={`border-l border-border p-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-1px] focus-visible:outline-primary/60 ${view === "grid" ? "bg-muted text-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
           >
             <LayoutGrid className="h-4 w-4" />
           </button>
@@ -439,7 +439,7 @@ export default function StudentCoursesPage() {
       {results.length === 0 ? (
         <div className="rounded-lg border border-border bg-background px-6 py-16 text-center">
           <p className="text-sm text-muted-foreground">No courses match your filters.</p>
-          <button type="button" onClick={clearAll} className="mt-3 text-xs font-medium text-primary hover:underline">
+          <button type="button" onClick={clearAll} className="mt-3 text-xs font-medium text-primary hover:underline transition-all rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
             Clear all filters
           </button>
         </div>
@@ -450,9 +450,9 @@ export default function StudentCoursesPage() {
             return (
               <div key={course.id} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/20">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">{course.title}</span>
-                    <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-medium ${scopeStyle[course.scope]}`}>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-sm font-medium text-foreground">{course.title}</span>
+                    <span className={`shrink-0 rounded-md border px-2 py-1 text-xs font-medium ${scopeStyle[course.scope]}`}>
                       {course.scope}
                     </span>
                   </div>
@@ -465,7 +465,7 @@ export default function StudentCoursesPage() {
                 <div className="flex shrink-0 items-center gap-4">
                   <span className="hidden text-xs text-muted-foreground sm:block">{course.enrolled} enrolled</span>
                   <span className="text-sm font-semibold text-foreground">{formatPrice(course.priceN)}</span>
-                  <button type="button" className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/15">
+                  <button type="button" className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60">
                     Enroll
                   </button>
                 </div>
@@ -485,11 +485,11 @@ export default function StudentCoursesPage() {
                     <h2 className="truncate text-sm font-semibold text-foreground">{course.title}</h2>
                     <p className="mt-0.5 text-xs text-muted-foreground">{course.teacher}</p>
                   </div>
-                  <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-medium ${scopeStyle[course.scope]}`}>
+                  <span className={`shrink-0 rounded-md border px-2 py-1 text-xs font-medium ${scopeStyle[course.scope]}`}>
                     {course.scope}
                   </span>
                 </div>
-                <p className="mt-3 flex-1 text-xs leading-relaxed text-muted-foreground">{course.description}</p>
+                <p className="mt-3 line-clamp-3 flex-1 text-xs leading-relaxed text-muted-foreground">{course.description}</p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   {broad?.label}{narrow ? <> &mdash; {narrow.label}</> : null}
                 </p>
@@ -498,7 +498,7 @@ export default function StudentCoursesPage() {
                     <p className="text-sm font-semibold text-foreground">{formatPrice(course.priceN)}</p>
                     <p className="text-xs text-muted-foreground">{course.enrolled} enrolled</p>
                   </div>
-                  <button type="button" className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/15">
+                  <button type="button" className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60">
                     Enroll
                   </button>
                 </div>

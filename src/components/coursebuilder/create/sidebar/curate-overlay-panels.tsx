@@ -1,5 +1,6 @@
 "use client"
 
+import { X } from "lucide-react"
 import { FilesBrowser } from "@/components/coursebuilder/create/sidebar/FilesBrowser"
 import { CreateAtlasSidebar } from "@/components/coursebuilder/create/sidebar/create-atlas-sidebar"
 
@@ -10,6 +11,9 @@ interface CurateOverlayPanelsProps {
   atlasWidth: number
   onResizeFilesStart: (event: React.MouseEvent) => void
   onResizeAtlasStart: (event: React.MouseEvent) => void
+  /** When true, show a close button inside each visible panel */
+  isMobile?: boolean
+  onCloseMobilePanel?: () => void
 }
 
 export function getCurateOverlayInset(width: number): number {
@@ -21,6 +25,8 @@ export function CurateOverlayPanels({
   atlasWidth,
   onResizeFilesStart,
   onResizeAtlasStart,
+  isMobile,
+  onCloseMobilePanel,
 }: CurateOverlayPanelsProps) {
   return (
     <>
@@ -29,14 +35,27 @@ export function CurateOverlayPanels({
           style={{ width: filesWidth }}
           className="relative flex h-full flex-col overflow-hidden bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.04)]"
         >
+          {isMobile && filesWidth > 0 && (
+            <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 px-3 py-2">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Files</span>
+              <button
+                onClick={onCloseMobilePanel}
+                className="p-1 rounded text-neutral-400 hover:text-neutral-700 transition-colors"
+                aria-label="Close files panel"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
           <FilesBrowser />
         </div>
 
+        {/* Resize handle — hidden on mobile */}
         <div
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize blocks panel"
-          className="group relative -mx-1 w-3 cursor-col-resize"
+          className="group relative -mx-1 w-3 cursor-col-resize md:block hidden"
           onMouseDown={onResizeFilesStart}
         >
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
@@ -45,11 +64,12 @@ export function CurateOverlayPanels({
       </div>
 
       <div className="absolute inset-y-0 right-0 z-20 flex">
+        {/* Resize handle — hidden on mobile */}
         <div
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize Atlas panel"
-          className="group relative -mx-1 w-3 cursor-col-resize"
+          className="group relative -mx-1 w-3 cursor-col-resize md:block hidden"
           onMouseDown={onResizeAtlasStart}
         >
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
@@ -58,8 +78,20 @@ export function CurateOverlayPanels({
 
         <div
           style={{ width: atlasWidth }}
-          className="h-full overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.04)]"
+          className="relative flex h-full flex-col overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.04)]"
         >
+          {isMobile && atlasWidth > 0 && (
+            <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 px-3 py-2 bg-white">
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Atlas</span>
+              <button
+                onClick={onCloseMobilePanel}
+                className="p-1 rounded text-neutral-400 hover:text-neutral-700 transition-colors"
+                aria-label="Close Atlas panel"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
           <CreateAtlasSidebar />
         </div>
       </div>

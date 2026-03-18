@@ -38,7 +38,7 @@ export default function AdminSettingsPage() {
         role="switch"
         aria-checked={checked}
         onClick={onToggle}
-        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 ${
           checked ? "bg-primary" : "bg-border"
         }`}
       >
@@ -52,7 +52,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-10">
+    <div className="animate-fade-up max-w-2xl space-y-10">
 
       {/* General */}
       <section>
@@ -66,7 +66,7 @@ export default function AdminSettingsPage() {
             { label: "Support email", defaultValue: "support@neptino.io" },
             { label: "Default language", defaultValue: "English" },
           ].map((field) => (
-            <div key={field.label} className="flex items-center justify-between gap-6 px-5 py-3.5">
+            <div key={field.label} className="flex items-center justify-between gap-6 px-5 py-4">
               <label className="shrink-0 w-36 text-sm font-medium text-foreground">{field.label}</label>
               <input
                 type="text"
@@ -77,7 +77,7 @@ export default function AdminSettingsPage() {
           ))}
         </div>
         <div className="mt-4 flex justify-end">
-          <button type="button" className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90">
+          <button type="button" className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60">
             Save changes
           </button>
         </div>

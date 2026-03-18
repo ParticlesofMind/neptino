@@ -267,18 +267,18 @@ export default function SignupPage() {
                 Create Account
               </AuthSubmitButton>
 
-              <p className="text-[11px] text-muted-foreground/60 leading-relaxed text-center">
+              <p className="text-xs text-muted-foreground/60 leading-relaxed text-center">
                 By clicking Create Account, you are creating a Neptino account and you agree to Neptino&apos;s{' '}
-                <a href="/terms" className="text-primary hover:text-primary/80 transition-colors duration-150">Terms of Use</a>
+                <a href="/terms" className="text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">Terms of Use</a>
                 {' '}and{' '}
-                <a href="/privacy" className="text-primary hover:text-primary/80 transition-colors duration-150">Privacy Policy</a>.
+                <a href="/privacy" className="text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">Privacy Policy</a>.
               </p>
             </form>
 
             <div className="px-8 pb-7 text-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150">
+                <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
                   Sign in
                 </Link>
               </p>

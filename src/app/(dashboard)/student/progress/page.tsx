@@ -27,21 +27,21 @@ export default function StudentProgressPage() {
   const submitted = assignments.filter((a) => a.status === "submitted").length
 
   return (
-    <div className="space-y-8">
+    <div className="animate-fade-up space-y-8">
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {[
           { label: "Courses Enrolled", value: String(courseProgress.length), Icon: BookOpen },
           { label: "Lessons Completed", value: String(totalLessons), Icon: CheckCircle2 },
           { label: "Assignments Submitted", value: String(submitted), Icon: ClipboardList },
         ].map(({ label, value, Icon }) => (
-          <div key={label} className="rounded-lg border border-border bg-background px-5 py-4">
+          <div key={label} className="rounded-lg border border-border bg-background px-5 py-5">
             <div className="flex items-center gap-2">
               <Icon className="h-3.5 w-3.5 text-primary" />
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
             </div>
-            <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+            <p className="mt-2 font-sans text-2xl font-semibold tabular-nums text-foreground">{value}</p>
           </div>
         ))}
       </div>
@@ -50,18 +50,20 @@ export default function StudentProgressPage() {
       <div>
         <h2 className="mb-4 text-base font-semibold text-foreground">Course Progress</h2>
         <div className="divide-y divide-border rounded-lg border border-border bg-background">
-          {courseProgress.map((course) => (
+          {courseProgress.length === 0 ? (
+            <p className="animate-fade-in px-5 py-6 text-center text-sm text-muted-foreground">No courses in progress.</p>
+          ) : courseProgress.map((course) => (
             <div key={course.id} className="px-5 py-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">{course.teacher}</p>
-                  <p className="mt-0.5 font-medium text-foreground">{course.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">{course.teacher}</p>
+                  <p className="mt-0.5 truncate font-medium text-foreground">{course.title}</p>
                 </div>
-                <span className="shrink-0 text-sm font-semibold text-foreground">{course.progress}%</span>
+                <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">{course.progress}%</span>
               </div>
-              <div className="mt-3 h-1.5 rounded-full bg-muted">
+              <div className="mt-3 h-2 rounded-full bg-muted">
                 <div
-                  className="h-1.5 rounded-full bg-primary transition-all"
+                  className="h-2 rounded-full bg-primary transition-all"
                   style={{ width: `${course.progress}%` }}
                 />
               </div>
@@ -77,16 +79,18 @@ export default function StudentProgressPage() {
       <div>
         <h2 className="mb-4 text-base font-semibold text-foreground">Assignments</h2>
         <div className="divide-y divide-border rounded-lg border border-border bg-background">
-          {assignments.map((a) => (
-            <div key={a.id} className="flex items-center justify-between px-5 py-3.5 gap-4">
+          {assignments.length === 0 ? (
+            <p className="animate-fade-in px-5 py-6 text-center text-sm text-muted-foreground">No assignments at this time.</p>
+          ) : assignments.map((a) => (
+            <div key={a.id} className="flex items-center justify-between px-5 py-4 gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{a.course}</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{a.course}</p>
               </div>
               <div className="shrink-0 flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">{a.due}</span>
                 <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                     a.status === "submitted"
                       ? "bg-[#5c9970]/10 text-[#5c9970]"
                       : "bg-[#b87c5c]/10 text-[#b87c5c]"

@@ -18,7 +18,7 @@ const services = [
 
 export default function AdminHomePage() {
   return (
-    <div className="space-y-8">
+    <div className="animate-fade-up space-y-8">
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -28,19 +28,19 @@ export default function AdminHomePage() {
           { label: "Pending Reviews", value: "12", detail: "4 due today", Icon: CheckCircle2 },
           { label: "System Alerts", value: "0", detail: "All services nominal", Icon: ShieldAlert },
         ].map(({ label, value, detail, Icon }) => (
-          <div key={label} className="rounded-lg border border-border bg-background px-5 py-4">
+          <div key={label} className="rounded-lg border border-border bg-background px-5 py-5">
             <div className="flex items-center gap-2">
               <Icon className="h-3.5 w-3.5 text-primary" />
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
             </div>
-            <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+            <p className="mt-2 font-sans text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+            <p className="mt-1 font-sans text-xs text-muted-foreground">{detail}</p>
           </div>
         ))}
       </div>
 
       {/* Quick links */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         {[
           { label: "Manage Users", href: "/admin/users", description: "View and edit user accounts" },
           { label: "Review Courses", href: "/admin/courses", description: "Approve or reject submissions" },
@@ -49,7 +49,7 @@ export default function AdminHomePage() {
           <Link
             key={link.href}
             href={link.href}
-            className="group flex items-center justify-between rounded-lg border border-border bg-background px-5 py-4 transition-all hover:border-primary/30 hover:shadow-sm"
+            className="group flex items-center justify-between rounded-lg border border-border bg-background px-5 py-4 transition-all hover:border-primary/30 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60"
           >
             <div>
               <p className="text-sm font-medium text-foreground group-hover:text-primary">{link.label}</p>
@@ -65,15 +65,15 @@ export default function AdminHomePage() {
         <h2 className="mb-4 text-base font-semibold text-foreground">System Status</h2>
         <div className="divide-y divide-border rounded-lg border border-border bg-background">
           {services.map((s) => (
-            <div key={s.name} className="flex items-center justify-between px-5 py-3.5">
-              <div className="flex items-center gap-3">
-                <Server className="h-3.5 w-3.5 text-muted-foreground" />
-                <p className="text-sm font-medium text-foreground">{s.name}</p>
+            <div key={s.name} className="flex items-center justify-between px-5 py-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <Server className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <p className="truncate text-sm font-medium text-foreground">{s.name}</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-3">
                 <span className="text-xs text-muted-foreground">{s.detail}</span>
                 <span
-                  className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                  className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                   style={{ background: "#5c9970", color: "#fff" }}
                 >
                   Operational
@@ -89,14 +89,14 @@ export default function AdminHomePage() {
         <h2 className="mb-4 text-base font-semibold text-foreground">Recent Activity</h2>
         <div className="divide-y divide-border rounded-lg border border-border bg-background">
           {recentActivity.map((item, i) => (
-            <div key={i} className="flex items-center justify-between px-5 py-3.5 gap-4">
-              <div className="flex items-center gap-3">
+            <div key={i} className="flex items-center justify-between px-5 py-4 gap-4">
+              <div className="flex min-w-0 items-center gap-3">
                 {item.type === "alert" ? (
                   <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[#b87070]" />
                 ) : (
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
                 )}
-                <span className="text-sm text-foreground">
+                <span className="min-w-0 truncate text-sm text-foreground">
                   <span className="font-medium">{item.text}</span>
                   {" · "}
                   <span className="text-muted-foreground">{item.context}</span>

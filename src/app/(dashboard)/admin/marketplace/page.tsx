@@ -48,7 +48,7 @@ export default function AdminMarketplacePage() {
   const pendingCount = LISTINGS.filter((l) => l.status === "pending").length
 
   return (
-    <div className="space-y-8">
+    <div className="animate-fade-up space-y-8">
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
@@ -58,8 +58,8 @@ export default function AdminMarketplacePage() {
           { label: "Approved", value: String(LISTINGS.filter((l) => l.status === "approved").length) },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-lg border border-border bg-background px-5 py-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className="mt-2 font-sans text-2xl font-semibold tabular-nums text-foreground">{value}</p>
           </div>
         ))}
       </div>
@@ -96,30 +96,30 @@ export default function AdminMarketplacePage() {
             <p className="px-5 py-8 text-sm text-muted-foreground">No listings in this category.</p>
           )}
           {filtered.map((listing) => (
-            <div key={listing.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
+            <div key={listing.id} className="flex items-center justify-between gap-4 px-5 py-4">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">{listing.title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="truncate text-sm font-medium text-foreground">{listing.title}</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
                   {listing.author} &middot; {listing.type} &middot; {listing.price ? `${listing.price}N` : "Free"}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span className="text-xs text-muted-foreground">{listing.submitted}</span>
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusStyle[listing.status]}`}>
+                <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium capitalize ${statusStyle[listing.status]}`}>
                   {listing.status}
                 </span>
                 {listing.status === "pending" && (
                   <>
                     <button
                       type="button"
-                      className="flex h-6 w-6 items-center justify-center rounded-md bg-[#5c9970]/10 text-[#5c9970] transition-colors hover:bg-[#5c9970]/20"
+                      className="flex h-6 w-6 items-center justify-center rounded-md bg-[#5c9970]/10 text-[#5c9970] transition-colors hover:bg-[#5c9970]/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5c9970]/60"
                       aria-label="Approve"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" />
                     </button>
                     <button
                       type="button"
-                      className="flex h-6 w-6 items-center justify-center rounded-md bg-[#b87070]/10 text-[#b87070] transition-colors hover:bg-[#b87070]/20"
+                      className="flex h-6 w-6 items-center justify-center rounded-md bg-[#b87070]/10 text-[#b87070] transition-colors hover:bg-[#b87070]/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b87070]/60"
                       aria-label="Reject"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -136,14 +136,16 @@ export default function AdminMarketplacePage() {
       <div>
         <h2 className="mb-4 text-base font-semibold text-foreground">Featured Content</h2>
         <div className="divide-y divide-border rounded-lg border border-border bg-background">
-          {featured.map((item) => (
-            <div key={item.title} className="flex items-center justify-between gap-4 px-5 py-3.5">
-              <div>
-                <p className="text-sm font-medium text-foreground">{item.title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{item.author} &middot; {item.type}</p>
+          {featured.length === 0 ? (
+            <p className="animate-fade-in px-5 py-6 text-center text-sm text-muted-foreground">No featured content.</p>
+          ) : featured.map((item) => (
+            <div key={item.title} className="flex items-center justify-between gap-4 px-5 py-4">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.author} &middot; {item.type}</p>
               </div>
               <span
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                className={`shrink-0 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                   item.pinned ? "bg-primary/10 text-primary" : "border border-border text-muted-foreground"
                 }`}
               >

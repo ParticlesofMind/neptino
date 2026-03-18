@@ -14,7 +14,7 @@
  *   className — optional extra Tailwind classes applied to the root div
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   type CollisionDetection,
   DndContext,
@@ -27,7 +27,8 @@ import {
   useSensors,
 } from "@dnd-kit/core"
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core"
-import { Wrench } from "lucide-react"
+import { PanelLeft, PanelRight, Wrench } from "lucide-react"
+import { useIsMobile } from "@/components/coursebuilder/create/hooks/useIsMobile"
 
 import { MakePanel }         from "@/components/coursebuilder/create/sidebar/MakePanel"
 import { CanvasVirtualizer } from "@/components/coursebuilder/create/canvas/CanvasVirtualizer"
@@ -92,6 +93,8 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
   // editor mode state lives in a global store so that the header can read it
   const mode = useCreateModeStore((s) => s.mode)
 
+  const isMobile = useIsMobile()
+
   const [cardsPanelWidth, setCardsPanelWidth] = useState(360)
   const cardsPanelWidthRef = useRef(cardsPanelWidth)
   cardsPanelWidthRef.current = cardsPanelWidth
@@ -99,6 +102,49 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
   const [atlasWidth, setAtlasWidth] = useState(360)
   const atlasWidthRef = useRef(atlasWidth)
   atlasWidthRef.current = atlasWidth
+
+  // Mobile: which panel (if any) is open — exclusive, one at a time
+  const [mobileOpenPanel, setMobileOpenPanel] = useState<"none" | "files" | "atlas">("none")
+
+  // Collapse or restore panels when viewport crosses the mobile breakpoint
+  useEffect(() => {
+    if (isMobile) {
+      setCardsPanelWidth(0)
+      setAtlasWidth(0)
+      setMobileOpenPanel("none")
+    } else {
+      // Restore desktop defaults when switching back from mobile
+      setCardsPanelWidth((prev) => (prev === 0 ? 360 : prev))
+      setAtlasWidth((prev) => (prev === 0 ? 360 : prev))
+    }
+  }, [isMobile])
+
+  const handleMobilePanelToggle = useCallback(
+    (panel: "files" | "atlas") => {
+      if (mobileOpenPanel === panel) {
+        setMobileOpenPanel("none")
+        if (panel === "files") setCardsPanelWidth(0)
+        else setAtlasWidth(0)
+      } else {
+        const vw = window.innerWidth
+        setMobileOpenPanel(panel)
+        if (panel === "files") {
+          setCardsPanelWidth(vw)
+          setAtlasWidth(0)
+        } else {
+          setAtlasWidth(vw)
+          setCardsPanelWidth(0)
+        }
+      }
+    },
+    [mobileOpenPanel],
+  )
+
+  const handleCloseMobilePanel = useCallback(() => {
+    setMobileOpenPanel("none")
+    setCardsPanelWidth(0)
+    setAtlasWidth(0)
+  }, [])
 
   const handleCardsResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -213,6 +259,35 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
         {/* Top mode bar */}
         {showModeBar !== false && <ModeBar />}
 
+        {/* Mobile panel toggle bar — curate mode only, hidden above md */}
+        {mode === "curate" && (
+          <div className="flex items-center shrink-0 h-9 px-3 gap-1.5 border-b border-neutral-200 bg-white md:hidden">
+            <span className="flex-1 text-[11px] font-medium text-neutral-400">Canvas</span>
+            <button
+              onClick={() => handleMobilePanelToggle("files")}
+              title="Files browser"
+              className={`p-1.5 rounded transition-colors ${
+                mobileOpenPanel === "files"
+                  ? "bg-[#dbe8f6] text-[#233f5d]"
+                  : "text-neutral-400 hover:text-neutral-600"
+              }`}
+            >
+              <PanelLeft size={15} strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={() => handleMobilePanelToggle("atlas")}
+              title="Atlas"
+              className={`p-1.5 rounded transition-colors ${
+                mobileOpenPanel === "atlas"
+                  ? "bg-[#dbe8f6] text-[#233f5d]"
+                  : "text-neutral-400 hover:text-neutral-600"
+              }`}
+            >
+              <PanelRight size={15} strokeWidth={1.75} />
+            </button>
+          </div>
+        )}
+
         {/* Mode bodies */}
         {mode === "curate" && (
           <div className="relative flex flex-1 min-h-0 overflow-hidden">
@@ -236,6 +311,8 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
               atlasWidth={atlasWidth}
               onResizeFilesStart={handleCardsResizeStart}
               onResizeAtlasStart={handleAtlasResizeStart}
+              isMobile={isMobile}
+              onCloseMobilePanel={handleCloseMobilePanel}
             />
 
           </div>

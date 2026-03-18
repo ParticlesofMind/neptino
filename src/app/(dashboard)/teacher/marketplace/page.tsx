@@ -73,7 +73,7 @@ function AssetCard({ asset }: { asset: MarketplaceAsset }) {
     <article className="flex flex-col overflow-hidden rounded-xl border border-border bg-background transition hover:border-primary/30 hover:shadow-md">
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
-          <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-medium ${type.color}`}>
+          <span className={`shrink-0 rounded-md border px-2 py-1 text-xs font-medium ${type.color}`}>
             {type.label}
           </span>
           <span className={`shrink-0 text-sm font-semibold ${asset.price === 0 ? "text-[#5c9970]" : "text-foreground"}`}>
@@ -81,8 +81,8 @@ function AssetCard({ asset }: { asset: MarketplaceAsset }) {
           </span>
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-foreground leading-snug">{asset.title}</h3>
-          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{asset.description}</p>
+          <h3 className="truncate text-sm font-semibold text-foreground leading-snug">{asset.title}</h3>
+          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">{asset.description}</p>
         </div>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <StarRating rating={asset.rating} count={asset.ratingCount} />
@@ -92,8 +92,8 @@ function AssetCard({ asset }: { asset: MarketplaceAsset }) {
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-between border-t border-border px-5 py-3">
-        <span className="text-xs text-muted-foreground">{asset.authorName}</span>
+      <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3">
+        <span className="min-w-0 truncate text-xs text-muted-foreground">{asset.authorName}</span>
         <button
           type="button"
           className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-primary/15"
@@ -114,7 +114,7 @@ export default function TeacherMarketplacePage() {
   ]
 
   return (
-    <div className="rounded-2xl border border-border bg-background overflow-hidden">
+    <div className="animate-fade-up rounded-2xl border border-border bg-background overflow-hidden">
 
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
@@ -139,7 +139,7 @@ export default function TeacherMarketplacePage() {
               <Icon className="h-3.5 w-3.5 text-primary" />
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
             </div>
-            <p className="mt-2 text-2xl font-semibold leading-none text-foreground">{value}</p>
+            <p className="mt-2 text-2xl font-semibold leading-none tabular-nums text-foreground">{value}</p>
             <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>
           </div>
         ))}
@@ -187,7 +187,9 @@ export default function TeacherMarketplacePage() {
           </select>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {ASSETS.map((a) => <AssetCard key={a.id} asset={a} />)}
+          {ASSETS.length === 0 ? (
+            <p className="col-span-full py-10 text-center text-sm text-muted-foreground">No assets available.</p>
+          ) : ASSETS.map((a) => <AssetCard key={a.id} asset={a} />)}
         </div>
 
         {/* Coming soon notice */}

@@ -20,7 +20,7 @@ export default function StudentSettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-10">
+    <div className="animate-fade-up max-w-2xl space-y-10">
 
       {/* Profile */}
       <section>
@@ -47,7 +47,7 @@ export default function StudentSettingsPage() {
             { label: "Display name", type: "text", defaultValue: "Jane Student" },
             { label: "Email address", type: "email", defaultValue: "jane@example.com" },
           ].map((field) => (
-            <div key={field.label} className="flex items-center justify-between gap-6 px-5 py-3.5">
+            <div key={field.label} className="flex items-center justify-between gap-6 px-5 py-4">
               <label className="shrink-0 text-sm font-medium text-foreground w-32">{field.label}</label>
               <input
                 type={field.type}
@@ -75,7 +75,7 @@ export default function StudentSettingsPage() {
           <h2 className="text-base font-semibold text-foreground">Language</h2>
         </div>
         <div className="rounded-lg border border-border bg-background">
-          <div className="flex items-center justify-between gap-6 px-5 py-3.5">
+          <div className="flex items-center justify-between gap-6 px-5 py-4">
             <label className="shrink-0 text-sm font-medium text-foreground w-32">Interface language</label>
             <select className="flex-1 rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-foreground focus:border-primary/50 focus:outline-none">
               {LANGUAGES.map((lang) => (
@@ -133,7 +133,7 @@ export default function StudentSettingsPage() {
           <h2 className="text-base font-semibold text-foreground">Account</h2>
         </div>
         <div className="divide-y divide-border rounded-lg border border-border bg-background">
-          <div className="flex items-center justify-between px-5 py-3.5">
+          <div className="flex items-center justify-between px-5 py-4">
             <div>
               <p className="text-sm font-medium text-foreground">Password</p>
               <p className="mt-0.5 text-xs text-muted-foreground">Update your account password</p>
@@ -142,7 +142,7 @@ export default function StudentSettingsPage() {
               Change password
             </button>
           </div>
-          <div className="flex items-center justify-between px-5 py-3.5">
+          <div className="flex items-center justify-between px-5 py-4">
             <div>
               <p className="text-sm font-medium text-foreground">Delete account</p>
               <p className="mt-0.5 text-xs text-muted-foreground">Permanently remove your account and all data</p>

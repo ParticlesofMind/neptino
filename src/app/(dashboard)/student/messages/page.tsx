@@ -44,7 +44,7 @@ export default function StudentMessagesPage() {
   const activeConversation = CONVERSATIONS.find((c) => c.id === selected) ?? null
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] min-h-96 gap-0 rounded-lg border border-border bg-background overflow-hidden">
+    <div className="animate-fade-up flex h-[calc(100vh-10rem)] min-h-96 gap-0 rounded-lg border border-border bg-background overflow-hidden">
 
       {/* Sidebar */}
       <div className="flex w-72 shrink-0 flex-col border-r border-border">
@@ -62,7 +62,7 @@ export default function StudentMessagesPage() {
           </div>
           <button
             type="button"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60"
             aria-label="New message"
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -72,14 +72,14 @@ export default function StudentMessagesPage() {
         {/* Conversation list */}
         <div className="flex-1 overflow-y-auto">
           {filtered.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-muted-foreground">No conversations found.</p>
+            <p className="animate-fade-in px-4 py-6 text-center text-sm text-muted-foreground">No conversations found.</p>
           )}
           {filtered.map((conv) => (
             <button
               key={conv.id}
               type="button"
               onClick={() => setSelected(conv.id)}
-              className={`flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted ${
+              className={`flex w-full items-start gap-3 px-4 py-4 text-left transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary/60 ${
                 selected === conv.id ? "bg-muted" : ""
               }`}
             >
@@ -111,15 +111,15 @@ export default function StudentMessagesPage() {
         {activeConversation ? (
           <>
             {/* Header */}
-            <div className="flex items-center gap-3 border-b border-border px-5 py-3.5">
+            <div className="flex items-center gap-3 border-b border-border px-5 py-4">
               <span
                 className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
                 style={{ backgroundColor: roleColor[activeConversation.role] }}
               >
                 {initials(activeConversation.name)}
               </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">{activeConversation.name}</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-foreground">{activeConversation.name}</p>
                 <p className="text-xs capitalize text-muted-foreground">{activeConversation.role}</p>
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function StudentMessagesPage() {
                 />
                 <button
                   type="button"
-                  className="shrink-0 text-xs font-medium text-primary hover:underline"
+                  className="rounded-sm shrink-0 text-xs font-medium text-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60"
                 >
                   Send
                 </button>

@@ -102,7 +102,7 @@ export default function LoginPage() {
               <div className="flex justify-end -mt-1">
                 <Link
                   href="/forgot-password"
-                  className="text-xs text-primary hover:text-primary/80 transition-colors duration-150"
+                  className="text-xs text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60"
                 >
                   Forgot your password?
                 </Link>
@@ -117,7 +117,7 @@ export default function LoginPage() {
             <div className="px-8 pb-7 text-center">
               <p className="text-sm text-muted-foreground">
                 Don&apos;t have an account?{' '}
-                <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150">
+                <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
                   Sign up
                 </Link>
               </p>

@@ -85,7 +85,7 @@ const SECTIONS: TutorialSection[] = [
 function TutorialRow({ item, isLast }: { item: TutorialItem; isLast: boolean }) {
   const available = item.status === "available"
   return (
-    <div className={`flex items-start justify-between gap-4 px-5 py-3.5 transition hover:bg-muted/20 ${!isLast ? "border-b border-border" : ""}`}>
+    <div className={`flex items-start justify-between gap-4 px-5 py-4 transition hover:bg-muted/20 ${!isLast ? "border-b border-border" : ""}`}>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`text-sm font-medium ${available ? "text-foreground" : "text-muted-foreground"}`}>

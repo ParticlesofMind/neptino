@@ -45,7 +45,7 @@ import React from "react"
 
 export default function AdminTutorialsPage() {
   return (
-    <div className="space-y-8">
+    <div className="animate-fade-up space-y-8">
       {guides.map((group) => {
         const GroupIcon = group.icon
         return (
@@ -59,13 +59,13 @@ export default function AdminTutorialsPage() {
             </div>
             <div className="divide-y divide-border rounded-lg border border-border bg-background">
               {group.articles.map((article) => (
-                <div key={article.title} className="flex items-center justify-between gap-4 px-5 py-3.5">
+                <div key={article.title} className="flex items-center justify-between gap-4 px-5 py-4">
                   <p className="text-sm font-medium text-foreground">{article.title}</p>
                   <div className="flex shrink-0 items-center gap-3">
                     <span className="text-xs text-muted-foreground">{article.updated}</span>
                     <button
                       type="button"
-                      className="text-xs font-medium text-primary hover:underline"
+                      className="rounded-sm text-xs font-medium text-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60"
                     >
                       Edit
                     </button>

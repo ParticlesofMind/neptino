@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="animate-fade-up space-y-6">
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
@@ -66,12 +66,12 @@ export default function AdminUsersPage() {
           { label: "Teachers", value: String(teachers), Icon: BookOpen },
           { label: "Students", value: String(students), Icon: GraduationCap },
         ].map(({ label, value, Icon }) => (
-          <div key={label} className="rounded-lg border border-border bg-background px-5 py-4">
+          <div key={label} className="rounded-lg border border-border bg-background px-5 py-5">
             <div className="flex items-center gap-2">
               <Icon className="h-3.5 w-3.5 text-primary" />
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
             </div>
-            <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+            <p className="mt-2 font-sans text-2xl font-semibold tabular-nums text-foreground">{value}</p>
           </div>
         ))}
       </div>
@@ -94,7 +94,7 @@ export default function AdminUsersPage() {
               key={f.value}
               type="button"
               onClick={() => setRoleFilter(f.value)}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 ${
                 roleFilter === f.value
                   ? "bg-primary/10 text-primary border border-primary/30"
                   : "border border-border bg-background text-muted-foreground hover:bg-muted"
@@ -111,11 +111,11 @@ export default function AdminUsersPage() {
         <div className="divide-y divide-border">
           {/* Header */}
           <div className="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-4 px-5 py-3 bg-muted">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">User</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Institution</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Role</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Joined</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">User</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Institution</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Role</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Joined</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</p>
           </div>
 
           {filtered.length === 0 && (
@@ -123,21 +123,21 @@ export default function AdminUsersPage() {
           )}
 
           {filtered.map((user) => (
-            <div key={user.id} className="grid grid-cols-[1fr_1fr_auto_auto_auto] items-center gap-4 px-5 py-3.5">
+            <div key={user.id} className="grid grid-cols-[1fr_1fr_auto_auto_auto] items-center gap-4 px-5 py-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground truncate">{user.email}</p>
               </div>
               <p className="text-sm text-muted-foreground truncate">{user.institution}</p>
               <span
-                className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                 style={{ background: roleStyle[user.role].bg, color: roleStyle[user.role].color }}
               >
                 {roleStyle[user.role].label}
               </span>
               <span className="text-xs text-muted-foreground whitespace-nowrap">{user.joined}</span>
               <span
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                   user.status === "active"
                     ? "bg-[#5c9970]/10 text-[#5c9970]"
                     : "bg-[#b87070]/10 text-[#b87070]"

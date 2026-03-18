@@ -43,10 +43,10 @@ export default function Home() {
     <PublicShell>
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="relative bg-gradient-to-b from-muted to-background">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28 grid gap-12 lg:gap-8 lg:grid-cols-[1fr_1.1fr] items-center">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28 grid gap-12 lg:gap-16 lg:grid-cols-[1fr_1.1fr] items-center">
           {/* Left — text */}
-          <div className="flex flex-col gap-6 max-w-[34rem]">
-            <h1 className="text-[2.8rem] sm:text-[3.5rem] lg:text-[4rem] font-bold leading-[1.05] text-foreground tracking-tight">
+          <div className="animate-fade-up flex flex-col gap-6 max-w-[34rem]">
+            <h1 className="text-5xl lg:text-6xl font-bold leading-[1.05] text-foreground tracking-tight">
               <span className="inline-block relative px-[0.15em] rounded-[0.45rem] bg-primary/10">
                 Powerful
               </span>{" "}
@@ -73,7 +73,7 @@ export default function Home() {
           </div>
 
           {/* Right — preview card */}
-          <div className="rounded-2xl border border-border bg-background shadow-[0_2px_24px_rgba(0,0,0,0.06)] overflow-hidden">
+          <div className="animate-fade-up [animation-delay:120ms] rounded-2xl border border-border bg-background shadow-[0_2px_24px_rgba(0,0,0,0.06)] overflow-hidden">
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
               <Badge variant="primary">Live demo</Badge>
               <span className="text-xs text-muted-foreground">Neptino canvas</span>
@@ -104,11 +104,11 @@ export default function Home() {
 
       {/* ── Trusted by ────────────────────────────────────────────────── */}
       <section className="border-t border-muted bg-background">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-8 flex flex-col sm:flex-row items-center gap-6">
-          <span className="shrink-0 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Used by</span>
+        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-14 flex flex-col sm:flex-row items-center gap-6">
+          <span className="shrink-0 font-sans text-xs font-semibold uppercase tracking-widest text-muted-foreground">Used by</span>
           <ul className="flex flex-wrap items-center gap-x-7 gap-y-2">
             {brands.map((b) => (
-              <li key={b} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-150 cursor-default">
+              <li key={b} className="font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-150 cursor-default">
                 {b}
               </li>
             ))}
@@ -118,7 +118,7 @@ export default function Home() {
 
       {/* ── Features strip ────────────────────────────────────────────── */}
       <section className="bg-muted border-y border-border">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-16 grid gap-6 sm:grid-cols-3">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-20 grid gap-6 sm:grid-cols-3">
           {featureCards.map((f) => (
             <div key={f.title} className="rounded-xl bg-background border border-border p-6 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
               <div className={`mb-3 h-1 w-10 rounded-full ${f.accentClass}`} />
@@ -132,7 +132,7 @@ export default function Home() {
       {/* ── CTA banner ────────────────────────────────────────────────── */}
       <section className="bg-background">
         <div className="mx-auto max-w-7xl px-5 lg:px-8 py-20 text-center flex flex-col items-center gap-6">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-tight">
             Ready to start teaching?
           </h2>
           <p className="text-muted-foreground max-w-xl">

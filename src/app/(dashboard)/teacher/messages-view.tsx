@@ -13,7 +13,7 @@ const conversations = [
 
 export function MessagesView() {
   return (
-    <div className="rounded-2xl border border-border bg-background overflow-hidden">
+    <div className="animate-fade-up rounded-2xl border border-border bg-background overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-6 py-5">
@@ -39,7 +39,7 @@ export function MessagesView() {
               <Icon className="h-3.5 w-3.5 text-primary" />
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
             </div>
-            <p className="mt-2 text-2xl font-semibold leading-none text-foreground">{value}</p>
+            <p className="mt-2 text-2xl font-semibold leading-none tabular-nums text-foreground">{value}</p>
             <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>
           </div>
         ))}

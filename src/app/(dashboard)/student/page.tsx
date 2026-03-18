@@ -14,7 +14,7 @@ const recentActivity = [
 
 export default function StudentHomePage() {
   return (
-    <div className="space-y-8">
+    <div className="animate-fade-up space-y-8">
 
       {/* Greeting */}
       <div>
@@ -25,18 +25,18 @@ export default function StudentHomePage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {[
           { label: "Enrolled Courses", value: "6", Icon: BookOpen },
           { label: "Lessons Completed", value: "24", Icon: CheckCircle2 },
           { label: "Unread Messages", value: "3", Icon: MessageSquare },
         ].map(({ label, value, Icon }) => (
-          <div key={label} className="rounded-lg border border-border bg-background px-5 py-4">
+          <div key={label} className="rounded-lg border border-border bg-background px-5 py-5">
             <div className="flex items-center gap-2">
               <Icon className="h-3.5 w-3.5 text-primary" />
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
             </div>
-            <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+            <p className="mt-2 font-sans text-2xl font-semibold tabular-nums text-foreground">{value}</p>
           </div>
         ))}
       </div>
@@ -44,7 +44,7 @@ export default function StudentHomePage() {
       {/* Continue learning */}
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Continue Learning</h2>
+          <h2 className="text-lg font-semibold text-foreground">Continue Learning</h2>
           <Link
             href="/student/courses"
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
@@ -53,22 +53,27 @@ export default function StudentHomePage() {
           </Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          {enrolledCourses.map((course) => (
+          {enrolledCourses.length === 0 ? (
+            <div className="col-span-full rounded-lg border border-border bg-background px-5 py-8 text-center">
+              <p className="text-sm text-muted-foreground">You are not enrolled in any courses yet.</p>
+              <a href="/student/courses" className="mt-2 inline-block text-xs font-medium text-primary hover:underline">Browse the catalog</a>
+            </div>
+          ) : enrolledCourses.map((course) => (
             <Link
               key={course.id}
               href="/student/courses"
               className="group rounded-lg border border-border bg-background p-5 transition-all hover:border-primary/30 hover:shadow-sm"
             >
-              <p className="text-xs text-muted-foreground">{course.teacher}</p>
-              <h3 className="mt-1 font-medium text-foreground transition-colors group-hover:text-primary">
+              <p className="truncate text-xs text-muted-foreground">{course.teacher}</p>
+              <h3 className="mt-1 truncate font-medium text-foreground transition-colors group-hover:text-primary">
                 {course.title}
               </h3>
-              <p className="mt-3 text-xs text-muted-foreground">Last: {course.lastLesson}</p>
+              <p className="mt-3 truncate text-xs text-muted-foreground">Last: {course.lastLesson}</p>
               <div className="mt-3 flex items-center gap-3">
-                <div className="h-1.5 flex-1 rounded-full bg-muted">
-                  <div className="h-1.5 rounded-full bg-primary" style={{ width: `${course.progress}%` }} />
+                <div className="h-2 flex-1 rounded-full bg-muted">
+                  <div className="h-2 rounded-full bg-primary" style={{ width: `${course.progress}%` }} />
                 </div>
-                <span className="shrink-0 text-xs text-muted-foreground">{course.progress}%</span>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{course.progress}%</span>
               </div>
             </Link>
           ))}
@@ -79,11 +84,13 @@ export default function StudentHomePage() {
       <div>
         <h2 className="mb-4 text-base font-semibold text-foreground">Recent Activity</h2>
         <div className="divide-y divide-border rounded-lg border border-border bg-background">
-          {recentActivity.map((item, i) => (
-            <div key={i} className="flex items-center justify-between px-5 py-3.5">
-              <div className="flex items-center gap-3">
+          {recentActivity.length === 0 ? (
+            <p className="px-5 py-6 text-center text-sm text-muted-foreground">No recent activity.</p>
+          ) : recentActivity.map((item, i) => (
+            <div key={i} className="flex items-center justify-between px-5 py-4">
+              <div className="flex min-w-0 items-center gap-3">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
-                <span className="text-sm text-foreground">
+                <span className="min-w-0 truncate text-sm text-foreground">
                   <span className="font-medium">{item.action}</span>
                   {" · "}
                   <span className="text-muted-foreground">{item.context}</span>

@@ -8,7 +8,7 @@ export function Label({
 }: LabelHTMLAttributes<HTMLLabelElement>) {
   return (
     <label
-      className={cn("text-sm font-medium text-foreground leading-none", className)}
+      className={cn("text-sm font-sans font-medium text-foreground leading-none", className)}
       {...props}
     >
       {children}

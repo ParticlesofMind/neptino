@@ -20,7 +20,7 @@ function TogglePill({ enabled }: { enabled: boolean }) {
 
 export function SettingsView() {
   return (
-    <div className="rounded-2xl border border-border bg-background overflow-hidden">
+    <div className="animate-fade-up rounded-2xl border border-border bg-background overflow-hidden">
 
       {/* Page header */}
       <div className="flex items-center justify-between border-b border-border px-6 py-5">
@@ -32,7 +32,7 @@ export function SettingsView() {
 
       {/* Profile */}
       <div className="border-b border-border px-6 py-5">
-        <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2 className="mb-4 flex items-center gap-2 font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <User className="h-3.5 w-3.5" /> Profile
         </h2>
         <div className="flex items-center gap-4 mb-5">
@@ -51,13 +51,13 @@ export function SettingsView() {
             { label: "Email",         value: "alex.chen@neptino.app" },
           ].map(({ label, value }) => (
             <div key={label}>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">{label}</label>
+              <label className="block font-sans text-xs font-medium text-muted-foreground mb-1">{label}</label>
               <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-foreground">{value}</div>
             </div>
           ))}
         </div>
         <div className="mt-4">
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Bio</label>
+          <label className="block font-sans text-xs font-medium text-muted-foreground mb-1">Bio</label>
           <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-foreground h-14 flex items-start">
             Educator and software engineer. Teaching data, JS, and Python fundamentals.
           </div>
@@ -67,13 +67,13 @@ export function SettingsView() {
       {/* Notifications */}
       <div className="border-b border-border">
         <div className="px-6 py-4">
-          <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <h2 className="flex items-center gap-2 font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <Bell className="h-3.5 w-3.5" /> Notifications
           </h2>
         </div>
         <div className="divide-y divide-border border-t border-border">
           {notificationRows.map((row) => (
-            <div key={row.label} className="flex items-center justify-between gap-4 px-6 py-3.5">
+            <div key={row.label} className="flex items-center justify-between gap-4 px-6 py-4">
               <div>
                 <p className="text-sm font-medium text-foreground">{row.label}</p>
                 <p className="text-xs text-muted-foreground">{row.description}</p>
@@ -86,7 +86,7 @@ export function SettingsView() {
 
       {/* Class Defaults */}
       <div className="px-6 py-5">
-        <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2 className="mb-4 flex items-center gap-2 font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Briefcase className="h-3.5 w-3.5" /> Class Defaults
         </h2>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -96,7 +96,7 @@ export function SettingsView() {
             { label: "Teaching language",       value: "English",     icon: Globe },
           ].map(({ label, value }) => (
             <div key={label} className="rounded-xl border border-border bg-muted/20 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
               <p className="mt-2 text-base font-semibold text-foreground">{value}</p>
             </div>
           ))}

@@ -42,7 +42,7 @@ export default function FeaturesPage() {
               { metric: "Real-time", label: "Collaboration and delivery" },
               { metric: "Single", label: "Unified teaching workspace" },
             ].map((item) => (
-              <div key={item.label} className="rounded-xl border border-primary/20 bg-background/85 backdrop-blur px-5 py-4">
+              <div key={item.label} className="rounded-xl border border-primary/20 bg-background/85 backdrop-blur px-5 py-5">
                 <div className="text-xl font-bold text-accent-foreground">{item.metric}</div>
                 <div className="mt-1 text-sm text-muted-foreground">{item.label}</div>
               </div>
@@ -52,7 +52,7 @@ export default function FeaturesPage() {
       </section>
 
       <section className="bg-background">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-16 grid gap-6 md:grid-cols-3">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-20 grid gap-6 md:grid-cols-3">
           {featureCards.map((feature) => (
             <article key={feature.title} className="rounded-2xl border border-border bg-background p-7 shadow-[0_8px_28px_rgba(15,23,42,0.05)]">
               <h2 className="text-xl font-semibold text-foreground">{feature.title}</h2>
@@ -73,7 +73,7 @@ export default function FeaturesPage() {
       <section className="bg-muted border-y border-border">
         <div className="mx-auto max-w-7xl px-5 lg:px-8 py-16">
           <div className="max-w-3xl">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">How it works</h2>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">How it works</h2>
             <p className="mt-3 text-muted-foreground">A clear workflow from planning to teaching to improvement.</p>
           </div>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
@@ -83,7 +83,7 @@ export default function FeaturesPage() {
               { step: "03", title: "Improve", body: "Use progress feedback and summaries to continuously optimize outcomes." },
             ].map((item) => (
               <div key={item.step} className="rounded-xl border border-border bg-background px-5 py-6">
-                <div className="text-xs font-bold tracking-wider text-primary">STEP {item.step}</div>
+                <div className="font-sans text-xs font-bold tracking-wider text-primary">STEP {item.step}</div>
                 <h3 className="mt-2 text-lg font-semibold text-foreground">{item.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.body}</p>
               </div>
@@ -93,8 +93,8 @@ export default function FeaturesPage() {
       </section>
 
       <section className="bg-background">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-16 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground">Ready to try it?</h2>
+        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-20 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Ready to try it?</h2>
           <p className="mt-3 text-muted-foreground">Create an account and start building your first learning flow.</p>
           <div className="mt-7 flex items-center justify-center gap-3">
             <Link href="/signup" className={buttonVariants({ variant: "primary", size: "lg" })}>

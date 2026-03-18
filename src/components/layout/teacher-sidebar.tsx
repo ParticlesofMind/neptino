@@ -13,6 +13,23 @@ export type TeacherSection =
   | "messages" | "announcements"
   | "earnings" | "settings"
 
+export const SECTION_LABELS: Record<TeacherSection, string> = {
+  home:          "Home",
+  analytics:     "Analytics",
+  calendar:      "Calendar",
+  courses:       "Courses",
+  lessons:       "Lessons",
+  templates:     "Templates",
+  resources:     "Resources",
+  students:      "Students",
+  classes:       "Classes",
+  submissions:   "Submissions",
+  messages:      "Messages",
+  announcements: "Announcements",
+  earnings:      "Earnings",
+  settings:      "Settings",
+}
+
 interface SidebarItem {
   id: TeacherSection
   label: string
@@ -69,15 +86,16 @@ const GROUPS: SidebarGroup[] = [
 type TeacherSidebarProps = {
   activeSection: TeacherSection
   onSectionChange: (section: TeacherSection) => void
+  className?: string
 }
 
-export function TeacherSidebar({ activeSection, onSectionChange }: TeacherSidebarProps) {
+export function TeacherSidebar({ activeSection, onSectionChange, className }: TeacherSidebarProps) {
   return (
-    <aside className="no-scrollbar w-60 shrink-0 overflow-y-auto">
+    <aside className={className ?? "no-scrollbar w-60 shrink-0 overflow-y-auto"}>
       <div className="rounded-2xl border border-border bg-background p-3 space-y-4">
         {GROUPS.map((group) => (
           <div key={group.heading}>
-            <p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="mb-1 px-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {group.heading}
             </p>
             <div className="space-y-1">
@@ -89,7 +107,7 @@ export function TeacherSidebar({ activeSection, onSectionChange }: TeacherSideba
                     key={item.id}
                     type="button"
                     onClick={() => onSectionChange(item.id)}
-                    className={`flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                    className={`flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 font-sans text-sm font-medium transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 ${
                       active
                         ? "border-primary bg-primary text-white shadow-sm"
                         : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-muted/30 hover:text-foreground"

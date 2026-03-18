@@ -26,7 +26,7 @@ const sessionStatusStyle: Record<string, string> = {
 
 export function ClassesView() {
   return (
-    <div className="rounded-2xl border border-border bg-background overflow-hidden">
+    <div className="animate-fade-up rounded-2xl border border-border bg-background overflow-hidden">
 
       {/* Header */}
       <div className="border-b border-border px-6 py-5">
@@ -41,12 +41,12 @@ export function ClassesView() {
           { label: "Total Learners",     value: "252", sub: "Across all classes",  icon: Users },
           { label: "Pending Reviews",    value: "3",   sub: "4 due today",          icon: FileText },
         ].map(({ label, value, sub, icon: Icon }) => (
-          <div key={label} className="px-6 py-4">
+          <div key={label} className="px-6 py-5">
             <div className="flex items-center gap-2">
               <Icon className="h-3.5 w-3.5 text-primary" />
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
             </div>
-            <p className="mt-2 text-2xl font-semibold leading-none text-foreground">{value}</p>
+            <p className="mt-2 text-2xl font-semibold leading-none tabular-nums text-foreground">{value}</p>
             <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>
           </div>
         ))}
@@ -54,19 +54,21 @@ export function ClassesView() {
 
       {/* Upcoming sessions */}
       <div className="border-b border-border">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Upcoming Sessions</h2>
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground">Upcoming Sessions</h2>
           <Clock className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
         <div className="divide-y divide-border">
-          {sessions.map((s) => (
-            <div key={`${s.course}-${s.date}`} className="flex items-center gap-4 px-5 py-3 hover:bg-muted/20 transition-colors">
+          {sessions.length === 0 ? (
+            <p className="animate-fade-in px-5 py-6 text-center text-sm text-muted-foreground">No upcoming sessions scheduled.</p>
+          ) : sessions.map((s) => (
+            <div key={`${s.course}-${s.date}`} className="flex items-center gap-4 px-5 py-4 hover:bg-muted/20 transition-colors">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{s.course}</p>
+                <p className="truncate text-sm font-medium text-foreground">{s.course}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">{s.date} · {s.time}</p>
               </div>
               <span className="text-xs text-muted-foreground">{s.enrolled} enrolled</span>
-              <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${sessionStatusStyle[s.status]}`}>{s.status}</span>
+              <span className={`rounded-md border px-2 py-1 text-xs font-medium ${sessionStatusStyle[s.status]}`}>{s.status}</span>
             </div>
           ))}
         </div>
@@ -74,22 +76,24 @@ export function ClassesView() {
 
       {/* Submission queue */}
       <div className="border-b border-border">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Submission Queue</h2>
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground">Submission Queue</h2>
           <span className="text-xs text-muted-foreground">3 pending</span>
         </div>
         <div className="divide-y divide-border">
-          {submissions.map((s, i) => (
-            <div key={i} className="flex items-center gap-4 px-5 py-3 hover:bg-muted/20 transition-colors">
+          {submissions.length === 0 ? (
+            <p className="animate-fade-in px-5 py-6 text-center text-sm text-muted-foreground">No pending submissions.</p>
+          ) : submissions.map((s, i) => (
+            <div key={i} className="flex items-center gap-4 px-5 py-4 hover:bg-muted/20 transition-colors">
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-[11px] font-semibold text-foreground">
                 {s.student.split(" ").map((n) => n[0]).join("")}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{s.student} <span className="font-normal text-muted-foreground">— {s.type}</span></p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{s.course} · {s.submitted}</p>
+                <p className="truncate text-sm font-medium text-foreground">{s.student} <span className="font-normal text-muted-foreground">— {s.type}</span></p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.course} · {s.submitted}</p>
               </div>
               {s.status === "Pending" ? (
-                <button type="button" className="rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/15 transition-colors">
+                <button type="button" className="rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/15 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60">
                   Review
                 </button>
               ) : (
@@ -104,7 +108,7 @@ export function ClassesView() {
 
       {/* Progress bars */}
       <div className="px-6 py-5">
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Learner Progress</h2>
+        <h2 className="mb-4 font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground">Learner Progress</h2>
         <div className="space-y-3">
           {[
             { course: "Advanced JavaScript",      pct: 64 },
@@ -116,7 +120,7 @@ export function ClassesView() {
                 <span className="text-foreground font-medium">{course}</span>
                 <span className="text-muted-foreground">{pct}% avg completion</span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                 <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
               </div>
             </div>

@@ -53,7 +53,7 @@ export default function AdminCoursesPage() {
   const pendingCount = COURSES.filter((c) => c.status === "pending").length
 
   return (
-    <div className="space-y-6">
+    <div className="animate-fade-up space-y-6">
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
@@ -62,9 +62,9 @@ export default function AdminCoursesPage() {
           { label: "Published", value: String(COURSES.filter((c) => c.status === "live").length) },
           { label: "Pending Review", value: String(pendingCount) },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-lg border border-border bg-background px-5 py-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
+          <div key={label} className="rounded-lg border border-border bg-background px-5 py-5">
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className="mt-2 font-sans text-2xl font-semibold tabular-nums text-foreground">{value}</p>
           </div>
         ))}
       </div>
@@ -87,7 +87,7 @@ export default function AdminCoursesPage() {
               key={f.value}
               type="button"
               onClick={() => setStatusFilter(f.value)}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 ${
                 statusFilter === f.value
                   ? "bg-primary/10 text-primary border border-primary/30"
                   : "border border-border bg-background text-muted-foreground hover:bg-muted"
@@ -110,11 +110,11 @@ export default function AdminCoursesPage() {
       <div className="rounded-lg border border-border bg-background overflow-hidden">
         <div className="divide-y divide-border">
           <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3 bg-muted">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Course</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Teacher</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Enrolled</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Updated</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Course</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Teacher</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Enrolled</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</p>
+            <p className="font-sans text-xs font-medium uppercase tracking-wide text-muted-foreground">Updated</p>
           </div>
 
           {filtered.length === 0 && (
@@ -122,12 +122,12 @@ export default function AdminCoursesPage() {
           )}
 
           {filtered.map((course) => (
-            <div key={course.id} className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-4 px-5 py-3.5">
+            <div key={course.id} className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-4 px-5 py-4">
               <p className="text-sm font-medium text-foreground truncate">{course.title}</p>
               <p className="text-sm text-muted-foreground whitespace-nowrap">{course.teacher}</p>
               <p className="text-sm text-muted-foreground text-right">{course.enrolled}</p>
               <span
-                className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                 style={{ background: statusStyle[course.status].bg, color: statusStyle[course.status].color }}
               >
                 {statusStyle[course.status].label}

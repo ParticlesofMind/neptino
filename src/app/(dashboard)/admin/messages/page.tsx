@@ -24,14 +24,14 @@ export default function AdminMessagesPage() {
   const [body, setBody] = useState("")
 
   return (
-    <div className="space-y-8">
+    <div className="animate-fade-up space-y-8">
 
       {/* Compose broadcast */}
       <div>
         <h2 className="mb-4 text-base font-semibold text-foreground">New Broadcast</h2>
         <div className="rounded-lg border border-border bg-background">
           {/* Audience selector */}
-          <div className="flex items-center gap-3 border-b border-border px-5 py-3.5">
+          <div className="flex items-center gap-3 border-b border-border px-5 py-4">
             <span className="shrink-0 text-sm text-muted-foreground">To:</span>
             <div className="flex gap-1">
               {(Object.entries(audienceStyle) as [Audience, typeof audienceStyle[Audience]][]).map(([key, val]) => {
@@ -41,7 +41,7 @@ export default function AdminMessagesPage() {
                     key={key}
                     type="button"
                     onClick={() => setAudience(key)}
-                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 ${
                       audience === key
                         ? "border border-primary/30 bg-primary/10 text-primary"
                         : "border border-border bg-background text-muted-foreground hover:bg-muted"
@@ -82,7 +82,7 @@ export default function AdminMessagesPage() {
             <button
               type="button"
               disabled={!subject.trim() || !body.trim()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60"
             >
               <Send className="h-3.5 w-3.5" />
               Send broadcast
@@ -95,17 +95,19 @@ export default function AdminMessagesPage() {
       <div>
         <h2 className="mb-4 text-base font-semibold text-foreground">Sent Broadcasts</h2>
         <div className="divide-y divide-border rounded-lg border border-border bg-background">
-          {broadcasts.map((b) => {
+          {broadcasts.length === 0 ? (
+            <p className="animate-fade-in px-5 py-6 text-center text-sm text-muted-foreground">No broadcasts sent yet.</p>
+          ) : broadcasts.map((b) => {
             const aud = audienceStyle[b.audience]
             const AudIcon = aud.Icon
             return (
-              <div key={b.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
+              <div key={b.id} className="flex items-center justify-between gap-4 px-5 py-4">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{b.subject}</p>
+                  <p className="truncate text-sm font-medium text-foreground">{b.subject}</p>
                   <div className="mt-1 flex items-center gap-2">
-                    <AudIcon className="h-3 w-3" style={{ color: aud.color }} />
-                    <span className="text-xs text-muted-foreground">{aud.label}</span>
-                    <span className="text-xs text-muted-foreground">&middot; {b.recipients.toLocaleString()} recipients</span>
+                    <AudIcon className="h-3 w-3 shrink-0" style={{ color: aud.color }} />
+                    <span className="truncate text-xs text-muted-foreground">{aud.label}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">&middot; {b.recipients.toLocaleString()} recipients</span>
                   </div>
                 </div>
                 <span className="shrink-0 text-xs text-muted-foreground">{b.sent}</span>

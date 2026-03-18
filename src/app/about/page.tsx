@@ -24,7 +24,7 @@ export default function AboutPage() {
               { label: "Core focus", value: "Clarity and engagement" },
               { label: "Outcome", value: "Better learning results" },
             ].map((item) => (
-              <div key={item.label} className="rounded-xl border border-primary/20 bg-background/85 backdrop-blur px-5 py-4">
+              <div key={item.label} className="rounded-xl border border-primary/20 bg-background/85 backdrop-blur px-5 py-5">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">{item.label}</div>
                 <div className="mt-1 text-sm font-semibold text-foreground">{item.value}</div>
               </div>
@@ -34,9 +34,9 @@ export default function AboutPage() {
       </section>
 
       <section className="bg-background">
-        <div className="mx-auto max-w-6xl px-5 lg:px-8 py-16 grid gap-10 lg:grid-cols-[1.1fr_1fr]">
+        <div className="mx-auto max-w-6xl px-5 lg:px-8 py-20 grid gap-10 lg:grid-cols-[1.1fr_1fr]">
           <div className="rounded-2xl border border-border bg-background p-8 shadow-[0_8px_28px_rgba(15,23,42,0.05)]">
-            <h2 className="text-2xl font-semibold text-foreground">Our mission</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Our mission</h2>
             <p className="mt-3 text-muted-foreground leading-relaxed">
               We believe high-quality education should be easy to design and deliver. Neptino gives teachers practical tools to create engaging learning journeys while giving students a clear path to progress.
             </p>
@@ -46,7 +46,7 @@ export default function AboutPage() {
           </div>
 
           <div className="rounded-2xl border border-border bg-muted p-8">
-            <h2 className="text-2xl font-semibold text-foreground">What we focus on</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">What we focus on</h2>
             <ul className="mt-5 space-y-3">
               {[
                 "Simple course planning and structured curriculum workflows",
@@ -79,7 +79,7 @@ export default function AboutPage() {
       </section>
 
       <section className="bg-background">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-16 text-center">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-20 text-center">
           <p className="text-muted-foreground">Want to explore what Neptino can do in practice?</p>
           <div className="mt-5 flex items-center justify-center gap-3">
             <Link href="/features" className={buttonVariants({ variant: "outline", size: "lg" })}>
