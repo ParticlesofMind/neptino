@@ -1,14 +1,14 @@
 "use client"
 
 /**
- * NachschlageDrawer
+ * AtlasDrawer
  *
  * Course-level persistent reference panel. Slides in from the right edge of the
  * canvas area. Architecturally separate from the canvas — it is Tier B of the
  * three-tier course structure:
  *
  *   Tier A — Canvases / Sessions / Tasks   (the linear learning sequence)
- *   Tier B — Nachschlagewerk               (this panel — always accessible reference)
+ *   Tier B — Atlas Drawer                  (this panel — always accessible reference)
  *   Tier C — Atlas                         (global entity graph)
  *
  * Entry kinds:
@@ -36,8 +36,8 @@ import {
   type AtlasItem,
   type EntityType,
   type EntitySubType,
-  type NachschlageEntry,
-  type NachschlageCustomEntry,
+  type AtlasReferenceEntry,
+  type AtlasCustomEntry,
   type AtlasContributionStatus,
 } from "@/types/atlas"
 import { AtlasEntitySearch } from "./AtlasEntitySearch"
@@ -45,32 +45,32 @@ import { AtlasEntitySearch } from "./AtlasEntitySearch"
 // ─── Entity type badge colour ──────────────────────────────────────────────────
 
 const TYPE_PILL: Record<EntityType, string> = {
-  Concept:     "bg-blue-100 text-blue-700",
-  Process:     "bg-teal-100 text-teal-700",
-  Instance:    "bg-orange-100 text-orange-700",
-  Person:      "bg-purple-100 text-purple-700",
-  State:       "bg-yellow-100 text-yellow-700",
-  Time:        "bg-rose-100 text-rose-700",
-  Environment: "bg-green-100 text-green-700",
-  Work:        "bg-amber-100 text-amber-700",
-  Technology:  "bg-indigo-100 text-indigo-700",
-  Institution: "bg-pink-100 text-pink-700",
-  Movement:    "bg-lime-100 text-lime-700",
+  Concept:     "bg-[#dbe8f6] text-[#3a6ea0]",
+  Process:     "bg-[#d6ede3] text-[#2e6b4a]",
+  Instance:    "bg-[#f0e6cc] text-[#7a5010]",
+  Person:      "bg-[#ecdcec] text-[#622c6a]",
+  State:       "bg-[#f0e8cc] text-[#7a6010]",
+  Time:        "bg-[#f0d8d8] text-[#8a3030]",
+  Environment: "bg-[#d6ede3] text-[#2e6b4a]",
+  Work:        "bg-[#f0e8cc] text-[#7a6010]",
+  Technology:  "bg-[#dbe8f6] text-[#3a6ea0]",
+  Institution: "bg-[#ecdcec] text-[#622c6a]",
+  Movement:    "bg-[#f0e8cc] text-[#7a6010]",
 }
 
 const CONTRIBUTION_PILL: Record<AtlasContributionStatus, string> = {
-  draft:          "bg-neutral-100 text-neutral-500",
-  pending:        "bg-yellow-100 text-yellow-700",
-  approved:       "bg-green-100 text-green-700",
-  rejected:       "bg-red-100 text-red-700",
+  draft:          "bg-muted text-muted-foreground",
+  pending:        "bg-[#f0e8cc] text-[#7a6010]",
+  approved:       "bg-[#d6ede3] text-[#2e6b4a]",
+  rejected:       "bg-destructive/10 text-destructive",
 }
 
 // ─── Entry kind meta ──────────────────────────────────────────────────────────
 
 const KIND_META = {
-  atlas_stub:        { label: "Atlas",          Icon: Globe,    colour: "text-blue-500"    },
-  course_extension:  { label: "Extended",       Icon: Edit3,    colour: "text-violet-500"  },
-  custom_entry:      { label: "Custom",         Icon: FileText, colour: "text-amber-500"   },
+  atlas_stub:        { label: "Atlas",          Icon: Globe,    colour: "text-[#6b8fc4]"  },
+  course_extension:  { label: "Extended",       Icon: Edit3,    colour: "text-[#6b8fc4]"  },
+  custom_entry:      { label: "Custom",         Icon: FileText, colour: "text-[#a89450]"  },
 } as const
 
 // ─── Stub in-memory state (replace with Supabase hook) ───────────────────────
@@ -85,7 +85,7 @@ type AddMode = "choose" | "atlas" | "custom"
 
 interface AddEntryPanelProps {
   courseId: string
-  onAdd: (entry: NachschlageEntry) => void
+  onAdd: (entry: AtlasReferenceEntry) => void
   onCancel: () => void
 }
 
@@ -112,7 +112,7 @@ function AddEntryPanel({ courseId, onAdd, onCancel }: AddEntryPanelProps) {
 
   const handleCustomSubmit = useCallback(() => {
     if (!title.trim() || !summary.trim()) return
-    const entry: NachschlageCustomEntry = {
+    const entry: AtlasCustomEntry = {
       id:                 makeStubId(),
       courseId,
       kind:               "custom_entry",
@@ -139,7 +139,7 @@ function AddEntryPanel({ courseId, onAdd, onCancel }: AddEntryPanelProps) {
           onClick={() => setMode("atlas")}
           className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 text-left hover:bg-neutral-50 transition-colors"
         >
-          <Globe size={16} className="text-blue-500 shrink-0" />
+          <Globe size={16} className="text-[#6b8fc4] shrink-0" />
           <div>
             <p className="text-[12px] font-semibold text-neutral-800">Link Atlas entity</p>
             <p className="text-[10px] text-neutral-500">Pull an existing Atlas entry into this course</p>
@@ -151,7 +151,7 @@ function AddEntryPanel({ courseId, onAdd, onCancel }: AddEntryPanelProps) {
           onClick={() => setMode("custom")}
           className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 text-left hover:bg-neutral-50 transition-colors"
         >
-          <FileText size={16} className="text-amber-500 shrink-0" />
+          <FileText size={16} className="text-[#a89450] shrink-0" />
           <div>
             <p className="text-[12px] font-semibold text-neutral-800">Custom entry</p>
             <p className="text-[10px] text-neutral-500">Author a new entry; optionally submit to Atlas</p>
@@ -199,7 +199,7 @@ function AddEntryPanel({ courseId, onAdd, onCancel }: AddEntryPanelProps) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Janissary corps"
-          className="w-full rounded border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-800 outline-none focus:border-blue-400"
+          className="w-full rounded border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-800 outline-none focus:border-primary"
           autoFocus
         />
       </label>
@@ -209,7 +209,7 @@ function AddEntryPanel({ courseId, onAdd, onCancel }: AddEntryPanelProps) {
         <select
           value={type}
           onChange={(e) => setType(e.target.value as EntityType)}
-          className="w-full rounded border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-800 outline-none focus:border-blue-400"
+          className="w-full rounded border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-800 outline-none focus:border-primary"
         >
           {ENTITY_TYPES.map((t) => (
             <option key={t} value={t}>{t}</option>
@@ -224,7 +224,7 @@ function AddEntryPanel({ courseId, onAdd, onCancel }: AddEntryPanelProps) {
           onChange={(e) => setSummary(e.target.value)}
           placeholder="A concise description of this entry…"
           rows={3}
-          className="w-full resize-none rounded border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-800 outline-none focus:border-blue-400"
+          className="w-full resize-none rounded border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[12px] text-neutral-800 outline-none focus:border-primary"
         />
       </label>
 
@@ -243,14 +243,14 @@ function AddEntryPanel({ courseId, onAdd, onCancel }: AddEntryPanelProps) {
 
 // ─── Entry detail view ────────────────────────────────────────────────────────
 
-function EntryDetail({ entry, onBack }: { entry: NachschlageEntry; onBack: () => void }) {
+function EntryDetail({ entry, onBack }: { entry: AtlasReferenceEntry; onBack: () => void }) {
   const isAtlas  = entry.kind === "atlas_stub"
   const isCustom = entry.kind === "custom_entry"
   const isExt    = entry.kind === "course_extension"
 
-  const title      = isAtlas || isExt ? entry.atlasItem.title : (entry as NachschlageCustomEntry).title
-  const entityType = isAtlas || isExt ? entry.atlasItem.knowledge_type : (entry as NachschlageCustomEntry).entityType
-  const summary    = isAtlas || isExt ? entry.atlasItem.summary : (entry as NachschlageCustomEntry).summary
+  const title      = isAtlas || isExt ? entry.atlasItem.title : (entry as AtlasCustomEntry).title
+  const entityType = isAtlas || isExt ? entry.atlasItem.knowledge_type : (entry as AtlasCustomEntry).entityType
+  const summary    = isAtlas || isExt ? entry.atlasItem.summary : (entry as AtlasCustomEntry).summary
   const km         = KIND_META[entry.kind]
 
   return (
@@ -273,8 +273,8 @@ function EntryDetail({ entry, onBack }: { entry: NachschlageEntry; onBack: () =>
             {km.label}
           </span>
           {isCustom && (
-            <span className={["rounded px-2 py-0.5 text-[10px] font-semibold", CONTRIBUTION_PILL[(entry as NachschlageCustomEntry).contributionStatus]].join(" ")}>
-              {(entry as NachschlageCustomEntry).contributionStatus}
+            <span className={["rounded px-2 py-0.5 text-[10px] font-semibold", CONTRIBUTION_PILL[(entry as AtlasCustomEntry).contributionStatus]].join(" ")}>
+              {(entry as AtlasCustomEntry).contributionStatus}
             </span>
           )}
         </div>
@@ -327,8 +327,8 @@ function EntryDetail({ entry, onBack }: { entry: NachschlageEntry; onBack: () =>
         {/* Course extension notes */}
         {isExt && (entry as { teacherNotes: string }).teacherNotes && (
           <div>
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Course notes</p>
-            <p className="text-[12px] leading-relaxed text-neutral-700">{(entry as { teacherNotes: string }).teacherNotes}</p>
+            <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Course notes</p>
+            <p className="text-[12px] leading-relaxed text-foreground/70">{(entry as { teacherNotes: string }).teacherNotes}</p>
           </div>
         )}
       </div>
@@ -348,10 +348,10 @@ function EntryRow({
   const isAtlas = entry.kind === "atlas_stub" || entry.kind === "course_extension"
   const title   = isAtlas
     ? (entry as { atlasItem: AtlasItem }).atlasItem.title
-    : (entry as NachschlageCustomEntry).title
+    : (entry as AtlasCustomEntry).title
   const type    = isAtlas
     ? (entry as { atlasItem: AtlasItem }).atlasItem.knowledge_type
-    : (entry as NachschlageCustomEntry).entityType
+    : (entry as AtlasCustomEntry).entityType
   const km      = KIND_META[entry.kind]
 
   return (
@@ -380,7 +380,7 @@ function EntryRow({
 
 // ─── Main drawer ──────────────────────────────────────────────────────────────
 
-interface NachschlageDrawerProps {
+interface AtlasDrawerProps {
   courseId: string
   open: boolean
   onClose: () => void
@@ -388,14 +388,14 @@ interface NachschlageDrawerProps {
 
 type DrawerView = "list" | "add" | "detail"
 
-export function NachschlageDrawer({ courseId, open, onClose }: NachschlageDrawerProps) {
+export function AtlasDrawer({ courseId, open, onClose }: AtlasDrawerProps) {
   const [view, setView]             = useState<DrawerView>("list")
-  const [entries, setEntries]       = useState<NachschlageEntry[]>([])
-  const [activeEntry, setActiveEntry] = useState<NachschlageEntry | null>(null)
+  const [entries, setEntries]       = useState<AtlasReferenceEntry[]>([])
+  const [activeEntry, setActiveEntry] = useState<AtlasReferenceEntry | null>(null)
   const [search, setSearch]         = useState("")
   const [activeKind, setActiveKind] = useState<"all" | NachschlageEntry["kind"]>("all")
 
-  const handleAdd = useCallback((entry: NachschlageEntry) => {
+  const handleAdd = useCallback((entry: AtlasReferenceEntry) => {
     setEntries((prev) => {
       // Deduplicate atlas_stub by atlasItem.id
       if (entry.kind === "atlas_stub") {
@@ -414,7 +414,7 @@ export function NachschlageDrawer({ courseId, open, onClose }: NachschlageDrawer
     if (!search.trim()) return true
     const q = search.toLowerCase()
     const isAtlas = e.kind === "atlas_stub" || e.kind === "course_extension"
-    const title   = isAtlas ? (e as { atlasItem: AtlasItem }).atlasItem.title : (e as NachschlageCustomEntry).title
+    const title   = isAtlas ? (e as { atlasItem: AtlasItem }).atlasItem.title : (e as AtlasCustomEntry).title
     return title.toLowerCase().includes(q)
   })
 
@@ -437,11 +437,11 @@ export function NachschlageDrawer({ courseId, open, onClose }: NachschlageDrawer
       >
         {/* Header */}
         <div className="flex shrink-0 items-center gap-2.5 border-b border-neutral-100 px-4 py-3">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-50">
-            <BookOpen size={14} className="text-blue-600" />
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#dbe8f6]">
+            <BookOpen size={14} className="text-[#3a6ea0]" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold text-neutral-900 leading-tight">Nachschlagewerk</p>
+            <p className="text-[11px] font-bold text-foreground leading-tight">Atlas</p>
             <p className="text-[9px] text-neutral-400">{entries.length} entries · course reference</p>
           </div>
           <button
@@ -478,7 +478,7 @@ export function NachschlageDrawer({ courseId, open, onClose }: NachschlageDrawer
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Filter entries…"
-                  className="w-full rounded-md border border-neutral-200 bg-neutral-50 pl-8 py-1.5 text-[12px] text-neutral-700 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                  className="w-full rounded-md border border-border bg-muted pl-8 py-1.5 text-[12px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                 />
               </div>
 
@@ -492,12 +492,12 @@ export function NachschlageDrawer({ courseId, open, onClose }: NachschlageDrawer
                       "flex-1 rounded py-1 text-[9px] font-bold uppercase tracking-wide transition-colors",
                       activeKind === k
                         ? k === "all"
-                          ? "bg-neutral-900 text-white"
+                          ? "bg-foreground text-background"
                           : k === "atlas_stub"
-                            ? "bg-blue-600 text-white"
+                            ? "bg-[#6b8fc4] text-white"
                             : k === "course_extension"
-                              ? "bg-violet-600 text-white"
-                              : "bg-amber-500 text-white"
+                              ? "bg-[#6b8fc4] text-white"
+                              : "bg-[#a89450] text-white"
                         : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200",
                     ].join(" ")}
                   >

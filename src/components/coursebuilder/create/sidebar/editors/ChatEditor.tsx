@@ -153,7 +153,7 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
                 placeholder={`Starter ${i + 1}`}
                 className="min-h-10 min-w-0 flex-1 rounded-md border border-neutral-200 bg-neutral-50/80 px-3 py-2.5 text-[12px] text-neutral-800 placeholder:text-neutral-400 outline-none transition-all focus:border-[#00ccb3]/60 focus:bg-white"
               />
-              <button type="button" onClick={() => removeStarter(i)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500">
+              <button type="button" onClick={() => removeStarter(i)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-destructive/10 hover:text-destructive">
                 <Trash2 size={13} />
               </button>
             </div>

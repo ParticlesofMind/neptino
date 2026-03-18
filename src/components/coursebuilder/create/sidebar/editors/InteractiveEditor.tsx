@@ -107,7 +107,7 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Prompt</span>
-            <span className={`text-[10px] font-mono ${promptCharCount > promptMax * 0.9 ? "text-amber-500" : "text-neutral-400"}`}>
+            <span className={`text-[10px] font-mono ${promptCharCount > promptMax * 0.9 ? "text-[#a89450]" : "text-neutral-400"}`}>
               {promptCharCount}/{promptMax}
             </span>
           </div>
@@ -149,8 +149,8 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
                       className={[
                         "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors",
                         opt.correct
-                          ? "border-green-500 bg-green-500 text-white"
-                          : "border-neutral-300 text-transparent hover:border-green-400 hover:text-green-400",
+                          ? "border-[#5c9970] bg-[#5c9970] text-white"
+                          : "border-neutral-300 text-transparent hover:border-[#5c9970] hover:text-[#5c9970]",
                       ].join(" ")}
                     >
                       <Check size={12} />
@@ -169,7 +169,7 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
                   <button type="button" onClick={() => moveOption(i, 1)} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700">
                     <ChevronDown size={13} />
                   </button>
-                  <button type="button" onClick={() => removeOption(i)} disabled={options.length <= 1} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-30">
+                  <button type="button" onClick={() => removeOption(i)} disabled={options.length <= 1} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-30">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -201,8 +201,8 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
                   "flex-1 rounded-md border py-2.5 text-[12px] font-bold transition-all",
                   tfCorrect === val
                     ? val
-                      ? "border-green-500 bg-green-500 text-white shadow-sm"
-                      : "border-red-500 bg-red-500 text-white shadow-sm"
+                      ? "border-[#5c9970] bg-[#5c9970] text-white shadow-sm"
+                      : "border-[#b87070] bg-[#b87070] text-white shadow-sm"
                     : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
                 ].join(" ")}
               >

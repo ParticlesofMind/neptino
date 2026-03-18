@@ -83,8 +83,8 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     rows: "1fr",
     header: { label: "Header", note: "Framing question or comparison title", height: "44px" },
     panels: [
-      { label: "Column A", note: "Source A / perspective A", col: "1 / 2", row: "1 / 2", accent: "#3A7AC1", primary: true },
-      { label: "Column B", note: "Source B / perspective B", col: "2 / 3", row: "1 / 2", accent: "#C13A3A" },
+      { label: "Column A", note: "Source A / perspective A", col: "1 / 2", row: "1 / 2", accent: "#6b8fc4", primary: true },
+      { label: "Column B", note: "Source B / perspective B", col: "2 / 3", row: "1 / 2", accent: "#b87070" },
     ],
   },
   "layout-stack": {
@@ -94,8 +94,8 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     rows: "3fr 2fr",
     header: { label: "Header", note: "Session title or learning objective", height: "44px" },
     panels: [
-      { label: "Primary Stage", note: "Main explanation or narrative", col: "1 / 2", row: "1 / 2", accent: "#3A7AC1", primary: true },
-      { label: "Secondary Stage", note: "Practice, reflection, or response", col: "1 / 2", row: "2 / 3", accent: "#C17A3A" },
+      { label: "Primary Stage", note: "Main explanation or narrative", col: "1 / 2", row: "1 / 2", accent: "#6b8fc4", primary: true },
+      { label: "Secondary Stage", note: "Practice, reflection, or response", col: "1 / 2", row: "2 / 3", accent: "#b87c5c" },
     ],
   },
   "layout-feature": {
@@ -105,9 +105,9 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     rows: "1fr 140px",
     header: { label: "Header", note: "Simulation title or scenario brief", height: "44px" },
     panels: [
-      { label: "Legend / Filters", note: "Layer toggles, symbol key", col: "1 / 2", row: "1 / 2", accent: "#C17A3A" },
-      { label: "Main Canvas", note: "Dominant spatial or media surface", col: "2 / 3", row: "1 / 2", accent: "#3A7AC1", primary: true },
-      { label: "Timeline Strip", note: "Chronology / navigation rail", col: "1 / 3", row: "2 / 3", accent: "#6B3AC1" },
+      { label: "Legend / Filters", note: "Layer toggles, symbol key", col: "1 / 2", row: "1 / 2", accent: "#b87c5c" },
+      { label: "Main Canvas", note: "Dominant spatial or media surface", col: "2 / 3", row: "1 / 2", accent: "#6b8fc4", primary: true },
+      { label: "Timeline Strip", note: "Chronology / navigation rail", col: "1 / 3", row: "2 / 3", accent: "#6b8fc4" },
     ],
   },
   "layout-sidebar": {
@@ -118,7 +118,7 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     header: { label: "Header", note: "Title bar, navigation, or session title", height: "44px" },
     panels: [
       { label: "Sidebar", note: "Legend, glossary, controls", col: "1 / 2", row: "1 / 2", accent: "#555555" },
-      { label: "Main Stage", note: "Primary teaching surface", col: "2 / 3", row: "1 / 2", accent: "#3A7AC1", primary: true },
+      { label: "Main Stage", note: "Primary teaching surface", col: "2 / 3", row: "1 / 2", accent: "#6b8fc4", primary: true },
     ],
   },
   "layout-quad": {
@@ -128,10 +128,10 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     rows: "1fr 1fr",
     header: { label: "Header", note: "Central question or organising theme", height: "44px" },
     panels: [
-      { label: "Panel 1", note: "Source / view", col: "1 / 2", row: "1 / 2", accent: "#3A7AC1" },
-      { label: "Panel 2", note: "Source / view", col: "2 / 3", row: "1 / 2", accent: "#C13A3A" },
-      { label: "Panel 3", note: "Source / view", col: "1 / 2", row: "2 / 3", accent: "#2D6A4F" },
-      { label: "Panel 4", note: "Source / view", col: "2 / 3", row: "2 / 3", accent: "#C17A3A" },
+      { label: "Panel 1", note: "Source / view", col: "1 / 2", row: "1 / 2", accent: "#6b8fc4" },
+      { label: "Panel 2", note: "Source / view", col: "2 / 3", row: "1 / 2", accent: "#b87070" },
+      { label: "Panel 3", note: "Source / view", col: "1 / 2", row: "2 / 3", accent: "#5c9970" },
+      { label: "Panel 4", note: "Source / view", col: "2 / 3", row: "2 / 3", accent: "#b87c5c" },
     ],
   },
   "layout-mosaic": {
@@ -143,7 +143,7 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     panels: Array.from({ length: 9 }, (_, i) => ({
       label: `Cell ${i + 1}`,
       note: "Thumbnail / quick reference",
-      accent: i % 2 === 0 ? "#3A7AC1" : "#555555",
+      accent: i % 2 === 0 ? "#6b8fc4" : "#555555",
     })),
   },
   "layout-triptych": {
@@ -154,8 +154,8 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     header: { label: "Header", note: "Narrative title or sequence label", height: "44px" },
     panels: [
       { label: "Left", note: "Context", col: "1 / 2", row: "1 / 2", accent: "#555555" },
-      { label: "Center", note: "Primary focus", col: "2 / 3", row: "1 / 2", accent: "#3A7AC1", primary: true },
-      { label: "Right", note: "Evidence / reflection", col: "3 / 4", row: "1 / 2", accent: "#C17A3A" },
+      { label: "Center", note: "Primary focus", col: "2 / 3", row: "1 / 2", accent: "#6b8fc4", primary: true },
+      { label: "Right", note: "Evidence / reflection", col: "3 / 4", row: "1 / 2", accent: "#b87c5c" },
     ],
   },
   "layout-trirow": {
@@ -165,9 +165,9 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     rows: "1fr 1fr 1fr",
     header: { label: "Header", note: "Phase or workflow title", height: "44px" },
     panels: [
-      { label: "Row 1", note: "Activation", col: "1 / 2", row: "1 / 2", accent: "#C13A3A" },
-      { label: "Row 2", note: "Instruction", col: "1 / 2", row: "2 / 3", accent: "#3A7AC1", primary: true },
-      { label: "Row 3", note: "Practice / feedback", col: "1 / 2", row: "3 / 4", accent: "#2D6A4F" },
+      { label: "Row 1", note: "Activation", col: "1 / 2", row: "1 / 2", accent: "#b87070" },
+      { label: "Row 2", note: "Instruction", col: "1 / 2", row: "2 / 3", accent: "#6b8fc4", primary: true },
+      { label: "Row 3", note: "Practice / feedback", col: "1 / 2", row: "3 / 4", accent: "#5c9970" },
     ],
   },
   "layout-banner": {
@@ -178,8 +178,8 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     header: { label: "Header", note: "Session or activity title", height: "44px" },
     panels: [
       { label: "Header Banner", note: "Prompt / objective", col: "1 / 3", row: "1 / 2", accent: "#555555" },
-      { label: "Left Stage", note: "Primary content", col: "1 / 2", row: "2 / 3", accent: "#3A7AC1", primary: true },
-      { label: "Right Stage", note: "Companion content", col: "2 / 3", row: "2 / 3", accent: "#C17A3A" },
+      { label: "Left Stage", note: "Primary content", col: "1 / 2", row: "2 / 3", accent: "#6b8fc4", primary: true },
+      { label: "Right Stage", note: "Companion content", col: "2 / 3", row: "2 / 3", accent: "#b87c5c" },
     ],
   },
   "layout-broadside": {
@@ -190,9 +190,9 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     header: { label: "Header", note: "Document title or overarching theme", height: "44px" },
     panels: [
       { label: "Header", note: "Theme, question, or orientation", col: "1 / 4", row: "1 / 2", accent: "#555555" },
-      { label: "Panel A", note: "Evidence / media", col: "1 / 2", row: "2 / 3", accent: "#3A7AC1", primary: true },
-      { label: "Panel B", note: "Evidence / media", col: "2 / 3", row: "2 / 3", accent: "#2D6A4F" },
-      { label: "Panel C", note: "Evidence / media", col: "3 / 4", row: "2 / 3", accent: "#C17A3A" },
+      { label: "Panel A", note: "Evidence / media", col: "1 / 2", row: "2 / 3", accent: "#6b8fc4", primary: true },
+      { label: "Panel B", note: "Evidence / media", col: "2 / 3", row: "2 / 3", accent: "#5c9970" },
+      { label: "Panel C", note: "Evidence / media", col: "3 / 4", row: "2 / 3", accent: "#b87c5c" },
     ],
   },
   "layout-tower": {
@@ -202,10 +202,10 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     rows: "1fr 1fr 1fr",
     header: { label: "Header", note: "Narrative title or episode name", height: "44px" },
     panels: [
-      { label: "Primary Rail", note: "Main story / flow", col: "1 / 2", row: "1 / 4", accent: "#3A7AC1", primary: true },
+      { label: "Primary Rail", note: "Main story / flow", col: "1 / 2", row: "1 / 4", accent: "#6b8fc4", primary: true },
       { label: "Support 1", note: "Reference", col: "2 / 3", row: "1 / 2", accent: "#555555" },
-      { label: "Support 2", note: "Reference", col: "2 / 3", row: "2 / 3", accent: "#C17A3A" },
-      { label: "Support 3", note: "Reference", col: "2 / 3", row: "3 / 4", accent: "#6B3AC1" },
+      { label: "Support 2", note: "Reference", col: "2 / 3", row: "2 / 3", accent: "#b87c5c" },
+      { label: "Support 3", note: "Reference", col: "2 / 3", row: "3 / 4", accent: "#6b8fc4" },
     ],
   },
   "layout-pinboard": {
@@ -216,10 +216,10 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     header: { label: "Header", note: "Inquiry question or board title", height: "44px" },
     panels: [
       { label: "Header", note: "Prompt / framing", col: "1 / 3", row: "1 / 2", accent: "#555555" },
-      { label: "Pin A", note: "Card slot", col: "1 / 2", row: "2 / 3", accent: "#3A7AC1", primary: true },
-      { label: "Pin B", note: "Card slot", col: "2 / 3", row: "2 / 3", accent: "#C17A3A" },
-      { label: "Pin C", note: "Card slot", col: "1 / 2", row: "3 / 4", accent: "#2D6A4F" },
-      { label: "Pin D", note: "Card slot", col: "2 / 3", row: "3 / 4", accent: "#6B3AC1" },
+      { label: "Pin A", note: "Card slot", col: "1 / 2", row: "2 / 3", accent: "#6b8fc4", primary: true },
+      { label: "Pin B", note: "Card slot", col: "2 / 3", row: "2 / 3", accent: "#b87c5c" },
+      { label: "Pin C", note: "Card slot", col: "1 / 2", row: "3 / 4", accent: "#5c9970" },
+      { label: "Pin D", note: "Card slot", col: "2 / 3", row: "3 / 4", accent: "#6b8fc4" },
     ],
   },
   "layout-annotated": {
@@ -229,10 +229,10 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     rows: "1fr 1fr",
     header: { label: "Header", note: "Document or source study title", height: "44px" },
     panels: [
-      { label: "Legend", note: "Terms and context", col: "1 / 2", row: "1 / 3", accent: "#6B3AC1" },
-      { label: "Panel A", note: "Main evidence", col: "2 / 3", row: "1 / 2", accent: "#3A7AC1", primary: true },
-      { label: "Panel B", note: "Main evidence", col: "3 / 4", row: "1 / 2", accent: "#C17A3A" },
-      { label: "Panel C", note: "Reference", col: "2 / 3", row: "2 / 3", accent: "#2D6A4F" },
+      { label: "Legend", note: "Terms and context", col: "1 / 2", row: "1 / 3", accent: "#6b8fc4" },
+      { label: "Panel A", note: "Main evidence", col: "2 / 3", row: "1 / 2", accent: "#6b8fc4", primary: true },
+      { label: "Panel B", note: "Main evidence", col: "3 / 4", row: "1 / 2", accent: "#b87c5c" },
+      { label: "Panel C", note: "Reference", col: "2 / 3", row: "2 / 3", accent: "#5c9970" },
       { label: "Panel D", note: "Reference", col: "3 / 4", row: "2 / 3", accent: "#555555" },
     ],
   },
@@ -245,7 +245,7 @@ export const LAYOUT_SYSTEM_SPECS: Partial<Record<CardType, LayoutSystemSpec>> = 
     panels: Array.from({ length: 6 }, (_, i) => ({
       label: `Grid ${i + 1}`,
       note: "Content block",
-      accent: i === 0 ? "#3A7AC1" : "#555555",
+      accent: i === 0 ? "#6b8fc4" : "#555555",
       primary: i === 0,
     })),
   },

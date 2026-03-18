@@ -199,7 +199,7 @@ export function TableEditor({ content, onChange }: TableEditorProps) {
                             className="w-full bg-transparent px-3 py-2.5 text-[11px] font-semibold text-neutral-700 outline-none"
                           />
                           {columns.length > 1 && (
-                            <button type="button" onClick={() => removeColumn(ci)} className="pr-1 text-neutral-300 hover:text-red-500 shrink-0">
+                            <button type="button" onClick={() => removeColumn(ci)} className="pr-1 text-neutral-300 hover:text-destructive shrink-0">
                               <Trash2 size={9} />
                             </button>
                           )}
@@ -219,13 +219,13 @@ export function TableEditor({ content, onChange }: TableEditorProps) {
                             value={row[ci] ?? ""}
                             onChange={(e) => setCell(ri, ci, e.target.value)}
                             onKeyDown={(e) => handleCellKeyDown(e, ri, ci)}
-                            className="w-full bg-transparent px-3 py-2 text-[11px] text-neutral-700 outline-none focus:bg-blue-50/50"
+                            className="w-full bg-transparent px-3 py-2 text-[11px] text-neutral-700 outline-none focus:bg-primary/5"
                             placeholder="—"
                           />
                         </td>
                       ))}
                       <td className="border border-neutral-200 px-1 text-center">
-                        <button type="button" onClick={() => removeRow(ri)} className="text-neutral-300 hover:text-red-500">
+                        <button type="button" onClick={() => removeRow(ri)} className="text-neutral-300 hover:text-destructive">
                           <Trash2 size={10} />
                         </button>
                       </td>

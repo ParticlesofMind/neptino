@@ -177,8 +177,8 @@ export function ChatCard({ card, onRemove }: CardRenderProps) {
       </div>
 
       <div className="border-t border-neutral-200 bg-white px-4 py-3">
-        {error && <p className="mb-2 text-[11px] text-red-600">{error}</p>}
-        {limitReached && <p className="mb-2 text-[11px] text-amber-700">Turn limit reached for this product.</p>}
+        {error && <p className="mb-2 text-[11px] text-destructive">{error}</p>}
+        {limitReached && <p className="mb-2 text-[11px] text-[#7a6010]">Turn limit reached for this product.</p>}
         <div className="flex items-end gap-2">
           <textarea
             value={input}

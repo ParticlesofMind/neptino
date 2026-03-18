@@ -291,13 +291,13 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
                   className={[
                     "flex items-center gap-2.5 rounded-lg border px-3 py-2 text-[12px] transition-colors",
                     opt.correct
-                      ? "border-green-200 bg-green-50 text-green-800"
+                      ? "border-[#d6ede3] bg-[#d6ede3]/50 text-[#2e6b4a]"
                       : "border-border text-muted-foreground",
                   ].join(" ")}
                 >
                   <span className={[
                     "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
-                    opt.correct ? "border-green-500 bg-green-500" : "border-border",
+                    opt.correct ? "border-[#5c9970] bg-[#5c9970]" : "border-border",
                   ].join(" ")}>
                     {opt.correct && <Check className="h-2.5 w-2.5 text-white" />}
                   </span>
@@ -315,8 +315,8 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
 
           {interactionType === "true-false" && (
             <div className="flex gap-2">
-              <div className={["flex-1 rounded-lg border px-3 py-2 text-center text-[13px] font-semibold transition-colors", tfCorrect ? "border-green-200 bg-green-50 text-green-700" : "border-border text-muted-foreground"].join(" ")}>True</div>
-              <div className={["flex-1 rounded-lg border px-3 py-2 text-center text-[13px] font-semibold transition-colors", !tfCorrect ? "border-red-200 bg-red-50 text-red-700" : "border-border text-muted-foreground"].join(" ")}>False</div>
+              <div className={["flex-1 rounded-lg border px-3 py-2 text-center text-[13px] font-semibold transition-colors", tfCorrect ? "border-[#d6ede3] bg-[#d6ede3]/50 text-[#2e6b4a]" : "border-border text-muted-foreground"].join(" ")}>True</div>
+              <div className={["flex-1 rounded-lg border px-3 py-2 text-center text-[13px] font-semibold transition-colors", !tfCorrect ? "border-[#f0d8d8] bg-[#f0d8d8]/50 text-[#8a3030]" : "border-border text-muted-foreground"].join(" ")}>False</div>
             </div>
           )}
 
@@ -414,7 +414,7 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       return (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Gamepad2 className="h-4 w-4 text-violet-500" />
+            <Gamepad2 className="h-4 w-4 text-[#6b8fc4]" />
             <span className="text-[12px] font-semibold text-foreground">{gameLabels[gameType] ?? gameType}</span>
             {timeLimit > 0 && (
               <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{timeLimit}s</span>
@@ -509,13 +509,13 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       return (
         <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
           <div className="flex items-center gap-1 border-b border-border bg-muted/20 px-3 py-2">
-            <span className="h-2 w-2 rounded-full bg-rose-300" />
-            <span className="h-2 w-2 rounded-full bg-amber-300" />
-            <span className="h-2 w-2 rounded-full bg-emerald-300" />
+            <span className="h-2 w-2 rounded-full bg-[#b87070]" />
+            <span className="h-2 w-2 rounded-full bg-[#a89450]" />
+            <span className="h-2 w-2 rounded-full bg-[#5c9970]" />
             <span className="ml-2 text-[10px] font-medium text-muted-foreground">TipTap workspace</span>
           </div>
           <div className="space-y-2 px-4 py-3">
-            <div className="h-3 w-24 rounded bg-sky-100" />
+            <div className="h-3 w-24 rounded bg-[#dbe8f6]" />
             <p className="text-[12px] leading-6 text-muted-foreground line-clamp-5">
               {plain || "A barebones rich-text writing area for notes, drafting, and guided responses."}
             </p>
@@ -533,7 +533,7 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
         <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-3 py-2">
             <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">CodeMirror</span>
-            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-medium text-emerald-200">
+            <span className="rounded-full border border-[#5c9970]/30 bg-[#5c9970]/15 px-2 py-0.5 text-[9px] font-medium text-[#5c9970]">
               {language}
             </span>
           </div>
@@ -559,9 +559,9 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             <span className="text-[10px] text-muted-foreground">Infinite canvas</span>
           </div>
           <div className="relative h-40 overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.08),transparent_35%),linear-gradient(rgba(148,163,184,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.15)_1px,transparent_1px)] bg-[length:auto,24px_24px,24px_24px]">
-            <div className="absolute left-6 top-6 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] text-sky-800 shadow-sm">Main idea</div>
-            <div className="absolute right-8 top-10 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800 shadow-sm">Sketch</div>
-            <div className="absolute bottom-6 left-1/3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 shadow-sm">Notes</div>
+            <div className="absolute left-6 top-6 rounded-lg border border-[#dbe8f6] bg-[#dbe8f6]/80 px-3 py-2 text-[11px] text-[#3a6ea0] shadow-sm">Main idea</div>
+            <div className="absolute right-8 top-10 rounded-full border border-[#d6ede3] bg-[#d6ede3]/80 px-3 py-2 text-[11px] text-[#2e6b4a] shadow-sm">Sketch</div>
+            <div className="absolute bottom-6 left-1/3 rounded-lg border border-[#f0e8cc] bg-[#f0e8cc]/80 px-3 py-2 text-[11px] text-[#7a6010] shadow-sm">Notes</div>
           </div>
         </div>
       )

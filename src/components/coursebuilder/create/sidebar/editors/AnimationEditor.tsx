@@ -180,8 +180,8 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
                     </div>
                   )}
                   {loadError && (
-                    <div className="flex aspect-[4/3] items-center justify-center rounded-[28px] border border-red-200 bg-red-50">
-                      <span className="text-[11px] text-red-500">Failed to load — check the URL</span>
+                    <div className="flex aspect-[4/3] items-center justify-center rounded-[28px] border border-destructive/20 bg-destructive/5">
+                      <span className="text-[11px] text-destructive">Failed to load — check the URL</span>
                     </div>
                   )}
                   {lottieData && !loading && !loadError && (

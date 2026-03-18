@@ -18,9 +18,9 @@ export function EditorNoticeBanner() {
   if (!notice) return null
 
   return (
-    <div className="pointer-events-none absolute right-4 top-4 z-40 max-w-[420px] rounded-md border border-amber-300 bg-amber-50 px-3 py-2 shadow-sm">
-      <p className="text-xs font-semibold text-amber-900">Placement rejected</p>
-      <p className="text-xs text-amber-800">{notice}</p>
+    <div className="pointer-events-none absolute right-4 top-4 z-40 max-w-[420px] rounded-md border border-[#a89450]/40 bg-[#a89450]/8 px-3 py-2 shadow-sm">
+      <p className="text-xs font-semibold text-[#7a6010]">Placement rejected</p>
+      <p className="text-xs text-[#7a6010]/80">{notice}</p>
     </div>
   )
 }

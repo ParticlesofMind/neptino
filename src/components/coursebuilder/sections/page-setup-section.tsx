@@ -213,7 +213,7 @@ export function PageSetupSection({
               {/* Bleed area */}
               {printOptions.bleed > 0 && (
                 <div
-                  className="absolute rounded-sm border border-dotted border-orange-400/50 bg-orange-400/5"
+                  className="absolute rounded-sm border border-dotted border-[#b87c5c]/50 bg-[#b87c5c]/5"
                   style={{
                     top:    `-${(printOptions.bleed / 10 / physH) * 100}%`,
                     bottom: `-${(printOptions.bleed / 10 / physH) * 100}%`,

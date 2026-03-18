@@ -153,7 +153,7 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
                       placeholder="Section heading"
                       className="min-h-10 flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] font-semibold text-neutral-700 outline-none focus:border-neutral-400"
                     />
-                    <button type="button" onClick={() => removeSection(i)} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 hover:bg-red-50 hover:text-red-500">
+                    <button type="button" onClick={() => removeSection(i)} className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 hover:bg-destructive/10 hover:text-destructive">
                       <Trash2 size={13} />
                     </button>
                   </div>

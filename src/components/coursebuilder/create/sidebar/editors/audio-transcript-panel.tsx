@@ -71,7 +71,7 @@ export function AudioTranscriptPanel({
       )}
 
       {error && (
-        <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[11px] leading-relaxed text-red-600">
+        <p className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-[11px] leading-relaxed text-destructive">
           {error}
         </p>
       )}
@@ -106,7 +106,7 @@ export function AudioTranscriptPanel({
                   <button
                     type="button"
                     onClick={() => onRemove(index)}
-                    className="p-0.5 text-neutral-400 transition-colors hover:text-red-500"
+                    className="p-0.5 text-neutral-400 transition-colors hover:text-destructive"
                     aria-label={`Remove transcript segment ${index + 1}`}
                   >
                     <Trash2 size={12} />

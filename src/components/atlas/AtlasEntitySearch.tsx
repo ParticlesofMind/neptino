@@ -5,7 +5,7 @@
  *
  * Combobox for finding Atlas Layer 1 entities. Used in:
  *   1. The TextEditor toolbar — to pick an entity for an inline annotation
- *   2. The NachschlageDrawer — to add an atlas_stub entry to the course
+ *   2. The AtlasDrawer — to add an atlas_stub entry to the course
  *
  * In production this would query the Atlas Supabase table. For now it resolves
  * against a small in-memory stub list plus a "create custom entry" escape hatch.
@@ -33,17 +33,17 @@ const STUB_ENTITIES: AtlasItem[] = [
 // ─── Entity type badge colour ──────────────────────────────────────────────────
 
 const ENTITY_TYPE_COLOURS: Record<EntityType, string> = {
-  Concept:     "bg-blue-100 text-blue-700",
-  Process:     "bg-teal-100 text-teal-700",
-  Instance:    "bg-orange-100 text-orange-700",
-  Person:      "bg-purple-100 text-purple-700",
-  State:       "bg-yellow-100 text-yellow-700",
-  Time:        "bg-rose-100 text-rose-700",
-  Environment: "bg-green-100 text-green-700",
-  Work:        "bg-amber-100 text-amber-700",
-  Technology:  "bg-indigo-100 text-indigo-700",
-  Institution: "bg-pink-100 text-pink-700",
-  Movement:    "bg-lime-100 text-lime-700",
+  Concept:     "bg-[#dbe8f6] text-[#3a6ea0]",
+  Process:     "bg-[#d6ede3] text-[#2e6b4a]",
+  Instance:    "bg-[#f0e0d4] text-[#7a4a2a]",
+  Person:      "bg-[#e0d8ee] text-[#5a3a80]",
+  State:       "bg-[#f0ead0] text-[#6b5520]",
+  Time:        "bg-[#f0d8d8] text-[#8a3030]",
+  Environment: "bg-[#d6ede3] text-[#2e6b4a]",
+  Work:        "bg-[#f0e6cc] text-[#7a5010]",
+  Technology:  "bg-[#dbe8f6] text-[#3a6ea0]",
+  Institution: "bg-[#ecd8ec] text-[#6a306a]",
+  Movement:    "bg-[#e0eed0] text-[#3a6020]",
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ export function AtlasEntitySearch({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-md border border-neutral-200 bg-white pl-8 pr-8 py-1.5 text-[12px] text-neutral-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+          className="w-full rounded-md border border-border bg-background pl-8 pr-8 py-1.5 text-[12px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
         />
         {query && (
           <button

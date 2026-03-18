@@ -32,7 +32,7 @@ import { MAKE_RESOURCE_ACCENT } from "./make-theme"
 const GROUP_ACCENT: Record<string, { icon: string; pill: string; pillActive: string; border: string; dot: string }> = {
   resources: MAKE_RESOURCE_ACCENT,
   tools:       { icon: "text-[#00ccb3]",  pill: "text-[#00ccb3]",  pillActive: "bg-[#00ccb3] text-white",  border: "border-[#00ccb3]/20 bg-[#00ccb3]/5",  dot: "bg-[#00ccb3]"  },
-  experiences: { icon: "text-amber-500", pill: "text-amber-600", pillActive: "bg-amber-500 text-white", border: "border-amber-200 bg-amber-50",         dot: "bg-amber-400" },
+  experiences: { icon: "text-[#a89450]", pill: "text-[#a89450]", pillActive: "bg-[#a89450] text-white", border: "border-[#a89450]/20 bg-[#a89450]/5", dot: "bg-[#a89450]" },
   layout:      { icon: "text-neutral-600", pill: "text-neutral-600", pillActive: "bg-neutral-600 text-white", border: "border-neutral-200 bg-neutral-50",     dot: "bg-neutral-400" },
 }
 
@@ -182,7 +182,7 @@ export function MakePanel() {
               className={[
                 "group flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-[12px] font-semibold transition-all active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none",
                 addedFeedback
-                  ? "border-emerald-600 bg-emerald-600 text-white shadow-[0_10px_24px_rgba(5,150,105,0.18)] hover:bg-emerald-600"
+                  ? "border-[#5c9970] bg-[#5c9970] text-white shadow-[0_10px_24px_rgba(92,153,112,0.18)] hover:bg-[#5c9970]"
                   : canAddToCanvas
                     ? "border-neutral-200 bg-white text-neutral-900 shadow-[0_8px_20px_rgba(15,23,42,0.08)] hover:-translate-y-px hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-[0_12px_24px_rgba(15,23,42,0.10)]"
                     : "border-neutral-200 bg-neutral-100 text-neutral-400 shadow-none",

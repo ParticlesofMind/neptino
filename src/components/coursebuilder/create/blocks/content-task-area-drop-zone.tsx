@@ -40,7 +40,7 @@ function InsertionLineSlot({
       className="relative h-2"
     >
       {isOver && (
-        <div className={`absolute inset-x-0 top-1/2 -translate-y-1/2 border-t ${isOver ? "border-blue-400" : "border-blue-200"}`} />
+        <div className={`absolute inset-x-0 top-1/2 -translate-y-1/2 border-t ${isOver ? "border-primary/60" : "border-primary/20"}`} />
       )}
     </div>
   )

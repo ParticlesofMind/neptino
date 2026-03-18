@@ -101,7 +101,7 @@ export function AudioWaveformPreview({
       />
 
       {audioError && (
-        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-700">
+        <p className="mt-3 rounded-lg border border-[#a89450]/30 bg-[#a89450]/5 px-3 py-2 text-[11px] leading-relaxed text-[#7a6010]">
           {audioError}
         </p>
       )}

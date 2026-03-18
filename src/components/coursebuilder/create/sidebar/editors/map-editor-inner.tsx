@@ -75,8 +75,8 @@ function MapEventBridge({
 // ── Choropleth color helper ───────────────────────────────────────────────────
 
 function scoreToColor(score: number): string {
-  const low = [219, 234, 254] // blue-100
-  const high = [30, 64, 175]  // blue-800
+  const low = [219, 232, 246] // #dbe8f6 entity-blue-light
+  const high = [58, 110, 160]  // #3a6ea0 entity-blue-dark
   const r = Math.round(low[0] + (high[0] - low[0]) * score)
   const g = Math.round(low[1] + (high[1] - low[1]) * score)
   const b = Math.round(low[2] + (high[2] - low[2]) * score)

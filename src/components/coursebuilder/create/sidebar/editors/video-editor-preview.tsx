@@ -108,7 +108,7 @@ export function VideoEditorPreview({
                   {captionsUrl && <track kind="captions" src={captionsUrl} default />}
                 </video>
                 {isHlsStream && (
-                  <p className={`px-5 py-3 text-[10px] ${streamStatus === "error" ? "text-red-500" : "text-neutral-500"}`}>
+                  <p className={`px-5 py-3 text-[10px] ${streamStatus === "error" ? "text-destructive" : "text-neutral-500"}`}>
                     {streamStatus === "hls" && "Adaptive streaming via hls.js"}
                     {streamStatus === "native" && "Adaptive streaming — native"}
                     {streamStatus === "error" && "HLS stream failed to load"}

@@ -25,8 +25,8 @@ const SEGMENT_ACTIVE: Record<SegmentVariant, string> = {
   dark: MAKE_BLUE_ACTIVE_SOFT,
   blue: MAKE_BLUE_ACTIVE_SOFT,
   teal: "bg-[#00ccb3] text-white",
-  amber: "bg-amber-500 text-white",
-  violet: "bg-violet-500 text-white",
+  amber: "bg-[#a89450] text-white",
+  violet: "bg-[#6b8fc4] text-white",
 }
 
 interface StudioSegmentProps<T extends string = string> {
@@ -252,7 +252,7 @@ export function StudioIconButton({ onClick, active, title, children, danger, sma
         active
           ? MAKE_BLUE_ACTIVE_SOFT
           : danger
-            ? "text-neutral-400 hover:bg-red-50 hover:text-red-500"
+            ? "text-neutral-400 hover:bg-destructive/10 hover:text-destructive"
             : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700",
       ].join(" ")}
     >
@@ -284,7 +284,7 @@ export function StudioActionButton({
     ghost: "text-neutral-600 hover:bg-neutral-100",
     outline: "border border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300",
     primary: `border ${MAKE_BLUE_BUTTON}`,
-    danger: "border border-red-200 text-red-600 hover:bg-red-50",
+    danger: "border border-destructive/30 text-destructive hover:bg-destructive/5",
   }[variant]
 
   return (

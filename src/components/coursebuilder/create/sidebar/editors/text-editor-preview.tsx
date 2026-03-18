@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react"
 
-import { AtlasEntitySearch } from "@/components/nachschlagewerk/AtlasEntitySearch"
+import { AtlasEntitySearch } from "@/components/atlas/AtlasEntitySearch"
 import type { AtlasItem } from "@/types/atlas"
 
 interface TextEditorPreviewProps {

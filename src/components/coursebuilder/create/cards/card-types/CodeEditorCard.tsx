@@ -67,7 +67,7 @@ export function CodeEditorCard({ card, onRemove }: CardRenderProps) {
           <h3 className="mt-1 text-sm font-semibold text-slate-100">{title}</h3>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
+          <span className="rounded-full border border-[#5c9970]/30 bg-[#5c9970]/15 px-2 py-0.5 text-[10px] font-medium text-[#5c9970]">
             CodeMirror
           </span>
           <select

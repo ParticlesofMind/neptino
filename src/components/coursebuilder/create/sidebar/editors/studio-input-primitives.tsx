@@ -75,7 +75,7 @@ export function StudioInput({
   ...props
 }: StudioInputProps) {
   const badgeClass = {
-    required: "bg-red-100 text-red-600",
+    required: "bg-destructive/10 text-destructive",
     optional: "bg-neutral-100 text-neutral-500",
     info: MAKE_BLUE_BADGE,
   }[badgeVariant]

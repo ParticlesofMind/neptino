@@ -105,7 +105,7 @@ function InsertionLineSlot({
       className="relative h-2"
     >
       {isOver && (
-        <div className={`absolute inset-x-0 top-1/2 -translate-y-1/2 border-t ${isOver ? "border-blue-400" : "border-blue-200"}`} />
+        <div className={`absolute inset-x-0 top-1/2 -translate-y-1/2 border-t ${isOver ? "border-primary/60" : "border-primary/20"}`} />
       )}
     </div>
   )
@@ -223,7 +223,7 @@ export function CanvasPage({
       className={[
         "bg-white shadow-md select-none",
         "ring-1",
-        isActive ? "ring-blue-400" : "ring-neutral-200",
+        isActive ? "ring-primary/50" : "ring-neutral-200",
       ]
         .filter(Boolean)
         .join(" ")}

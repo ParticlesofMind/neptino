@@ -60,7 +60,7 @@ export function DraggableUserCard({ card, onRemove }: { card: StudioCard; onRemo
         type="button"
         onClick={onRemove}
         title="Remove block"
-        className="absolute right-1.5 top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-neutral-200 text-neutral-500 hover:bg-red-100 hover:text-red-500 group-hover:flex transition-colors"
+        className="absolute right-1.5 top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-neutral-200 text-neutral-500 hover:bg-destructive/10 hover:text-destructive group-hover:flex transition-colors"
       >
         <X size={10} />
       </button>

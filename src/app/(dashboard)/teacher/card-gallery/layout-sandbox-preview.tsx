@@ -219,7 +219,7 @@ function ResizeHandle({ axis, dividerIndex, fractions, containerRef, onUpdate, o
         style={{
           opacity: (isHovered || isActiveDrag) ? 1 : 0,
           borderRadius: 2,
-          backgroundColor: "#60a5fa",
+          backgroundColor: "#6b8fc4",
           ...(isCol
             ? { left: "50%", top: 4, bottom: 4, width: 2, transform: "translateX(-50%)" }
             : { top: "50%", left: 4, right: 4, height: 2, transform: "translateY(-50%)" }),

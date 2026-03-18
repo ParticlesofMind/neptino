@@ -102,7 +102,7 @@ export function FilesBrowser() {
             <button
               type="button"
               onClick={() => setActiveCategory("layout")}
-              className="mb-2 w-full rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-left text-[9px] text-amber-700 transition-colors hover:bg-amber-100"
+              className="mb-2 w-full rounded border border-[#a89450]/30 bg-[#a89450]/5 px-2 py-1.5 text-left text-[9px] text-[#7a6010] transition-colors hover:bg-[#a89450]/10"
             >
               Start by placing a layout block. <span className="underline">Go to Layout</span>
             </button>

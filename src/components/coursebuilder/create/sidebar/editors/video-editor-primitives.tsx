@@ -30,8 +30,8 @@ interface ChapterEditRowProps {
 
 export function ProviderBadge({ provider }: ProviderBadgeProps) {
   const cfg = {
-    youtube: { label: "YouTube", dot: "bg-red-500", pill: "bg-red-100 text-red-700 border-red-200" },
-    vimeo: { label: "Vimeo", dot: "bg-blue-500", pill: "bg-blue-100 text-blue-700 border-blue-200" },
+    youtube: { label: "YouTube", dot: "bg-red-500", pill: "bg-[#f0d8d8] text-[#8a3030] border-[#f0d8d8]" },
+    vimeo: { label: "Vimeo", dot: "bg-blue-500", pill: "bg-[#dbe8f6] text-[#3a6ea0] border-[#dbe8f6]" },
     direct: { label: "Direct", dot: "bg-neutral-400", pill: "bg-neutral-100 text-neutral-600 border-neutral-200" },
   }[provider]
 
@@ -141,7 +141,7 @@ export function ChapterEditRow({ chapter, idx, onUpdate, onDelete }: ChapterEdit
       <button
         type="button"
         onClick={onDelete}
-        className="shrink-0 text-neutral-400 transition-colors hover:text-red-500"
+        className="shrink-0 text-neutral-400 transition-colors hover:text-destructive"
       >
         <Trash2 size={13} />
       </button>

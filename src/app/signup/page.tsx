@@ -137,8 +137,8 @@ export default function SignupPage() {
       }>
         <div className="flex min-h-[calc(100vh-3.75rem-56px)] items-center justify-center px-4 py-16 bg-gradient-to-b from-muted to-background">
           <div className="w-full max-w-[22rem] rounded-2xl border border-border bg-background shadow-[0_2px_20px_rgba(0,0,0,0.06)] p-8 text-center space-y-5">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#f0fdf4] border border-[#dcfce7]">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#d6ede3] border border-[#5c9970]/30">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5c9970" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>

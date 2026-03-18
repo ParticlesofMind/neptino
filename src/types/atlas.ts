@@ -320,11 +320,11 @@ export const ISCED_DOMAINS: ISCEDDomain[] = [
 ]
 
 // ═══════════════════════════════════════════════════════════════════════
-// NACHSCHLAGEWERK — Course-level persistent reference layer
+// ATLAS REFERENCE — Course-level persistent reference layer
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
- * The three kinds of Nachschlagewerk entry.
+ * The three kinds of Atlas reference entry.
  *
  * atlas_stub      — Auto-created when a teacher creates an inline entity reference.
  *                   Sourced from Atlas Layer 1; not teacher-authored.
@@ -332,18 +332,18 @@ export const ISCED_DOMAINS: ISCEDDomain[] = [
  *                   The global Atlas entry stays clean; course context is added here.
  * custom_entry    — Fully teacher-authored; no Atlas anchor (no wikidata_id).
  */
-export type NachschlageEntryKind = "atlas_stub" | "course_extension" | "custom_entry"
+export type AtlasReferenceEntryKind = "atlas_stub" | "course_extension" | "custom_entry"
 
-interface NachschlageEntryBase {
+interface AtlasReferenceEntryBase {
   id: string
   courseId: string
-  kind: NachschlageEntryKind
+  kind: AtlasReferenceEntryKind
   createdAt?: string
   updatedAt?: string
 }
 
 /** Atlas stub — a mirror of an AtlasItem, pulled in when the teacher first links it. */
-export interface NachschlageAtlasStub extends NachschlageEntryBase {
+export interface AtlasStubEntry extends AtlasReferenceEntryBase {
   kind: "atlas_stub"
   atlasItem: AtlasItem
 }
@@ -353,7 +353,7 @@ export interface NachschlageAtlasStub extends NachschlageEntryBase {
  * The teacher can add notes, course-specific examples, and additional context
  * without modifying the global Atlas entry.
  */
-export interface NachschlageCourseExtension extends NachschlageEntryBase {
+export interface AtlasCourseExtension extends AtlasReferenceEntryBase {
   kind: "course_extension"
   atlasItem: AtlasItem
   teacherNotes: string
@@ -365,7 +365,7 @@ export interface NachschlageCourseExtension extends NachschlageEntryBase {
  * Custom entry — fully teacher-authored with no Atlas anchor.
  * Goes through editorial review before becoming globally visible in Atlas.
  */
-export interface NachschlageCustomEntry extends NachschlageEntryBase {
+export interface AtlasCustomEntry extends AtlasReferenceEntryBase {
   kind: "custom_entry"
   title: string
   entityType: EntityType
@@ -378,10 +378,10 @@ export interface NachschlageCustomEntry extends NachschlageEntryBase {
   contributionStatus: AtlasContributionStatus
 }
 
-export type NachschlageEntry =
-  | NachschlageAtlasStub
-  | NachschlageCourseExtension
-  | NachschlageCustomEntry
+export type AtlasReferenceEntry =
+  | AtlasStubEntry
+  | AtlasCourseExtension
+  | AtlasCustomEntry
 
 // ═══════════════════════════════════════════════════════════════════════
 // ATLAS CONTRIBUTION MODEL
@@ -402,7 +402,7 @@ export interface AtlasContribution {
   teacherId: string
   courseId: string
   /** The custom entry this contribution promotes to Atlas */
-  entry: NachschlageCustomEntry
+  entry: AtlasCustomEntry
   status: AtlasContributionStatus
   /** Set when status is "rejected"; describes what needs to change */
   editorialFeedback?: string

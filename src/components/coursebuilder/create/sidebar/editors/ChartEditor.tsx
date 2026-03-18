@@ -162,7 +162,7 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
                             className="w-full min-w-[70px] bg-transparent px-3 py-2 text-[11px] font-semibold text-neutral-700 outline-none"
                           />
                           {ci > 1 && (
-                            <button type="button" onClick={() => removeColumn(ci)} className="pr-1 text-neutral-300 hover:text-red-500">
+                            <button type="button" onClick={() => removeColumn(ci)} className="pr-1 text-neutral-300 hover:text-destructive">
                               <Trash2 size={10} />
                             </button>
                           )}
@@ -187,7 +187,7 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
                         </td>
                       ))}
                       <td className="border border-neutral-200 px-1">
-                        <button type="button" onClick={() => removeRow(ri)} className="text-neutral-300 hover:text-red-500">
+                        <button type="button" onClick={() => removeRow(ri)} className="text-neutral-300 hover:text-destructive">
                           <Trash2 size={11} />
                         </button>
                       </td>

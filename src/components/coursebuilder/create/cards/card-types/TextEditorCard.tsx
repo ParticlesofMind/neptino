@@ -21,7 +21,7 @@ function ToolbarButton({ active, onClick, children }: ToolbarButtonProps) {
       className={[
         "flex h-8 w-8 items-center justify-center rounded-md border text-neutral-600 transition-colors",
         active
-          ? "border-sky-200 bg-sky-50 text-sky-700"
+          ? "border-[#dbe8f6] bg-[#dbe8f6]/50 text-[#3a6ea0]"
           : "border-neutral-200 bg-white hover:bg-neutral-50",
       ].join(" ")}
     >

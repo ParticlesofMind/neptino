@@ -75,7 +75,7 @@ export function AudioChaptersPanel({
               >
                 Seek
               </button>
-              <button type="button" onClick={() => onRemove(index)} className="ml-0.5 p-0.5 text-neutral-400 transition-colors hover:text-red-500">
+              <button type="button" onClick={() => onRemove(index)} className="ml-0.5 p-0.5 text-neutral-400 transition-colors hover:text-destructive">
                 <Trash2 size={12} />
               </button>
             </div>

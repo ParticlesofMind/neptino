@@ -82,7 +82,7 @@ export function TimelineEditor({ content, onChange }: TimelineEditorProps) {
                   <button
                     type="button"
                     onClick={() => removeEvent(i)}
-                    className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 hover:bg-red-50 hover:text-red-500"
+                    className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 hover:bg-destructive/10 hover:text-destructive"
                     aria-label="Remove event"
                   >
                     <Trash2 size={12} />

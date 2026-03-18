@@ -89,7 +89,7 @@ function WordMatchEditor({ pairs, onChange }: { pairs: Pair[]; onChange: (p: Pai
               placeholder="Definition / match"
               className={`min-h-10 flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
             />
-            <button type="button" onClick={() => removePair(i)} disabled={pairs.length <= 1} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-30">
+            <button type="button" onClick={() => removePair(i)} disabled={pairs.length <= 1} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-30">
               <Trash2 size={13} />
             </button>
           </div>
@@ -157,7 +157,7 @@ function DragOrderEditor({ items, onChange }: { items: string[]; onChange: (item
               placeholder={`Step ${i + 1}`}
               className={`min-h-10 flex-1 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
             />
-            <button type="button" onClick={() => removeItem(i)} disabled={items.length <= 2} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-30">
+            <button type="button" onClick={() => removeItem(i)} disabled={items.length <= 2} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-30">
               <Trash2 size={13} />
             </button>
           </div>

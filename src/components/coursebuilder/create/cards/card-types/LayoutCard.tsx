@@ -407,16 +407,16 @@ function LayoutSlot({
   const shouldPulse = isNonLayoutDrag && isCompatible && !isFull && slotCards.length === 0
 
   const borderClass =
-    isOver && isCompatible && !isFull ? "border-blue-400 bg-blue-50/50" :
-    isOver && (!isCompatible || isFull) ? "border-red-300 bg-red-50/30" :
+    isOver && isCompatible && !isFull ? "border-primary/50 bg-primary/5" :
+    isOver && (!isCompatible || isFull) ? "border-destructive/50 bg-destructive/5" :
     isDragActive && (!isCompatible || isFull) ? "border-neutral-200 bg-neutral-50/30 opacity-40" :
-    shouldPulse ? "border-blue-300 bg-blue-50/30 animate-pulse" :
+    shouldPulse ? "border-primary/30 bg-primary/5 animate-pulse" :
     "border-neutral-200 bg-neutral-50/60"
 
   const labelClass =
-    isOver && isCompatible && !isFull  ? "text-blue-400" :
-    isOver && (!isCompatible || isFull) ? "text-red-400" :
-    shouldPulse ? "text-blue-300" :
+    isOver && isCompatible && !isFull  ? "text-primary" :
+    isOver && (!isCompatible || isFull) ? "text-destructive" :
+    shouldPulse ? "text-primary/60" :
     "text-neutral-300"
 
   const labelText =
