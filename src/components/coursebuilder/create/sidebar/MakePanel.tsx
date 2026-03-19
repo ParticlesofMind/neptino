@@ -4,7 +4,7 @@
  * Make Panel — redesigned
  *
  * Two-column layout:
- *   Left nav  (w-72) — grouped card type list with search + filters
+ *   Left nav  (max 26rem) — grouped card type list with search + filters
  *   Editor    (flex-1) — per-type rich editor (EditorShell)
  *
  * Motion toolbar strip rendered at bottom for animation-capable types.
@@ -166,13 +166,13 @@ export function MakePanel() {
             </div>
             <div className="min-w-0">
               <p className="truncate text-[12px] font-bold text-neutral-900">{meta.label}</p>
-              <p className="text-[9px] text-neutral-400">{GROUP_LABEL[selectedSpec?.group ?? "resources"]} block</p>
+              <p className="text-[10px] uppercase tracking-wide text-neutral-400">{GROUP_LABEL[selectedSpec?.group ?? "resources"]} block</p>
             </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
             {!canAddToCanvas && (
-              <p className="hidden text-[11px] text-neutral-400 lg:block">Add a card title and content to enable this block.</p>
+              <p className="hidden text-xs text-neutral-400 lg:block">Add a card title and content to enable this block.</p>
             )}
             <button
               type="button"
@@ -180,7 +180,7 @@ export function MakePanel() {
               title={canAddToCanvas ? "Add block to canvas" : "Complete this block before adding it to the canvas"}
               disabled={!canAddToCanvas}
               className={[
-                "group flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-[12px] font-semibold transition-all active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none",
+                "group flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-[12px] font-semibold transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none",
                 addedFeedback
                   ? "border-[#5c9970] bg-[#5c9970] text-white shadow-[0_10px_24px_rgba(92,153,112,0.18)] hover:bg-[#5c9970]"
                   : canAddToCanvas

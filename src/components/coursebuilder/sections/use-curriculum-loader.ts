@@ -52,7 +52,7 @@ export interface CurriculumLoaderSetters {
   setScheduleEntries: (v: ScheduleGeneratedEntry[]) => void
   setSessionRows: (v: CurriculumSessionRow[]) => void
   setReadinessIssues: (v: string[]) => void
-  setMissing: (v: { essentials: boolean; schedule: boolean; curriculum: boolean }) => void
+  setMissing: (v: { essentials: boolean; students: boolean; schedule: boolean; curriculum: boolean }) => void
   generationSettingsRef: MutableRefObject<Record<string, unknown> | null>
 }
 
@@ -187,12 +187,15 @@ async function loadCourse(courseId: string, s: CurriculumLoaderSetters) {
   const essentialsReady =
     Boolean((data.course_name as string | undefined)?.trim()) &&
     Boolean((data.course_description as string | undefined)?.trim())
+  const studentsReady = totalStudents > 0
   if (!essentialsReady) issues.push("Complete Essentials (title and description).")
+  if (!studentsReady) issues.push("Add at least 1 student in Students.")
   if (loadedScheduleEntries.length === 0) issues.push("Generate a schedule with at least 1 session.")
   if (syncedRows.length === 0) issues.push("Set up curriculum session rows in Curriculum.")
   s.setReadinessIssues(issues)
   s.setMissing({
     essentials: !essentialsReady,
+    students: !studentsReady,
     schedule: loadedScheduleEntries.length === 0,
     curriculum: syncedRows.length === 0,
   })

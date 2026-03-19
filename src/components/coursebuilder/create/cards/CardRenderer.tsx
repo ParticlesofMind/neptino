@@ -74,7 +74,7 @@ export function CardRenderer({ card, onRemove, mode = "editor", draggable, sourc
   }
 
   const selectionRing = mode === "editor" && isSelected
-    ? "ring-2 ring-blue-500 ring-offset-1 rounded"
+    ? "ring-2 ring-primary ring-offset-1 rounded"
     : undefined
 
   const content = Component

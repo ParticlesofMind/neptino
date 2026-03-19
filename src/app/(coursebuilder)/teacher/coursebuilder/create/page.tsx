@@ -3,20 +3,34 @@
 /**
  * /teacher/coursebuilder/create?courseId=<uuid>
  *
- * Thin route wrapper — reads courseId from the URL and delegates to
- * CreateEditorLayout, which is also embedded inside the main wizard.
+ * Redirect shim — normalizes legacy create links to the canonical
+ * /teacher/coursebuilder?id=<uuid>&view=create route.
  */
 
 import { Suspense } from "react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
-import { CreateEditorLayout } from "@/components/coursebuilder/create/CreateEditorLayout"
 
 function CreatePageInner() {
+  const router = useRouter()
   const courseId = useSearchParams().get("courseId")
+
+  useEffect(() => {
+    const next = new URLSearchParams(window.location.search)
+    next.delete("courseId")
+    if (courseId) next.set("id", courseId)
+    next.set("view", "create")
+
+    const query = next.toString()
+    router.replace(`/teacher/coursebuilder${query ? `?${query}` : ""}`)
+  }, [courseId, router])
 
   return (
     <div className="flex flex-col h-screen overflow-x-visible overflow-y-hidden">
-      <CreateEditorLayout courseId={courseId} />
+      <div className="flex h-full items-center justify-center">
+        <span className="text-sm text-muted-foreground">Opening create editor…</span>
+      </div>
     </div>
   )
 }

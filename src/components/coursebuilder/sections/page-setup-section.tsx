@@ -7,6 +7,10 @@ import {
   updateCourseById,
   useCourseRowLoader,
   useDebouncedChangeSave,
+  SEGMENTED_CONTROL_GROUP_CLASS,
+  SEGMENTED_CONTROL_BUTTON_BASE_CLASS,
+  SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS,
+  SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS,
   SetupSection,
   SetupPanelLayout,
   SetupColumn,
@@ -51,7 +55,6 @@ export function PageSetupSection({
 
   // ── Print options ──
   const [printOptions, setPrintOptions] = useState<PrintOptions>(DEFAULT_PRINT_OPTIONS)
-  const headerFooter = { pageNumbers: true, courseTitle: false, date: false, studentName: false }
 
   const handlePrintChange = useCallback(
     <K extends keyof PrintOptions>(key: K, val: PrintOptions[K]) =>
@@ -73,6 +76,7 @@ export function PageSetupSection({
       left:   margins.left   * factor,
     }
     const cfg = computePageConfig(size, orientation, pageCount, marginsMm)
+    const headerFooter = { pageNumbers: true, courseTitle: false, date: false, studentName: false }
 
     const pageSettings = {
       page_size:        size,
@@ -100,7 +104,7 @@ export function PageSetupSection({
     if (!error) {
       onSaved?.(cfg)
     }
-  }, [courseId, units, margins, size, orientation, pageCount, onSaved, printOptions, headerFooter])
+  }, [courseId, units, margins, size, orientation, pageCount, onSaved, printOptions])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
 
@@ -119,16 +123,16 @@ export function PageSetupSection({
           {/* Units toggle */}
           <div>
             <FieldLabel>Units</FieldLabel>
-            <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+            <div className={SEGMENTED_CONTROL_GROUP_CLASS}>
               {(["cm", "inches"] as const).map((u) => (
                 <button
                   key={u}
                   type="button"
                   onClick={() => setUnits(u)}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                  className={`${SEGMENTED_CONTROL_BUTTON_BASE_CLASS} ${
                     units === u
-                      ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS
+                      : SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS
                   }`}
                 >
                   {u === "cm" ? "Metric (cm)" : "Imperial (in)"}
@@ -140,16 +144,16 @@ export function PageSetupSection({
           {/* Page size toggle */}
           <div>
             <FieldLabel>Page Size</FieldLabel>
-            <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+            <div className={SEGMENTED_CONTROL_GROUP_CLASS}>
               {(["a4", "us-letter"] as const).map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setSize(s)}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                  className={`${SEGMENTED_CONTROL_BUTTON_BASE_CLASS} ${
                     size === s
-                      ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS
+                      : SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS
                   }`}
                 >
                   {s === "a4" ? "A4" : "US Letter"}
@@ -162,16 +166,16 @@ export function PageSetupSection({
           {/* Orientation toggle */}
           <div>
             <FieldLabel>Orientation</FieldLabel>
-            <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+            <div className={SEGMENTED_CONTROL_GROUP_CLASS}>
               {(["portrait", "landscape"] as const).map((o) => (
                 <button
                   key={o}
                   type="button"
                   onClick={() => setOrientation(o)}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition ${
+                  className={`${SEGMENTED_CONTROL_BUTTON_BASE_CLASS} capitalize ${
                     orientation === o
-                      ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS
+                      : SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS
                   }`}
                 >
                   {o}
@@ -213,7 +217,7 @@ export function PageSetupSection({
               {/* Bleed area */}
               {printOptions.bleed > 0 && (
                 <div
-                  className="absolute rounded-sm border border-dotted border-[#b87c5c]/50 bg-[#b87c5c]/5"
+                  className="absolute rounded-sm border border-dotted border-amber-600/40 bg-amber-500/10"
                   style={{
                     top:    `-${(printOptions.bleed / 10 / physH) * 100}%`,
                     bottom: `-${(printOptions.bleed / 10 / physH) * 100}%`,

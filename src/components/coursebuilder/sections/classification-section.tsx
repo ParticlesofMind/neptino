@@ -24,16 +24,7 @@ import iscedData from "@/data/isced2011.json"
 import { OverlineLabel } from "@/components/ui/overline-label"
 import { CLASS_YEARS, CURRICULAR_FRAMEWORKS } from "./classification-section-data"
 import { ClassificationContextFields } from "./classification-context-fields"
-
-type CourseCreatedData = {
-  title: string
-  subtitle: string
-  description: string
-  language: string
-  courseType: string
-  imageName: string | null
-  imageUrl: string | null
-}
+import type { CourseCreatedData } from "@/components/coursebuilder/builder-types"
 
 type ClassificationRow = {
   classification_data: Record<string, string> | null

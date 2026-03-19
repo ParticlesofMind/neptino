@@ -96,7 +96,6 @@ function PreviewProgram({
           </thead>
           <tbody>
             {rows.map((row, i) => (
-              // eslint-disable-next-line react/no-array-index-key
               <tr key={i} className={i % 2 === 0 ? TR_ODD : TR_EVEN}>
                 {showTopic  && <td className={TD}>{row.topic}</td>}
                 {showObj    && <td className={TD}>{row.obj}</td>}
@@ -151,7 +150,6 @@ function PreviewResources({
           </thead>
           <tbody>
             {Array.from({ length: taskCount }, (_, i) => (
-              // eslint-disable-next-line react/no-array-index-key
               <tr key={i} className={i % 2 === 0 ? TR_ODD : TR_EVEN}>
                 {showTask    && <td className={TD}>Task {i + 1}</td>}
                 {showType    && <td className={TD}>{TYPES[i % TYPES.length]}</td>}
@@ -171,9 +169,9 @@ function PreviewResources({
 
 // Subtle left-border accent colours to differentiate content slot types
 const SLOT_ACCENTS = {
-  instruction: "border-l-2 border-l-sky-400/60",
-  practice:    "border-l-2 border-l-[#6b8fc4]/60",
-  feedback:    "border-l-2 border-l-[#5c9970]/60",
+  instruction: "border-l-2 border-l-primary/60",
+  practice:    "border-l-2 border-l-accent-foreground/40",
+  feedback:    "border-l-2 border-l-secondary/60",
 }
 
 /**
@@ -207,16 +205,13 @@ function PreviewTaskBlock({
       </div>
       <div className="p-3">
         {Array.from({ length: topicCount }, (_, topicIdx) => (
-          // eslint-disable-next-line react/no-array-index-key
           <div key={topicIdx}>
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-foreground/60">
               Topic {topicIdx + 1}
             </p>
             {Array.from({ length: objectiveCount }, (__, objIdx) => (
-              // eslint-disable-next-line react/no-array-index-key
               <div key={objIdx}>
                 {Array.from({ length: taskCount }, (___, taskIdx) => (
-                  // eslint-disable-next-line react/no-array-index-key
                   <div key={taskIdx} className="mb-2">
                     <p className="mb-1.5 text-[10px] text-muted-foreground">
                       Obj. {objIdx + 1} &rsaquo; Task {taskIdx + 1}
@@ -290,7 +285,6 @@ function PreviewScoring({
           </thead>
           <tbody>
             {Array.from({ length: taskCount }, (_, i) => (
-              // eslint-disable-next-line react/no-array-index-key
               <tr key={i} className={i % 2 === 0 ? TR_ODD : TR_EVEN}>
                 {showCriteria  && <td className={TD}>Task {i + 1}</td>}
                 {showPoints    && <td className={TD}>{(i + 1) * 5}</td>}

@@ -136,7 +136,7 @@ export function LLMSection({ courseId }: { courseId: string | null }) {
             <p className="text-xs text-muted-foreground">Selected model</p>
             <p className="mt-0.5 text-sm font-medium text-foreground">{selectedModelInfo.displayName}</p>
             {selectedModelInfo.speed === "slow" && (
-              <p className="mt-1 text-xs text-[#a89450]">
+              <p className="mt-1 text-xs text-amber-700">
                 High compute usage: this model can heavily load CPU/GPU on laptops. Prefer Gemma 3, Phi 3, or Mistral for cooler, faster runs.
               </p>
             )}

@@ -3,11 +3,8 @@
 import type { CardType } from "../types"
 import {
   MAKE_BLUE_ACTIVE,
-  MAKE_BLUE_BORDER_HEX,
   MAKE_BLUE_BUTTON,
   MAKE_BLUE_INPUT_FOCUS,
-  MAKE_BLUE_SURFACE_HEX,
-  MAKE_BLUE_TEXT_HEX,
 } from "./make-theme"
 import { getStudioProfile, type StudioField } from "./make-studio-tools"
 
@@ -93,7 +90,7 @@ function OptionField({
 }) {
   return (
     <label key={field.key} className="block space-y-1">
-      <span className="text-[11px] font-medium text-neutral-600">{field.label}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">{field.label}</span>
 
       {field.kind === "text" && (
         <TextInput
@@ -164,7 +161,7 @@ function OptionField({
             type="button"
             disabled={field.disabled}
             className={[
-              "min-h-10 rounded-md border px-3 py-2.5 text-[11px] font-medium transition-colors",
+              "h-9 rounded-md border px-3 py-2 text-[11px] font-medium transition-colors",
               field.disabled
                 ? "cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400"
                 : MAKE_BLUE_BUTTON,
@@ -193,7 +190,7 @@ export function MakeStudioToolsPanel({ cardType, content, onChange, layout = "su
 
         <div className="space-y-2 px-3 py-3">
           <label className="block space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Media name</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Media name</span>
             <TextInput
               value={typeof content.title === "string" ? content.title : ""}
               placeholder="Name"
@@ -201,7 +198,7 @@ export function MakeStudioToolsPanel({ cardType, content, onChange, layout = "su
             />
           </label>
           <label className="block space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Subtitle</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Subtitle</span>
             <TextInput
               value={typeof content.subtitle === "string" ? content.subtitle : ""}
               placeholder="Subtitle"
@@ -209,19 +206,19 @@ export function MakeStudioToolsPanel({ cardType, content, onChange, layout = "su
             />
           </label>
           <label className="block space-y-1">
-            <span className="text-[11px] font-medium text-neutral-600">Description</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Description</span>
             <textarea
               value={typeof content.description === "string" ? content.description : ""}
               rows={3}
               placeholder="Description"
               onChange={(event) => onChange("description", event.target.value)}
-              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+              className={`w-full rounded-md border border-neutral-200 bg-white px-3 py-2.5 text-[12px] text-neutral-700 outline-none ${MAKE_BLUE_INPUT_FOCUS}`}
             />
           </label>
           {supportsUpload && (
             <button
               type="button"
-              className={`min-h-10 rounded-md border px-3 py-2.5 text-[11px] font-medium transition-colors ${MAKE_BLUE_BUTTON}`}
+              className={`h-9 rounded-md border px-3 py-2 text-[11px] font-medium transition-colors ${MAKE_BLUE_BUTTON}`}
             >
               {uploadLabelFor(cardType)}
             </button>
@@ -241,7 +238,7 @@ export function MakeStudioToolsPanel({ cardType, content, onChange, layout = "su
       <div className="grid grid-cols-1 gap-2 p-3 md:grid-cols-3">
         {profile.sections.map((section) => (
           <section key={section.title} className="space-y-2 min-w-0">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">{section.title}</h3>
+            <h3 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">{section.title}</h3>
             <div className="space-y-2">
               {section.fields
                 .filter((field) => !inlineFieldKeys.has(field.key))

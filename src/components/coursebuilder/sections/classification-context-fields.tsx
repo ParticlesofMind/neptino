@@ -45,7 +45,7 @@ export function ClassificationContextFields({
           onChange={(e) => setPriorKnowledge(e.target.value.slice(0, 500))}
           placeholder="e.g., Students have completed Algebra I and basic geometry. They can solve linear equations and understand coordinate planes."
           rows={3}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary resize-none"
+          className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
         />
         <p className="mt-1 text-right text-[11px] text-muted-foreground">{priorKnowledge.length}/500</p>
       </div>
@@ -67,7 +67,7 @@ export function ClassificationContextFields({
               onChange={(e) => keyTerms.updateDraft(e.target.value)}
               onKeyDown={keyTerms.onDraftKeyDown}
               placeholder="e.g., photosynthesis"
-              className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
+              className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
             />
             <button
               type="button"
@@ -99,7 +99,7 @@ export function ClassificationContextFields({
               onChange={(e) => mandatoryTopics.updateDraft(e.target.value)}
               onKeyDown={mandatoryTopics.onDraftKeyDown}
               placeholder="e.g., Cell Division and Mitosis"
-              className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
+              className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
             />
             <button
               type="button"
@@ -121,7 +121,7 @@ export function ClassificationContextFields({
           onChange={(e) => setApplicationContext(e.target.value.slice(0, 500))}
           placeholder="e.g., This biology course is taught through a medical sciences lens. Examples should use clinical scenarios, patient cases, and healthcare applications."
           rows={3}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary resize-none"
+          className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
         />
         <p className="mt-1 text-right text-[11px] text-muted-foreground">{applicationContext.length}/500</p>
       </div>

@@ -201,10 +201,10 @@ export function PedagogySection({ courseId }: { courseId: string | null }) {
                 backgroundSize: "32px 32px",
               }}
             />
-            <div className="pointer-events-none absolute left-0 top-0 h-1/2 w-1/2 bg-[#6b8fc4]/5" />
-            <div className="pointer-events-none absolute right-0 top-0 h-1/2 w-1/2 bg-[#5c9970]/5" />
-            <div className="pointer-events-none absolute left-0 bottom-0 h-1/2 w-1/2 bg-[#a89450]/5" />
-            <div className="pointer-events-none absolute right-0 bottom-0 h-1/2 w-1/2 bg-[#b87070]/5" />
+            <div className="pointer-events-none absolute left-0 top-0 h-1/2 w-1/2 bg-primary/5" />
+            <div className="pointer-events-none absolute right-0 top-0 h-1/2 w-1/2 bg-secondary/5" />
+            <div className="pointer-events-none absolute left-0 bottom-0 h-1/2 w-1/2 bg-amber-500/10" />
+            <div className="pointer-events-none absolute right-0 bottom-0 h-1/2 w-1/2 bg-destructive/10" />
             <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-foreground/25" />
             <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-foreground/25" />
             <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-foreground/70">Essentialist</span>

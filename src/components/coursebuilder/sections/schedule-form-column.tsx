@@ -6,7 +6,7 @@ import {
   PRIMARY_ACTION_BUTTON_CLASS,
   SECONDARY_ACTION_BUTTON_CLASS,
 } from "@/components/coursebuilder/layout-primitives"
-import { FieldLabel, TextInput } from "@/components/coursebuilder/form-primitives"
+import { FieldLabel, SelectInput, TextInput } from "@/components/coursebuilder/form-primitives"
 import { DAYS, type ScheduleMode, type RepeatUnit } from "./schedule-section-utils"
 
 export interface ScheduleFormColumnProps {
@@ -116,16 +116,15 @@ export function ScheduleFormColumn({
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <FieldLabel>Repeats</FieldLabel>
-            <select
+            <SelectInput
               value={repeatUnit}
               onChange={(e) => setRepeatUnit(e.target.value as RepeatUnit)}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
             >
               <option value="none">No Repeat</option>
               <option value="weeks">Every X Weeks</option>
               <option value="months">Every X Months</option>
               <option value="years">Every X Years</option>
-            </select>
+            </SelectInput>
           </div>
           {repeatUnit !== "none" && (
             <>
@@ -210,7 +209,7 @@ export function ScheduleFormColumn({
             onChange={(e) => setImportText(e.target.value)}
             rows={5}
             placeholder="Paste one session per line, e.g. 12.03.2026 09:00-10:30"
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           />
           <button type="button" onClick={() => applyImportedSchedule(importText)} className={PRIMARY_ACTION_BUTTON_CLASS}>
             Apply Imported Schedule

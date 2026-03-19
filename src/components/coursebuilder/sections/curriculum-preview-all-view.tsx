@@ -45,7 +45,7 @@ export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPrev
                           prev.map((cur, ci) => ci === sessionIndex ? { ...cur, title: e.target.value } : cur),
                         )
                       }
-                      className="mb-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      className="mb-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                     />
                     <div className="space-y-2.5">
                       {Array.from({ length: row.topics ?? topics }, (_, topicIdx) => (
@@ -65,7 +65,7 @@ export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPrev
                                   ),
                                 )
                               }}
-                              className="flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                              className="flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                             />
                           </div>
                           <div className="ml-1.5 space-y-2">
@@ -87,7 +87,7 @@ export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPrev
                                         ),
                                       )
                                     }}
-                                    className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                    className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                                   />
                                 </div>
                                 <div className="ml-1.5 space-y-1.5">
@@ -108,7 +108,7 @@ export function CurriculumPreviewAllView({ modulesForPreview, sessionRowsForPrev
                                             ),
                                           )
                                         }}
-                                        className="flex-1 rounded-md border border-border bg-background px-2 py-0.5 text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                        className="flex-1 rounded-md border border-border bg-background px-2 py-0.5 text-[11px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                                       />
                                     </div>
                                   ))}

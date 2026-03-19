@@ -2,7 +2,12 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { SetupSection, deleteCourseById } from "@/components/coursebuilder"
+import {
+  SetupSection,
+  deleteCourseById,
+  DANGER_ACTION_BUTTON_CLASS,
+  PRIMARY_ACTION_BUTTON_CLASS,
+} from "@/components/coursebuilder"
 
 export function AdvancedSection({ courseId }: { courseId: string | null }) {
   const router = useRouter()
@@ -35,7 +40,7 @@ export function AdvancedSection({ courseId }: { courseId: string | null }) {
             type="button"
             disabled={!courseId}
             onClick={() => setConfirm(true)}
-            className="rounded-md border border-destructive bg-background px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive hover:text-destructive-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className={DANGER_ACTION_BUTTON_CLASS}
           >
             Delete Course
           </button>
@@ -49,7 +54,7 @@ export function AdvancedSection({ courseId }: { courseId: string | null }) {
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="rounded-md border border-destructive bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                className={DANGER_ACTION_BUTTON_CLASS}
               >
                 {deleting ? "Deleting..." : "Yes, Delete Course"}
               </button>
@@ -57,7 +62,7 @@ export function AdvancedSection({ courseId }: { courseId: string | null }) {
                 type="button"
                 onClick={() => { setConfirm(false); setDeleteError(null) }}
                 disabled={deleting}
-                className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/30"
+                className={PRIMARY_ACTION_BUTTON_CLASS}
               >
                 Cancel
               </button>

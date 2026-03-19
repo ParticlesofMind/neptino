@@ -101,7 +101,7 @@ export function PricingSection({ courseId }: { courseId: string | null }) {
                 value={discountNotes}
                 onChange={(e) => setDiscountNotes(e.target.value)}
                 placeholder="Describe educator or early-bird discounts"
-                className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+                className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               />
             </div>
           </div>

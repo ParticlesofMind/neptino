@@ -55,7 +55,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("modules")
   const [lastAction, setLastAction] = useState<GenerationAction | null>(null)
   const [readinessIssues, setReadinessIssues] = useState<string[]>([])
-  const [missing, setMissing] = useState({ essentials: false, schedule: false, curriculum: false })
+  const [missing, setMissing] = useState({ essentials: false, students: false, schedule: false, curriculum: false })
   const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
 
   useCurriculumLoader(courseId, {
@@ -130,7 +130,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     setModuleNames, setSessionRows, setLastAction,
   })
 
-  const goToSection = (sectionId: "essentials" | "schedule" | "curriculum") => {
+  const goToSection = (sectionId: "essentials" | "students" | "schedule" | "curriculum") => {
     window.dispatchEvent(new CustomEvent("coursebuilder:navigate-section", { detail: { sectionId } }))
   }
 

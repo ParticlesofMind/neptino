@@ -105,14 +105,14 @@ export function MakePanelSidebar({
           type="button"
           onClick={() => onToggleSidebar(true)}
           title="Expand block library"
-          className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15"
         >
           <ChevronRight size={16} className="rotate-180" />
         </button>
         <button
           type="button"
           onClick={() => onToggleSidebar(true)}
-          className="mt-3 rounded-md px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground [writing-mode:vertical-rl] [text-orientation:mixed]"
+          className="mt-3 rounded-md px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15 [writing-mode:vertical-rl] [text-orientation:mixed]"
         >
           Blocks
         </button>
@@ -123,11 +123,11 @@ export function MakePanelSidebar({
   const isLibraryView = activeFilter === "library"
 
   return (
-    <div className="flex w-72 shrink-0 flex-col overflow-hidden border-r border-border bg-background">
+    <div className="flex w-full shrink flex-col overflow-hidden border-r border-border bg-background md:w-[26rem] md:min-w-[20rem] md:max-w-[26rem]">
       <div className="shrink-0 border-b border-border/50 px-4 pb-3 pt-4">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="text-[11px] font-bold tracking-tight text-foreground">Block library</p>
+            <p className="text-xs font-bold tracking-tight text-foreground">Block library</p>
             <p className="mt-0.5 text-[10px] text-muted-foreground/70">
               {isLibraryView ? "Browse saved blocks by project" : "Choose a block to configure"}
             </p>
@@ -136,7 +136,7 @@ export function MakePanelSidebar({
             type="button"
             onClick={() => onToggleSidebar(false)}
             title="Collapse block library"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted/60 hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           >
             <ChevronRight size={15} className="rotate-180" />
           </button>
@@ -157,7 +157,7 @@ export function MakePanelSidebar({
           placeholder={isLibraryView ? "Search saved blocks…" : "Search block types…"}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          className={`min-h-10 w-full rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-[12px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 ${MAKE_BLUE_INPUT_FOCUS}`}
+          className={`min-h-10 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-[12px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 ${MAKE_BLUE_INPUT_FOCUS}`}
         />
       </div>
 
@@ -171,7 +171,7 @@ export function MakePanelSidebar({
               type="button"
               onClick={() => onFilterChange(filter)}
               className={[
-                "flex min-h-8 flex-1 items-center justify-center rounded-md px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all",
+                "flex min-h-8 flex-1 items-center justify-center rounded-md px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15",
                 isActive
                   ? groupAccent
                     ? groupAccent.pillActive
@@ -201,7 +201,7 @@ export function MakePanelSidebar({
                   <button
                     type="button"
                     onClick={() => setExpandedProjects((prev) => ({ ...prev, [group.id]: !isExpanded }))}
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-background"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-background focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   >
                     {isExpanded ? <ChevronDown size={14} className="shrink-0 text-muted-foreground" /> : <ChevronRight size={14} className="shrink-0 text-muted-foreground" />}
                     <FolderOpen size={14} className="shrink-0 text-muted-foreground/70" />
@@ -228,7 +228,7 @@ export function MakePanelSidebar({
                               const key = `${group.id}:${cardTypeGroup.id}`
                               setExpandedTypeGroups((prev) => ({ ...prev, [key]: !(prev[key] ?? true) }))
                             }}
-                            className="mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/30"
+                            className="mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/30 focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                           >
                             {(expandedTypeGroups[`${group.id}:${cardTypeGroup.id}`] ?? true)
                               ? <ChevronDown size={12} className="shrink-0 text-muted-foreground/70" />
@@ -250,7 +250,7 @@ export function MakePanelSidebar({
                                 type="button"
                                 onClick={() => onSelectLibraryCard(card)}
                                 className={[
-                                  "mb-1 flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left transition-all last:mb-0",
+                                  "mb-1 flex w-full items-start gap-2.5 rounded-lg px-2 py-2 text-left transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15 last:mb-0",
                                   isSelected ? "bg-neutral-900 text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)]" : "hover:bg-muted/30",
                                 ].join(" ")}
                               >
@@ -306,7 +306,7 @@ export function MakePanelSidebar({
                       key={spec.cardType}
                       type="button"
                       onClick={() => onSelectCardType(spec.cardType)}
-                      className={["mx-auto flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all", isActive ? "" : "hover:bg-muted/30"].join(" ")}
+                      className={["mx-auto flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15", isActive ? "" : "hover:bg-muted/30"].join(" ")}
                     >
                       <div className={[
                         "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-all",

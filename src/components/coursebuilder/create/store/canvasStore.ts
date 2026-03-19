@@ -22,7 +22,7 @@ export type BuildTool =
 
 export type AnimateTool = "selection" | "scene" | "path" | "modify"
 
-export type EditorMode = "build" | "animate"
+export type CanvasMode = "build" | "animate"
 
 const ZOOM_MIN = 25
 const ZOOM_MAX = 400
@@ -31,7 +31,7 @@ const ZOOM_STEP_DEFAULT = 5
 // ─── Shape ────────────────────────────────────────────────────────────────────
 
 interface CanvasState {
-  mode: EditorMode
+  mode: CanvasMode
   zoomLevel: number
   panOffset: { x: number; y: number }
   activeTool: BuildTool | AnimateTool
@@ -57,7 +57,7 @@ interface CanvasState {
 
   // ── Viewport ───────────────────────────────────────────────────────────────
 
-  setMode:     (mode: EditorMode) => void
+  setMode:     (mode: CanvasMode) => void
   setZoom:     (zoom: number) => void
   stepZoom:    (delta?: number) => void
   setPan:      (offset: { x: number; y: number }) => void

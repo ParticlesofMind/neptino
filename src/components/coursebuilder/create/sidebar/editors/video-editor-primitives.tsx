@@ -31,7 +31,7 @@ interface ChapterEditRowProps {
 export function ProviderBadge({ provider }: ProviderBadgeProps) {
   const cfg = {
     youtube: { label: "YouTube", dot: "bg-red-500", pill: "bg-[#f0d8d8] text-[#8a3030] border-[#f0d8d8]" },
-    vimeo: { label: "Vimeo", dot: "bg-blue-500", pill: "bg-[#dbe8f6] text-[#3a6ea0] border-[#dbe8f6]" },
+    vimeo: { label: "Vimeo", dot: "bg-[#9eb9da]", pill: "bg-[#dbe8f6] text-[#3a6ea0] border-[#dbe8f6]" },
     direct: { label: "Direct", dot: "bg-neutral-400", pill: "bg-neutral-100 text-neutral-600 border-neutral-200" },
   }[provider]
 

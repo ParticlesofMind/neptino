@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { createClient, getSupabaseClientConfigError } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -80,12 +80,17 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const supabase = createClient()
+  const configError = getSupabaseClientConfigError()
   const router = useRouter()
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (configError) {
+      setError(configError)
+      return
+    }
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.')
@@ -95,6 +100,7 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
+      const supabase = createClient()
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -174,7 +180,7 @@ export default function SignupPage() {
             </div>
 
             <form onSubmit={handleSignup} className="px-8 py-6 space-y-3.5">
-              {error && <AuthErrorBanner message={error} />}
+              {(error || configError) && <AuthErrorBanner message={error ?? configError!} />}
 
               {/* Role picker */}
               <div>

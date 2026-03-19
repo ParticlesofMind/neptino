@@ -5,6 +5,7 @@ import {
   FieldLabel,
   PRIMARY_ACTION_BUTTON_CLASS,
   SECONDARY_ACTION_BUTTON_CLASS,
+  SelectInput,
   SetupColumn,
 } from "@/components/coursebuilder"
 import { MIN_TASKS_PER_OBJECTIVE } from "@/lib/curriculum/content-load-service"
@@ -46,8 +47,8 @@ export interface CurriculumStructurePanelProps {
   highLoadModelActive: boolean
   isGenerationReady: boolean
   readinessIssues: string[]
-  missing: { essentials: boolean; schedule: boolean; curriculum: boolean }
-  goToSection: (id: "essentials" | "schedule" | "curriculum") => void
+  missing: { essentials: boolean; students: boolean; schedule: boolean; curriculum: boolean }
+  goToSection: (id: "essentials" | "students" | "schedule" | "curriculum") => void
   isGenerating: boolean
   generationCooldownLeft: number
   estimateForAction: (action: GenerationAction) => string
@@ -153,12 +154,11 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
       </div>
       <div>
         <FieldLabel>Include certificate</FieldLabel>
-        <select value={props.certificateMode} onChange={(e) => props.setCertificateMode(e.target.value as CertificateMode)}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary">
+        <SelectInput value={props.certificateMode} onChange={(e) => props.setCertificateMode(e.target.value as CertificateMode)}>
           <option value="end-module">At the end of each module</option>
           <option value="end-course">At the end of the course</option>
           <option value="never">Never</option>
-        </select>
+        </SelectInput>
       </div>
 
       <Divider label="Naming Conventions" />
@@ -172,28 +172,27 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
         ] as const).map(({ key, label }) => (
           <div key={key}>
             <FieldLabel>{label}</FieldLabel>
-            <select value={namingRules[key]} onChange={(e) => setNamingRules({ ...namingRules, [key]: e.target.value })}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary">
+            <SelectInput value={namingRules[key]} onChange={(e) => setNamingRules({ ...namingRules, [key]: e.target.value })}>
               <option value="">No specific rule</option>
               <option value="gerund">Start with a gerund (Exploring, Understanding…)</option>
               <option value="verb">Start with an action verb (Analyze, Compare…)</option>
               <option value="noun">Start with a noun phrase (Introduction to…)</option>
               <option value="blooms">Bloom&apos;s taxonomy verb (Identify, Apply, Evaluate…)</option>
               <option value="question">Question format (What is…? How does…?)</option>
-            </select>
+            </SelectInput>
           </div>
         ))}
       </div>
 
       <Divider label="Generation" />
       <p className="-mt-2 text-sm text-muted-foreground">
-        Generation uses your full setup data (essentials, classification, pedagogy, students,
-        schedule, and curriculum structure).
+        Generation uses your setup and instruction data (essentials, students, schedule,
+        curriculum, plus classification and pedagogy context when available).
       </p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className={`rounded-md border px-2 py-1 text-[11px] font-medium ${
           props.ollamaHealthy === null ? "border-border bg-muted/40 text-muted-foreground"
-          : props.ollamaHealthy ? "border-[#5c9970]/30 bg-[#5c9970]/10 text-[#5c9970]"
+          : props.ollamaHealthy ? "border-emerald-600/30 bg-emerald-500/10 text-emerald-700"
           : "border-destructive/30 bg-destructive/10 text-destructive"}`}>
           {props.ollamaHealthy === null ? "Checking Ollama…" : props.ollamaHealthy ? "Ollama Connected" : "Ollama Disconnected"}
         </span>
@@ -203,23 +202,26 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
           </span>
         )}
         {props.highLoadModelActive && (
-          <span className="rounded-md border border-[#a89450]/30 bg-[#a89450]/10 px-2 py-1 text-[11px] font-medium text-[#a89450]">
+          <span className="rounded-md border border-amber-600/30 bg-amber-500/10 px-2 py-1 text-[11px] font-medium text-amber-700">
             High-load model active
           </span>
         )}
       </div>
 
       {!props.isGenerationReady && (
-        <div className="mt-3 rounded-lg border border-[#a89450]/40 bg-[#a89450]/10 px-3 py-3">
-          <p className="text-xs font-medium text-[#a89450]">Generation is locked until setup is complete.</p>
+        <div className="mt-3 rounded-lg border border-amber-600/40 bg-amber-500/10 px-3 py-3">
+          <p className="text-xs font-medium text-amber-700">Generation is locked until setup is complete.</p>
           <ul className="mt-1 space-y-1">
             {props.readinessIssues.map((issue) => (
-              <li key={issue} className="text-xs text-[#a89450]/90">• {issue}</li>
+              <li key={issue} className="text-xs text-amber-700/90">• {issue}</li>
             ))}
           </ul>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {props.missing.essentials && (
               <button type="button" onClick={() => props.goToSection("essentials")} className={PRIMARY_ACTION_BUTTON_CLASS}>Go to Essentials</button>
+            )}
+            {props.missing.students && (
+              <button type="button" onClick={() => props.goToSection("students")} className={SECONDARY_ACTION_BUTTON_CLASS}>Go to Students</button>
             )}
             {props.missing.schedule && (
               <button type="button" onClick={() => props.goToSection("schedule")} className={SECONDARY_ACTION_BUTTON_CLASS}>Go to Schedule</button>

@@ -42,7 +42,7 @@ import { useCanvasPersistence }    from "@/components/coursebuilder/create/hooks
 import { useCourseStore }          from "@/components/coursebuilder/create/store/courseStore"
 import { useCanvasStore }          from "@/components/coursebuilder/create/store/canvasStore"
 import { DEFAULT_PAGE_DIMENSIONS } from "@/components/coursebuilder/create/types"
-import type { CourseId, SessionId } from "@/components/coursebuilder/create/types"
+import type { SessionId } from "@/components/coursebuilder/create/types"
 import type { DragSourceData } from "@/components/coursebuilder/create/hooks/useCardDrop"
 import { DragOverlayCard } from "@/components/coursebuilder/create/drag/DragOverlayCard"
 
@@ -88,8 +88,6 @@ function FixView() {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function CreateEditorLayout({ courseId, className, showModeBar = true }: CreateEditorLayoutProps) {
-  const typedCourseId    = (courseId ?? "") as CourseId
-
   // editor mode state lives in a global store so that the header can read it
   const mode = useCreateModeStore((s) => s.mode)
 
@@ -97,11 +95,17 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
 
   const [cardsPanelWidth, setCardsPanelWidth] = useState(360)
   const cardsPanelWidthRef = useRef(cardsPanelWidth)
-  cardsPanelWidthRef.current = cardsPanelWidth
 
   const [atlasWidth, setAtlasWidth] = useState(360)
   const atlasWidthRef = useRef(atlasWidth)
-  atlasWidthRef.current = atlasWidth
+
+  useEffect(() => {
+    cardsPanelWidthRef.current = cardsPanelWidth
+  }, [cardsPanelWidth])
+
+  useEffect(() => {
+    atlasWidthRef.current = atlasWidth
+  }, [atlasWidth])
 
   // Mobile: which panel (if any) is open — exclusive, one at a time
   const [mobileOpenPanel, setMobileOpenPanel] = useState<"none" | "files" | "atlas">("none")
@@ -302,7 +306,7 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
                   rightOverlayInset={getCurateOverlayInset(atlasWidth)}
                 />
               ) : (
-                <EmptyState courseId={typedCourseId} />
+                <EmptyState courseId={courseId} />
               )}
             </div>
 
@@ -346,7 +350,7 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-function EmptyState({ courseId }: { courseId: CourseId }) {
+function EmptyState({ courseId }: { courseId: string | null }) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-3 text-neutral-400">
       <p className="text-sm">No sessions found{courseId ? ` for course ${courseId}` : ""}.</p>

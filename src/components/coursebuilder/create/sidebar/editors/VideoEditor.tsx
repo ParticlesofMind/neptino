@@ -128,7 +128,7 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white md:flex-row">
-      <div className="w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:w-[32rem] md:border-b-0 md:border-r md:border-neutral-200 xl:w-[35rem]">
+      <div className="make-editor-split-sidebar w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:min-w-[32rem] md:flex-1 md:border-b-0 md:border-r md:border-neutral-200 xl:min-w-[35rem]">
         <div className="min-h-0 h-full overflow-y-auto">
           <StudioSection label="Source" className="pt-4">
             <StudioUrlInput
@@ -174,7 +174,7 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
               <button
                 type="button"
                 onClick={addChapter}
-                className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-all hover:border-neutral-300 hover:bg-neutral-50"
+                className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-all hover:border-neutral-300 hover:bg-neutral-50 focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               >
                 <Plus size={10} />
                 Add chapter
@@ -206,7 +206,7 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
                     key={i}
                     type="button"
                     onClick={() => setSelectedChapterIdx(i)}
-                    className="flex w-full items-center gap-2 rounded-md border border-neutral-100 bg-neutral-50 px-3 py-1.5 text-left transition-all hover:border-neutral-200 hover:bg-white"
+                    className="flex w-full items-center gap-2 rounded-md border border-neutral-100 bg-neutral-50 px-3 py-1.5 text-left transition-all hover:border-neutral-200 hover:bg-white focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   >
                     <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[8px] font-bold text-neutral-600">
                       {i + 1}

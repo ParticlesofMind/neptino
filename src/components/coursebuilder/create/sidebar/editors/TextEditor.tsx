@@ -94,7 +94,7 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
 
   return (
     <EditorSplitLayout
-      sidebarWidthClassName="md:w-[26rem] xl:w-[30rem]"
+      sidebarWidthClassName="md:min-w-[26rem] md:flex-1 xl:min-w-[30rem]"
       previewClassName="bg-white"
       previewContentClassName="overflow-hidden"
       sidebar={(
@@ -120,7 +120,7 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
           <div className="border-b border-neutral-100 bg-neutral-50 px-4 py-4 space-y-3">
             <div className="flex items-center gap-1.5">
               <Sparkles size={11} className="text-neutral-400" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">AI Generation</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">AI Generation</span>
             </div>
 
             <StudioTextarea

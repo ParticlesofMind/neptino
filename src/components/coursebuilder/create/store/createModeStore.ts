@@ -1,10 +1,10 @@
 import { create } from "zustand"
 
-export type EditorMode = "curate" | "make" | "fix"
+export type CreateMode = "curate" | "make" | "fix"
 
 interface CreateModeState {
-  mode: EditorMode
-  setMode: (mode: EditorMode) => void
+  mode: CreateMode
+  setMode: (mode: CreateMode) => void
 }
 
 export const useCreateModeStore = create<CreateModeState>((set) => ({

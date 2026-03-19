@@ -12,7 +12,6 @@
 import { useEffect, useState } from "react"
 import { selectCourseById, selectLessonsByCourseId } from "@/components/coursebuilder/course-queries"
 import { useCourseStore } from "../store/courseStore"
-import type { } from "../types"
 import {
   type RawSessionRow,
   type RawScheduleEntry,

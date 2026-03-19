@@ -77,7 +77,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                   <input type="text" value={module.title}
                     data-testid={`curriculum-module-input-${module.index}`}
                     onChange={(e) => { props.setModuleNames((prev) => { const updated = [...prev]; updated[module.index] = e.target.value; return updated }) }}
-                    className="mb-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    className="mb-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-bold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                     placeholder={`Module ${module.index + 1}`}
                   />
                   <div className="space-y-1.5 rounded-md border border-border/50 bg-background p-2">
@@ -106,7 +106,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                     <select
                       value={row.template_type ?? "lesson"}
                       onChange={(e) => props.upsertSessionRow(index, { template_type: e.target.value as TemplateType })}
-                      className="rounded border border-border bg-background px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      className="rounded border border-border bg-background px-2 py-1 text-[11px] text-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       aria-label={`Template type for session ${index + 1}`}
                     >
                       {props.availableTemplateTypes.map((type) => (
@@ -117,7 +117,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                     </select>
                   </div>
                   <input type="text" value={row.title} onChange={(e) => props.upsertSessionRow(index, { title: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                     placeholder={`Session ${index + 1}`} />
                 </div>
               )
@@ -140,7 +140,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                       <input type="text" value={row.topic_names?.[ti] || ""}
                         data-testid={`curriculum-topic-input-${index}-${ti}`}
                         onChange={(e) => { props.setSessionRows((prev) => prev.map((cur, ci) => ci === index ? { ...cur, topic_names: [...(cur.topic_names?.slice(0, ti) || []), e.target.value, ...(cur.topic_names?.slice(ti + 1) || [])] } : cur)) }}
-                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       />
                     </div>
                   ))}
@@ -178,7 +178,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                                   ),
                                 )
                               }}
-                              className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                              className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                             />
                           </div>
                         ))}
@@ -225,7 +225,7 @@ export function CurriculumPreviewPanel(props: CurriculumPreviewPanelProps) {
                                         ),
                                       )
                                     }}
-                                    className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                    className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                                   />
                                 </div>
                               ))}

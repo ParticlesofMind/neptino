@@ -6,6 +6,7 @@ import {
   FieldLabel,
   PRIMARY_ACTION_BUTTON_CLASS,
   SECONDARY_ACTION_BUTTON_CLASS,
+  SelectInput,
   SetupColumn,
   SetupPanelLayout,
   SetupSection,
@@ -222,11 +223,10 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
             </div>
             <div>
               <FieldLabel>Learning Style Preference</FieldLabel>
-              <select
+              <SelectInput
                 value={learningStyle}
                 onChange={(e) => setLearningStyle(e.target.value)}
                 disabled={method !== "manual"}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary disabled:opacity-60"
               >
                 <option value="">Select preference...</option>
                 <option value="visual">Visual</option>
@@ -234,21 +234,20 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
                 <option value="reading_writing">Reading/Writing</option>
                 <option value="kinesthetic">Kinesthetic</option>
                 <option value="mixed">Mixed/No strong preference</option>
-              </select>
+              </SelectInput>
             </div>
             <div>
               <FieldLabel>Learning Differences</FieldLabel>
-              <select
+              <SelectInput
                 value={learningDifferences}
                 onChange={(e) => setLearningDifferences(e.target.value)}
                 disabled={method !== "manual"}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary disabled:opacity-60"
               >
                 <option value="unknown">Unknown/Not provided</option>
                 <option value="none">None</option>
                 <option value="identified">Identified learning differences</option>
                 <option value="accommodations">IEP/504 accommodations</option>
-              </select>
+              </SelectInput>
             </div>
             {(learningDifferences === "identified" || learningDifferences === "accommodations") && (
               <div>
@@ -259,7 +258,7 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
                   onChange={(e) => setAccommodations(e.target.value)}
                   placeholder="e.g., extended time, reduced reading load, assistive tech"
                   disabled={method !== "manual"}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none disabled:opacity-60"
+                  className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15 disabled:opacity-60"
                 />
               </div>
             )}
@@ -282,7 +281,7 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
                 onChange={(e) => setBulkEntry(e.target.value)}
                 placeholder={"Jane,Doe,jane@school.org,12345\nJohn,Smith,john@school.org,12346"}
                 disabled={method !== "manual"}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none disabled:opacity-60"
+                className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15 disabled:opacity-60"
               />
               <p className="mt-1 text-xs text-muted-foreground">Format: First, Last, Email, optional ID</p>
               {bulkError && <p className="mt-1 text-xs text-destructive">{bulkError}</p>}

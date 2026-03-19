@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react"
 import { EditorSplitLayout } from "./editor-split-layout"
 import { EditorPreviewFrame } from "./editor-preview-frame"
 
@@ -52,10 +52,25 @@ const CHART_TYPES: { id: ChartType; label: string }[] = [
   { id: "area", label: "Area" },
   { id: "scatter", label: "Scatter" },
   { id: "pie", label: "Pie" },
+  { id: "histogram", label: "Histogram" },
+  { id: "box", label: "Box Plot" },
+  { id: "heatmap", label: "Heatmap" },
+  { id: "bubble", label: "Bubble" },
+  { id: "stacked-bar", label: "Stacked Bar" },
+  { id: "stacked-bar-100", label: "100% Stacked" },
+  { id: "radar", label: "Radar" },
+  { id: "waterfall", label: "Waterfall" },
+  { id: "treemap", label: "Treemap" },
+  { id: "funnel", label: "Funnel" },
+  { id: "sankey", label: "Sankey" },
+  { id: "normal-distribution", label: "Normal Dist" },
 ]
 
 export function ChartEditor({ content, onChange }: ChartEditorProps) {
   const [colorScheme, setColorScheme] = useState(typeof content.colorScheme === "string" ? content.colorScheme : "Blue")
+  const typeRailRef = useRef<HTMLDivElement | null>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
 
   const title = typeof content.title === "string" ? content.title : ""
   const chartType = (typeof content.chartType === "string" ? content.chartType : "line") as ChartType
@@ -71,6 +86,38 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
   const seriesKeys = columns.slice(1) // everything except first column (label)
 
   const setChartType = (t: ChartType) => onChange("chartType", t)
+
+  const refreshRailScrollState = useCallback(() => {
+    const rail = typeRailRef.current
+    if (!rail) return
+    setCanScrollLeft(rail.scrollLeft > 4)
+    setCanScrollRight(rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 4)
+  }, [])
+
+  const scrollTypeRail = useCallback((direction: "left" | "right") => {
+    const rail = typeRailRef.current
+    if (!rail) return
+    rail.scrollBy({
+      left: direction === "left" ? -180 : 180,
+      behavior: "smooth",
+    })
+  }, [])
+
+  useEffect(() => {
+    refreshRailScrollState()
+    const rail = typeRailRef.current
+    if (!rail) return
+
+    const selectedButton = rail.querySelector<HTMLButtonElement>(`button[data-chart-type="${chartType}"]`)
+    selectedButton?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
+
+    rail.addEventListener("scroll", refreshRailScrollState)
+    window.addEventListener("resize", refreshRailScrollState)
+    return () => {
+      rail.removeEventListener("scroll", refreshRailScrollState)
+      window.removeEventListener("resize", refreshRailScrollState)
+    }
+  }, [chartType, refreshRailScrollState])
 
   const setColumn = (i: number, val: string) => {
     const next = [...columns]
@@ -105,26 +152,51 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
 
   return (
     <EditorSplitLayout
-      sidebarWidthClassName="md:w-[28rem] xl:w-[32rem]"
+      sidebarWidthClassName="md:min-w-[28rem] md:flex-1 xl:min-w-[32rem]"
       previewContentClassName="overflow-auto"
       sidebar={(
         <div className="flex h-full flex-col bg-white">
-          <div className="flex shrink-0 border-b border-neutral-200 bg-white">
-            {CHART_TYPES.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setChartType(id)}
-                className={[
-                  "flex-1 py-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
-                  chartType === id
-                    ? "border-b-2 border-[#9eb9da] text-[#233f5d]"
-                    : "text-neutral-400 hover:text-neutral-700",
-                ].join(" ")}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="relative flex shrink-0 border-b border-neutral-200 bg-white">
+            <button
+              type="button"
+              onClick={() => scrollTypeRail("left")}
+              disabled={!canScrollLeft}
+              className="absolute left-0 top-0 z-10 flex h-full w-9 items-center justify-center border-r border-neutral-200 bg-white text-neutral-500 transition-colors hover:text-neutral-700 disabled:cursor-not-allowed disabled:text-neutral-300"
+              aria-label="Scroll chart types left"
+            >
+              <ChevronLeft size={14} />
+            </button>
+
+            <div ref={typeRailRef} className="no-scrollbar mx-9 w-full overflow-x-auto">
+              <div className="flex min-w-max">
+                {CHART_TYPES.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    data-chart-type={id}
+                    onClick={() => setChartType(id)}
+                    className={[
+                      "shrink-0 border-b-2 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                      chartType === id
+                        ? "border-[#9eb9da] text-[#233f5d]"
+                        : "border-transparent text-neutral-400 hover:text-neutral-700",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scrollTypeRail("right")}
+              disabled={!canScrollRight}
+              className="absolute right-0 top-0 z-10 flex h-full w-9 items-center justify-center border-l border-neutral-200 bg-white text-neutral-500 transition-colors hover:text-neutral-700 disabled:cursor-not-allowed disabled:text-neutral-300"
+              aria-label="Scroll chart types right"
+            >
+              <ChevronRight size={14} />
+            </button>
           </div>
 
           <div className="space-y-2 border-b border-neutral-100 px-4 py-3 overflow-x-auto">

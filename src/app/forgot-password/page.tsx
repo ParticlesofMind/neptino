@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { createClient, getSupabaseClientConfigError } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useState } from 'react'
 import { PublicShell } from '@/components/layout/public-shell'
@@ -19,13 +19,20 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
-  const supabase = createClient()
+  const configError = getSupabaseClientConfigError()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (configError) {
+      setError(configError)
+      return
+    }
+
     setLoading(true)
     setError(null)
 
+    const supabase = createClient()
     const redirectTo = `${window.location.origin}/auth/callback?next=/reset-password`
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
 
@@ -70,7 +77,7 @@ export default function ForgotPasswordPage() {
             ) : (
               /* Form */
               <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
-                {error && <AuthErrorBanner message={error} />}
+                {(error || configError) && <AuthErrorBanner message={error ?? configError!} />}
 
                 <AuthInput
                   type="email"

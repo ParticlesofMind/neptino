@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { createClient, getSupabaseClientConfigError } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -82,10 +82,16 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const configError = getSupabaseClientConfigError()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (configError) {
+      setError(configError)
+      return
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
@@ -93,6 +99,7 @@ export default function ResetPasswordPage() {
     setLoading(true)
     setError(null)
 
+    const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password })
 
     setLoading(false)
@@ -130,7 +137,7 @@ export default function ResetPasswordPage() {
             ) : (
               /* Form */
               <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
-                {error && <AuthErrorBanner message={error} />}
+                {(error || configError) && <AuthErrorBanner message={error ?? configError!} />}
 
                 <PasswordField
                   value={password}

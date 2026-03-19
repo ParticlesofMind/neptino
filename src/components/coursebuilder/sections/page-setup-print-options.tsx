@@ -1,7 +1,17 @@
 "use client"
 
 import { OverlineLabel } from "@/components/ui/overline-label"
-import { FieldLabel, TextInput } from "@/components/coursebuilder"
+import {
+  FieldLabel,
+  TextInput,
+  SEGMENTED_CONTROL_GROUP_CLASS,
+  SEGMENTED_CONTROL_BUTTON_BASE_CLASS,
+  SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS,
+  SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS,
+  TOGGLE_SWITCH_TRACK_BASE_CLASS,
+  TOGGLE_SWITCH_TRACK_ON_CLASS,
+  TOGGLE_SWITCH_TRACK_OFF_CLASS,
+} from "@/components/coursebuilder"
 
 // ─── Print Options Type ───────────────────────────────────────────────────────
 
@@ -44,16 +54,16 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
       {/* Color mode */}
       <div className="mb-5">
         <FieldLabel>Color Mode</FieldLabel>
-        <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+        <div className={SEGMENTED_CONTROL_GROUP_CLASS}>
           {(["color", "grayscale", "bw"] as const).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => onChange("colorMode", m)}
-              className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+              className={`${SEGMENTED_CONTROL_BUTTON_BASE_CLASS} ${
                 colorMode === m
-                  ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS
+                  : SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS
               }`}
             >
               {m === "color" ? "Full Color" : m === "grayscale" ? "Grayscale" : "B & W"}
@@ -74,8 +84,8 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
             role="switch"
             aria-checked={inkSaver}
             onClick={() => onChange("inkSaver", !inkSaver)}
-            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
-              inkSaver ? "bg-primary" : "bg-muted"
+            className={`${TOGGLE_SWITCH_TRACK_BASE_CLASS} ${
+              inkSaver ? TOGGLE_SWITCH_TRACK_ON_CLASS : TOGGLE_SWITCH_TRACK_OFF_CLASS
             }`}
           >
             <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition ${
@@ -107,8 +117,8 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
               role="switch"
               aria-checked={cropMarks}
               onClick={() => onChange("cropMarks", !cropMarks)}
-              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
-                cropMarks ? "bg-primary" : "bg-muted"
+              className={`${TOGGLE_SWITCH_TRACK_BASE_CLASS} ${
+                cropMarks ? TOGGLE_SWITCH_TRACK_ON_CLASS : TOGGLE_SWITCH_TRACK_OFF_CLASS
               }`}
             >
               <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition ${
@@ -122,16 +132,16 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
       {/* Page scaling */}
       <div className="mb-5">
         <FieldLabel>Page Scaling</FieldLabel>
-        <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+        <div className={SEGMENTED_CONTROL_GROUP_CLASS}>
           {(["fit", "actual", "custom"] as const).map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => onChange("pageScaling", s)}
-              className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium capitalize transition ${
+              className={`${SEGMENTED_CONTROL_BUTTON_BASE_CLASS} capitalize ${
                 pageScaling === s
-                  ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS
+                  : SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS
               }`}
             >
               {s === "fit" ? "Fit to Page" : s === "actual" ? "Actual Size" : "Custom"}
@@ -156,16 +166,16 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
       {/* Duplex */}
       <div className="mb-5">
         <FieldLabel>Duplex Binding</FieldLabel>
-        <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+        <div className={SEGMENTED_CONTROL_GROUP_CLASS}>
           {(["none", "long", "short"] as const).map((d) => (
             <button
               key={d}
               type="button"
               onClick={() => onChange("duplex", d)}
-              className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+              className={`${SEGMENTED_CONTROL_BUTTON_BASE_CLASS} ${
                 duplex === d
-                  ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS
+                  : SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS
               }`}
             >
               {d === "none" ? "Single-Sided" : d === "long" ? "Long Edge" : "Short Edge"}
@@ -177,16 +187,16 @@ export function PageSetupPrintOptions({ value, onChange }: Props) {
       {/* Export quality */}
       <div>
         <FieldLabel>Export Quality</FieldLabel>
-        <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+        <div className={SEGMENTED_CONTROL_GROUP_CLASS}>
           {(["screen", "print", "high"] as const).map((q) => (
             <button
               key={q}
               type="button"
               onClick={() => onChange("exportQuality", q)}
-              className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+              className={`${SEGMENTED_CONTROL_BUTTON_BASE_CLASS} ${
                 exportQuality === q
-                  ? "border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS
+                  : SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS
               }`}
             >
               {q === "screen" ? "Screen (150 DPI)" : q === "print" ? "Print (300 DPI)" : "High (600 DPI)"}

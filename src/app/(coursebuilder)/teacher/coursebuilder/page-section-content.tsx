@@ -26,7 +26,7 @@ export interface SectionContentProps {
   onCourseCreated: (courseId: string, data: CourseCreatedData) => void
   courseCreatedData: CourseCreatedData | null
   initialEssentials: CourseCreatedData | null
-  existingCourseId: string | null
+  courseId: string | null
   pageConfig?: CanvasPageConfig | null
   onPageConfigChange?: (cfg: CanvasPageConfig) => void
 }
@@ -36,28 +36,28 @@ export function SectionContent({
   onCourseCreated,
   courseCreatedData,
   initialEssentials,
-  existingCourseId,
+  courseId,
   pageConfig,
   onPageConfigChange,
 }: SectionContentProps) {
   switch (id) {
-    case "essentials":     return <EssentialsSection key={existingCourseId ?? "new"} onCourseCreated={onCourseCreated} initialData={initialEssentials} existingCourseId={existingCourseId} />
-    case "classification": return <ClassificationSection courseCreatedData={courseCreatedData} courseId={existingCourseId} />
-    case "students":       return <StudentsSection courseId={existingCourseId} />
-    case "pedagogy":       return <PedagogySection       courseId={existingCourseId} />
-    case "interface":      return <InterfaceSection      courseId={existingCourseId} />
-    case "templates":      return <TemplatesSection     courseId={existingCourseId} />
-    case "schedule":       return <ScheduleSection      courseId={existingCourseId} />
-    case "resources":      return <ResourcesSection     courseId={existingCourseId} />
-    case "curriculum":     return <CurriculumSection    courseId={existingCourseId} />
-    case "llm":            return <LLMSection           courseId={existingCourseId} />
-    case "visibility":     return <VisibilitySection    courseId={existingCourseId} />
-    case "marketplace":    return <MarketplaceSection   courseId={existingCourseId} />
-    case "pricing":        return <PricingSection        courseId={existingCourseId} />
-    case "integrations":   return <IntegrationsSection   courseId={existingCourseId} />
-    case "communication":  return <CommunicationSection  courseId={existingCourseId} />
-    case "page-setup":     return <PageSetupSection key={`${existingCourseId ?? "new"}-${pageConfig?.pageCount ?? 1}`} courseId={existingCourseId} initialConfig={pageConfig} onSaved={onPageConfigChange} />
-    case "advanced":       return <AdvancedSection courseId={existingCourseId} />
+    case "essentials":     return <EssentialsSection key={courseId ?? "new"} onCourseCreated={onCourseCreated} initialData={initialEssentials} courseId={courseId} />
+    case "classification": return <ClassificationSection courseCreatedData={courseCreatedData} courseId={courseId} />
+    case "students":       return <StudentsSection courseId={courseId} />
+    case "pedagogy":       return <PedagogySection       courseId={courseId} />
+    case "interface":      return <InterfaceSection      courseId={courseId} />
+    case "templates":      return <TemplatesSection     courseId={courseId} />
+    case "schedule":       return <ScheduleSection      courseId={courseId} />
+    case "resources":      return <ResourcesSection     courseId={courseId} />
+    case "curriculum":     return <CurriculumSection    courseId={courseId} />
+    case "llm":            return <LLMSection           courseId={courseId} />
+    case "visibility":     return <VisibilitySection    courseId={courseId} />
+    case "marketplace":    return <MarketplaceSection   courseId={courseId} />
+    case "pricing":        return <PricingSection        courseId={courseId} />
+    case "integrations":   return <IntegrationsSection   courseId={courseId} />
+    case "communication":  return <CommunicationSection  courseId={courseId} />
+    case "page-setup":     return <PageSetupSection key={`${courseId ?? "new"}-${pageConfig?.pageCount ?? 1}`} courseId={courseId} initialConfig={pageConfig} onSaved={onPageConfigChange} />
+    case "advanced":       return <AdvancedSection courseId={courseId} />
     default:               return <Placeholder />
   }
 }

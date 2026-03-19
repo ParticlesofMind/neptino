@@ -1,18 +1,20 @@
 import { useCallback } from "react"
-import { useCreateModeStore, type EditorMode } from "./store/createModeStore"
+import { useCreateModeStore, type CreateMode } from "./store/createModeStore"
+
+const CREATE_MODES = ["curate", "make", "fix"] as const satisfies readonly CreateMode[]
 
 export function ModeBar() {
   const mode    = useCreateModeStore((s) => s.mode)
   const setMode = useCreateModeStore((s) => s.setMode)
 
   const handleClick = useCallback(
-    (m: EditorMode) => () => setMode(m),
+    (m: CreateMode) => () => setMode(m),
     [setMode],
   )
 
   return (
     <div className="flex items-center justify-center shrink-0 h-9 px-3 border-b border-neutral-200 bg-white gap-1">
-      {(["curate", "make", "fix"] as EditorMode[]).map((m) => (
+      {CREATE_MODES.map((m) => (
         <button
           key={m}
           onClick={handleClick(m)}

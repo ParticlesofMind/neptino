@@ -22,7 +22,7 @@ export function EditorSplitLayout({
   sidebarDescription,
   previewTitle,
   previewDescription,
-  sidebarWidthClassName = "md:w-[28rem] xl:w-[32rem]",
+  sidebarWidthClassName = "md:min-w-[28rem] md:flex-1 xl:min-w-[32rem]",
   previewClassName = "bg-[#f5f7fb]",
   sidebarContentClassName,
   previewContentClassName,
@@ -33,7 +33,7 @@ export function EditorSplitLayout({
         {(sidebarTitle || sidebarDescription) && (
           <div className="border-b border-neutral-100 px-5 py-4">
             {sidebarTitle && <p className="text-[13px] font-semibold text-neutral-900">{sidebarTitle}</p>}
-            {sidebarDescription && <p className="mt-1 text-[11px] text-neutral-400">{sidebarDescription}</p>}
+            {sidebarDescription && <p className="mt-1 text-[10px] text-neutral-500">{sidebarDescription}</p>}
           </div>
         )}
         <div className={["min-h-0 h-full overflow-y-auto", sidebarContentClassName].filter(Boolean).join(" ")}>
@@ -41,12 +41,12 @@ export function EditorSplitLayout({
         </div>
       </div>
 
-      <div className={["min-h-0 min-w-0 flex-1", previewClassName].join(" ")}>
+      <div className={["min-h-0 min-w-0 w-full md:w-[min(44rem,40vw)] md:max-w-[44rem] md:flex-none", previewClassName].join(" ")}>
         <div className="flex h-full min-h-0 flex-col">
           {(previewTitle || previewDescription) && (
             <div className="shrink-0 border-b border-neutral-200 bg-white/80 px-5 py-4 backdrop-blur-sm">
               {previewTitle && <p className="text-[13px] font-semibold text-neutral-900">{previewTitle}</p>}
-              {previewDescription && <p className="mt-1 text-[11px] text-neutral-400">{previewDescription}</p>}
+              {previewDescription && <p className="mt-1 text-[10px] text-neutral-500">{previewDescription}</p>}
             </div>
           )}
           <div className={["min-h-0 flex-1", previewContentClassName].filter(Boolean).join(" ")}>

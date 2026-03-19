@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { createClient, getSupabaseClientConfigError } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -30,12 +30,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const configError = getSupabaseClientConfigError()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (configError) {
+      setError(configError)
+      return
+    }
+
     setLoading(true)
     setError(null)
+
+    const supabase = createClient()
 
     const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -75,7 +83,7 @@ export default function LoginPage() {
 
             {/* Form */}
             <form onSubmit={handleLogin} className="px-8 py-6 space-y-4">
-              {error && <AuthErrorBanner message={error} />}
+              {(error || configError) && <AuthErrorBanner message={error ?? configError!} />}
 
               <AuthInput
                 type="email"

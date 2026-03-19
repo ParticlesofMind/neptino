@@ -114,7 +114,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white md:flex-row">
-      <div className="w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:w-[26rem] md:border-b-0 md:border-r md:border-neutral-200 xl:w-[30rem]">
+      <div className="make-editor-split-sidebar w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:min-w-[26rem] md:flex-1 md:border-b-0 md:border-r md:border-neutral-200 xl:min-w-[30rem]">
         <ImageEditorSidebar
           sourceTab={sourceTab}
           urlDraft={urlDraft}
@@ -151,7 +151,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
         />
       </div>
 
-      <div className="min-h-0 min-w-0 flex-1 bg-[#f5f7fb]">
+      <div className="min-h-0 min-w-0 md:w-[min(44rem,40vw)] md:max-w-[44rem] md:flex-none bg-[#f5f7fb]">
         <div className="relative min-h-0 h-full overflow-hidden">
             {url ? (
               cropMode ? (
@@ -170,7 +170,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
                     <button
                       type="button"
                       onClick={() => setCropMode(false)}
-                      className="flex min-h-10 items-center gap-1 rounded-md border border-neutral-200 bg-white px-3.5 py-2.5 text-[10px] font-bold text-neutral-700 transition-colors hover:bg-neutral-50"
+                      className="flex h-9 items-center gap-1 rounded-md border border-neutral-200 bg-white px-3.5 py-2 text-[11px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                     >
                       <X size={10} /> Cancel
                     </button>
@@ -178,7 +178,7 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
                       type="button"
                       onClick={handleApplyCrop}
                       disabled={applying}
-                      className={`flex min-h-10 items-center gap-1 rounded-md border px-3.5 py-2.5 text-[10px] font-bold transition-colors ${MAKE_BLUE_BUTTON} disabled:opacity-60`}
+                      className={`flex h-9 items-center gap-1 rounded-md border px-3.5 py-2 text-[11px] font-semibold transition-colors focus:outline-none focus:ring-[3px] focus:ring-primary/15 ${MAKE_BLUE_BUTTON} disabled:opacity-60`}
                     >
                       <Check size={10} /> Apply
                     </button>

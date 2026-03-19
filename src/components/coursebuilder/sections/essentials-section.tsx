@@ -16,6 +16,7 @@ import {
   SelectInput,
   SetupColumn,
   SetupPanelLayout,
+  PRIMARY_ACTION_BUTTON_CLASS,
   SetupSection,
   TextInput,
   updateCourseById,
@@ -24,22 +25,7 @@ import {
   useCourseSectionSave,
   useDebouncedChangeSave,
 } from "@/components/coursebuilder"
-
-type CourseEssentials = {
-  title: string
-  subtitle: string
-  description: string
-  language: string
-  courseType: string
-  teacherId: string
-  teacherName: string
-  institution: string
-  imageName: string | null
-}
-
-type CourseCreatedData = CourseEssentials & {
-  imageUrl: string | null
-}
+import type { CourseCreatedData, CourseEssentials } from "@/components/coursebuilder/builder-types"
 
 type EssentialsSettingsRow = {
   generation_settings: Record<string, unknown> | null
@@ -48,11 +34,11 @@ type EssentialsSettingsRow = {
 export function EssentialsSection({
   onCourseCreated,
   initialData,
-  existingCourseId,
+  courseId,
 }: {
   onCourseCreated: (id: string, data: CourseCreatedData) => void
   initialData?: CourseCreatedData | null
-  existingCourseId?: string | null
+  courseId?: string | null
 }) {
   const [data, setData] = useState<CourseEssentials>({
     title: initialData?.title ?? "",
@@ -66,7 +52,7 @@ export function EssentialsSection({
     imageName: initialData?.imageName ?? null,
   })
   const [error, setError] = useState<string | null>(null)
-  const { saveStatus, lastSavedAt, markEmpty, markError, markSaved, markSaving } = useCourseSectionSave()
+  const { saveStatus, markEmpty, markError, markSaved, markSaving } = useCourseSectionSave()
   const [createdCourseId, setCreatedCourseId] = useState<string | null>(null)
   const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null)
   const imageRef = useRef<HTMLInputElement>(null)
@@ -102,7 +88,7 @@ export function EssentialsSection({
   }, [initialData?.institution])
 
   useCourseRowLoader<EssentialsSettingsRow>({
-    courseId: existingCourseId ?? null,
+    courseId: courseId ?? null,
     select: "generation_settings",
     onLoaded: (row) => {
       generationSettingsRef.current = row.generation_settings
@@ -119,7 +105,7 @@ export function EssentialsSection({
     },
   })
 
-  const persistEssentials = useCallback(async () => {
+  const persistEssentials = useCallback(async (options?: { allowCreate?: boolean }) => {
     setError(null)
     if (!data.title.trim() || data.title.trim().length < 3) {
       markEmpty()
@@ -134,7 +120,8 @@ export function EssentialsSection({
       return
     }
 
-    const activeCourseId = existingCourseId ?? createdCourseId
+    const activeCourseId = courseId ?? createdCourseId
+    const allowCreate = options?.allowCreate ?? false
     markSaving()
     try {
       const user = await getCurrentAuthUser()
@@ -181,6 +168,11 @@ export function EssentialsSection({
         generationSettingsRef.current = payload.generation_settings as Record<string, unknown>
         onCourseCreated(activeCourseId, { ...data, title: data.title.trim(), imageUrl })
       } else {
+        if (!allowCreate) {
+          markEmpty()
+          return
+        }
+
         const { data: course, error: insertError } = await insertCourseReturningId({
           ...payload,
           teacher_id: user.id,
@@ -202,9 +194,12 @@ export function EssentialsSection({
     } catch {
       markError()
     }
-  }, [data, existingCourseId, createdCourseId, initialImageUrl, onCourseCreated, markEmpty, markError, markSaved, markSaving])
+  }, [data, courseId, createdCourseId, initialImageUrl, onCourseCreated, markEmpty, markError, markSaved, markSaving])
 
-  useDebouncedChangeSave(persistEssentials, 800)
+  useDebouncedChangeSave(() => {
+    if (!(courseId ?? createdCourseId)) return
+    void persistEssentials({ allowCreate: false })
+  }, 800)
 
   return (
     <SetupSection
@@ -329,25 +324,16 @@ export function EssentialsSection({
               {error}
             </p>
           )}
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <span className="hidden text-xs text-muted-foreground md:block">
-              {saveStatus === "saving"
-                ? "Saving…"
-                : saveStatus === "error"
-                  ? "Could not save"
-                  : lastSavedAt
-                    ? `Saved ${new Date(lastSavedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                    : ""}
-            </span>
+          <div className="flex items-center justify-end gap-3 pt-1">
             <button
               type="button"
-              onClick={() => void persistEssentials()}
+              onClick={() => void persistEssentials({ allowCreate: true })}
               disabled={saveStatus === "saving"}
-              className="ml-auto rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${PRIMARY_ACTION_BUTTON_CLASS} ml-auto`}
             >
               {saveStatus === "saving"
                 ? "Saving…"
-                : existingCourseId ?? createdCourseId
+                : courseId ?? createdCourseId
                   ? "Save Changes"
                   : "Create Course"}
             </button>

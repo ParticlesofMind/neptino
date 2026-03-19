@@ -109,11 +109,11 @@ export function TeacherSidebar({ activeSection, onSectionChange, className }: Te
                     onClick={() => onSectionChange(item.id)}
                     className={`flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 font-sans text-sm font-medium transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 ${
                       active
-                        ? "border-primary bg-primary text-white shadow-sm"
+                        ? "border-primary/30 bg-primary/10 text-primary"
                         : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-muted/30 hover:text-foreground"
                     }`}
                   >
-                    <Icon className={`h-4 w-4 shrink-0 ${active ? "text-white" : "text-muted-foreground"}`} />
+                    <Icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`} />
                     <span>{item.label}</span>
                   </button>
                 )

@@ -48,7 +48,7 @@ export function VideoEditorPreview({
   onDurationChange,
 }: VideoEditorPreviewProps) {
   return (
-    <div className="min-h-0 min-w-0 flex-1 bg-[#f5f7fb]">
+    <div className="min-h-0 min-w-0 md:w-[min(44rem,40vw)] md:max-w-[44rem] md:flex-none bg-[#f5f7fb]">
       <div className="flex min-h-full flex-col justify-center px-2 py-2 md:px-3 md:py-3">
         {!url ? (
           <EditorPreviewFrame

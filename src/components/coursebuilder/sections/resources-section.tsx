@@ -81,7 +81,7 @@ export function ResourcesSection({ courseId }: { courseId: string | null }) {
                   value={resource.priority}
                   onChange={(e) => updatePriority(resource.id, e.target.value as ResourcePriority)}
                   disabled={Boolean(resource.locked)}
-                  className="min-w-[140px] rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-w-[140px] rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {RESOURCE_PRIORITY_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>

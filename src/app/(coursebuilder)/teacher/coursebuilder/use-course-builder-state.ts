@@ -11,6 +11,14 @@ import {
   isView, hasText, isSectionId,
 } from "./page-section-registry"
 
+function getBuilderStorageKeys(courseId: string | null) {
+  const id = courseId ?? "new"
+  return {
+    view: `coursebuilder:last-view:${id}`,
+    section: `coursebuilder:last-section:${id}`,
+  }
+}
+
 export function useCourseBuilderState() {
   const searchParams = useSearchParams()
   const urlCourseId = searchParams.get("id")
@@ -34,51 +42,39 @@ export function useCourseBuilderState() {
   const completionFetchRef = useRef<{ courseId: string | null; at: number }>({ courseId: null, at: 0 })
   const loggedSectionTraceRef = useRef(false)
 
-  const viewStorageKey = `coursebuilder:last-view:${courseId ?? resolvedUrlCourseId ?? "new"}`
-  const sectionStorageKey = `coursebuilder:last-section:${courseId ?? resolvedUrlCourseId ?? "new"}`
+  const storageKeys = getBuilderStorageKeys(courseId ?? resolvedUrlCourseId)
 
   const hydrateSectionCompletion = useCallback((raw: Record<string, unknown>) => {
-    const classification = (raw.classification_data as Record<string, unknown> | null) ?? {}
     const students = (raw.students_overview as Record<string, unknown> | null) ?? {}
-    const templateSettings = (raw.template_settings as Record<string, unknown> | null) ?? {}
     const schedule = (raw.schedule_settings as Record<string, unknown> | null) ?? {}
     const curriculum = (raw.curriculum_data as Record<string, unknown> | null) ?? {}
-    const courseLayout = (raw.course_layout as Record<string, unknown> | null) ?? {}
-
-    const templates = Array.isArray(templateSettings.templates)
-      ? templateSettings.templates
-      : Array.isArray(templateSettings)
-        ? templateSettings
-        : []
 
     const generatedEntries = Array.isArray(schedule.generated_entries) ? schedule.generated_entries : []
     const sessionRows = Array.isArray(curriculum.session_rows) ? curriculum.session_rows : []
-    const studentsTotal = typeof students.total === "number" ? students.total : 0
-    const pedagogy = (courseLayout.pedagogy as Record<string, unknown> | null) ?? null
+    const studentsTotal = typeof students.total === "number"
+      ? students.total
+      : (Array.isArray(students.students) ? students.students.length : 0)
 
     const essentialsDone = hasText(raw.course_name) && hasText(raw.course_description) && hasText(raw.course_language) && hasText(raw.course_type)
-    const classificationDone = hasText(classification.domain) && hasText(classification.subject) && hasText(classification.topic)
+    const studentsDone = studentsTotal > 0
     const scheduleDone = generatedEntries.length > 0
     const curriculumDone = sessionRows.length > 0
 
     setCompletedSetupSections({
       essentials: essentialsDone,
-      classification: classificationDone,
-      students: studentsTotal > 0,
-      pedagogy: pedagogy !== null,
-      templates: templates.length > 0,
+      students: studentsDone,
       schedule: scheduleDone,
       curriculum: curriculumDone,
-      generation: essentialsDone && scheduleDone && curriculumDone,
     })
   }, [])
 
   useEffect(() => {
+    const initialKeys = getBuilderStorageKeys(resolvedUrlCourseId)
     if (!isView(urlView)) {
-      const storedView = window.localStorage.getItem(`coursebuilder:last-view:${resolvedUrlCourseId ?? "new"}`)
+      const storedView = window.localStorage.getItem(initialKeys.view)
       if (isView(storedView)) setView(storedView)
     }
-    const storedSection = window.localStorage.getItem(`coursebuilder:last-section:${resolvedUrlCourseId ?? "new"}`)
+    const storedSection = window.localStorage.getItem(initialKeys.section)
     if (isSectionId(storedSection)) setActiveSection(storedSection)
   }, [urlView, resolvedUrlCourseId])
 
@@ -141,11 +137,11 @@ export function useCourseBuilderState() {
       if (error || !data) return
       hydrateSectionCompletion(data)
     })
-  }, [courseId, activeSection, hydrateSectionCompletion])
+  }, [courseId, hydrateSectionCompletion])
 
   useEffect(() => {
-    window.localStorage.setItem(viewStorageKey, view)
-  }, [viewStorageKey, view])
+    window.localStorage.setItem(storageKeys.view, view)
+  }, [storageKeys.view, view])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -158,20 +154,20 @@ export function useCourseBuilderState() {
   }, [view])
 
   useEffect(() => {
-    window.localStorage.setItem(sectionStorageKey, activeSection)
-  }, [sectionStorageKey, activeSection])
+    window.localStorage.setItem(storageKeys.section, activeSection)
+  }, [storageKeys.section, activeSection])
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return
     if (loggedSectionTraceRef.current) return
     loggedSectionTraceRef.current = true
     console.debug("[coursebuilder:section-sync]", {
-      key: sectionStorageKey,
+      key: storageKeys.section,
       activeSection,
-      storedSection: window.localStorage.getItem(sectionStorageKey),
-      matches: window.localStorage.getItem(sectionStorageKey) === activeSection,
+      storedSection: window.localStorage.getItem(storageKeys.section),
+      matches: window.localStorage.getItem(storageKeys.section) === activeSection,
     })
-  }, [activeSection, sectionStorageKey])
+  }, [activeSection, storageKeys.section])
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -190,10 +186,7 @@ export function useCourseBuilderState() {
   const handleCourseCreated = useCallback((id: string, essentials: CourseCreatedData) => {
     setCourseId(id)
     setCourseCreatedData(essentials)
-    if (!urlCourseId && !courseId) {
-      setActiveSection("classification")
-    }
-  }, [urlCourseId, courseId])
+  }, [])
 
   return {
     view, setView,

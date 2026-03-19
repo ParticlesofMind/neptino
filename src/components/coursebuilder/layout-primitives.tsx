@@ -10,6 +10,13 @@ export const SECONDARY_ACTION_BUTTON_CLASS = "inline-flex items-center gap-2 rou
 export const SECONDARY_ACTION_BUTTON_SM_CLASS = "inline-flex items-center gap-2 rounded-md border border-secondary/30 bg-secondary/10 px-3 py-1.5 text-xs font-medium text-[#0d7a6b] backdrop-blur-sm transition hover:bg-secondary/15 focus:outline-none focus:ring-2 focus:ring-secondary/30 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-foreground/60"
 export const DANGER_ACTION_BUTTON_CLASS = "inline-flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive backdrop-blur-sm transition hover:bg-destructive/15 focus:outline-none focus:ring-2 focus:ring-destructive/30 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-foreground/60"
 export const DANGER_ACTION_BUTTON_SM_CLASS = "inline-flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive backdrop-blur-sm transition hover:bg-destructive/15 focus:outline-none focus:ring-2 focus:ring-destructive/30 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-foreground/60"
+export const SEGMENTED_CONTROL_GROUP_CLASS = "flex gap-1 rounded-lg border border-border bg-muted/50 p-1"
+export const SEGMENTED_CONTROL_BUTTON_BASE_CLASS = "flex-1 rounded-md border px-3 py-1.5 text-xs font-medium transition focus:outline-none"
+export const SEGMENTED_CONTROL_BUTTON_ACTIVE_CLASS = "border-primary/35 bg-primary/10 text-accent-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+export const SEGMENTED_CONTROL_BUTTON_INACTIVE_CLASS = "border-transparent text-muted-foreground hover:text-foreground"
+export const TOGGLE_SWITCH_TRACK_BASE_CLASS = "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition"
+export const TOGGLE_SWITCH_TRACK_ON_CLASS = "bg-primary"
+export const TOGGLE_SWITCH_TRACK_OFF_CLASS = "bg-muted"
 
 function formatLastSaved(ts: string | null) {
   if (!ts) return "No data submitted yet"
@@ -163,6 +170,3 @@ export function SaveStatusBar({
   )
 }
 
-export const SectionContainer = SetupSection
-export const SplitPane = SetupColumn
-export const SetupSaveFooter = SaveStatusBar

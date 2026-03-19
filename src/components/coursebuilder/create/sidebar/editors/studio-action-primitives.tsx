@@ -178,7 +178,7 @@ export function StudioUrlInput({
         <button
           type="button"
           onClick={() => onCommit(draft)}
-          className="min-h-10 shrink-0 border-l border-neutral-200 bg-white px-3.5 py-2.5 text-[11px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+          className="h-9 shrink-0 border-l border-neutral-200 bg-white px-3.5 py-2 text-[11px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
         >
           {buttonLabel}
         </button>

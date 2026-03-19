@@ -40,3 +40,22 @@ export async function selectCourseById<T = Record<string, unknown>>(courseId: st
     error,
   }
 }
+
+export async function selectTeacherCourseCount(teacherId: string, excludeCourseId?: string | null) {
+  const supabase = createClient()
+  let query = supabase
+    .from("courses")
+    .select("id", { count: "exact", head: true })
+    .eq("teacher_id", teacherId)
+
+  if (excludeCourseId) {
+    query = query.neq("id", excludeCourseId)
+  }
+
+  const { count, error } = await query
+
+  return {
+    count: count ?? 0,
+    error,
+  }
+}

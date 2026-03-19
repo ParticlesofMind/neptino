@@ -1,12 +1,13 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useEffect } from "react"
 import { CreateEditorLayout } from "@/components/coursebuilder/create/CreateEditorLayout"
 import { useCourseBuilderState } from "./use-course-builder-state"
 import { SectionContent, PreviewView, LaunchView } from "./page-section-content"
 import { CourseBuilderTopBar } from "./course-builder-top-bar"
 import { CourseBuilderSidebarNav } from "./course-builder-sidebar-nav"
 import { CourseBuilderMobileNav } from "./course-builder-mobile-nav"
+import type { SectionId } from "./page-section-registry"
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ export default function CourseBuilderPage() {
 function CourseBuilderPageInner() {
   const {
     view, setView,
-    activeSection, setActiveSection,
+    activeSection, setActiveSection: setRawActiveSection,
     courseId,
     courseCreatedData,
     initialEssentials,
@@ -35,6 +36,20 @@ function CourseBuilderPageInner() {
     completedSetupSections,
     handleCourseCreated,
   } = useCourseBuilderState()
+
+  const setupSectionsLocked = !courseId
+
+  useEffect(() => {
+    if (!setupSectionsLocked) return
+    if (activeSection !== "essentials") {
+      setRawActiveSection("essentials")
+    }
+  }, [activeSection, setupSectionsLocked, setRawActiveSection])
+
+  const setActiveSection = (id: SectionId) => {
+    if (setupSectionsLocked && id !== "essentials") return
+    setRawActiveSection(id)
+  }
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -48,6 +63,7 @@ function CourseBuilderPageInner() {
               setActiveSection={setActiveSection}
               completedSetupSections={completedSetupSections}
               flashSectionId={flashSectionId}
+              setupSectionsLocked={setupSectionsLocked}
             />
 
             <div className="flex flex-1 flex-col overflow-hidden border-x border-b border-border bg-background">
@@ -63,7 +79,7 @@ function CourseBuilderPageInner() {
                       onCourseCreated={handleCourseCreated}
                       courseCreatedData={courseCreatedData}
                       initialEssentials={initialEssentials}
-                      existingCourseId={courseId}
+                      courseId={courseId}
                       pageConfig={pageConfig}
                       onPageConfigChange={setPageConfig}
                     />
@@ -75,21 +91,20 @@ function CourseBuilderPageInner() {
                 activeSection={activeSection}
                 setActiveSection={setActiveSection}
                 completedSetupSections={completedSetupSections}
+                setupSectionsLocked={setupSectionsLocked}
               />
             </div>
           </div>
         ) : view === "create" ? (
           <div className="flex flex-1 overflow-x-visible overflow-y-hidden bg-muted/10">
             <div className="flex flex-1 overflow-hidden border-x border-b border-border bg-background">
-              <div className="flex flex-1 overflow-hidden border-x border-b border-border bg-background">
-                <CreateEditorLayout courseId={courseId} />
-              </div>
+              <CreateEditorLayout courseId={courseId} />
             </div>
           </div>
         ) : view === "preview" ? (
           <div className="no-scrollbar flex flex-1 overflow-y-auto bg-muted/10">
             <div className="no-scrollbar flex flex-1 overflow-y-auto border-x border-b border-border bg-background p-4 md:p-5">
-              <div className="no-scrollbar flex flex-1 overflow-y-auto rounded-md border-x border-b border-border bg-background">
+              <div className="no-scrollbar flex flex-1 overflow-y-auto rounded-md border border-border bg-background">
                 <PreviewView courseData={courseCreatedData} />
               </div>
             </div>
@@ -97,7 +112,7 @@ function CourseBuilderPageInner() {
         ) : (
           <div className="no-scrollbar flex flex-1 overflow-y-auto bg-muted/10">
             <div className="no-scrollbar flex flex-1 overflow-y-auto border-x border-b border-border bg-background p-4 md:p-5">
-              <div className="no-scrollbar flex flex-1 overflow-y-auto rounded-md border-x border-b border-border bg-background">
+              <div className="no-scrollbar flex flex-1 overflow-y-auto rounded-md border border-border bg-background">
                 <LaunchView courseId={courseId} courseData={courseCreatedData} onSetView={setView} />
               </div>
             </div>

@@ -68,52 +68,62 @@ export function hasText(value: unknown): boolean {
 
 // ─── Section registry ─────────────────────────────────────────────────────────
 
-export const SECTIONS: SectionGroup[] = [
-  {
-    heading: "SETUP",
-    items: [
-      { id: "essentials", label: "Essentials", icon: FileText },
-      { id: "classification", label: "Classification", icon: AlignJustify },
-      { id: "students", label: "Students", icon: Users },
-      { id: "pedagogy", label: "Pedagogy", icon: BookOpen },
-      { id: "templates", label: "Templates", icon: LayoutTemplate },
-      { id: "schedule", label: "Schedule", icon: Calendar },
-      { id: "resources", label: "Resources", icon: BookOpen },
-      { id: "curriculum", label: "Curriculum", icon: BookMarked },
-    ],
-  },
-  {
-    heading: "PUBLISHING",
-    items: [
-      { id: "visibility", label: "Course Visibility", icon: Eye },
-      { id: "marketplace", label: "Marketplace", icon: Store },
-      { id: "pricing", label: "Pricing & Monetization", icon: DollarSign },
-      { id: "integrations", label: "External Integrations", icon: Plug },
-      { id: "communication", label: "Communication", icon: MessageSquare },
-    ],
-  },
-  {
-    heading: "ENGINE",
-    items: [
-      { id: "page-setup", label: "Page Setup", icon: Layers },
-      { id: "interface", label: "Interface", icon: Monitor },
-      { id: "themes", label: "Themes", icon: Palette },
-      { id: "accessibility", label: "Accessibility", icon: Smile },
-    ],
-  },
-  {
-    heading: "SETTINGS",
-    items: [
-      { id: "llm", label: "AI Model", icon: Brain },
-      { id: "notifications", label: "Notifications", icon: Bell },
-      { id: "data-management", label: "Data Management", icon: Database },
-      { id: "advanced", label: "Advanced Settings", icon: Settings },
-    ],
-  },
-]
+export function getSections(): SectionGroup[] {
+  return [
+    {
+      heading: "SETUP",
+      items: [
+        { id: "essentials", label: "Essentials", icon: FileText },
+        { id: "students", label: "Students", icon: Users },
+        { id: "schedule", label: "Schedule", icon: Calendar },
+        { id: "curriculum", label: "Curriculum", icon: BookMarked },
+      ],
+    },
+    {
+      heading: "INSTRUCTION",
+      items: [
+        { id: "classification", label: "Classification", icon: AlignJustify },
+        { id: "pedagogy", label: "Pedagogy", icon: BookOpen },
+        { id: "templates", label: "Templates", icon: LayoutTemplate },
+      ],
+    },
+    {
+      heading: "PUBLISHING",
+      items: [
+        { id: "visibility", label: "Course Visibility", icon: Eye },
+        { id: "marketplace", label: "Marketplace", icon: Store },
+        { id: "pricing", label: "Pricing & Monetization", icon: DollarSign },
+        { id: "integrations", label: "External Integrations", icon: Plug },
+        { id: "communication", label: "Communication", icon: MessageSquare },
+      ],
+    },
+    {
+      heading: "ENGINE",
+      items: [
+        { id: "page-setup", label: "Page Setup", icon: Layers },
+        { id: "interface", label: "Interface", icon: Monitor },
+        { id: "themes", label: "Themes", icon: Palette },
+        { id: "accessibility", label: "Accessibility", icon: Smile },
+      ],
+    },
+    {
+      heading: "SETTINGS",
+      items: [
+        { id: "llm", label: "AI Model", icon: Brain },
+        { id: "notifications", label: "Notifications", icon: Bell },
+        { id: "data-management", label: "Data Management", icon: Database },
+        { id: "resources", label: "Resources", icon: BookOpen },
+        { id: "advanced", label: "Advanced Settings", icon: Settings },
+      ],
+    },
+  ]
+}
 
-export const SETUP_SECTION_IDS = SECTIONS.find((group) => group.heading === "SETUP")?.items.map((item) => item.id) ?? []
-export const ALL_SECTION_IDS = SECTIONS.flatMap((group) => group.items.map((item) => item.id))
+export function getSetupSectionIds() {
+  return getSections().find((group) => group.heading === "SETUP")?.items.map((item) => item.id) ?? []
+}
+
+export const ALL_SECTION_IDS = getSections().flatMap((group) => group.items.map((item) => item.id))
 
 export function isSectionId(value: string | null): value is SectionId {
   return typeof value === "string" && ALL_SECTION_IDS.includes(value)
