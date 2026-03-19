@@ -18,11 +18,11 @@ export function PreviewView({ courseData }: { courseData: CourseCreatedData | nu
     <div className="mx-auto max-w-3xl space-y-8 py-8">
       <div className="rounded-xl border border-border bg-background overflow-hidden shadow-sm">
         {courseData.imageUrl ? (
-          <div className="h-56 overflow-hidden">
+          <div className="aspect-[4/3] w-full overflow-hidden">
             <img src={courseData.imageUrl} alt={courseData.title} className="w-full h-full object-cover" />
           </div>
         ) : (
-          <div className="h-56 flex items-center justify-center bg-muted/50">
+          <div className="aspect-[4/3] w-full flex items-center justify-center bg-muted/50">
             <span className="text-xs italic text-muted-foreground/40">No cover image</span>
           </div>
         )}

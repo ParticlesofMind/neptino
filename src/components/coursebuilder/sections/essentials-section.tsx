@@ -1,6 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import Cropper from "react-easy-crop"
+import type { Area, Point } from "react-easy-crop"
 import {
   buildEssentialsGenerationSettings,
   CharCount,
@@ -31,6 +33,72 @@ type EssentialsSettingsRow = {
   generation_settings: Record<string, unknown> | null
 }
 
+const CROP_ASPECT_OPTIONS = [
+  { value: "16:9", label: "Wide 16:9", ratio: 16 / 9 },
+  { value: "4:3", label: "Standard 4:3", ratio: 4 / 3 },
+  { value: "1:1", label: "Square 1:1", ratio: 1 },
+  { value: "3:4", label: "Portrait 3:4", ratio: 3 / 4 },
+] as const
+
+type CropAspectValue = (typeof CROP_ASPECT_OPTIONS)[number]["value"]
+
+function buildEssentialsSnapshot(data: CourseEssentials, imageUrl: string | null) {
+  return JSON.stringify({
+    title: data.title.trim(),
+    subtitle: data.subtitle.trim() || null,
+    description: data.description.trim(),
+    language: data.language,
+    courseType: data.courseType,
+    teacherId: data.teacherId,
+    teacherName: data.teacherName,
+    institution: data.institution,
+    imageUrl,
+  })
+}
+
+async function makeCroppedImageFile(src: string, croppedAreaPixels: Area, fileName: string): Promise<File> {
+  const image = new Image()
+  image.crossOrigin = "anonymous"
+  image.src = src
+
+  await new Promise<void>((resolve, reject) => {
+    image.onload = () => resolve()
+    image.onerror = () => reject(new Error("Failed to load selected image for cropping."))
+  })
+
+  const canvas = document.createElement("canvas")
+  canvas.width = Math.max(1, Math.round(croppedAreaPixels.width))
+  canvas.height = Math.max(1, Math.round(croppedAreaPixels.height))
+
+  const context = canvas.getContext("2d")
+  if (!context) {
+    throw new Error("Unable to prepare image crop.")
+  }
+
+  context.drawImage(
+    image,
+    croppedAreaPixels.x,
+    croppedAreaPixels.y,
+    croppedAreaPixels.width,
+    croppedAreaPixels.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  )
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, "image/jpeg", 0.92)
+  })
+
+  if (!blob) {
+    throw new Error("Failed to export cropped image.")
+  }
+
+  const baseName = fileName.includes(".") ? fileName.slice(0, fileName.lastIndexOf(".")) : fileName
+  return new File([blob], `${baseName || "course-image"}-cropped.jpg`, { type: "image/jpeg" })
+}
+
 export function EssentialsSection({
   onCourseCreated,
   initialData,
@@ -52,9 +120,20 @@ export function EssentialsSection({
     imageName: initialData?.imageName ?? null,
   })
   const [error, setError] = useState<string | null>(null)
-  const { saveStatus, markEmpty, markError, markSaved, markSaving } = useCourseSectionSave()
+  const { markEmpty, markError, markSaved, markSaving } = useCourseSectionSave()
+  const [isManualSaving, setIsManualSaving] = useState(false)
+  const [showManualSaving, setShowManualSaving] = useState(false)
   const [createdCourseId, setCreatedCourseId] = useState<string | null>(null)
   const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null)
+  const [cropModalOpen, setCropModalOpen] = useState(false)
+  const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null)
+  const [pendingImageName, setPendingImageName] = useState<string>("course-image")
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [cropAspect, setCropAspect] = useState<CropAspectValue>("3:4")
+  const [cropPixels, setCropPixels] = useState<Area | null>(null)
+  const [applyingCrop, setApplyingCrop] = useState(false)
+  const [lastPersistedSnapshot, setLastPersistedSnapshot] = useState<string>("")
   const imageRef = useRef<HTMLInputElement>(null)
   const imageFileRef = useRef<File | null>(null)
   const [teacherOptions, setTeacherOptions] = useState<Array<{ id: string; name: string }>>([])
@@ -66,6 +145,20 @@ export function EssentialsSection({
 
   const initialImageUrl = initialData?.imageUrl ?? null
   const previewImageUrl = imageObjectUrl ?? initialData?.imageUrl ?? null
+
+  const currentSnapshot = useMemo(
+    () => buildEssentialsSnapshot(data, previewImageUrl),
+    [data, previewImageUrl],
+  )
+  const hasPendingImageUpload = Boolean(imageFileRef.current)
+  const hasUnsavedChanges = hasPendingImageUpload || currentSnapshot !== lastPersistedSnapshot
+
+  useEffect(() => {
+    return () => {
+      if (imageObjectUrl) URL.revokeObjectURL(imageObjectUrl)
+      if (pendingImageSrc) URL.revokeObjectURL(pendingImageSrc)
+    }
+  }, [imageObjectUrl, pendingImageSrc])
 
   useEffect(() => {
     void (async () => {
@@ -104,6 +197,13 @@ export function EssentialsSection({
       }
     },
   })
+
+  useEffect(() => {
+    setLastPersistedSnapshot(buildEssentialsSnapshot(data, previewImageUrl))
+    // Intentionally baseline on incoming/loaded course identity.
+    // Subsequent edits will diverge currentSnapshot and enable saving.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId, initialData])
 
   const persistEssentials = useCallback(async (options?: { allowCreate?: boolean }) => {
     setError(null)
@@ -167,6 +267,8 @@ export function EssentialsSection({
         }
         generationSettingsRef.current = payload.generation_settings as Record<string, unknown>
         onCourseCreated(activeCourseId, { ...data, title: data.title.trim(), imageUrl })
+        imageFileRef.current = null
+        setLastPersistedSnapshot(buildEssentialsSnapshot(data, imageUrl))
       } else {
         if (!allowCreate) {
           markEmpty()
@@ -188,6 +290,8 @@ export function EssentialsSection({
         setCreatedCourseId(course.id)
         generationSettingsRef.current = generationSettingsPayload
         onCourseCreated(course.id, { ...data, title: data.title.trim(), imageUrl })
+        imageFileRef.current = null
+        setLastPersistedSnapshot(buildEssentialsSnapshot(data, imageUrl))
       }
 
       markSaved()
@@ -200,6 +304,54 @@ export function EssentialsSection({
     if (!(courseId ?? createdCourseId)) return
     void persistEssentials({ allowCreate: false })
   }, 800)
+
+  const handleManualSave = useCallback(async () => {
+    setIsManualSaving(true)
+    setShowManualSaving(false)
+
+    const savingLabelTimer = window.setTimeout(() => {
+      setShowManualSaving(true)
+    }, 180)
+
+    try {
+      await persistEssentials({ allowCreate: true })
+    } finally {
+      window.clearTimeout(savingLabelTimer)
+      setShowManualSaving(false)
+      setIsManualSaving(false)
+    }
+  }, [persistEssentials])
+
+  const closeCropModal = useCallback(() => {
+    setCropModalOpen(false)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setCropAspect("3:4")
+    setCropPixels(null)
+    setApplyingCrop(false)
+    if (pendingImageSrc) URL.revokeObjectURL(pendingImageSrc)
+    setPendingImageSrc(null)
+    if (imageRef.current) imageRef.current.value = ""
+  }, [pendingImageSrc])
+
+  const applyCroppedImage = useCallback(async () => {
+    if (!pendingImageSrc || !cropPixels) return
+    setApplyingCrop(true)
+    setError(null)
+    try {
+      const croppedFile = await makeCroppedImageFile(pendingImageSrc, cropPixels, pendingImageName)
+      imageFileRef.current = croppedFile
+
+      if (imageObjectUrl) URL.revokeObjectURL(imageObjectUrl)
+      const nextPreviewUrl = URL.createObjectURL(croppedFile)
+      setImageObjectUrl(nextPreviewUrl)
+      set("imageName", croppedFile.name)
+      closeCropModal()
+    } catch {
+      setError("Could not crop the selected image. Please try another file.")
+      setApplyingCrop(false)
+    }
+  }, [closeCropModal, cropPixels, imageObjectUrl, pendingImageName, pendingImageSrc])
 
   return (
     <SetupSection
@@ -302,11 +454,18 @@ export function EssentialsSection({
                 className="sr-only"
                 onChange={(e) => {
                   const file = e.target.files?.[0] ?? null
-                  imageFileRef.current = file
-                  if (imageObjectUrl) URL.revokeObjectURL(imageObjectUrl)
-                  const url = file ? URL.createObjectURL(file) : null
-                  setImageObjectUrl(url)
-                  set("imageName", file?.name ?? null)
+                  if (!file) return
+
+                  if (pendingImageSrc) URL.revokeObjectURL(pendingImageSrc)
+                  const sourceUrl = URL.createObjectURL(file)
+
+                  setPendingImageSrc(sourceUrl)
+                  setPendingImageName(file.name)
+                  setCrop({ x: 0, y: 0 })
+                  setZoom(1)
+                  setCropAspect("3:4")
+                  setCropPixels(null)
+                  setCropModalOpen(true)
                 }}
               />
               {data.imageName ? (
@@ -327,14 +486,16 @@ export function EssentialsSection({
           <div className="flex items-center justify-end gap-3 pt-1">
             <button
               type="button"
-              onClick={() => void persistEssentials({ allowCreate: true })}
-              disabled={saveStatus === "saving"}
+              onClick={() => void handleManualSave()}
+              disabled={isManualSaving || (Boolean(courseId ?? createdCourseId) && !hasUnsavedChanges)}
               className={`${PRIMARY_ACTION_BUTTON_CLASS} ml-auto`}
             >
-              {saveStatus === "saving"
-                ? "Saving…"
+              {isManualSaving && showManualSaving
+                ? "Saving..."
                 : courseId ?? createdCourseId
-                  ? "Save Changes"
+                  ? hasUnsavedChanges
+                    ? "Save Changes"
+                    : "No Changes"
                   : "Create Course"}
             </button>
           </div>
@@ -345,7 +506,6 @@ export function EssentialsSection({
             <CourseImagePreview
               imageUrl={previewImageUrl}
               alt="Course cover"
-              heightClassName="h-56"
               emptyText="No image uploaded"
             />
             <div className="p-5 space-y-2.5">
@@ -372,6 +532,90 @@ export function EssentialsSection({
           </CoursePreviewCard>
         </SetupColumn>
       </SetupPanelLayout>
+
+      {cropModalOpen && pendingImageSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close image crop modal"
+            className="absolute inset-0 bg-black/50"
+            onClick={closeCropModal}
+          />
+
+          <div className="relative z-10 w-full max-w-4xl overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Crop course image</p>
+                <p className="text-xs text-muted-foreground">Adjust framing, then upload the cropped image.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 p-4">
+              <div className="relative h-[52vh] min-h-[320px] w-full overflow-hidden rounded-lg bg-black/80">
+                <Cropper
+                  image={pendingImageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  minZoom={0.6}
+                  maxZoom={4}
+                  objectFit="contain"
+                  aspect={CROP_ASPECT_OPTIONS.find((option) => option.value === cropAspect)?.ratio ?? 3 / 4}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={(_, pixels) => setCropPixels(pixels)}
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="course-image-ratio" className="mb-1 block text-xs text-muted-foreground">Crop ratio</label>
+                  <SelectInput
+                    id="course-image-ratio"
+                    value={cropAspect}
+                    onChange={(e) => setCropAspect(e.target.value as CropAspectValue)}
+                  >
+                    {CROP_ASPECT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </SelectInput>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label htmlFor="course-image-zoom" className="text-xs text-muted-foreground">Zoom</label>
+                <input
+                  id="course-image-zoom"
+                  type="range"
+                  min={0.6}
+                  max={4}
+                  step={0.05}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
+                <button
+                  type="button"
+                  onClick={closeCropModal}
+                  className="rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/40"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void applyCroppedImage()}
+                  disabled={applyingCrop}
+                  className={`${PRIMARY_ACTION_BUTTON_CLASS} text-xs`}
+                >
+                  {applyingCrop ? "Uploading..." : "Upload"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </SetupSection>
   )
 }

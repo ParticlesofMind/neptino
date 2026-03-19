@@ -263,7 +263,6 @@ export function ClassificationSection({
                 <CourseImagePreview
                   imageUrl={courseCreatedData.imageUrl}
                   alt="Course"
-                  heightClassName="h-52"
                   emptyText="No image"
                   emptyTextClassName="text-xs italic text-muted-foreground/40"
                 />

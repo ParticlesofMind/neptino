@@ -11,7 +11,6 @@ export function LLMSection({ courseId }: { courseId: string | null }) {
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL)
   const [ollamaHealthy, setOllamaHealthy] = useState<boolean>(true)
   const [checking, setChecking] = useState(true)
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
 
   // Check Ollama health and load saved model preference
@@ -66,7 +65,6 @@ export function LLMSection({ courseId }: { courseId: string | null }) {
         console.error("Failed to save LLM selection:", error)
       } else {
         generationSettingsRef.current = nextSettings
-        setLastSavedAt(new Date().toISOString())
       }
     } catch (error) {
       console.error("Error saving LLM selection:", error)
@@ -147,11 +145,6 @@ export function LLMSection({ courseId }: { courseId: string | null }) {
           {checking && <span>Checking Ollama status…</span>}
           {!checking && ollamaHealthy && <span>Ollama is running</span>}
           {!checking && !ollamaHealthy && <span>Ollama is not accessible</span>}
-          {lastSavedAt && (
-            <span className="mt-1 block">
-              Last saved: {new Date(lastSavedAt).toLocaleTimeString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-            </span>
-          )}
         </div>
       </div>
     </SetupSection>

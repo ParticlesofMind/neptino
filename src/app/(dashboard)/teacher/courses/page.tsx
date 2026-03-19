@@ -82,7 +82,7 @@ export default async function TeacherCoursesPage() {
                 className="block"
               >
                 {/* Cover image */}
-                <div className={`relative h-64 ${course.course_image ? "overflow-hidden" : "flex items-center justify-center bg-muted/50"}`}>
+                <div className={`relative aspect-[4/3] w-full ${course.course_image ? "overflow-hidden" : "flex items-center justify-center bg-muted/50"}`}>
                   {course.course_image ? (
                     <img
                       src={course.course_image}

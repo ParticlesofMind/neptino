@@ -214,10 +214,13 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       // templates table
       const templateRecord = updatedTemplates.find((t) => t.id === aid)
       if (templateRecord) {
-        await updateTemplateData(aid, {
+        const { error: templateSyncError } = await updateTemplateData(aid, {
           fieldState,
           blocks: templateRecord.blocks,
         })
+        if (templateSyncError) {
+          console.error("Template library sync failed while updating template data:", templateSyncError)
+        }
       }
     }, 800)
 
@@ -255,7 +258,8 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       templateData: { fieldState, blocks: newTemplate.blocks },
     })
     if (templateError) {
-      setMessage("Template saved locally but failed to write to template library.")
+      console.error("Template library write failed:", templateError)
+      setMessage(`Template saved locally but failed to write to template library: ${templateError.message}`)
     }
     setActiveTemplateId(newTemplate.id)
     fieldStateInteractedRef.current = false
