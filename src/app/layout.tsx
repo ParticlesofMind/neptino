@@ -19,6 +19,7 @@ const geistMono = Geist_Mono({
 const openSans = Open_Sans({
   variable: "--font-open-sans",
   subsets: ["latin"],
+  preload: false,
   weight: ["300", "400", "500", "600", "700"],
 });
 

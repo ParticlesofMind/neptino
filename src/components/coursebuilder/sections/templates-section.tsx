@@ -219,7 +219,8 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
           blocks: templateRecord.blocks,
         })
         if (templateSyncError) {
-          console.error("Template library sync failed while updating template data:", templateSyncError)
+          const syncErrorDetail = templateSyncError?.message || JSON.stringify(templateSyncError) || "Unknown error"
+          console.error("Template library sync failed while updating template data:", syncErrorDetail)
         }
       }
     }, 800)
@@ -258,8 +259,9 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       templateData: { fieldState, blocks: newTemplate.blocks },
     })
     if (templateError) {
+      const errorMessage = templateError?.message || JSON.stringify(templateError) || "Unknown error"
       console.error("Template library write failed:", templateError)
-      setMessage(`Template saved locally but failed to write to template library: ${templateError.message}`)
+      setMessage(`Template saved locally but failed to write to template library: ${errorMessage}`)
     }
     setActiveTemplateId(newTemplate.id)
     fieldStateInteractedRef.current = false
