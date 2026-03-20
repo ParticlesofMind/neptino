@@ -29,7 +29,7 @@ export function EditorSplitLayout({
 }: EditorSplitLayoutProps) {
   return (
     <div className="make-editor-split-layout flex h-full min-h-0 flex-col overflow-hidden bg-white md:flex-row">
-      <div className={["make-editor-split-sidebar w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:border-b-0 md:border-r md:border-neutral-200", sidebarWidthClassName].join(" ")}>
+      <div className={["make-editor-split-sidebar w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:flex-1 md:border-b-0 md:border-r md:border-neutral-200", sidebarWidthClassName].join(" ")}>
         {(sidebarTitle || sidebarDescription) && (
           <div className="border-b border-neutral-100 px-5 py-4">
             {sidebarTitle && <p className="text-[13px] font-semibold text-neutral-900">{sidebarTitle}</p>}

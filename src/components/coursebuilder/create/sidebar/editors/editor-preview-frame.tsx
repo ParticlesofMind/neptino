@@ -26,8 +26,8 @@ export function EditorPreviewFrame({
   return (
     <div
       className={[
-        "mx-auto w-full !max-w-[40rem] overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
         className,
+        "mx-auto w-[calc(100%-1.5rem)] md:w-[calc(100%-2.5rem)] !max-w-[40rem] max-h-[min(36rem,calc(100vh-10rem))] overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]",
       ].filter(Boolean).join(" ")}
     >
       <div className="flex items-center gap-3 border-b border-neutral-100 bg-white px-5 py-3.5">

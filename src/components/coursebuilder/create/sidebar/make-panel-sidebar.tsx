@@ -123,7 +123,7 @@ export function MakePanelSidebar({
   const isLibraryView = activeFilter === "library"
 
   return (
-    <div className="flex w-full shrink flex-col overflow-hidden border-r border-border bg-background md:w-[26rem] md:min-w-[20rem] md:max-w-[26rem]">
+    <div className="flex w-full shrink flex-col overflow-hidden border-r border-border bg-background md:w-[19rem] md:min-w-[15.5rem] md:max-w-[19rem]">
       <div className="shrink-0 border-b border-border/50 px-4 pb-3 pt-4">
         <div className="flex items-start justify-between gap-2">
           <div>

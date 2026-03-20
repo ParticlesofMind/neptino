@@ -4,6 +4,7 @@
 import React from "react"
 import {
   Brain,
+  Braces,
   FileText,
   AlignJustify,
   Users,
@@ -110,6 +111,7 @@ export function getSections(): SectionGroup[] {
       heading: "SETTINGS",
       items: [
         { id: "llm", label: "AI Model", icon: Brain },
+        { id: "context", label: "Context", icon: Braces },
         { id: "notifications", label: "Notifications", icon: Bell },
         { id: "data-management", label: "Data Management", icon: Database },
         { id: "resources", label: "Resources", icon: BookOpen },

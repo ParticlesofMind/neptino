@@ -162,11 +162,23 @@ export function renderAdvancedChart(props: ChartEditorPreviewProps, commonProps:
     case "treemap": {
       const seriesKey = getFirstSeries(seriesKeys)
       if (!seriesKey) return <p className="py-8 text-center text-[11px] text-neutral-400">Need at least 1 numeric series for a treemap</p>
-      const treeData = chartData.map((datum) => ({
-        name: String((datum as Record<string, unknown>)[columns[0]] ?? "Item"),
-        size: Math.max(0, toNumber((datum as Record<string, unknown>)[seriesKey])),
-      }))
-      return <Treemap data={treeData} dataKey="size" stroke="#fff" fill={colors[0]} />
+      const treeData = chartData
+        .map((datum, index) => {
+          const rawName = String((datum as Record<string, unknown>)[columns[0]] ?? "")
+          const name = rawName.trim().length > 0 ? rawName : `Item ${index + 1}`
+          return {
+            id: `treemap-item-${index}`,
+            name,
+            size: Math.max(0, toNumber((datum as Record<string, unknown>)[seriesKey])),
+          }
+        })
+        .filter((node) => node.size > 0)
+
+      if (treeData.length === 0) {
+        return <p className="py-8 text-center text-[11px] text-neutral-400">Need positive numeric values for a treemap</p>
+      }
+
+      return <Treemap data={treeData} dataKey="size" stroke="#fff" fill={colors[0]} isAnimationActive={false} />
     }
 
     case "funnel": {

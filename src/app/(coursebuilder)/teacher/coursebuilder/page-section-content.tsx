@@ -1,4 +1,5 @@
 import { ClassificationSection } from "@/components/coursebuilder/sections/classification-section"
+import { ContextSection } from "@/components/coursebuilder/sections/context-section"
 import { CurriculumSection } from "@/components/coursebuilder/sections/curriculum-section"
 import { EssentialsSection } from "@/components/coursebuilder/sections/essentials-section"
 import { InterfaceSection } from "@/components/coursebuilder/sections/interface-section"
@@ -42,6 +43,7 @@ export function SectionContent({
 }: SectionContentProps) {
   switch (id) {
     case "essentials":     return <EssentialsSection key={courseId ?? "new"} onCourseCreated={onCourseCreated} initialData={initialEssentials} courseId={courseId} />
+    case "context":        return <ContextSection courseId={courseId} />
     case "classification": return <ClassificationSection courseCreatedData={courseCreatedData} courseId={courseId} />
     case "students":       return <StudentsSection courseId={courseId} />
     case "pedagogy":       return <PedagogySection       courseId={courseId} />
