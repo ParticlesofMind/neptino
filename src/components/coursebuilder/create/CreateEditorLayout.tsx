@@ -32,6 +32,7 @@ import { useIsMobile } from "@/components/coursebuilder/create/hooks/useIsMobile
 
 import { MakePanel }         from "@/components/coursebuilder/create/sidebar/MakePanel"
 import { CanvasVirtualizer } from "@/components/coursebuilder/create/canvas/CanvasVirtualizer"
+import { PageNavStrip } from "@/components/coursebuilder/create/canvas/CanvasPageNavStrip"
 import {
   CurateOverlayPanels,
   getCurateOverlayInset,
@@ -315,6 +316,7 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
               atlasWidth={atlasWidth}
               onResizeFilesStart={handleCardsResizeStart}
               onResizeAtlasStart={handleAtlasResizeStart}
+              rightAttachedSlot={<PageNavStrip sessions={sessions} />}
               isMobile={isMobile}
               onCloseMobilePanel={handleCloseMobilePanel}
             />

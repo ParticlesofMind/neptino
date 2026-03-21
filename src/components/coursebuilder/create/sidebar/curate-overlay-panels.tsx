@@ -11,6 +11,7 @@ interface CurateOverlayPanelsProps {
   atlasWidth: number
   onResizeFilesStart: (event: React.MouseEvent) => void
   onResizeAtlasStart: (event: React.MouseEvent) => void
+  rightAttachedSlot?: React.ReactNode
   /** When true, show a close button inside each visible panel */
   isMobile?: boolean
   onCloseMobilePanel?: () => void
@@ -25,6 +26,7 @@ export function CurateOverlayPanels({
   atlasWidth,
   onResizeFilesStart,
   onResizeAtlasStart,
+  rightAttachedSlot,
   isMobile,
   onCloseMobilePanel,
 }: CurateOverlayPanelsProps) {
@@ -63,7 +65,13 @@ export function CurateOverlayPanels({
         </div>
       </div>
 
-      <div className="absolute inset-y-0 right-0 z-20 flex">
+      <div className="absolute inset-y-0 right-0 z-20 flex relative">
+        {rightAttachedSlot ? (
+          <div className="pointer-events-none absolute inset-y-0 right-full flex items-center pr-2 z-30">
+            <div className="pointer-events-auto">{rightAttachedSlot}</div>
+          </div>
+        ) : null}
+
         {/* Resize handle — hidden on mobile */}
         <div
           role="separator"

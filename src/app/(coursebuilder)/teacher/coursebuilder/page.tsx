@@ -102,11 +102,9 @@ function CourseBuilderPageInner() {
             </div>
           </div>
         ) : view === "preview" ? (
-          <div className="no-scrollbar flex flex-1 overflow-y-auto bg-muted/10">
-            <div className="no-scrollbar flex flex-1 overflow-y-auto border-x border-b border-border bg-background p-4 md:p-5">
-              <div className="no-scrollbar flex flex-1 overflow-y-auto rounded-md border border-border bg-background">
-                <PreviewView courseData={courseCreatedData} />
-              </div>
+          <div className="flex flex-1 overflow-hidden bg-muted/10">
+            <div className="flex flex-1 overflow-hidden border-x border-b border-border bg-background">
+              <PreviewView courseId={courseId} courseData={courseCreatedData} />
             </div>
           </div>
         ) : (

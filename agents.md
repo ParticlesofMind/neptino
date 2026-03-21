@@ -50,8 +50,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=    # Supabase anon/public key
 ### Also used (dev/test tooling)
 
 ```
-VITE_SUPABASE_URL=                # same URL, used by Vitest + chrome extension
-VITE_SUPABASE_ANON_KEY=           # same key, used by Vitest + chrome extension
+VITE_SUPABASE_URL=                # same URL, used by Vitest + firefox extension
+VITE_SUPABASE_ANON_KEY=           # same key, used by Vitest + firefox extension
 NODE_ENV=development
 VITE_APP_ENV=development
 ```
@@ -188,9 +188,9 @@ Course content is primarily stored as JSONB (`curriculum_data`, `layout`) in the
 
 ---
 
-## Chrome extension
+## Firefox extension
 
-A companion Chrome extension lives in `chrome-extension/`. It is a separate Vite project.
+A companion Firefox extension lives in `firefox-extension/`. It is a separate Vite project.
 
 ```bash
 npm run ext:dev    # dev build with watch
@@ -198,4 +198,4 @@ npm run ext:build  # production build
 npm run ext:icons  # regenerate extension icons
 ```
 
-Source: `chrome-extension/src/` — `background.ts`, `content-script.ts`, `popup.ts`, `settings.ts`
+Source: `firefox-extension/src/` — `background.ts`, `content-script.ts`, `popup.ts`, `settings.ts`

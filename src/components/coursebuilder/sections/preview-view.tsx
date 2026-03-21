@@ -1,60 +1,109 @@
 "use client"
 
-import { FieldLabel } from "@/components/coursebuilder"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { DndContext, DragOverlay, MeasuringStrategy } from "@dnd-kit/core"
 import type { CourseCreatedData } from "@/components/coursebuilder/builder-types"
+import { CanvasVirtualizer } from "@/components/coursebuilder/create/canvas/CanvasVirtualizer"
+import { CreateAtlasSidebar } from "@/components/coursebuilder/create/sidebar/create-atlas-sidebar"
+import { DEFAULT_PAGE_DIMENSIONS } from "@/components/coursebuilder/create/types"
+import { useCourseSessionLoader } from "@/components/coursebuilder/create/hooks/useCourseSessionLoader"
+import { useCourseStore } from "@/components/coursebuilder/create/store/courseStore"
 
-export function PreviewView({ courseData }: { courseData: CourseCreatedData | null }) {
-  if (!courseData?.title) {
+export function PreviewView({ courseId }: { courseId: string | null; courseData?: CourseCreatedData | null }) {
+  const [atlasWidth, setAtlasWidth] = useState(360)
+  const atlasWidthRef = useRef(atlasWidth)
+
+  useEffect(() => {
+    atlasWidthRef.current = atlasWidth
+  }, [atlasWidth])
+
+  // Load sessions when courseId changes
+  const { loading } = useCourseSessionLoader(courseId)
+  const sessions = useCourseStore((s) => s.sessions)
+
+  const handleAtlasResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = atlasWidthRef.current
+    const onMove = (ev: MouseEvent) => {
+      setAtlasWidth(Math.max(200, Math.min(600, startWidth - (ev.clientX - startX))))
+    }
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+    }
+    document.addEventListener("mousemove", onMove)
+    document.addEventListener("mouseup", onUp)
+  }, [])
+
+  if (!courseId) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center py-24">
-        <p className="text-sm font-medium text-foreground">Nothing to preview yet</p>
+        <p className="text-sm font-medium text-foreground">No course selected</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Complete the Setup section to see your course preview.
+          Create or select a course to preview.
         </p>
       </div>
     )
   }
-  return (
-    <div className="mx-auto max-w-3xl space-y-8 py-8">
-      <div className="rounded-xl border border-border bg-background overflow-hidden shadow-sm">
-        {courseData.imageUrl ? (
-          <div className="aspect-[4/3] w-full overflow-hidden">
-            <img src={courseData.imageUrl} alt={courseData.title} className="w-full h-full object-cover" />
-          </div>
-        ) : (
-          <div className="aspect-[4/3] w-full flex items-center justify-center bg-muted/50">
-            <span className="text-xs italic text-muted-foreground/40">No cover image</span>
-          </div>
-        )}
-        <div className="p-6 space-y-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{courseData.title}</h1>
-            {courseData.subtitle && (
-              <p className="mt-1 text-base text-muted-foreground">{courseData.subtitle}</p>
-            )}
-          </div>
-          <p className="text-sm text-foreground/80 leading-relaxed">{courseData.description}</p>
-          <div className="flex flex-wrap gap-2">
-            {courseData.language && (
-              <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-                {courseData.language}
-              </span>
-            )}
-            {courseData.courseType && (
-              <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-                {courseData.courseType}
-              </span>
-            )}
-          </div>
-        </div>
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center py-24">
+        <p className="text-sm font-medium text-foreground">Loading preview…</p>
       </div>
-      <div className="rounded-lg border border-border bg-background p-5">
-        <FieldLabel>Student Experience Preview</FieldLabel>
-        <p className="text-sm text-muted-foreground">
-          This is a simplified preview. The full student experience — including the lesson canvas, assignments,
-          and assessments — will be available once the course is launched.
+    )
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center py-24">
+        <p className="text-sm font-medium text-foreground">No content yet</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Go to Create to add content to your course.
         </p>
       </div>
-    </div>
+    )
+  }
+
+  return (
+    <DndContext
+      id="preview-dnd"
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+    >
+      <div className="flex flex-1 h-full overflow-hidden bg-neutral-200">
+        {/* Canvas viewport — centered with padding */}
+        <div className="flex-1 flex flex-col overflow-x-visible overflow-y-hidden bg-neutral-200 px-8">
+          <CanvasVirtualizer
+            sessions={sessions}
+            dims={DEFAULT_PAGE_DIMENSIONS}
+            rightOverlayInset={atlasWidth + 8}
+            disableOverflow
+          />
+        </div>
+
+        {/* Resize handle — atlas panel */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize Atlas panel"
+          className="group relative -mx-1 w-3 cursor-col-resize"
+          onMouseDown={handleAtlasResizeStart}
+        >
+          <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
+          <div className="pointer-events-none absolute left-1/2 top-1/2 h-6 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-neutral-300/90 transition-colors group-hover:bg-neutral-600/80" />
+        </div>
+
+        {/* Atlas sidebar */}
+        <div
+          style={{ width: atlasWidth }}
+          className="relative flex h-full flex-col overflow-hidden bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.04)]"
+        >
+          <CreateAtlasSidebar />
+        </div>
+      </div>
+
+      <DragOverlay dropAnimation={null} />
+    </DndContext>
   )
 }

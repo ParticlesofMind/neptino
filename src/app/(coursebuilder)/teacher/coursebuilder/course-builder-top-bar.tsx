@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Rocket } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import type { View } from "@/components/coursebuilder/builder-types"
 import { VIEW_LABELS, getPrevView, getNextView } from "./page-section-registry"
 
@@ -16,7 +16,7 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
   return (
     <div className="flex h-9 items-center justify-between border-b border-border px-3 shrink-0 gap-4">
       {/* Left: back/previous */}
-      <div className="flex items-center gap-4 min-w-[110px]">
+      <div className="flex items-center gap-4">
         {prevView === null ? (
           <Link
             href="/teacher/courses"
@@ -43,21 +43,15 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
       </div>
 
       {/* Right: next step */}
-      <div className="flex items-center justify-end min-w-[110px]">
+      <div className="flex items-center gap-4">
         {nextView !== null ? (
           <button
             type="button"
             onClick={() => setView(nextView)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
-              nextView === "launch"
-                ? "bg-primary text-primary-foreground hover:opacity-90"
-                : "bg-background text-foreground hover:text-primary"
-            }`}
+            className="flex items-center gap-1.5 bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:text-primary transition"
           >
             {VIEW_LABELS[nextView]}
-            {nextView === "launch"
-              ? <Rocket className="h-3.5 w-3.5" />
-              : <ArrowRight className="h-3.5 w-3.5" />}
+            <ArrowRight className="h-3.5 w-3.5" />
           </button>
         ) : (
           <Link

@@ -12,9 +12,9 @@
     "test:coverage": "vitest run --coverage",
     "verify:clean-repo": "bash scripts/verify-clean-repo.sh && bash scripts/verify-no-legacy-imports.sh && npm run verify:file-lengths",
     "verify:file-lengths": "node scripts/check-file-line-limits.mjs",
-    "ext:dev": "npm --prefix chrome-extension run dev",
-    "ext:build": "npm --prefix chrome-extension run build",
-    "ext:icons": "npm --prefix chrome-extension run generate-icons",
+    "ext:dev": "npm --prefix firefox-extension run dev",
+    "ext:build": "npm --prefix firefox-extension run build",
+    "ext:icons": "npm --prefix firefox-extension run generate-icons",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"

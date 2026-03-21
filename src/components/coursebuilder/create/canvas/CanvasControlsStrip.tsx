@@ -34,7 +34,7 @@ export function CanvasControlsStrip() {
 
       <div className="w-6 h-px bg-neutral-200 my-1" />
 
-      <ControlBtn label="Fit" title="Fit to width (100%)" onClick={() => setZoom(100)}>
+      <ControlBtn label="100" title="Reset zoom to 100%" onClick={() => setZoom(100)}>
         <Focus size={13} strokeWidth={1.5} />
       </ControlBtn>
 

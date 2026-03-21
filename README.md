@@ -54,8 +54,8 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 | `npm run test:coverage` | Tests with coverage report |
 | `npm run test:e2e` | Playwright end-to-end tests |
 | `npm run lint` | ESLint |
-| `npm run ext:dev` | Chrome extension dev build |
-| `npm run ext:build` | Chrome extension production build |
+| `npm run ext:dev` | Firefox extension dev build |
+| `npm run ext:build` | Firefox extension production build |
 
 ## Project structure
 
@@ -81,7 +81,7 @@ supabase/
 e2e/                      # Playwright end-to-end tests
 src/__tests__/            # Vitest unit tests
 
-chrome-extension/         # Companion browser extension (separate Vite project)
+firefox-extension/        # Companion Firefox browser extension (separate Vite project)
 ```
 
 ## Database

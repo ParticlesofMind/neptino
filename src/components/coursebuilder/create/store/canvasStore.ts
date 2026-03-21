@@ -42,7 +42,9 @@ interface CanvasState {
   /** Whether a media drag from the sidebar is in progress */
   mediaDragActive: boolean
   /**
-   * Base fit-to-container scale written by CanvasVirtualizer.
+    * Base scale written by CanvasVirtualizer.
+    * It never exceeds 1, so 100% remains the natural page size and only scales
+    * down when the viewport is narrower than the page.
    * effectiveScale = fitScale * (zoomLevel / 100)
    * 0 until the first ResizeObserver fires.
    */
