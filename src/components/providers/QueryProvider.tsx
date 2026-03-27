@@ -14,12 +14,16 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Data is considered fresh for 30 seconds before re-fetching
-            staleTime: 30 * 1000,
-            // Keep unused data in cache for 5 minutes
-            gcTime: 5 * 60 * 1000,
+            // Keep data fresh longer to prevent rapid refetch flicker between view transitions.
+            staleTime: 2 * 60 * 1000,
+            // Keep unused data in cache long enough to survive common navigation loops.
+            gcTime: 10 * 60 * 1000,
             // Retry once on failure before surfacing the error
             retry: 1,
+            // Keep prior data visible while fetching the next result.
+            placeholderData: (previousData) => previousData,
+            // Avoid unexpected refetch flashes when tab focus changes.
+            refetchOnWindowFocus: false,
           },
         },
       }),

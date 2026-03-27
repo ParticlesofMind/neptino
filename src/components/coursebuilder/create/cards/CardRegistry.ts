@@ -83,7 +83,15 @@ export const DEFAULT_CARD_REGISTRY: CardRegistry = {
   "layout-tower":     { Editor: LayoutCard },
   "layout-pinboard":  { Editor: LayoutCard },
   "layout-annotated": { Editor: LayoutCard },
-  "layout-sixgrid":   { Editor: LayoutCard },}
+  "layout-sixgrid":   { Editor: LayoutCard },
+  "layout-comparison": { Editor: LayoutCard },
+  "layout-stepped": { Editor: LayoutCard },
+  "layout-hero": { Editor: LayoutCard },
+  "layout-dialogue": { Editor: LayoutCard },
+  "layout-gallery": { Editor: LayoutCard },
+  "layout-spotlight": { Editor: LayoutCard },
+  "layout-flipcard": { Editor: LayoutCard },
+}
 
 // ─── Lookup helper ────────────────────────────────────────────────────────────
 

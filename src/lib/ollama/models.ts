@@ -109,7 +109,16 @@ export const AVAILABLE_MODELS: OllamaModel[] = [
   },
 ]
 
-export const DEFAULT_MODEL = "gemma3:4b"
+export const DEFAULT_MODEL = "llama3.2"
+
+const MODEL_ALIASES: Record<string, string> = {
+  gemma3: "gemma3:4b",
+  "gemma3:latest": "gemma3:4b",
+  llama3: "llama3.2",
+  "llama3:latest": "llama3.2",
+  qwen3: "qwen3-instruct",
+  "qwen3:latest": "qwen3-instruct",
+}
 
 function candidateBaseUrls(baseUrl: string): string[] {
   const normalized = baseUrl.replace(/\/$/, "")
@@ -121,6 +130,16 @@ function candidateBaseUrls(baseUrl: string): string[] {
     urls.push(normalized.replace("127.0.0.1", "localhost"))
   }
   return Array.from(new Set(urls))
+}
+
+export function normalizeOllamaModelName(modelName: string): string {
+  const trimmed = modelName.trim()
+  return MODEL_ALIASES[trimmed] ?? trimmed
+}
+
+function getModelBaseName(modelName: string): string {
+  const normalized = normalizeOllamaModelName(modelName)
+  return normalized.split(":")[0]
 }
 
 /**
@@ -145,11 +164,62 @@ export async function fetchOllamaModels(
   return []
 }
 
+export async function resolveOllamaModel(
+  requestedModel: string,
+  options?: {
+    baseUrl?: string
+    fallbackModel?: string
+  },
+): Promise<string> {
+  const normalizedRequested = normalizeOllamaModelName(requestedModel)
+  const normalizedFallback = options?.fallbackModel
+    ? normalizeOllamaModelName(options.fallbackModel)
+    : null
+
+  const installedModels = await fetchOllamaModels(options?.baseUrl)
+  if (installedModels.length === 0) {
+    return normalizedRequested
+  }
+
+  if (installedModels.includes(normalizedRequested)) {
+    return normalizedRequested
+  }
+
+  const requestedBase = getModelBaseName(normalizedRequested)
+  const baseMatch = installedModels.find((model) => getModelBaseName(model) === requestedBase)
+  if (baseMatch) {
+    return baseMatch
+  }
+
+  if (normalizedFallback) {
+    if (installedModels.includes(normalizedFallback)) {
+      return normalizedFallback
+    }
+
+    const fallbackBase = getModelBaseName(normalizedFallback)
+    const fallbackBaseMatch = installedModels.find((model) => getModelBaseName(model) === fallbackBase)
+    if (fallbackBaseMatch) {
+      return fallbackBaseMatch
+    }
+  }
+
+  const preferredFamilies = ["llama", "qwen", "gemma", "mistral", "phi", "deepseek", "neural-chat", "dbrx"]
+  for (const family of preferredFamilies) {
+    const familyMatch = installedModels.find((model) => getModelBaseName(model).includes(family))
+    if (familyMatch) {
+      return familyMatch
+    }
+  }
+
+  return installedModels[0]
+}
+
 /**
  * Get model info from our curated list
  */
 export function getModelInfo(modelName: string): OllamaModel | undefined {
-  return AVAILABLE_MODELS.find((m) => m.name === modelName || m.displayName === modelName)
+  const normalized = normalizeOllamaModelName(modelName)
+  return AVAILABLE_MODELS.find((m) => m.name === normalized || m.displayName === normalized || getModelBaseName(m.name) === getModelBaseName(normalized))
 }
 
 /**

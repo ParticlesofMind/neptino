@@ -8,6 +8,7 @@ import { CreateAtlasSidebar } from "@/components/coursebuilder/create/sidebar/cr
 import { DEFAULT_PAGE_DIMENSIONS } from "@/components/coursebuilder/create/types"
 import { useCourseSessionLoader } from "@/components/coursebuilder/create/hooks/useCourseSessionLoader"
 import { useCourseStore } from "@/components/coursebuilder/create/store/courseStore"
+import { useSteadyLoading } from "@/components/coursebuilder"
 
 export function PreviewView({ courseId }: { courseId: string | null; courseData?: CourseCreatedData | null }) {
   const [atlasWidth, setAtlasWidth] = useState(360)
@@ -19,6 +20,7 @@ export function PreviewView({ courseId }: { courseId: string | null; courseData?
 
   // Load sessions when courseId changes
   const { loading } = useCourseSessionLoader(courseId)
+  const showLoading = useSteadyLoading(loading)
   const sessions = useCourseStore((s) => s.sessions)
 
   const handleAtlasResizeStart = useCallback((e: React.MouseEvent) => {
@@ -47,10 +49,17 @@ export function PreviewView({ courseId }: { courseId: string | null; courseData?
     )
   }
 
-  if (loading) {
+  if (showLoading && sessions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center py-24">
-        <p className="text-sm font-medium text-foreground">Loading preview…</p>
+      <div className="flex h-full items-center justify-center p-8">
+        <div className="w-full max-w-4xl rounded-xl border border-border bg-background/80 p-5">
+          <div className="h-4 w-40 rounded bg-muted/70" />
+          <div className="mt-4 space-y-3">
+            <div className="h-12 rounded bg-muted/60" />
+            <div className="h-12 rounded bg-muted/60" />
+            <div className="h-12 rounded bg-muted/60" />
+          </div>
+        </div>
       </div>
     )
   }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { SetupPanelLayout, SetupSection } from "@/components/coursebuilder"
+import { SetupPanelLayout, SetupSection, useSteadyLoading } from "@/components/coursebuilder"
 import { buildDefaultResourcePreferences, type ResourcePreference } from "@/lib/curriculum/resources"
 import { getObjectiveCapForDuration, listDurationPresets, normalizeContentLoadConfig } from "@/lib/curriculum/content-load-service"
 import type { GenerationAction, ClassificationContext, PedagogyContext, NamingRules, StudentsContext } from "@/lib/curriculum/ai-generation-service"
@@ -58,7 +58,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   const [missing, setMissing] = useState({ essentials: false, students: false, schedule: false, curriculum: false })
   const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
 
-  useCurriculumLoader(courseId, {
+  const { loading: loadingCurriculum, hydrated: curriculumHydrated } = useCurriculumLoader(courseId, {
     setCourseInfo, setCourseGoalsList, setSelectedLLMModel, setResourcePreferences,
     setCourseLanguage, setClassificationData, setKeyTerms, setMandatoryTopics,
     setPriorKnowledge, setApplicationContext, setPedagogyData, setStudentsData,
@@ -70,24 +70,37 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     generationSettingsRef,
   })
 
+  const showHydrationPlaceholder = useSteadyLoading(Boolean(courseId && !curriculumHydrated), {
+    delayMs: 120,
+    minVisibleMs: 220,
+  })
+
   // Sync topics/objectives/tasks when content volume preset changes.
   useEffect(() => {
     const preset = listDurationPresets().find((p) => p.name === contentVolume)
-    if (preset) {
-      const norm = normalizeContentLoadConfig(preset.config, preset.maxDuration)
+    if (!preset) return
+
+    const norm = normalizeContentLoadConfig(preset.config, preset.maxDuration)
+    const frame = window.requestAnimationFrame(() => {
       setTopics(norm.topicsPerLesson)
       setObjectives(norm.objectivesPerTopic)
       setTasks(norm.tasksPerObjective)
-    }
+    })
+
+    return () => window.cancelAnimationFrame(frame)
   }, [contentVolume])
 
   // Keep module name array in sync with module count.
   useEffect(() => {
     const count = moduleOrg === "linear" ? 1 : moduleCount
-    setModuleNames((prev) => {
-      const next = Array.from({ length: count }, (_, i) => prev[i] || `Module ${i + 1}`)
-      return prev.length === next.length && prev.every((v, i) => v === next[i]) ? prev : next
+    const frame = window.requestAnimationFrame(() => {
+      setModuleNames((prev) => {
+        const next = Array.from({ length: count }, (_, i) => prev[i] || `Module ${i + 1}`)
+        return prev.length === next.length && prev.every((v, i) => v === next[i]) ? prev : next
+      })
     })
+
+    return () => window.cancelAnimationFrame(frame)
   }, [moduleOrg, moduleCount])
 
   const hasGeneratedSchedule = scheduleEntries.length > 0
@@ -132,6 +145,33 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
   const goToSection = (sectionId: "essentials" | "students" | "schedule" | "curriculum") => {
     window.dispatchEvent(new CustomEvent("coursebuilder:navigate-section", { detail: { sectionId } }))
+  }
+
+  if (courseId && !curriculumHydrated && (showHydrationPlaceholder || loadingCurriculum)) {
+    return (
+      <SetupSection title="Curriculum" description="Structure, generation, and preview of your course curriculum.">
+        <SetupPanelLayout>
+          <div className="space-y-4 rounded-xl border border-border/70 bg-background p-5">
+            <div className="h-4 w-40 rounded bg-muted/60" />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="h-16 rounded bg-muted/50" />
+              <div className="h-16 rounded bg-muted/50" />
+              <div className="h-16 rounded bg-muted/50" />
+            </div>
+            <div className="h-10 rounded bg-muted/50" />
+            <div className="h-10 rounded bg-muted/50" />
+          </div>
+          <div className="rounded-xl border border-border/70 bg-background p-5">
+            <div className="h-4 w-24 rounded bg-muted/60" />
+            <div className="mt-4 space-y-3">
+              <div className="h-10 rounded bg-muted/50" />
+              <div className="h-10 rounded bg-muted/50" />
+              <div className="h-10 rounded bg-muted/50" />
+            </div>
+          </div>
+        </SetupPanelLayout>
+      </SetupSection>
+    )
   }
 
   return (

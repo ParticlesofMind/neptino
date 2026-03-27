@@ -10,7 +10,7 @@
  * Motion toolbar strip rendered at bottom for animation-capable types.
  */
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import { Plus, Check } from "lucide-react"
 import type { CardType } from "../types"
 import { CARD_TYPE_META } from "../cards/CardTypePreview"
@@ -31,14 +31,14 @@ import { MAKE_RESOURCE_ACCENT } from "./make-theme"
 
 const GROUP_ACCENT: Record<string, { icon: string; pill: string; pillActive: string; border: string; dot: string }> = {
   resources: MAKE_RESOURCE_ACCENT,
-  tools:       { icon: "text-[#00ccb3]",  pill: "text-[#00ccb3]",  pillActive: "bg-[#00ccb3] text-white",  border: "border-[#00ccb3]/20 bg-[#00ccb3]/5",  dot: "bg-[#00ccb3]"  },
+  activities:  { icon: "text-[#00ccb3]",  pill: "text-[#00ccb3]",  pillActive: "bg-[#00ccb3] text-white",  border: "border-[#00ccb3]/20 bg-[#00ccb3]/5",  dot: "bg-[#00ccb3]"  },
   experiences: { icon: "text-[#a89450]", pill: "text-[#a89450]", pillActive: "bg-[#a89450] text-white", border: "border-[#a89450]/20 bg-[#a89450]/5", dot: "bg-[#a89450]" },
   layout:      { icon: "text-neutral-600", pill: "text-neutral-600", pillActive: "bg-neutral-600 text-white", border: "border-neutral-200 bg-neutral-50",     dot: "bg-neutral-400" },
 }
 
 const GROUP_LABEL: Record<CardGroup, string> = {
   resources: "Resource",
-  tools: "Tool",
+  activities: "Activity",
   experiences: "Experience",
   layout: "Layout",
 }
@@ -59,14 +59,6 @@ export function MakePanel() {
   const setMode = useCreateModeStore((s) => s.setMode)
   const sessions = useCourseStore((s) => s.sessions)
   const activeSessionId = useCourseStore((s) => s.activeSessionId)
-
-  // Seed defaults on first select without sample content so previews start empty.
-  useEffect(() => {
-    setContentByType((prev) => {
-      if (prev[selected]) return prev
-      return { ...prev, [selected]: getStudioDefaults(selected) }
-    })
-  }, [selected])
 
   const selectedContent = contentByType[selected] ?? getStudioDefaults(selected)
   const readiness = getBlockReadiness(selected, selectedContent)
@@ -133,6 +125,8 @@ export function MakePanel() {
   const meta = CARD_TYPE_META[selected]
   const selectedSpec = CARD_SPECS.find((s) => s.cardType === selected)
   const accent = GROUP_ACCENT[selectedSpec?.group ?? "resources"]
+  const isLayoutSelection = selectedSpec?.group === "layout"
+  const itemLabel = isLayoutSelection ? "composition" : "block"
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#f5f7fb_100%)]">
@@ -172,12 +166,16 @@ export function MakePanel() {
 
           <div className="flex shrink-0 items-center gap-3">
             {!canAddToCanvas && (
-              <p className="hidden text-xs text-neutral-400 lg:block">Add a card title and content to enable this block.</p>
+              <p className="hidden text-xs text-neutral-400 lg:block">
+                {isLayoutSelection
+                  ? "Add a composition name to enable this composition."
+                  : "Add a card title and content to enable this block."}
+              </p>
             )}
             <button
               type="button"
               onClick={handleAddToCanvas}
-              title={canAddToCanvas ? "Add block to canvas" : "Complete this block before adding it to the canvas"}
+              title={canAddToCanvas ? `Add ${itemLabel} to canvas` : `Complete this ${itemLabel} before adding it to the canvas`}
               disabled={!canAddToCanvas}
               className={[
                 "group flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-[12px] font-semibold transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none",
@@ -196,7 +194,7 @@ export function MakePanel() {
               >
                 {addedFeedback ? <Check size={12} /> : <Plus size={12} />}
               </span>
-              <span>{addedFeedback ? "Added to canvas" : "Add block"}</span>
+              <span>{addedFeedback ? `Added ${itemLabel}` : `Add ${itemLabel}`}</span>
             </button>
           </div>
         </div>

@@ -48,8 +48,9 @@ const TimelineJSPreview = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center bg-neutral-50 text-[12px] text-neutral-400" style={{ height: 160 }}>
-        Loading timeline…
+      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3" style={{ height: 160 }}>
+        <div className="h-3 w-28 rounded bg-neutral-200" />
+        <div className="mt-3 h-[112px] rounded bg-neutral-100" />
       </div>
     ),
   },

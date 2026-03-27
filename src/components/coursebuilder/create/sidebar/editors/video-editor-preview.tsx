@@ -3,6 +3,7 @@ import type { RefObject } from "react"
 
 import { EditorPreviewFrame } from "./editor-preview-frame"
 import type { VideoFitMode, VideoProvider } from "./video-utils"
+import { useSteadyLoading } from "@/components/coursebuilder/use-steady-loading"
 
 interface VideoEditorPreviewProps {
   url: string
@@ -47,6 +48,8 @@ export function VideoEditorPreview({
   onTitleChange,
   onDurationChange,
 }: VideoEditorPreviewProps) {
+  const showStreamLoading = useSteadyLoading(streamStatus === "idle")
+
   return (
     <div className="min-h-0 min-w-0 md:w-[min(44rem,40vw)] md:max-w-[44rem] md:flex-none bg-[#f5f7fb]">
       <div className="flex min-h-full flex-col justify-center px-2 py-2 md:px-3 md:py-3">
@@ -112,7 +115,7 @@ export function VideoEditorPreview({
                     {streamStatus === "hls" && "Adaptive streaming via hls.js"}
                     {streamStatus === "native" && "Adaptive streaming — native"}
                     {streamStatus === "error" && "HLS stream failed to load"}
-                    {streamStatus === "idle" && "Loading stream…"}
+                    {streamStatus === "idle" && showStreamLoading && "Loading stream…"}
                   </p>
                 )}
               </>

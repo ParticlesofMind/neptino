@@ -10,13 +10,14 @@ import {
   normalizeGeneratedSessions,
 } from "./generation-route-utils"
 import type { GeneratedSession, GeneratedModule } from "./generation-route-utils"
+import { DEFAULT_MODEL, normalizeOllamaModelName, resolveOllamaModel } from "@/lib/ollama/models"
 
 // Allow up to 10 minutes for Ollama to generate (reasoning models like deepseek-r1 can be very slow)
 export const maxDuration = 600
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434"
-const OLLAMA_MODEL_DEFAULT = process.env.OLLAMA_MODEL || "gemma3:4b"
-const OLLAMA_LOW_POWER_MODEL = process.env.OLLAMA_LOW_POWER_MODEL || "gemma3:4b"
+const OLLAMA_MODEL_DEFAULT = process.env.OLLAMA_MODEL || DEFAULT_MODEL
+const OLLAMA_LOW_POWER_MODEL = process.env.OLLAMA_LOW_POWER_MODEL || DEFAULT_MODEL
 const GENERATION_COOLDOWN_MS = 10_000
 
 // Cloud LLM fallback — used when Ollama is unreachable.
@@ -134,20 +135,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use provided model or fall back to default
-    let selectedModel = model ?? OLLAMA_MODEL_DEFAULT
-
-    // Normalise legacy model names that were stored without an explicit tag.
-    // Ollama 0.4+ requires the full "<name>:<tag>" form.
-    const MODEL_ALIASES: Record<string, string> = {
-      gemma3: "gemma3:4b",
-      "gemma3:latest": "gemma3:4b",
-      llama3: "llama3.2:latest",
-      "llama3:latest": "llama3.2:latest",
-      "deepseek-r1:latest": "deepseek-r1:latest", // already valid, kept for completeness
-    }
-    if (MODEL_ALIASES[selectedModel]) {
-      selectedModel = MODEL_ALIASES[selectedModel]
-    }
+    let selectedModel = normalizeOllamaModelName(model ?? OLLAMA_MODEL_DEFAULT)
 
     // Estimate token budget: generous allocation per session.
     // deepseek-r1 may still use some tokens for reasoning even with think=false.
@@ -163,8 +151,13 @@ export async function POST(request: NextRequest) {
     const isHeavyModel = selectedModel.includes("deepseek-r1") || selectedModel.includes("dbrx")
     if (isHeavyModel && estimatedSessions > 8) {
       console.warn(`[generate-curriculum] Heavy model '${selectedModel}' requested for ${estimatedSessions} sessions. Falling back to '${OLLAMA_LOW_POWER_MODEL}' to reduce load.`)
-      selectedModel = OLLAMA_LOW_POWER_MODEL
+      selectedModel = normalizeOllamaModelName(OLLAMA_LOW_POWER_MODEL)
     }
+
+    selectedModel = await resolveOllamaModel(selectedModel, {
+      baseUrl: OLLAMA_BASE_URL,
+      fallbackModel: OLLAMA_LOW_POWER_MODEL,
+    })
 
     console.log(`[generate-curriculum] Using model: ${selectedModel}`)
 

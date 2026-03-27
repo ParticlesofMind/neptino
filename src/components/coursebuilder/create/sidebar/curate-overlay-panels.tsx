@@ -34,6 +34,7 @@ export function CurateOverlayPanels({
     <>
       <div className="absolute inset-y-0 left-0 z-20 flex">
         <div
+          data-testid="curate-files-panel"
           style={{ width: filesWidth }}
           className="relative flex h-full flex-col overflow-hidden bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.04)]"
         >
@@ -52,12 +53,13 @@ export function CurateOverlayPanels({
           <FilesBrowser />
         </div>
 
-        {/* Resize handle — hidden on mobile */}
+        {/* Drag handle — desktop only */}
         <div
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize blocks panel"
-          className="group relative -mx-1 w-3 cursor-col-resize md:block hidden"
+          data-testid="resize-files-panel-handle"
+          className="group relative -mx-1 hidden w-3 cursor-col-resize md:block"
           onMouseDown={onResizeFilesStart}
         >
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
@@ -65,19 +67,20 @@ export function CurateOverlayPanels({
         </div>
       </div>
 
-      <div className="absolute inset-y-0 right-0 z-20 flex relative">
+      <div className="absolute inset-y-0 right-0 z-20 flex">
         {rightAttachedSlot ? (
           <div className="pointer-events-none absolute inset-y-0 right-full flex items-center pr-2 z-30">
             <div className="pointer-events-auto">{rightAttachedSlot}</div>
           </div>
         ) : null}
 
-        {/* Resize handle — hidden on mobile */}
+        {/* Drag handle — desktop only */}
         <div
           role="separator"
           aria-orientation="vertical"
           aria-label="Resize Atlas panel"
-          className="group relative -mx-1 w-3 cursor-col-resize md:block hidden"
+          data-testid="resize-atlas-panel-handle"
+          className="group relative -mx-1 hidden w-3 cursor-col-resize md:block"
           onMouseDown={onResizeAtlasStart}
         >
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
@@ -85,6 +88,7 @@ export function CurateOverlayPanels({
         </div>
 
         <div
+          data-testid="curate-atlas-panel"
           style={{ width: atlasWidth }}
           className="relative flex h-full flex-col overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.04)]"
         >

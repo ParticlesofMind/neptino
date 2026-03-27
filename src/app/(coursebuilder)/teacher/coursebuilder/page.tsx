@@ -1,13 +1,33 @@
 "use client"
 
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useRef } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { CreateEditorLayout } from "@/components/coursebuilder/create/CreateEditorLayout"
+import { prefetchCourseRow, useSteadyLoading } from "@/components/coursebuilder"
 import { useCourseBuilderState } from "./use-course-builder-state"
 import { SectionContent, PreviewView, LaunchView } from "./page-section-content"
 import { CourseBuilderTopBar } from "./course-builder-top-bar"
 import { CourseBuilderSidebarNav } from "./course-builder-sidebar-nav"
 import { CourseBuilderMobileNav } from "./course-builder-mobile-nav"
-import type { SectionId } from "./page-section-registry"
+import { getSetupSectionIds, type SectionId } from "./page-section-registry"
+import { CURRICULUM_LOADER_SELECT } from "@/components/coursebuilder/sections/use-curriculum-loader"
+
+const SECTION_SELECTS: Record<string, string[]> = {
+  essentials: ["generation_settings"],
+  students: ["students_overview"],
+  schedule: ["schedule_settings"],
+  curriculum: ["curriculum_data", CURRICULUM_LOADER_SELECT],
+  classification: ["classification_data"],
+  pedagogy: ["course_layout"],
+  templates: ["template_settings,curriculum_data"],
+  visibility: ["visibility_settings"],
+  marketplace: ["marketplace_settings"],
+  pricing: ["pricing_settings"],
+  integrations: ["integration_settings"],
+  communication: ["communication_settings"],
+  "page-setup": ["generation_settings"],
+  resources: ["generation_settings"],
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -24,6 +44,8 @@ export default function CourseBuilderPage() {
 }
 
 function CourseBuilderPageInner() {
+  const queryClient = useQueryClient()
+  const prefetchedCourseIdRef = useRef<string | null>(null)
   const {
     view, setView,
     activeSection, setActiveSection: setRawActiveSection,
@@ -38,6 +60,7 @@ function CourseBuilderPageInner() {
   } = useCourseBuilderState()
 
   const setupSectionsLocked = !courseId
+  const showLoadingCourse = useSteadyLoading(loadingCourse)
 
   useEffect(() => {
     if (!setupSectionsLocked) return
@@ -50,6 +73,34 @@ function CourseBuilderPageInner() {
     if (setupSectionsLocked && id !== "essentials") return
     setRawActiveSection(id)
   }
+
+  useEffect(() => {
+    if (!courseId || view !== "setup") return
+
+    const setupSections = getSetupSectionIds()
+    const currentIdx = setupSections.indexOf(activeSection)
+    const nextSectionId = currentIdx >= 0 ? setupSections[currentIdx + 1] : null
+    const targets = [activeSection, nextSectionId].filter(Boolean) as string[]
+
+    // Warm all setup-section row queries once per course to remove first-hop loading flashes.
+    if (prefetchedCourseIdRef.current !== courseId) {
+      prefetchedCourseIdRef.current = courseId
+      for (const sectionId of setupSections) {
+        const selects = SECTION_SELECTS[sectionId] ?? []
+        for (const select of selects) {
+          void prefetchCourseRow(queryClient, courseId, select)
+        }
+      }
+    }
+
+    // Keep next likely section warm as the user navigates setup.
+    for (const sectionId of targets) {
+      const selects = SECTION_SELECTS[sectionId] ?? []
+      for (const select of selects) {
+        void prefetchCourseRow(queryClient, courseId, select)
+      }
+    }
+  }, [activeSection, courseId, queryClient, view])
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -69,7 +120,7 @@ function CourseBuilderPageInner() {
             <div className="flex flex-1 flex-col overflow-hidden border-x border-b border-border bg-background">
               <main className="flex-1 overflow-hidden p-4 md:p-5">
                 <div className="mx-auto flex h-full min-h-0 flex-col bg-background">
-                  {loadingCourse ? (
+                  {showLoadingCourse ? (
                     <div className="flex items-center justify-center h-48">
                       <span className="text-sm text-muted-foreground">Loading course…</span>
                     </div>

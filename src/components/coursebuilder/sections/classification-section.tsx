@@ -16,6 +16,7 @@ import {
   updateCourseById,
   useCourseRowLoader,
   useCourseSectionSave,
+  useSteadyLoading,
   useDebouncedChangeSave,
   useStringListInput,
   type IscedDomain,
@@ -83,6 +84,7 @@ export function ClassificationSection({
       setApplicationContext(hydrated.applicationContext)
     },
   })
+  const showLoading = useSteadyLoading(loading)
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
@@ -132,10 +134,28 @@ export function ClassificationSection({
     subtopics.find((s) => s.label === subtopic || s.value === subtopic)?.label,
   ].filter(Boolean) as string[]
 
-  if (loading) {
+  if (showLoading) {
     return (
       <SetupSection title="Classification" description="Subject matter hierarchy and course positioning.">
-        <p className="text-sm text-muted-foreground">Loading classification…</p>
+        <SetupPanelLayout>
+          <SetupColumn className="space-y-4">
+            <div className="h-5 w-40 rounded bg-muted/70" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="h-10 rounded bg-muted/60" />
+              <div className="h-10 rounded bg-muted/60" />
+            </div>
+            <div className="h-px w-full bg-border" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="h-10 rounded bg-muted/60" />
+              <div className="h-10 rounded bg-muted/60" />
+              <div className="h-10 rounded bg-muted/60" />
+              <div className="h-10 rounded bg-muted/60" />
+            </div>
+          </SetupColumn>
+          <SetupColumn>
+            <div className="h-64 rounded bg-muted/50" />
+          </SetupColumn>
+        </SetupPanelLayout>
       </SetupSection>
     )
   }

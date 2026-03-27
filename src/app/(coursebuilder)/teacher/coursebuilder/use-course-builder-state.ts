@@ -40,7 +40,6 @@ export function useCourseBuilderState() {
   const [flashSectionId, setFlashSectionId] = useState<SectionId | null>(null)
   const [completedSetupSections, setCompletedSetupSections] = useState<Record<string, boolean>>({})
   const completionFetchRef = useRef<{ courseId: string | null; at: number }>({ courseId: null, at: 0 })
-  const loggedSectionTraceRef = useRef(false)
 
   const storageKeys = getBuilderStorageKeys(courseId ?? resolvedUrlCourseId)
 
@@ -70,12 +69,16 @@ export function useCourseBuilderState() {
 
   useEffect(() => {
     const initialKeys = getBuilderStorageKeys(resolvedUrlCourseId)
-    if (!isView(urlView)) {
-      const storedView = window.localStorage.getItem(initialKeys.view)
-      if (isView(storedView)) setView(storedView)
-    }
-    const storedSection = window.localStorage.getItem(initialKeys.section)
-    if (isSectionId(storedSection)) setActiveSection(storedSection)
+    const frame = window.requestAnimationFrame(() => {
+      if (!isView(urlView)) {
+        const storedView = window.localStorage.getItem(initialKeys.view)
+        if (isView(storedView)) setView(storedView)
+      }
+      const storedSection = window.localStorage.getItem(initialKeys.section)
+      if (isSectionId(storedSection)) setActiveSection(storedSection)
+    })
+
+    return () => window.cancelAnimationFrame(frame)
   }, [urlView, resolvedUrlCourseId])
 
   useEffect(() => {
@@ -156,18 +159,6 @@ export function useCourseBuilderState() {
   useEffect(() => {
     window.localStorage.setItem(storageKeys.section, activeSection)
   }, [storageKeys.section, activeSection])
-
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "development") return
-    if (loggedSectionTraceRef.current) return
-    loggedSectionTraceRef.current = true
-    console.debug("[coursebuilder:section-sync]", {
-      key: storageKeys.section,
-      activeSection,
-      storedSection: window.localStorage.getItem(storageKeys.section),
-      matches: window.localStorage.getItem(storageKeys.section) === activeSection,
-    })
-  }, [activeSection, storageKeys.section])
 
   useEffect(() => {
     const handler = (event: Event) => {

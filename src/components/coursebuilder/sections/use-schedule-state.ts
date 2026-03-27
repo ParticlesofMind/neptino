@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { useCourseRowLoader } from "@/components/coursebuilder"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import {
   JS_DAY_TO_LABEL,
@@ -29,33 +30,27 @@ export function useScheduleState(courseId: string | null) {
   const [importText, setImportText] = useState("")
   const [importStatus, setImportStatus] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("schedule_settings")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data?.schedule_settings) {
-          const s = data.schedule_settings as Record<string, unknown>
-          setScheduleMode((s.schedule_mode as ScheduleMode) ?? "date-range")
-          setActiveDays((s.active_days as string[]) ?? [])
-          setGeneratedEntries(ensureScheduleEntryIds((s.generated_entries as ScheduleEntry[]) ?? []))
-          setStartDate((s.start_date as string) ?? "")
-          setEndDate((s.end_date as string) ?? "")
-          setTargetSessions((s.target_sessions as number) ?? 12)
-          setSessionsPerDay((s.sessions_per_day as number) ?? 1)
-          setRepeatUnit((s.repeat_unit as RepeatUnit) ?? "none")
-          setRepeatEvery((s.repeat_every as number) ?? 1)
-          setRepeatCycles((s.repeat_cycles as number) ?? 1)
-          setStartTime((s.start_time as string) ?? "")
-          setEndTime((s.end_time as string) ?? "")
-          setBreaks((s.breaks as { start: string; end: string }[]) ?? [])
-        }
-      })
-  }, [courseId])
+  const { loading, hasData } = useCourseRowLoader<{ schedule_settings: Record<string, unknown> | null }>({
+    courseId,
+    select: "schedule_settings",
+    onLoaded: (row) => {
+      if (!row.schedule_settings) return
+      const s = row.schedule_settings
+      setScheduleMode((s.schedule_mode as ScheduleMode) ?? "date-range")
+      setActiveDays((s.active_days as string[]) ?? [])
+      setGeneratedEntries(ensureScheduleEntryIds((s.generated_entries as ScheduleEntry[]) ?? []))
+      setStartDate((s.start_date as string) ?? "")
+      setEndDate((s.end_date as string) ?? "")
+      setTargetSessions((s.target_sessions as number) ?? 12)
+      setSessionsPerDay((s.sessions_per_day as number) ?? 1)
+      setRepeatUnit((s.repeat_unit as RepeatUnit) ?? "none")
+      setRepeatEvery((s.repeat_every as number) ?? 1)
+      setRepeatCycles((s.repeat_cycles as number) ?? 1)
+      setStartTime((s.start_time as string) ?? "")
+      setEndTime((s.end_time as string) ?? "")
+      setBreaks((s.breaks as { start: string; end: string }[]) ?? [])
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
@@ -249,6 +244,8 @@ export function useScheduleState(courseId: string | null) {
     breaks, setBreaks,
     importText, setImportText,
     importStatus,
+    loading,
+    hydrated: !courseId || hasData,
     hasSchedule: generatedEntries.length > 0,
     toggle,
     generateSchedule,

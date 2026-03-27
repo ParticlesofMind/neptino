@@ -1,0 +1,58 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Neptino" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - img "Neptino" [ref=e6]
+        - navigation [ref=e7]:
+          - link "Features" [ref=e8] [cursor=pointer]:
+            - /url: /features
+          - link "About" [ref=e9] [cursor=pointer]:
+            - /url: /about
+    - main [ref=e10]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - heading "Welcome back" [level=1] [ref=e15]
+          - paragraph [ref=e16]: Sign in to your Neptino account
+        - generic [ref=e17]:
+          - generic [ref=e18]: Invalid login credentials
+          - generic [ref=e19]:
+            - generic:
+              - img
+            - textbox "Email address" [ref=e20]: test@example.com
+          - generic [ref=e21]:
+            - generic:
+              - img
+            - textbox "Password" [ref=e22]: testpassword123
+          - link "Forgot your password?" [ref=e24] [cursor=pointer]:
+            - /url: /forgot-password
+          - button "Sign In" [ref=e25]
+        - paragraph [ref=e27]:
+          - text: Don't have an account?
+          - link "Sign up" [ref=e28] [cursor=pointer]:
+            - /url: /signup
+    - contentinfo [ref=e29]:
+      - generic [ref=e30]:
+        - link "Neptino" [ref=e31] [cursor=pointer]:
+          - /url: /
+          - img "Neptino" [ref=e32]
+        - generic [ref=e33]:
+          - link "Privacy Policy" [ref=e34] [cursor=pointer]:
+            - /url: /
+          - link "Terms of Service" [ref=e35] [cursor=pointer]:
+            - /url: /
+          - link "Contact" [ref=e36] [cursor=pointer]:
+            - /url: /
+        - generic [ref=e37]: © 2026 Neptino
+  - generic [ref=e38]:
+    - img [ref=e40]
+    - button "Open Tanstack query devtools" [ref=e88] [cursor=pointer]:
+      - img [ref=e89]
+  - button "Open Next.js Dev Tools" [ref=e142] [cursor=pointer]:
+    - img [ref=e143]
+  - alert [ref=e146]
+```

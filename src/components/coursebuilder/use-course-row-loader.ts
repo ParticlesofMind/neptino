@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
+import { useQuery, type QueryClient } from "@tanstack/react-query"
 import { createClient } from "@/lib/supabase/client"
 
 type LoadState<T> = {
@@ -13,57 +14,57 @@ type UseCourseRowLoaderOptions<T> = {
   onLoaded?: (row: T) => void
 }
 
+export function makeCourseRowQueryKey(courseId: string, select: string) {
+  return ["coursebuilder", "course-row", courseId, select] as const
+}
+
+async function fetchCourseRow<T>(courseId: string, select: string): Promise<LoadState<T>> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("courses")
+    .select(select)
+    .eq("id", courseId)
+    .single()
+
+  return {
+    data: (data as T | null) ?? null,
+    error,
+  }
+}
+
+export function prefetchCourseRow<T>(queryClient: QueryClient, courseId: string, select: string) {
+  return queryClient.prefetchQuery({
+    queryKey: makeCourseRowQueryKey(courseId, select),
+    queryFn: () => fetchCourseRow<T>(courseId, select),
+  })
+}
+
 export function useCourseRowLoader<T>({
   courseId,
   select,
   enabled = true,
   onLoaded,
 }: UseCourseRowLoaderOptions<T>) {
-  const [loading, setLoading] = useState(false)
   const onLoadedRef = useRef(onLoaded)
 
   useEffect(() => {
     onLoadedRef.current = onLoaded
   }, [onLoaded])
 
-  useEffect(() => {
-    if (!enabled || !courseId) return
+  const query = useQuery({
+    queryKey: courseId ? makeCourseRowQueryKey(courseId, select) : ["coursebuilder", "course-row", "disabled", select],
+    queryFn: () => fetchCourseRow<T>(courseId as string, select),
+    enabled: Boolean(enabled && courseId),
+  })
 
-    let isCancelled = false
+  useLayoutEffect(() => {
+    if (!query.data || query.data.error || !query.data.data || !onLoadedRef.current) return
+    onLoadedRef.current(query.data.data)
+  }, [query.data])
 
-    const load = async () => {
-      setLoading(true)
-      const supabase = createClient()
-      try {
-        const { data, error } = await supabase
-          .from("courses")
-          .select(select)
-          .eq("id", courseId)
-          .single()
-
-        if (isCancelled) return
-
-        const result: LoadState<T> = {
-          data: (data as T | null) ?? null,
-          error,
-        }
-
-        if (!result.error && result.data && onLoadedRef.current) {
-          onLoadedRef.current(result.data)
-        }
-      } finally {
-        if (!isCancelled) {
-          setLoading(false)
-        }
-      }
-    }
-
-    void load()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [enabled, courseId, select])
-
-  return { loading }
+  return {
+    loading: Boolean(enabled && courseId && query.isPending && !query.data),
+    refreshing: Boolean(enabled && courseId && query.isFetching && Boolean(query.data)),
+    hasData: Boolean(enabled && courseId && query.data && !query.data.error && query.data.data),
+  }
 }

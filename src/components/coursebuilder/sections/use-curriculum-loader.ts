@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, type MutableRefObject } from "react"
-import { selectCourseById } from "@/components/coursebuilder"
+import { type MutableRefObject } from "react"
+import { useCourseRowLoader } from "@/components/coursebuilder"
 import { getPedagogyApproach } from "@/components/coursebuilder/sections/pedagogy-section"
 import { mergeResourcePreferences, type ResourcePreference } from "@/lib/curriculum/resources"
 import { normalizeContentLoadConfig, MIN_TASKS_PER_OBJECTIVE } from "@/lib/curriculum/content-load-service"
@@ -56,20 +56,26 @@ export interface CurriculumLoaderSetters {
   generationSettingsRef: MutableRefObject<Record<string, unknown> | null>
 }
 
+export const CURRICULUM_LOADER_SELECT =
+  "course_name, course_description, course_language, curriculum_data, schedule_settings, generation_settings, classification_data, course_layout, students_overview"
+
 export function useCurriculumLoader(courseId: string | null, setters: CurriculumLoaderSetters) {
-  useEffect(() => {
-    if (!courseId) return
-    void loadCourse(courseId, setters)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId])
+  const { loading, refreshing, hasData } = useCourseRowLoader<Record<string, unknown>>({
+    courseId,
+    select: CURRICULUM_LOADER_SELECT,
+    onLoaded: (row) => {
+      applyLoadedCourseData(row, setters)
+    },
+  })
+
+  return {
+    loading,
+    refreshing,
+    hydrated: !courseId || hasData,
+  }
 }
 
-async function loadCourse(courseId: string, s: CurriculumLoaderSetters) {
-  const { data, error } = await selectCourseById<Record<string, unknown>>(
-    courseId,
-    "course_name, course_description, course_language, curriculum_data, schedule_settings, generation_settings, classification_data, course_layout, students_overview",
-  )
-  if (error || !data) return
+function applyLoadedCourseData(data: Record<string, unknown>, s: CurriculumLoaderSetters) {
 
   const c = (data.curriculum_data as Record<string, unknown>) ?? {}
   const sch = (data.schedule_settings as Record<string, unknown>) ?? {}

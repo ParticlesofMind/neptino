@@ -27,6 +27,9 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     video:      { width: 480, height: 270 },
     animation:  { width: 480, height: 270 },
     dataset:    { width: 480, height: 200 },
+    embed:      { width: 520, height: 320 },
+    flashcards: { width: 520, height: 340 },
+    "code-snippet": { width: 560, height: 300 },
     "model-3d": { width: 520, height: 280 },
     map:        { width: 480, height: 360 },
     chart:      { width: 480, height: 320 },
@@ -39,6 +42,9 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     "rich-sim":   { width: 520, height: 320 },
     "village-3d": { width: 560, height: 360 },
     interactive:  { width: 480, height: 280 },
+    form:         { width: 500, height: 320 },
+    "voice-recorder": { width: 420, height: 220 },
+    sorter:       { width: 520, height: 320 },
     games:        { width: 560, height: 360 },
     chat:         { width: 420, height: 320 },
     "text-editor": { width: 520, height: 360 },
@@ -62,6 +68,13 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     "layout-pinboard":  { width: 642, height: 560 },
     "layout-annotated": { width: 700, height: 510 },
     "layout-sixgrid":   { width: 780, height: 510 },
+    "layout-comparison": { width: 700, height: 360 },
+    "layout-stepped": { width: 680, height: 520 },
+    "layout-hero": { width: 780, height: 420 },
+    "layout-dialogue": { width: 700, height: 340 },
+    "layout-gallery": { width: 780, height: 520 },
+    "layout-spotlight": { width: 760, height: 520 },
+    "layout-flipcard": { width: 700, height: 420 },
   }
 
   return dimensionMap[cardType] ?? { width: 420, height: 220 }
@@ -133,6 +146,34 @@ export function getSampleCardContent(
         columns: 8,
         format: "CSV",
         url: "",
+      }
+
+    case "embed":
+      return {
+        title,
+        url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        provider: "iframe",
+        caption: "Embedded external resource",
+      }
+
+    case "flashcards":
+      return {
+        title,
+        gameType: "word-match",
+        pairs: [
+          { term: "Evaporation", match: "Liquid water turns to vapor" },
+          { term: "Condensation", match: "Water vapor turns into droplets" },
+          { term: "Precipitation", match: "Water falls to earth" },
+        ],
+        showHints: true,
+      }
+
+    case "code-snippet":
+      return {
+        title,
+        language: "typescript",
+        code: "export function area(width: number, height: number): number {\n  return width * height\n}\n",
+        caption: "Read-only example",
       }
 
     case "model-3d":
@@ -211,6 +252,34 @@ export function getSampleCardContent(
         questions: 5,
         timeLimit: 300,
         difficulty: "intermediate",
+      }
+
+    case "form":
+      return {
+        title,
+        prompt: "Reflect on the lesson and submit your response.",
+        fields: [
+          { label: "Name", type: "text", required: true },
+          { label: "Reflection", type: "textarea", required: true },
+        ],
+      }
+
+    case "voice-recorder":
+      return {
+        title,
+        prompt: "Record a 60-second spoken summary.",
+        maxDurationSeconds: 60,
+        transcript: "",
+      }
+
+    case "sorter":
+      return {
+        title,
+        mode: "match",
+        pairs: [
+          { term: "Photosynthesis", match: "Plants make glucose" },
+          { term: "Respiration", match: "Cells release energy" },
+        ],
       }
 
     case "games":
@@ -304,6 +373,13 @@ export function getSampleCardContent(
     case "layout-pinboard":
     case "layout-annotated":
     case "layout-sixgrid":
+    case "layout-comparison":
+    case "layout-stepped":
+    case "layout-hero":
+    case "layout-dialogue":
+    case "layout-gallery":
+    case "layout-spotlight":
+    case "layout-flipcard":
       return { slots: {} }
 
     default:

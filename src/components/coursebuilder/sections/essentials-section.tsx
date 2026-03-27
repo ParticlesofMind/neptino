@@ -26,6 +26,7 @@ import {
   useCourseRowLoader,
   useCourseSectionSave,
   useDebouncedChangeSave,
+  useSteadyLoading,
 } from "@/components/coursebuilder"
 import type { CourseCreatedData, CourseEssentials } from "@/components/coursebuilder/builder-types"
 
@@ -180,7 +181,7 @@ export function EssentialsSection({
     })()
   }, [initialData?.institution])
 
-  useCourseRowLoader<EssentialsSettingsRow>({
+  const { loading, hasData } = useCourseRowLoader<EssentialsSettingsRow>({
     courseId: courseId ?? null,
     select: "generation_settings",
     onLoaded: (row) => {
@@ -196,6 +197,11 @@ export function EssentialsSection({
         }))
       }
     },
+  })
+  const hydrated = !courseId || hasData
+  const showHydrationPlaceholder = useSteadyLoading(Boolean(courseId && !hydrated && loading), {
+    delayMs: 120,
+    minVisibleMs: 220,
   })
 
   useEffect(() => {
@@ -352,6 +358,31 @@ export function EssentialsSection({
       setApplyingCrop(false)
     }
   }, [closeCropModal, cropPixels, imageObjectUrl, pendingImageName, pendingImageSrc])
+
+  if (courseId && !hydrated && (showHydrationPlaceholder || loading)) {
+    return (
+      <SetupSection
+        title="Essentials"
+        description="Core information about your course."
+      >
+        <SetupPanelLayout>
+          <SetupColumn className="space-y-4">
+            <div className="h-10 rounded bg-muted/60" />
+            <div className="h-10 rounded bg-muted/60" />
+            <div className="h-24 rounded bg-muted/50" />
+            <div className="h-10 rounded bg-muted/60" />
+          </SetupColumn>
+          <SetupColumn>
+            <div className="rounded-xl border border-border/70 bg-background p-5">
+              <div className="h-48 rounded bg-muted/50" />
+              <div className="mt-4 h-10 rounded bg-muted/60" />
+              <div className="mt-3 h-10 rounded bg-muted/60" />
+            </div>
+          </SetupColumn>
+        </SetupPanelLayout>
+      </SetupSection>
+    )
+  }
 
   return (
     <SetupSection

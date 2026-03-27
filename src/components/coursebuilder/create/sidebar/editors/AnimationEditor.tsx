@@ -13,13 +13,15 @@ import {
 } from "./studio-primitives"
 import { EditorSplitLayout } from "./editor-split-layout"
 import { EditorPreviewFrame } from "./editor-preview-frame"
+import { useSteadyLoading } from "@/components/coursebuilder/use-steady-loading"
 
 // Dynamically import lottie-react to avoid SSR issues
 const LottiePlayer = dynamic(() => import("lottie-react").then((m) => m.default), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-40 bg-neutral-50">
-      <span className="text-[11px] text-neutral-400">Loading player…</span>
+    <div className="h-40 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+      <div className="h-3 w-24 rounded bg-neutral-200" />
+      <div className="mt-3 h-[120px] rounded-lg bg-neutral-100" />
     </div>
   ),
 })
@@ -33,6 +35,7 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
   const [lottieData, setLottieData] = useState<object | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [loading, setLoading] = useState(false)
+  const showLoading = useSteadyLoading(loading)
   const [playing, setPlaying] = useState(true)
   const lottieRef = useRef<{
     play: () => void
@@ -87,12 +90,19 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
   }, [format, url])
 
   useEffect(() => {
-    lottieRef.current?.setSpeed?.(speed)
+    const player = lottieRef.current
+    if (player?.setSpeed) {
+      player.setSpeed(speed)
+    }
   }, [speed])
 
   const togglePlay = () => {
     if (!lottieRef.current) return
-    playing ? lottieRef.current.pause() : lottieRef.current.play()
+    if (playing) {
+      lottieRef.current.pause()
+    } else {
+      lottieRef.current.play()
+    }
     setPlaying((p) => !p)
   }
 
@@ -174,9 +184,12 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
             >
               {format === "lottie" && (
                 <>
-                  {loading && (
+                  {showLoading && (
                     <div className="flex aspect-[4/3] items-center justify-center rounded-[28px] border border-neutral-200 bg-white">
-                      <span className="text-[11px] text-neutral-400">Loading animation…</span>
+                      <div className="w-full px-6">
+                        <div className="h-3 w-28 rounded bg-neutral-200" />
+                        <div className="mt-3 h-24 rounded-lg bg-neutral-100" />
+                      </div>
                     </div>
                   )}
                   {loadError && (

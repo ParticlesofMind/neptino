@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { DEFAULT_MODEL } from "@/lib/ollama/models"
+import { DEFAULT_MODEL, resolveOllamaModel } from "@/lib/ollama/models"
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434"
 
@@ -23,7 +23,11 @@ function buildCandidates(baseUrl: string): string[] {
 
 export async function POST(request: Request) {
   const body = (await request.json()) as ChatRequestBody
-  const model = typeof body.model === "string" && body.model.trim() ? body.model : DEFAULT_MODEL
+  const requestedModel = typeof body.model === "string" && body.model.trim() ? body.model : DEFAULT_MODEL
+  const model = await resolveOllamaModel(requestedModel, {
+    baseUrl: OLLAMA_BASE_URL,
+    fallbackModel: DEFAULT_MODEL,
+  })
   const systemPrompt = typeof body.systemPrompt === "string" ? body.systemPrompt.trim() : ""
   const messages = Array.isArray(body.messages)
     ? body.messages
@@ -73,7 +77,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: data.error }, { status: 502 })
       }
 
-      return NextResponse.json({ message: data.message?.content ?? "" }, { status: 200 })
+      return NextResponse.json({ message: data.message?.content ?? "", model }, { status: 200 })
     } catch (error) {
       lastConnectionError = error
     }

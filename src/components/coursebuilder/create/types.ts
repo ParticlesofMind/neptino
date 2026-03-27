@@ -24,23 +24,29 @@ export type CardType =
   | "video"
   | "animation"
   | "dataset"
+  | "embed"
+  | "flashcards"
+  | "code-snippet"
   | "model-3d"
   | "map"
   | "chart"
   | "diagram"
   | "media"
   | "document"
-  | "table"
+  | "table" // legacy standalone type; new create flow prefers dataset views
   | "rich-sim"    // interactive simulation — canvas-backed
   | "village-3d"  // 3D exploration card — canvas-backed
-  | "interactive" // quiz / interactive — canvas-backed
+  | "interactive" // assessment / interactive — canvas-backed
+  | "form"
+  | "voice-recorder"
+  | "sorter"
   | "games"       // game-based learning card
   | "chat"        // AI-powered student chat card
   | "text-editor" // embedded writing workspace product
   | "code-editor" // embedded code workspace product
   | "whiteboard"  // embedded whiteboard product
   | "timeline"    // chronological event timeline
-  | "legend"      // color-coded map/chart legend
+  | "legend"      // legacy standalone legend; now treated as map/chart config
   | "layout-split"      // two equal columns
   | "layout-stack"      // two rows (60% top / 40% bottom)
   | "layout-feature"    // narrow-left anchor + large-right upper + thin-right lower
@@ -55,6 +61,13 @@ export type CardType =
   | "layout-pinboard"   // spanning header strip + 2×2 grid below
   | "layout-annotated"  // narrow-left annotation column + 2×2 content grid
   | "layout-sixgrid"    // 3 columns × 2 rows (storyboard / six-panel)
+  | "layout-comparison" // labelled side-by-side comparison columns
+  | "layout-stepped"    // sequential step stack with numbered flow
+  | "layout-hero"       // full-bleed hero media with overlaid text/action
+  | "layout-dialogue"   // persona + context split dialogue layout
+  | "layout-gallery"    // media-first gallery grid with optional captions
+  | "layout-spotlight"  // central focus with surrounding context nodes
+  | "layout-flipcard"   // two-face flip container (front/back)
 
 // ─── Task area kinds ─────────────────────────────────────────────────────────
 export type TaskAreaKind = "instruction" | "practice" | "feedback"

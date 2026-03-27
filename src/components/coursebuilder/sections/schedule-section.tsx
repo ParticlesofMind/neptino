@@ -6,12 +6,17 @@ import {
   SetupPanelLayout,
   SetupSection,
 } from "@/components/coursebuilder/layout-primitives"
+import { useSteadyLoading } from "@/components/coursebuilder"
 import { useScheduleState } from "./use-schedule-state"
 import { ScheduleFormColumn } from "./schedule-form-column"
 
 
 export function ScheduleSection({ courseId }: { courseId: string | null }) {
   const state = useScheduleState(courseId)
+  const showHydrationPlaceholder = useSteadyLoading(Boolean(courseId && !state.hydrated && state.loading), {
+    delayMs: 120,
+    minVisibleMs: 220,
+  })
   const {
     generatedEntries,
     startTime,
@@ -21,6 +26,31 @@ export function ScheduleSection({ courseId }: { courseId: string | null }) {
     activeDays,
     removeEntry,
   } = state
+
+  if (courseId && !state.hydrated && (showHydrationPlaceholder || state.loading)) {
+    return (
+      <SetupSection title="Schedule" description="Define when the course takes place.">
+        <SetupPanelLayout>
+          <SetupColumn className="space-y-4">
+            <div className="h-10 rounded bg-muted/60" />
+            <div className="h-10 rounded bg-muted/60" />
+            <div className="h-10 rounded bg-muted/60" />
+            <div className="h-40 rounded bg-muted/50" />
+          </SetupColumn>
+          <SetupColumn>
+            <div className="rounded-lg border border-border bg-background p-4">
+              <div className="h-4 w-24 rounded bg-muted/60" />
+              <div className="mt-4 space-y-3">
+                <div className="h-8 rounded bg-muted/50" />
+                <div className="h-8 rounded bg-muted/50" />
+                <div className="h-8 rounded bg-muted/50" />
+              </div>
+            </div>
+          </SetupColumn>
+        </SetupPanelLayout>
+      </SetupSection>
+    )
+  }
 
 
 

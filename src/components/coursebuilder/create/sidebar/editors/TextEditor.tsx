@@ -6,13 +6,37 @@ import Color from "@tiptap/extension-color"
 import { TextStyle } from "@tiptap/extension-text-style"
 import Placeholder from "@tiptap/extension-placeholder"
 import { useEffect, useRef, useState } from "react"
-import { Sparkles } from "lucide-react"
+import { Loader2, Sparkles } from "lucide-react"
 import { StudioInput, StudioNumberInput, StudioTextarea, StudioSelect } from "./studio-primitives"
 import { EditorSplitLayout } from "./editor-split-layout"
 import { EditorPreviewFrame } from "./editor-preview-frame"
 import { TextEditorPreview } from "./text-editor-preview"
 import { EntityRefMark } from "@/lib/tiptap/EntityRefMark"
 import type { AtlasItem } from "@/types/atlas"
+
+interface OllamaChatResponse {
+  message?: string
+  error?: string
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;")
+}
+
+function plainTextToHtml(value: string): string {
+  const normalized = value.trim()
+  if (!normalized) return ""
+
+  return normalized
+    .split(/\n\s*\n/)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br />")}</p>`)
+    .join("")
+}
 
 interface TextEditorProps {
   content: Record<string, unknown>
@@ -21,6 +45,7 @@ interface TextEditorProps {
 
 export function TextEditor({ content, onChange }: TextEditorProps) {
   const html = typeof content.text === "string" ? content.text : ""
+  const title = typeof content.title === "string" ? content.title : ""
   const readingLevel = typeof content.readingLevel === "string" ? content.readingLevel : ""
   const durationMinutes = typeof content.durationMinutes === "number" ? content.durationMinutes : 0
   const generationPrompt = typeof content.generationPrompt === "string" ? content.generationPrompt : ""
@@ -29,6 +54,8 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
 
   const suppressSync = useRef(false)
   const [showEntityPicker, setShowEntityPicker] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -92,6 +119,46 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
     setShowEntityPicker(false)
   }
 
+  const canGenerate = generationPrompt.trim().length > 0 && !isGenerating
+
+  const handleGenerate = async () => {
+    if (!canGenerate) return
+
+    setIsGenerating(true)
+    setGenerationError(null)
+
+    const systemPrompt = [
+      "You write polished educational text for a course builder.",
+      `Tone: ${writingTone}.`,
+      `Target length: ${targetLength}.`,
+      readingLevel ? `Reading level: ${readingLevel}.` : "",
+      title ? `Block title: ${title}.` : "",
+      "Return only the body copy with clear paragraphing. No markdown fences. No prefatory notes.",
+    ].filter(Boolean).join("\n")
+
+    try {
+      const response = await fetch("/api/ollama-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemPrompt,
+          messages: [{ role: "user", content: generationPrompt.trim() }],
+        }),
+      })
+
+      const data = await response.json() as OllamaChatResponse
+      if (!response.ok || !data.message?.trim()) {
+        throw new Error(data.error || "Unable to generate text.")
+      }
+
+      onChange("text", plainTextToHtml(data.message))
+    } catch (error) {
+      setGenerationError(error instanceof Error ? error.message : "Unable to generate text.")
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   return (
     <EditorSplitLayout
       sidebarWidthClassName="md:min-w-[26rem] md:flex-1 xl:min-w-[30rem]"
@@ -153,13 +220,18 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
               </StudioSelect>
             </div>
 
+            {generationError && (
+              <p className="text-[11px] text-destructive">{generationError}</p>
+            )}
+
             <button
               type="button"
-              disabled
-              className="flex min-h-10 w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-100 px-3 py-2.5 text-[11px] font-semibold text-neutral-400"
+              onClick={() => void handleGenerate()}
+              disabled={!canGenerate}
+              className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-900 px-3 py-2.5 text-[11px] font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:border-neutral-200 disabled:bg-neutral-100 disabled:text-neutral-400"
             >
-              <Sparkles size={11} />
-              Generate
+              {isGenerating ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+              {isGenerating ? "Generating..." : "Generate"}
             </button>
           </div>
         </div>
@@ -168,7 +240,7 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
         <div className="flex h-full min-h-0 items-center justify-center px-6 py-6 md:px-8">
           <EditorPreviewFrame
             cardType="text"
-            title={typeof content.title === "string" ? content.title : ""}
+            title={title}
             onTitleChange={(next) => onChange("title", next)}
             className="h-full w-full max-w-5xl"
             bodyClassName="h-[min(42rem,100%)] bg-white"

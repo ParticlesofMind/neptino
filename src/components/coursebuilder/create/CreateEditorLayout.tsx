@@ -37,6 +37,7 @@ import {
   CurateOverlayPanels,
   getCurateOverlayInset,
 } from "@/components/coursebuilder/create/sidebar/curate-overlay-panels"
+import { useSteadyLoading } from "@/components/coursebuilder"
 import { useCardDrop }             from "@/components/coursebuilder/create/hooks/useCardDrop"
 import { useCourseSessionLoader }  from "@/components/coursebuilder/create/hooks/useCourseSessionLoader"
 import { useCanvasPersistence }    from "@/components/coursebuilder/create/hooks/useCanvasPersistence"
@@ -52,6 +53,8 @@ import { DragOverlayCard } from "@/components/coursebuilder/create/drag/DragOver
 import { useCreateModeStore }  from "./store/createModeStore"
 import { CanvasDebugPanel }    from "./canvas/CanvasDebugPanel"
 import { EditorNoticeBanner }  from "./notifications/EditorNoticeBanner"
+
+const PANEL_FIXED_WIDTH = 360
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -94,71 +97,71 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
 
   const isMobile = useIsMobile()
 
-  const [cardsPanelWidth, setCardsPanelWidth] = useState(360)
+  const [cardsPanelWidth, setCardsPanelWidth] = useState(PANEL_FIXED_WIDTH)
   const cardsPanelWidthRef = useRef(cardsPanelWidth)
 
-  const [atlasWidth, setAtlasWidth] = useState(360)
+  const [atlasWidth, setAtlasWidth] = useState(PANEL_FIXED_WIDTH)
   const atlasWidthRef = useRef(atlasWidth)
 
-  useEffect(() => {
-    cardsPanelWidthRef.current = cardsPanelWidth
-  }, [cardsPanelWidth])
+  const [viewportWidth, setViewportWidth] = useState(0)
+
+  useEffect(() => { cardsPanelWidthRef.current = cardsPanelWidth }, [cardsPanelWidth])
+  useEffect(() => { atlasWidthRef.current = atlasWidth }, [atlasWidth])
 
   useEffect(() => {
-    atlasWidthRef.current = atlasWidth
-  }, [atlasWidth])
+    if (typeof window === "undefined") return
+    const sync = () => setViewportWidth(window.innerWidth)
+    sync()
+    window.addEventListener("resize", sync)
+    return () => window.removeEventListener("resize", sync)
+  }, [])
 
-  // Mobile: which panel (if any) is open — exclusive, one at a time
-  const [mobileOpenPanel, setMobileOpenPanel] = useState<"none" | "files" | "atlas">("none")
-
-  // Collapse or restore panels when viewport crosses the mobile breakpoint
+  // Collapse both panels when switching to mobile; restore on desktop
   useEffect(() => {
-    if (isMobile) {
-      setCardsPanelWidth(0)
-      setAtlasWidth(0)
-      setMobileOpenPanel("none")
-    } else {
-      // Restore desktop defaults when switching back from mobile
-      setCardsPanelWidth((prev) => (prev === 0 ? 360 : prev))
-      setAtlasWidth((prev) => (prev === 0 ? 360 : prev))
-    }
+    const frame = window.requestAnimationFrame(() => {
+      if (isMobile) {
+        setCardsPanelWidth(0)
+        setAtlasWidth(0)
+      } else {
+        setCardsPanelWidth(PANEL_FIXED_WIDTH)
+        setAtlasWidth(PANEL_FIXED_WIDTH)
+      }
+    })
+
+    return () => window.cancelAnimationFrame(frame)
   }, [isMobile])
 
-  const handleMobilePanelToggle = useCallback(
-    (panel: "files" | "atlas") => {
-      if (mobileOpenPanel === panel) {
-        setMobileOpenPanel("none")
-        if (panel === "files") setCardsPanelWidth(0)
-        else setAtlasWidth(0)
-      } else {
-        const vw = window.innerWidth
-        setMobileOpenPanel(panel)
-        if (panel === "files") {
-          setCardsPanelWidth(vw)
-          setAtlasWidth(0)
-        } else {
-          setAtlasWidth(vw)
-          setCardsPanelWidth(0)
-        }
-      }
-    },
-    [mobileOpenPanel],
-  )
+  // Mobile tap-toggle (exclusive)
+  const toggleCards = useCallback(() => {
+    setCardsPanelWidth((prev) => {
+      if (prev === 0) { setAtlasWidth(0); return viewportWidth }
+      return 0
+    })
+  }, [viewportWidth])
+
+  const toggleAtlas = useCallback(() => {
+    setAtlasWidth((prev) => {
+      if (prev === 0) { setCardsPanelWidth(0); return viewportWidth }
+      return 0
+    })
+  }, [viewportWidth])
 
   const handleCloseMobilePanel = useCallback(() => {
-    setMobileOpenPanel("none")
     setCardsPanelWidth(0)
     setAtlasWidth(0)
   }, [])
 
+  // Desktop drag handles — live preview while dragging, snap to fixed/closed on release
   const handleCardsResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     const startX = e.clientX
     const startWidth = cardsPanelWidthRef.current
     const onMove = (ev: MouseEvent) => {
-      setCardsPanelWidth(Math.max(0, Math.min(520, startWidth + ev.clientX - startX)))
+      setCardsPanelWidth(Math.max(0, Math.min(PANEL_FIXED_WIDTH, startWidth + ev.clientX - startX)))
     }
-    const onUp = () => {
+    const onUp = (ev: MouseEvent) => {
+      const final = startWidth + ev.clientX - startX
+      setCardsPanelWidth(final > PANEL_FIXED_WIDTH / 2 ? PANEL_FIXED_WIDTH : 0)
       document.removeEventListener("mousemove", onMove)
       document.removeEventListener("mouseup", onUp)
     }
@@ -171,9 +174,11 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
     const startX = e.clientX
     const startWidth = atlasWidthRef.current
     const onMove = (ev: MouseEvent) => {
-      setAtlasWidth(Math.max(0, Math.min(520, startWidth - (ev.clientX - startX))))
+      setAtlasWidth(Math.max(0, Math.min(PANEL_FIXED_WIDTH, startWidth - (ev.clientX - startX))))
     }
-    const onUp = () => {
+    const onUp = (ev: MouseEvent) => {
+      const final = startWidth - (ev.clientX - startX)
+      setAtlasWidth(final > PANEL_FIXED_WIDTH / 2 ? PANEL_FIXED_WIDTH : 0)
       document.removeEventListener("mousemove", onMove)
       document.removeEventListener("mouseup", onUp)
     }
@@ -183,6 +188,7 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
 
   // Load sessions from Supabase whenever courseId changes
   const { loading } = useCourseSessionLoader(courseId)
+  const showLoading = useSteadyLoading(loading)
 
   // Persist canvas state (topics tree, canvas pages) back to Supabase
   useCanvasPersistence()
@@ -242,14 +248,6 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
     setMediaDragActive(false)
   }, [setMediaDragActive])
 
-  if (loading) {
-    return (
-      <div className={`flex items-center justify-center flex-1 h-full bg-neutral-100 ${className ?? ""}`}>
-        <p className="text-sm text-neutral-400">Loading sessions&hellip;</p>
-      </div>
-    )
-  }
-
   return (
     <DndContext
       id="course-editor-dnd"
@@ -269,10 +267,10 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
           <div className="flex items-center shrink-0 h-9 px-3 gap-1.5 border-b border-neutral-200 bg-white md:hidden">
             <span className="flex-1 text-[11px] font-medium text-neutral-400">Canvas</span>
             <button
-              onClick={() => handleMobilePanelToggle("files")}
+              onClick={toggleCards}
               title="Files browser"
               className={`p-1.5 rounded transition-colors ${
-                mobileOpenPanel === "files"
+                cardsPanelWidth > 0
                   ? "bg-[#dbe8f6] text-[#233f5d]"
                   : "text-neutral-400 hover:text-neutral-600"
               }`}
@@ -280,10 +278,10 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
               <PanelLeft size={15} strokeWidth={1.75} />
             </button>
             <button
-              onClick={() => handleMobilePanelToggle("atlas")}
+              onClick={toggleAtlas}
               title="Atlas"
               className={`p-1.5 rounded transition-colors ${
-                mobileOpenPanel === "atlas"
+                atlasWidth > 0
                   ? "bg-[#dbe8f6] text-[#233f5d]"
                   : "text-neutral-400 hover:text-neutral-600"
               }`}
@@ -306,6 +304,8 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
                   leftOverlayInset={getCurateOverlayInset(cardsPanelWidth)}
                   rightOverlayInset={getCurateOverlayInset(atlasWidth)}
                 />
+              ) : showLoading ? (
+                <LoadingSessionsPlaceholder />
               ) : (
                 <EmptyState courseId={courseId} />
               )}
@@ -320,6 +320,7 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
               isMobile={isMobile}
               onCloseMobilePanel={handleCloseMobilePanel}
             />
+
 
           </div>
         )}
@@ -359,6 +360,21 @@ function EmptyState({ courseId }: { courseId: string | null }) {
       <p className="text-xs max-w-xs text-center">
         Create a course in the setup wizard and return here to start building.
       </p>
+    </div>
+  )
+}
+
+function LoadingSessionsPlaceholder() {
+  return (
+    <div className="flex flex-1 items-center justify-center px-6">
+      <div className="w-full max-w-3xl rounded-xl border border-neutral-300/70 bg-white/80 p-6">
+        <div className="h-4 w-44 rounded bg-neutral-200" />
+        <div className="mt-4 space-y-3">
+          <div className="h-10 rounded bg-neutral-100" />
+          <div className="h-10 rounded bg-neutral-100" />
+          <div className="h-10 rounded bg-neutral-100" />
+        </div>
+      </div>
     </div>
   )
 }

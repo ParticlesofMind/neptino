@@ -6,14 +6,19 @@ import { Pause, Play, RefreshCw, SkipBack, SkipForward, Sparkles } from "lucide-
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
   ScatterChart, Scatter, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from "recharts"
 
 // Lottie player — SSR-safe
 const LottiePlayer = dynamic(() => import("lottie-react").then((m) => m.default), {
   ssr: false,
-  loading: () => <div className="flex h-28 items-center justify-center bg-neutral-50 text-[11px] text-neutral-400">Loading…</div>,
+  loading: () => (
+    <div className="h-28 rounded-lg border border-neutral-200 bg-neutral-50 p-2">
+      <div className="h-3 w-20 rounded bg-neutral-200" />
+      <div className="mt-2 h-[84px] rounded bg-neutral-100" />
+    </div>
+  ),
 })
 
 // ─── Animation Preview ─────────────────────────────────────────────────────────
@@ -27,8 +32,7 @@ interface AnimationPreviewProps {
   title?: string
 }
 
-const ANIM_SPEED_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
-type AnimPlaybackRate = typeof ANIM_SPEED_STEPS[number]
+type AnimPlaybackRate = 0.5 | 0.75 | 1 | 1.25 | 1.5 | 1.75 | 2
 const SVG_LOOP_DURATION = 3.2 // seconds — matches longest blob animation
 
 // ─── Shared animation transport bar ───────────────────────────────────────────
@@ -125,7 +129,7 @@ function AnimTransportBar({
   )
 }
 
-export function AnimationPreview({ format, fps: _fps, url, lottieData }: AnimationPreviewProps) {
+export function AnimationPreview({ format, url, lottieData }: AnimationPreviewProps) {
   const [playing, setPlaying] = React.useState(true)
   const [progress, setProgress] = React.useState(0)
   const [currentTime, setCurrentTime] = React.useState(0)
@@ -174,7 +178,6 @@ export function AnimationPreview({ format, fps: _fps, url, lottieData }: Animati
   // Keep Lottie loop property in sync without restarting the animation
   React.useEffect(() => {
     if (!lottieData || !lottieRef.current?.animationItem) return
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     lottieRef.current.animationItem.loop = loop
   }, [loop, lottieData])
 
@@ -308,7 +311,6 @@ export function AnimationPreview({ format, fps: _fps, url, lottieData }: Animati
             animationData={lottieData}
             loop={loop}
             autoplay
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             lottieRef={lottieRef}
             onComplete={() => { if (!loop) setPlaying(false) }}
             style={{ width: "100%", height: "100%" }}

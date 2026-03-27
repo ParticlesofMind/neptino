@@ -6,6 +6,7 @@ type CourseImagePreviewProps = {
   emptyText: string
   emptyTextClassName?: string
   frameClassName?: string
+  loading?: "eager" | "lazy"
 }
 
 export function CourseImagePreview({
@@ -14,6 +15,7 @@ export function CourseImagePreview({
   emptyText,
   emptyTextClassName = "text-xs italic text-muted-foreground/50",
   frameClassName = "w-full aspect-[4/3]",
+  loading = "eager",
 }: CourseImagePreviewProps) {
   if (!imageUrl) {
     return (
@@ -31,6 +33,7 @@ export function CourseImagePreview({
         fill
         unoptimized
         className="object-cover"
+        loading={loading}
         sizes="(max-width: 768px) 100vw, 560px"
       />
     </div>

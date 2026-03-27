@@ -4,13 +4,13 @@ import { useEffect, useState } from "react"
 import { CARD_TYPE_META } from "../cards/CardTypePreview"
 import type { StudioCard } from "../store/makeLibraryStore"
 import type { CardType } from "../types"
-import { GROUPS, type CardGroup, type CardSpec } from "./make-panel-data"
+import { type CardGroup, type CardSpec } from "./make-panel-data"
 import type { LibraryProjectGroup } from "./make-panel-library"
 import { MAKE_BLUE_ACTIVE_SOFT, MAKE_BLUE_BADGE, MAKE_BLUE_INPUT_FOCUS, MAKE_RESOURCE_ACCENT } from "./make-theme"
 
 const GROUP_ACCENT: Record<string, { pill: string; pillActive: string; border: string; dot: string }> = {
   resources: MAKE_RESOURCE_ACCENT,
-  tools: { pill: "text-[#00ccb3]", pillActive: "bg-[#00ccb3] text-white", border: "border-[#00ccb3]/20 bg-[#00ccb3]/5", dot: "bg-[#00ccb3]" },
+  activities: { pill: "text-[#00ccb3]", pillActive: "bg-[#00ccb3] text-white", border: "border-[#00ccb3]/20 bg-[#00ccb3]/5", dot: "bg-[#00ccb3]" },
   experiences: { pill: "text-[#a89450]", pillActive: "bg-[#a89450] text-white", border: "border-[#a89450]/20 bg-[#a89450]/10", dot: "bg-[#a89450]" },
   layout: { pill: "text-muted-foreground", pillActive: "bg-foreground/80 text-white", border: "border-border bg-muted/40", dot: "bg-muted-foreground/60" },
 }
@@ -18,7 +18,7 @@ const GROUP_ACCENT: Record<string, { pill: string; pillActive: string; border: s
 const FILTER_LABELS: Record<string, string> = {
   all: "All",
   resources: "Res",
-  tools: "Tools",
+  activities: "Act",
   experiences: "Exp",
   library: "Library",
 }
@@ -162,7 +162,7 @@ export function MakePanelSidebar({
       </div>
 
       <div className="shrink-0 flex gap-1 px-3 pb-2.5">
-        {(["all", "resources", "tools", "experiences", "library"] as const).map((filter) => {
+        {(["all", "resources", "activities", "experiences", "library"] as const).map((filter) => {
           const isActive = activeFilter === filter
           const groupAccent = filter !== "all" && filter !== "library" ? GROUP_ACCENT[filter] : null
           return (
@@ -321,6 +321,11 @@ export function MakePanelSidebar({
                         <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-muted-foreground/70">
                           {spec.description}
                         </p>
+                        {spec.group === "layout" && spec.fields.length > 0 && (
+                          <p className="mt-0.5 line-clamp-2 text-[9px] leading-snug text-muted-foreground/60">
+                            {spec.fields.slice(0, 3).join(" • ")}
+                          </p>
+                        )}
                       </div>
                       {isActive && <div className={["mt-1 h-1.5 w-1.5 shrink-0 rounded-full", accent.dot].join(" ")} />}
                     </button>

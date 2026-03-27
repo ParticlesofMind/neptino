@@ -8,8 +8,9 @@ const WhiteboardCardInner = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full items-center justify-center bg-neutral-50 text-[12px] text-neutral-400">
-        Loading whiteboard…
+      <div className="h-full rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+        <div className="h-4 w-32 rounded bg-neutral-200" />
+        <div className="mt-3 h-[300px] rounded-lg bg-neutral-100" />
       </div>
     ),
   },

@@ -7,8 +7,11 @@ import {
   Columns2,
   Columns3,
   Database,
+  ExternalLink,
   FileText,
+  FileCode2,
   Film,
+  ClipboardList,
   Gamepad2,
   Grid3X3,
   Grid3x2,
@@ -22,9 +25,10 @@ import {
   LayoutPanelTop,
   LayoutTemplate,
   LineChart,
-  List,
   Map as MapIcon,
+  Mic,
   Network,
+  ArrowLeftRight,
   PanelLeft,
   PanelLeftOpen,
   PenTool,
@@ -33,13 +37,12 @@ import {
   Rows3,
   ScrollText,
   Sparkles,
-  Table2,
   Timer,
 } from "lucide-react"
 
 import type { CardType } from "../types"
 
-export type CardGroup = "resources" | "tools" | "experiences" | "layout"
+export type CardGroup = "resources" | "activities" | "experiences" | "layout"
 
 export interface CardTypeMeta {
   label: string
@@ -70,7 +73,7 @@ export interface CardSpec {
 
 export const GROUPS: { id: CardGroup; label: string }[] = [
   { id: "resources", label: "Resources" },
-  { id: "tools", label: "Tools" },
+  { id: "activities", label: "Activities" },
   { id: "experiences", label: "Experiences" },
   { id: "layout", label: "Layout" },
 ]
@@ -82,23 +85,29 @@ const CARD_TYPE_DEFINITIONS: CardTypeDefinition[] = [
   { cardType: "video", label: "Video", icon: PlayCircle, sidebar: { description: "YouTube, Vimeo, or hosted video.", detail: "Auto-detects YouTube/Vimeo URLs and shows native embed. Supports poster images, captions, and chapter markers.", fields: ["Video URL", "Poster", "Captions URL", "Chapters"], group: "resources" } },
   { cardType: "animation", label: "Animation", icon: Film, sidebar: { description: "Lottie JSON, GIF, or animated SVG.", detail: "Load Lottie animations with play/pause/speed controls. Supports GIF and SVG formats. Full playback scrubber.", fields: ["Animation URL", "Format", "Speed", "Loop"], group: "resources" } },
   { cardType: "dataset", label: "Dataset", icon: Database, sidebar: { description: "Structured data snapshot with metadata.", detail: "Reference a data source with row/column counts, format, schema version, and refresh cadence.", fields: ["Source URL", "Format", "Row count", "Refresh"], group: "resources" } },
+  { cardType: "embed", label: "Embed", icon: ExternalLink, sidebar: { description: "Embedded external content via URL.", detail: "Use iframe-compatible links for YouTube, Figma, CodePen, maps, and other embeddable resources with optional caption and attribution.", fields: ["Embed URL", "Provider", "Caption", "Attribution"], group: "resources" } },
+  { cardType: "flashcards", label: "Flashcard set", icon: ClipboardList, sidebar: { description: "Question and answer card deck.", detail: "Create a reusable set of prompt-answer pairs with optional tags and difficulty labels for revision activities.", fields: ["Deck title", "Cards (prompt/answer)", "Tags", "Difficulty"], group: "resources" } },
+  { cardType: "code-snippet", label: "Code snippet", icon: FileCode2, sidebar: { description: "Read-only syntax-highlighted code block.", detail: "Present a code example for explanation and review without exposing an interactive editor surface.", fields: ["Language", "Snippet", "Caption", "Line numbers"], group: "resources" } },
   { cardType: "model-3d", label: "3D Model", icon: Box, sidebar: { description: "Curated GLB models with orbit controls.", detail: "Display-only WebGL viewer powered by React Three Fiber. Uses a small Poly Pizza test catalog with camera presets and viewing controls.", fields: ["Poly Pizza model", "Camera preset", "Lighting", "Display options"], group: "resources" } },
   { cardType: "map", label: "Map", icon: MapIcon, sidebar: { description: "Geographic map with lat/lng and zoom.", detail: "Leaflet + OpenStreetMap. Full viewport controls: lat, lng, zoom slider, style presets (Standard, Topographic, Dark), and overlay layers (Labels, Choropleth, Points).", fields: ["Lat / Lng", "Zoom level", "Map style", "Overlays"], group: "resources" } },
   { cardType: "chart", label: "Chart", icon: LineChart, sidebar: { description: "Editable data table with live chart preview.", detail: "Full recharts-powered chart editor. Inline spreadsheet for data entry. Supports Line, Bar, Area, Scatter, and Pie charts with color schemes.", fields: ["Chart type", "Data table", "Axis labels", "Color scheme"], group: "resources" } },
   { cardType: "diagram", label: "Diagram", icon: Network, sidebar: { description: "Visual node-edge diagram builder.", detail: "SVG canvas diagram editor. Add, drag, connect, and rename nodes. Flowchart, Concept Map, and Cycle layouts. Node shapes: rect, diamond, oval, hex.", fields: ["Nodes (drag & connect)", "Edges", "Layout preset", "Node shapes"], group: "resources" } },
   { cardType: "media", label: "Media", icon: Layers },
   { cardType: "document", label: "Document", icon: ScrollText, sidebar: { description: "PDF, slide deck, or web article.", detail: "Embed PDF documents, Google Slides, or web articles with a native preview. Add structured sections with headings and body text.", fields: ["Document URL", "Type", "Pages", "Sections"], group: "resources" } },
-  { cardType: "table", label: "Table", icon: Table2, sidebar: { description: "Structured data table with inline editing.", detail: "Spreadsheet-like table editor. Tab to advance cells, Enter for new row. Up to 8 columns × 50 rows. Sortable and highlight-rule settings.", fields: ["Column headers", "Data rows", "Row limit", "Sort / highlight"], group: "resources" } },
+  { cardType: "table", label: "Table", icon: Database },
   { cardType: "rich-sim", label: "Simulation", icon: Sparkles, sidebar: { description: "Embeddable simulation or widget — passive observation.", detail: "Embed any simulation via URL. Configure a starter prompt, observation checkpoints, and hint scaffolding. Student watches; no graded response.", fields: ["Embed URL", "Prompt", "Checkpoints", "Hints"], group: "experiences" } },
   { cardType: "village-3d", label: "3D Scene", icon: Box },
-  { cardType: "interactive", label: "Quiz", icon: HelpCircle, sidebar: { description: "Graded questions with per-option feedback.", detail: "Full quiz builder: Multiple Choice, True/False, Short Answer, and Ranking. Per-option feedback, hint text, and point scoring.", fields: ["Interaction type", "Question", "Options", "Feedback / hints"], group: "tools" } },
+  { cardType: "interactive", label: "Assessment", icon: HelpCircle, sidebar: { description: "Graded questions with per-option feedback.", detail: "Build assessable prompts with objective scoring, feedback, and hints across multiple interaction formats.", fields: ["Interaction type", "Question", "Options", "Feedback / hints"], group: "activities" } },
+  { cardType: "form", label: "Form", icon: ClipboardList, sidebar: { description: "Structured learner input form.", detail: "Collect open and structured responses with configurable fields, required rules, and section prompts.", fields: ["Form title", "Fields", "Required rules", "Submit label"], group: "activities" } },
+  { cardType: "voice-recorder", label: "Voice recorder", icon: Mic, sidebar: { description: "Record spoken learner responses.", detail: "Capture microphone input with time limit, retry policy, and submission notes for language and oral assessments.", fields: ["Prompt", "Max duration", "Retry policy", "Submission notes"], group: "activities" } },
+  { cardType: "sorter", label: "Sorter / matcher", icon: ArrowLeftRight, sidebar: { description: "Drag-and-drop sort or match activity.", detail: "Configure matching pairs or ordering tasks with optional hints and validation behavior.", fields: ["Mode (sort/match)", "Items", "Hints", "Validation"], group: "activities" } },
   { cardType: "games", label: "Game", icon: Gamepad2, sidebar: { description: "Vocabulary match, memory, fill-in-the-blank.", detail: "Gamified learning activities: Word Match, Memory Cards, Fill in the Blank, Drag & Drop ordering. Configure pairs, time limits, and scoring.", fields: ["Game type", "Term/definition pairs", "Time limit", "Hints"], group: "experiences" } },
-  { cardType: "chat", label: "Chat with character", icon: Bot, sidebar: { description: "AI-powered character chat — guided conversation with a persona.", detail: "Configure an AI persona, Ollama model, opening message, learning objectives, and conversation starters. Students chat with the character to explore a topic.", fields: ["AI persona", "Ollama model", "Topic", "Opening message", "Conversation starters", "Max turns"], group: "tools" } },
-  { cardType: "text-editor", label: "Text editor", icon: FileText, sidebar: { description: "Embedded writing surface powered by TipTap.", detail: "A barebones rich-text workspace for drafting, annotating, and guided writing directly inside the layout.", fields: ["Title", "Document body", "Placeholder", "Mode"], group: "tools" } },
-  { cardType: "code-editor", label: "Code editor", icon: Code2, sidebar: { description: "Embedded code workspace powered by CodeMirror.", detail: "Syntax-highlighted code editor with language selection, starter prompt, and a clean reading-focused surface for live coding examples.", fields: ["Title", "Language", "Starter code", "Prompt"], group: "tools" } },
-  { cardType: "whiteboard", label: "Whiteboard", icon: PenTool, sidebar: { description: "Embedded whiteboard powered by tldraw.", detail: "A lightweight infinite canvas for sketching diagrams, concept maps, annotations, and lesson-side brainstorming.", fields: ["Title", "Board prompt", "Board key"], group: "tools" } },
+  { cardType: "chat", label: "Character", icon: Bot, sidebar: { description: "AI-powered character chat — guided conversation with a persona.", detail: "Configure an AI persona, Ollama model, opening message, learning objectives, and conversation starters. Students chat with the character to explore a topic.", fields: ["AI persona", "Ollama model", "Topic", "Opening message", "Conversation starters", "Max turns"], group: "activities" } },
+  { cardType: "text-editor", label: "Writing pad", icon: FileText, sidebar: { description: "Embedded writing surface powered by TipTap.", detail: "A focused rich-text workspace for drafting, annotating, and guided writing directly inside the layout.", fields: ["Title", "Document body", "Placeholder", "Mode"], group: "activities" } },
+  { cardType: "code-editor", label: "Code editor", icon: Code2, sidebar: { description: "Embedded code workspace powered by CodeMirror.", detail: "Syntax-highlighted code editor with language selection, starter prompt, and a clean reading-focused surface for live coding examples.", fields: ["Title", "Language", "Starter code", "Prompt"], group: "activities" } },
+  { cardType: "whiteboard", label: "Whiteboard", icon: PenTool, sidebar: { description: "Embedded whiteboard powered by tldraw.", detail: "A lightweight infinite canvas for sketching diagrams, concept maps, annotations, and lesson-side brainstorming.", fields: ["Title", "Board prompt", "Board key"], group: "activities" } },
   { cardType: "timeline", label: "Timeline", icon: Timer, sidebar: { description: "Chronological event sequence with dates and descriptions.", detail: "Horizontal scrollable TimelineJS timeline. Each event has a date badge, title, and optional description paragraph. Ideal for history, process flows, and product simulations.", fields: ["Events (date, label, description)", "Orientation (horizontal)", "Node colors"], group: "resources" } },
-  { cardType: "legend", label: "Legend", icon: List, sidebar: { description: "Color-coded key for maps, charts, and simulations.", detail: "List, chip, or grid layout. Each item has a color swatch, label, and optional description or value. Designed to live in narrow sidebar slots alongside a map or diagram.", fields: ["Items (color, label, description)", "Layout (list / chips / grid)", "Title"], group: "resources" } },
+  { cardType: "legend", label: "Legend", icon: Layers },
   { cardType: "layout-split", label: "Split", icon: Columns2, sidebar: { description: "Two equal full-height columns. Good for side-by-side comparison.", detail: "50/50 columns. Neither side is dominant. Drop any card type into each slot — the slot adapts to its content.", fields: ["Left slot", "Right slot"], group: "layout" } },
   { cardType: "layout-stack", label: "Stack", icon: Rows2, sidebar: { description: "Two full-width rows, 60% top and 40% bottom.", detail: "Top slot is the primary content area, bottom is secondary. The workhorse layout: Video above, Quiz below; Timeline above, Text below.", fields: ["Primary slot (top)", "Secondary slot (bottom)"], group: "layout" } },
   { cardType: "layout-feature", label: "Feature", icon: Layout, sidebar: { description: "Narrow left panel + large right area + thin bottom strip.", detail: "Product-first composition. Left panel is a persistent legend/control rail, right upper is the main map or visual, right lower is timeline/caption context. Recommended for Simulation ensembles.", fields: ["Legend / controls slot", "Primary map / visual slot", "Timeline / context slot"], group: "layout" } },
@@ -113,6 +122,13 @@ const CARD_TYPE_DEFINITIONS: CardTypeDefinition[] = [
   { cardType: "layout-pinboard", label: "Pinboard", icon: LayoutDashboard, sidebar: { description: "Full-width header above a 2 × 2 card grid.", detail: "Pin a title or guiding question at the top, then display four equal content cards below. Used in bulletin-board and review-sheet layouts.", fields: ["Header slot (full width)", "Top-left card", "Top-right card", "Bottom-left card", "Bottom-right card"], group: "layout" } },
   { cardType: "layout-annotated", label: "Annotated", icon: PanelLeftOpen, sidebar: { description: "Narrow annotation margin beside a 2 × 2 content grid.", detail: "Product review layout: keep legend/glossary persistent in the left rail while map, chart, evidence, and prompt cards occupy the right grid. Built for teacher-led synthesis pages.", fields: ["Legend / glossary rail", "Map cell", "Chart cell", "Evidence cell", "Prompt cell"], group: "layout" } },
   { cardType: "layout-sixgrid", label: "Six-Grid", icon: Grid3x2, sidebar: { description: "3 × 2 storyboard grid, six equal cells.", detail: "Six-panel storyboard or comic-strip layout. Each cell holds a single content card. Good for sequential narratives, timelines, or step-by-step visual guides.", fields: ["Panel 1", "Panel 2", "Panel 3", "Panel 4", "Panel 5", "Panel 6"], group: "layout" } },
+  { cardType: "layout-comparison", label: "Comparison", icon: Columns2, sidebar: { description: "Semantic side-by-side contrast layout with labelled columns.", detail: "Unlike plain Split, Comparison includes explicit labels and two contrasted content areas, making the rivalry structure visible to learners.", fields: ["Label A (text)", "Label B (text)", "Content A", "Content B"], group: "layout" } },
+  { cardType: "layout-stepped", label: "Stepped", icon: Rows3, sidebar: { description: "Numbered sequence for tutorials and processes.", detail: "A repeated vertical sequence of steps. Each slot represents one stage and is best used for how-to or procedural instruction.", fields: ["Step 1", "Step 2", "Step 3", "Step 4"], group: "layout" } },
+  { cardType: "layout-hero", label: "Hero", icon: LayoutPanelTop, sidebar: { description: "Full-bleed opening layout with overlay text and action.", detail: "High-impact opener: background visual, overlaid headline/subtext, and an action slot for assessments or activities.", fields: ["Background media", "Headline", "Subtext", "Action"], group: "layout" } },
+  { cardType: "layout-dialogue", label: "Dialogue", icon: Columns2, sidebar: { description: "Character and context split for guided conversations.", detail: "Designed for Character activities: persona on one side and contextual artifacts on the other.", fields: ["Persona (Character)", "Context"], group: "layout" } },
+  { cardType: "layout-gallery", label: "Gallery", icon: Grid3X3, sidebar: { description: "Media-only grid for image/video/animation collections.", detail: "A constrained gallery layout for visual media collections where each cell expects media content.", fields: ["Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"], group: "layout" } },
+  { cardType: "layout-spotlight", label: "Spotlight", icon: Layout, sidebar: { description: "One focal center with surrounding supporting context.", detail: "Focus-first composition: dominant center slot surrounded by smaller context slots.", fields: ["Focus", "Context A", "Context B", "Context C"], group: "layout" } },
+  { cardType: "layout-flipcard", label: "Flipcard", icon: LayoutTemplate, sidebar: { description: "Two-face layout for reveal interactions.", detail: "Front and back faces for question/explanation or before/after moments. Adds stateful reveal semantics to an experience.", fields: ["Front face", "Back face"], group: "layout" } },
 ]
 
 export const CARD_TYPE_META: Record<CardType, CardTypeMeta> = Object.fromEntries(

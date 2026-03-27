@@ -4,6 +4,7 @@ import { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import {
   SetupSection,
   SetupPanels,
+  useSteadyLoading,
   updateCourseById,
   upsertTemplateRecord,
   updateTemplateData,
@@ -104,7 +105,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   useEffect(() => { activeTemplateIdRef.current = activeTemplateId }, [activeTemplateId])
   useEffect(() => { courseIdRef.current = courseId }, [courseId])
 
-  useCourseRowLoader<{ template_settings: Record<string, unknown> | null; curriculum_data: Record<string, unknown> | null }>({
+  const { loading, hasData } = useCourseRowLoader<{ template_settings: Record<string, unknown> | null; curriculum_data: Record<string, unknown> | null }>({
     courseId,
     select: "template_settings,curriculum_data",
     onLoaded: (row) => {
@@ -127,12 +128,20 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       templateSettingsRef.current = loadedSettings
     },
   })
+  const hydrated = !courseId || hasData
+  const showHydrationPlaceholder = useSteadyLoading(Boolean(courseId && !hydrated && loading), {
+    delayMs: 120,
+    minVisibleMs: 220,
+  })
 
   const hasLessonTemplate = useMemo(
     () => Array.isArray(templateSettings.templates) && templateSettings.templates.some((t) => t.type === "lesson"),
     [templateSettings.templates],
   )
-  const savedTemplates = Array.isArray(templateSettings.templates) ? templateSettings.templates : []
+  const savedTemplates = useMemo(
+    () => (Array.isArray(templateSettings.templates) ? templateSettings.templates : []),
+    [templateSettings.templates],
+  )
 
   const selectedBlocks = getDefaultBlocksForType(selectedTemplateType)
 
@@ -177,9 +186,12 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       skipFieldStateResetRef.current = false
       return
     }
-    setFieldState(createDefaultTemplateFieldState(selectedTemplateType))
+    const frame = window.requestAnimationFrame(() => {
+      setFieldState(createDefaultTemplateFieldState(selectedTemplateType))
+    })
     // Selecting a different template type resets the editing context
     fieldStateInteractedRef.current = false
+    return () => window.cancelAnimationFrame(frame)
   }, [selectedTemplateType])
 
   // Debounced auto-save: whenever the user toggles a field checkbox and there
@@ -369,41 +381,64 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
         />
       )}
     >
-      <SetupPanels
-        config={(
-          <div className="space-y-4">
-            {/* Active template indicator */}
-            {activeTemplateId && (() => {
-              const activeTpl = savedTemplates.find((t) => t.id === activeTemplateId)
-              return activeTpl ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Active template</span>
-                  <span className="text-xs font-medium text-foreground">{activeTpl.label}</span>
-                  <span className="rounded border border-border bg-background/70 px-1.5 py-0.5 text-[10px] text-muted-foreground capitalize">{activeTpl.type}</span>
-                </div>
-              ) : null
-            })()}
-
-            {/* Field toggle panel */}
-            <div className="rounded-lg border border-border bg-background p-4">
-              <TemplateConfigPanel
-                blocks={selectedBlocks}
-                fieldDefs={BLOCK_FIELDS}
-                fieldState={fieldState}
-                onToggleOptional={handleToggleOptional}
-              />
-              {message && <p className="mt-3 text-xs text-muted-foreground">{message}</p>}
-              {!courseId && <p className="mt-2 text-xs text-muted-foreground">Create a course first to save templates.</p>}
+      {courseId && !hydrated && (showHydrationPlaceholder || loading) ? (
+        <SetupPanels
+          config={(
+            <div className="space-y-4 rounded-xl border border-border/70 bg-background p-5">
+              <div className="h-10 rounded bg-muted/60" />
+              <div className="h-10 rounded bg-muted/60" />
+              <div className="h-10 rounded bg-muted/60" />
+              <div className="h-40 rounded bg-muted/50" />
             </div>
-          </div>
-        )}
-        preview={(
-          <TemplatePreviewPanel
-            blocks={selectedBlocks}
-            fieldState={fieldState}
-          />
-        )}
-      />
+          )}
+          preview={(
+            <div className="rounded-xl border border-border/70 bg-background p-5">
+              <div className="h-4 w-32 rounded bg-muted/60" />
+              <div className="mt-4 space-y-3">
+                <div className="h-8 rounded bg-muted/50" />
+                <div className="h-8 rounded bg-muted/50" />
+                <div className="h-8 rounded bg-muted/50" />
+              </div>
+            </div>
+          )}
+        />
+      ) : (
+        <SetupPanels
+          config={(
+            <div className="space-y-4">
+              {/* Active template indicator */}
+              {activeTemplateId && (() => {
+                const activeTpl = savedTemplates.find((t) => t.id === activeTemplateId)
+                return activeTpl ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Active template</span>
+                    <span className="text-xs font-medium text-foreground">{activeTpl.label}</span>
+                    <span className="rounded border border-border bg-background/70 px-1.5 py-0.5 text-[10px] text-muted-foreground capitalize">{activeTpl.type}</span>
+                  </div>
+                ) : null
+              })()}
+
+              {/* Field toggle panel */}
+              <div className="rounded-lg border border-border bg-background p-4">
+                <TemplateConfigPanel
+                  blocks={selectedBlocks}
+                  fieldDefs={BLOCK_FIELDS}
+                  fieldState={fieldState}
+                  onToggleOptional={handleToggleOptional}
+                />
+                {message && <p className="mt-3 text-xs text-muted-foreground">{message}</p>}
+                {!courseId && <p className="mt-2 text-xs text-muted-foreground">Create a course first to save templates.</p>}
+              </div>
+            </div>
+          )}
+          preview={(
+            <TemplatePreviewPanel
+              blocks={selectedBlocks}
+              fieldState={fieldState}
+            />
+          )}
+        />
+      )}
     </SetupSection>
   )
 }

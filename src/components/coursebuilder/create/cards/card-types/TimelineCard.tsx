@@ -8,8 +8,9 @@ const TimelineCardInner = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full min-h-[200px] items-center justify-center bg-muted/10 text-[12px] text-muted-foreground">
-        Loading timeline…
+      <div className="h-full min-h-[200px] rounded-lg border border-border/70 bg-muted/20 p-3">
+        <div className="h-4 w-28 rounded bg-muted/70" />
+        <div className="mt-3 h-[120px] rounded bg-muted/50" />
       </div>
     ),
   },

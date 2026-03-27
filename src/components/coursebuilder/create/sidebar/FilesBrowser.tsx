@@ -10,7 +10,7 @@
  * Categories follow the 3+1 taxonomy:
  *   All         — every block
  *   Resources   — passive reference and display blocks
- *   Tools       — interactive instruments learners use
+ *   Activities  — learner-input blocks and response widgets
  *   Experiences — composed learning units
  *   Layout      — structural arrangements
  */

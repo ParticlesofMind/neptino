@@ -15,4 +15,11 @@ export const LAYOUT_SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unkn
   "layout-pinboard": { slots: {} },
   "layout-annotated": { slots: {} },
   "layout-sixgrid": { slots: {} },
+  "layout-comparison": { slots: {} },
+  "layout-stepped": { slots: {} },
+  "layout-hero": { slots: {} },
+  "layout-dialogue": { slots: {} },
+  "layout-gallery": { slots: {} },
+  "layout-spotlight": { slots: {} },
+  "layout-flipcard": { slots: {} },
 }

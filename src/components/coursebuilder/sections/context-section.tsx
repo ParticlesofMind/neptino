@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { SetupSection } from "@/components/coursebuilder/layout-primitives"
+import { useSteadyLoading } from "@/components/coursebuilder"
 
 type JsonObject = Record<string, unknown>
 
@@ -549,11 +550,14 @@ function JsonLikeTree({ value, depth = 0 }: { value: JsonLikeObject; depth?: num
 export function ContextSection({ courseId }: { courseId: string | null }) {
   const [row, setRow] = useState<CourseContextRow | null>(null)
   const [loading, setLoading] = useState(false)
+  const showLoading = useSteadyLoading(loading)
 
   useEffect(() => {
     if (!courseId) {
-      setRow(null)
-      return
+      const frame = window.requestAnimationFrame(() => {
+        setRow(null)
+      })
+      return () => window.cancelAnimationFrame(frame)
     }
 
     const supabase = createClient()
@@ -679,7 +683,7 @@ export function ContextSection({ courseId }: { courseId: string | null }) {
         <div className="max-h-[70vh] overflow-y-auto rounded-xl border border-border/80 bg-gradient-to-b from-background to-accent/20 p-4 font-mono shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] sm:p-5">
           <JsonLikeTree value={jsonLikeDocument} />
           <p className="mt-4 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
-            {loading ? "Loading context..." : "Context updates automatically when setup data changes."}
+            {showLoading ? "Loading context..." : "Context updates automatically when setup data changes."}
           </p>
         </div>
       )}
