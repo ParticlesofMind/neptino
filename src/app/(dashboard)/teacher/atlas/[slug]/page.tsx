@@ -65,6 +65,23 @@ function normalizeFilter(value: string): string | null {
   return value
 }
 
+function uniqueNonEmptyStrings(values: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const value of values) {
+    if (!value) {
+      continue
+    }
+    const trimmed = value.trim()
+    if (!trimmed || seen.has(trimmed)) {
+      continue
+    }
+    seen.add(trimmed)
+    result.push(trimmed)
+  }
+  return result
+}
+
 function metadataEntries(metadata: Record<string, unknown> | null): Array<[string, string]> {
   if (!metadata) {
     return []
@@ -175,6 +192,8 @@ export default async function TeacherAtlasDetailPage({
   const filtered = (filteredRows ?? []) as Array<{ id: string; title: string; knowledge_type: string }>
   const related = filtered.filter((entry) => entry.id !== slug).slice(0, 8)
   const metadata = metadataEntries(item.metadata)
+  const secondaryDomains = uniqueNonEmptyStrings(item.secondary_domains ?? [])
+  const tags = uniqueNonEmptyStrings(item.tags ?? [])
 
   const filteredIds = filtered.map((entry) => entry.id)
   const currentIndex = filteredIds.indexOf(slug)
@@ -244,20 +263,20 @@ export default async function TeacherAtlasDetailPage({
             <div>Wikidata: <span className="text-foreground">{item.wikidata_id ?? "—"}</span></div>
           </div>
 
-          {item.secondary_domains && item.secondary_domains.length > 0 && (
+          {secondaryDomains.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {item.secondary_domains.map((domain) => (
-                <span key={domain} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">
+              {secondaryDomains.map((domain, index) => (
+                <span key={`${domain}-${index}`} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">
                   {domain}
                 </span>
               ))}
             </div>
           )}
 
-          {item.tags && item.tags.length > 0 && (
+          {tags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {item.tags.map((tag) => (
-                <span key={tag} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">
+              {tags.map((tag, index) => (
+                <span key={`${tag}-${index}`} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">
                   {tag}
                 </span>
               ))}

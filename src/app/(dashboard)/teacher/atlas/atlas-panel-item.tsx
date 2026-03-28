@@ -1,6 +1,6 @@
 import Link from "next/link"
 import type { SearchParams, PanelItemRow, PanelMediaRow } from "./atlas-page-utils"
-import { buildQueryString, formatMetadataValue } from "./atlas-page-utils"
+import { buildQueryString, formatMetadataValue, uniqueNonEmptyStrings } from "./atlas-page-utils"
 
 interface Props {
   panelItem: PanelItemRow
@@ -11,6 +11,8 @@ interface Props {
 }
 
 export function AtlasPanelItem({ panelItem, panelMediaByType, params, activePage, displayMode }: Props) {
+  const tags = uniqueNonEmptyStrings(panelItem.tags ?? [])
+
   return (
     <section className="mt-4 rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/40 p-4 backdrop-blur-sm">
       <div className="flex items-start justify-between gap-3">
@@ -40,10 +42,10 @@ export function AtlasPanelItem({ panelItem, panelMediaByType, params, activePage
         {panelItem.summary ?? "No summary available yet."}
       </p>
 
-      {panelItem.tags && panelItem.tags.length > 0 && (
+      {tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {panelItem.tags.map(tag => (
-            <span key={tag} className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[11px] text-[var(--atlas-text-dim)]">{tag}</span>
+          {tags.map((tag, index) => (
+            <span key={`${tag}-${index}`} className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[11px] text-[var(--atlas-text-dim)]">{tag}</span>
           ))}
         </div>
       )}

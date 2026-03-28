@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { TimelineJsCard } from "@/components/encyclopedia/timelinejs-card"
 import type { EncyclopediaItemRow, WikidataCardData, TimelineEvent, SearchParams } from "./atlas-page-utils"
-import { buildQueryString, capitalize } from "./atlas-page-utils"
+import { buildQueryString, capitalize, uniqueNonEmptyStrings } from "./atlas-page-utils"
 
 interface ProfileRow { label: string; value: string }
 
@@ -24,6 +24,9 @@ export function AtlasLargeCard({
   item, index, mediaCount, mediaTypes, previewMedia, wikidataCard, hasCompendium,
   timelineEvents, profileRows, domainBadges, params, displayMode,
 }: Props) {
+  const uniqueTags = uniqueNonEmptyStrings(item.tags ?? [])
+  const knowledgeEntries = uniqueNonEmptyStrings(domainBadges.length > 0 ? domainBadges : [item.knowledge_type])
+
   return (
     <article className="rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/40 p-6 backdrop-blur-sm">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
@@ -44,18 +47,18 @@ export function AtlasLargeCard({
             {wikidataCard?.longDescription ?? wikidataCard?.description ?? item.summary ?? "No summary available yet."}
           </p>
 
-          {item.tags && item.tags.length > 0 && (
+          {uniqueTags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1">
-              {item.tags.map(tag => (
-                <span key={`${item.id}-${tag}`} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">{tag}</span>
+              {uniqueTags.map((tag, index) => (
+                <span key={`${item.id}-${tag}-${index}`} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">{tag}</span>
               ))}
             </div>
           )}
 
           {domainBadges.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {domainBadges.map(domain => (
-                <span key={`${item.id}-${domain}`} className="rounded-full border border-[var(--primary)]/40 bg-[var(--primary)]/8 px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)]">{domain}</span>
+              {domainBadges.map((domain, index) => (
+                <span key={`${item.id}-${domain}-${index}`} className="rounded-full border border-[var(--primary)]/40 bg-[var(--primary)]/8 px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)]">{domain}</span>
               ))}
             </div>
           )}
@@ -68,18 +71,18 @@ export function AtlasLargeCard({
             <div className="rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg)]/70 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--atlas-text-dim)]">Knowledge</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {(domainBadges.length > 0 ? domainBadges : [item.knowledge_type]).slice(0, 7).map(entry => (
-                  <span key={`${item.id}-knowledge-${entry}`} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">{entry}</span>
+                {knowledgeEntries.slice(0, 7).map((entry, index) => (
+                  <span key={`${item.id}-knowledge-${entry}-${index}`} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">{entry}</span>
                 ))}
               </div>
             </div>
             <div className="rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg)]/70 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--atlas-text-dim)]">Related</p>
-              {item.tags && item.tags.length > 0 ? (
+              {uniqueTags.length > 0 ? (
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {item.tags.slice(0, 7).map(tag => (
+                  {uniqueTags.slice(0, 7).map((tag, index) => (
                     <Link
-                      key={`${item.id}-related-${tag}`}
+                      key={`${item.id}-related-${tag}-${index}`}
                       href={`/teacher/atlas?${buildQueryString(params, { q: tag, page: "1", item: null, display: displayMode })}`}
                       className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[11px] text-[var(--atlas-text-dim)] hover:border-[var(--primary)]/40 hover:text-[var(--atlas-text)] transition-all"
                     >

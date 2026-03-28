@@ -7,7 +7,7 @@ import { AtlasLargeCard } from "./atlas-large-card"
 import { AtlasSmallCard } from "./atlas-small-card"
 import { AtlasPagination } from "./atlas-pagination"
 import type { SearchParams } from "./atlas-page-utils"
-import { formatMetadataValue, capitalize, buildQueryString, buildTimelineEventsWithFallback } from "./atlas-page-utils"
+import { formatMetadataValue, capitalize, buildQueryString, buildTimelineEventsWithFallback, uniqueNonEmptyStrings } from "./atlas-page-utils"
 
 export default async function TeacherAtlasPage({
   searchParams,
@@ -80,7 +80,7 @@ export default async function TeacherAtlasPage({
                   }
                   return null
                 }
-                const domainBadges = [item.domain, ...(item.secondary_domains ?? [])].filter(Boolean) as string[]
+                const domainBadges = uniqueNonEmptyStrings([item.domain, ...(item.secondary_domains ?? [])])
                 const timelineEvents = buildTimelineEventsWithFallback(metadata, item.title, wikidataCard?.profile, item.era_group, item.era_label)
                 const profileRows = [
                   { label: "Full name",      value: item.title },

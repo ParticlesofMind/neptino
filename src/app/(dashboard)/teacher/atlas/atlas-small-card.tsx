@@ -1,4 +1,5 @@
 import type { EncyclopediaItemRow } from "./atlas-page-utils"
+import { uniqueNonEmptyStrings } from "./atlas-page-utils"
 
 interface Props {
   item: EncyclopediaItemRow
@@ -7,6 +8,8 @@ interface Props {
 }
 
 export function AtlasSmallCard({ item, previewMedia, hasCompendium }: Props) {
+  const tags = uniqueNonEmptyStrings(item.tags ?? [])
+
   return (
     <article className="rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/40 p-4 backdrop-blur-sm">
       {previewMedia && (
@@ -44,10 +47,10 @@ export function AtlasSmallCard({ item, previewMedia, hasCompendium }: Props) {
         {item.summary ?? "No summary available yet."}
       </p>
 
-      {item.tags && item.tags.length > 0 && (
+      {tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1">
-          {item.tags.slice(0, 4).map(tag => (
-            <span key={`${item.id}-${tag}`} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">
+          {tags.slice(0, 4).map((tag, index) => (
+            <span key={`${item.id}-${tag}-${index}`} className="rounded-full border border-border/40 px-2 py-0.5 text-[11px] text-muted-foreground">
               {tag}
             </span>
           ))}

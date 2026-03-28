@@ -3,11 +3,11 @@ import { ISCED_DOMAINS } from "@/types/atlas"
 import {
   getSingleParam, normalizeFilter, parsePositiveInt, uniqueSorted,
   buildQueryString, getVisiblePages, formatMetadataValue, capitalize,
-  buildTimelineEventsWithFallback,
+  buildTimelineEventsWithFallback, dedupeAtlasItems,
   isLikelyImageMediaType, readMediaImageUrl, getWikidataCardData,
 } from "./atlas-page-utils"
 import type {
-  SearchParams, EncyclopediaItemRow, WikidataCardData, TimelineEvent,
+  SearchParams, EncyclopediaItemRow, WikidataCardData,
   MediaRow, PanelItemRow, PanelMediaRow,
 } from "./atlas-page-utils"
 
@@ -105,13 +105,13 @@ export async function fetchAtlasPageData(rawParams: SearchParams): Promise<Atlas
   }
 
   let activePage = requestedPage
-  let { count: totalCount, data: initialRows } = await buildItemsQuery(activePage)
-  let items = (initialRows ?? []) as EncyclopediaItemRow[]
+  const { count: totalCount, data: initialRows } = await buildItemsQuery(activePage)
+  let items = dedupeAtlasItems((initialRows ?? []) as EncyclopediaItemRow[])
   const totalPages = Math.max(1, Math.ceil((totalCount ?? 0) / PAGE_SIZE))
   if (items.length === 0 && (totalCount ?? 0) > 0 && activePage > totalPages) {
     activePage = totalPages
     const retry = await buildItemsQuery(activePage)
-    items = (retry.data ?? []) as EncyclopediaItemRow[]
+    items = dedupeAtlasItems((retry.data ?? []) as EncyclopediaItemRow[])
   }
 
   const availableCount = totalCount ?? 0

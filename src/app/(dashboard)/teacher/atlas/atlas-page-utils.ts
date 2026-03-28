@@ -105,6 +105,54 @@ export function uniqueSorted(values: Array<string | null | undefined>): string[]
   )
 }
 
+export function uniqueNonEmptyStrings(values: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const value of values) {
+    if (!value) {
+      continue
+    }
+    const trimmed = value.trim()
+    if (!trimmed || seen.has(trimmed)) {
+      continue
+    }
+    seen.add(trimmed)
+    result.push(trimmed)
+  }
+  return result
+}
+
+function normalizeDedupTitle(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+}
+
+function atlasEntityTitleTypeKey(item: Pick<EncyclopediaItemRow, "title" | "knowledge_type" | "sub_type">): string {
+  return `title:${normalizeDedupTitle(item.title)}|type:${item.knowledge_type.toLowerCase()}|subtype:${(item.sub_type ?? "").toLowerCase()}`
+}
+
+export function atlasEntityDedupKey(item: Pick<EncyclopediaItemRow, "wikidata_id" | "title" | "knowledge_type" | "sub_type">): string {
+  if (item.wikidata_id && item.wikidata_id.trim()) {
+    return `wikidata:${item.wikidata_id.trim().toLowerCase()}`
+  }
+  return atlasEntityTitleTypeKey(item)
+}
+
+export function dedupeAtlasItems(items: EncyclopediaItemRow[]): EncyclopediaItemRow[] {
+  const seen = new Set<string>()
+  const result: EncyclopediaItemRow[] = []
+  for (const item of items) {
+    const entityKey = atlasEntityDedupKey(item)
+    const titleTypeKey = atlasEntityTitleTypeKey(item)
+    if (seen.has(entityKey) || seen.has(titleTypeKey)) {
+      continue
+    }
+    seen.add(entityKey)
+    seen.add(titleTypeKey)
+    result.push(item)
+  }
+  return result
+}
+
 export function buildQueryString(
   searchParams: SearchParams,
   overrides: Record<string, string | null | undefined> = {},
