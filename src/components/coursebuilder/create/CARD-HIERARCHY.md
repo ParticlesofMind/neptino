@@ -17,7 +17,7 @@ the **Atlas knowledge system** (`src/types/atlas.ts`) so the two stay in sync.
 
 Cards in the Make panel represent **Layers 2 – 4**.
 Layer 1 entities surface in two ways: as **inline entity references** within card
-content, and as the **Nachschlagewerk** — see below.
+content, and as the **Atlas** — see below.
 
 ---
 
@@ -125,15 +125,15 @@ Atlas entry. The lesson is not interrupted. The card is not replaced.
 - The teacher annotates during authoring; the student reads during delivery
 - Drives no coordination logic; structurally inert at the card level
 
-### 2. The Nachschlagewerk *(course-level persistent reference layer)*
+### 2. The Atlas *(course-level persistent reference layer)*
 
-The **Nachschlagewerk** is a course-level reference work — always accessible,
+The **Atlas** is a course-level reference work — always accessible,
 never part of the linear card sequence. It is consulted on demand, not read
 in order. Think: dictionary, glossary, encyclopaedia of figures, cast of
 characters.
 
 It is architecturally separate from the canvas. The canvas is where learning
-*happens*. The Nachschlagewerk is where students and teachers *look things up*.
+*happens*. The Atlas is where students and teachers *look things up*.
 
 See the **Three-tier course structure** section below.
 
@@ -225,7 +225,7 @@ Tier A — Sessions / Canvases / Tasks
          Where learning happens.
          Built from cards in the Make panel.
 
-Tier B — Nachschlagewerk  (reference layer)
+Tier B — Atlas  (reference layer)
          Course-scoped persistent reference work.
          Always accessible; never part of the card sequence.
          Where students and teachers look things up.
@@ -236,9 +236,9 @@ Tier C — Atlas  (global entity graph)
          Not course-specific; shared across all courses.
 ```
 
-### Nachschlagewerk detail
+### Atlas detail
 
-The Nachschlagewerk surfaces as a **persistent panel or overlay** available
+The Atlas surfaces as a **persistent panel or overlay** available
 throughout the course — not a canvas page, not a card. Its entries are:
 
 | Entry kind | Source | Who authors it |
@@ -252,11 +252,11 @@ enrichment. The global Atlas entry stays clean; course-specific elaboration is
 layered on top.
 
 Inline entity references (see Knowledge section above) link directly into the
-Nachschlagewerk: tapping an annotated word in a Text card opens the corresponding
-Nachschlagewerk entry in a side drawer.
+Atlas: tapping an annotated word in a Text card opens the corresponding
+Atlas entry in a side drawer.
 
-**Implementation:** See `src/types/atlas.ts` (`NachschlageEntry` union type) and
-`src/components/nachschlagewerk/NachschlageDrawer.tsx`.
+**Implementation:** See `src/types/atlas.ts` (`AtlasReferenceEntry` union type) and
+`src/components/atlas/AtlasDrawer.tsx`.
 
 ---
 
@@ -291,7 +291,7 @@ anchor are deduplicated by title + `EntityType` + domain during editorial review
 ```
 Tier 1 — Entity    (Atlas Layer 1 — what the content is about)
          Fetched from Wikidata / Wikipedia. Not authored by the teacher.
-         Surfaces as inline annotations and Nachschlagewerk entries.
+         Surfaces as inline annotations and Atlas entries.
          Attaches to cards as a tag (atomic) or scope (compound).
 
 Tier 2 — Card      (Atlas Layers 2 – 4 — how content is delivered)
@@ -397,7 +397,7 @@ Make Panel
 
 ─── NOT in the Make panel ──────────────────────────────────────────────
 
-Nachschlagewerk    (course-level persistent reference layer)
+Atlas (reference layer)    (course-level persistent reference layer)
     Inline entity references — annotation primitive inside card content
     Course extensions — teacher elaboration on Atlas stubs
     Custom entries — fully teacher-authored

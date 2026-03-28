@@ -37,7 +37,6 @@
     "src/components/coursebuilder/sections/template-preview-panel.tsx": 387,
     "src/components/coursebuilder/sections/templates-section.tsx": 403,
     "src/components/encyclopedia/sort-content-drilldown.tsx": 388,
-    "src/components/nachschlagewerk/NachschlageDrawer.tsx": 563,
     "src/components/ui/dropdown.tsx": 352,
     "src/data/isced-f-2013.ts": 391,
     "src/lib/curriculum/generation-api-client.ts": 353,

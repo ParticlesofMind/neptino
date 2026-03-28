@@ -342,7 +342,7 @@ function EntryRow({
   entry,
   onClick,
 }: {
-  entry: NachschlageEntry
+  entry: AtlasReferenceEntry
   onClick: () => void
 }) {
   const isAtlas = entry.kind === "atlas_stub" || entry.kind === "course_extension"
@@ -393,7 +393,7 @@ export function AtlasDrawer({ courseId, open, onClose }: AtlasDrawerProps) {
   const [entries, setEntries]       = useState<AtlasReferenceEntry[]>([])
   const [activeEntry, setActiveEntry] = useState<AtlasReferenceEntry | null>(null)
   const [search, setSearch]         = useState("")
-  const [activeKind, setActiveKind] = useState<"all" | NachschlageEntry["kind"]>("all")
+  const [activeKind, setActiveKind] = useState<"all" | AtlasReferenceEntry["kind"]>("all")
 
   const handleAdd = useCallback((entry: AtlasReferenceEntry) => {
     setEntries((prev) => {

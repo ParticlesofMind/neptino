@@ -3,7 +3,7 @@
  *
  * Lets teachers annotate a span of prose text with an Atlas Layer 1 entity.
  * The annotation is structurally inert at the card level (no onEntityChange handler).
- * It is stored as HTML attributes on a <span> and surfaces a Nachschlagewerk
+ * It is stored as HTML attributes on a <span> and surfaces an Atlas
  * entry when the student taps the annotated word in the delivered lesson.
  *
  * Storage: Serialised as HTML inside the card's rich-text content field.

@@ -100,6 +100,43 @@ async function makeCroppedImageFile(src: string, croppedAreaPixels: Area, fileNa
   return new File([blob], `${baseName || "course-image"}-cropped.jpg`, { type: "image/jpeg" })
 }
 
+function CourseIdDisplay({ courseId }: { courseId: string }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    void navigator.clipboard.writeText(courseId).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <span className="text-xs text-muted-foreground whitespace-nowrap">Course ID:</span>
+      <span className="font-mono text-xs text-foreground/70 truncate max-w-[180px]" title={courseId}>
+        {courseId}
+      </span>
+      <button
+        type="button"
+        onClick={handleCopy}
+        title={copied ? "Copied!" : "Copy course ID"}
+        className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        {copied ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        )}
+      </button>
+    </div>
+  )
+}
+
 export function EssentialsSection({
   onCourseCreated,
   initialData,
@@ -514,12 +551,17 @@ export function EssentialsSection({
               {error}
             </p>
           )}
-          <div className="flex items-center justify-end gap-3 pt-1">
+          <div className="flex items-center justify-between gap-3 pt-1">
+            {(courseId ?? createdCourseId) ? (
+              <CourseIdDisplay courseId={(courseId ?? createdCourseId)!} />
+            ) : (
+              <span />
+            )}
             <button
               type="button"
               onClick={() => void handleManualSave()}
               disabled={isManualSaving || (Boolean(courseId ?? createdCourseId) && !hasUnsavedChanges)}
-              className={`${PRIMARY_ACTION_BUTTON_CLASS} ml-auto`}
+              className={PRIMARY_ACTION_BUTTON_CLASS}
             >
               {isManualSaving && showManualSaving
                 ? "Saving..."
