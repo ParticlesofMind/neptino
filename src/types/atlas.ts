@@ -169,7 +169,7 @@ export function isProductType(type: string): type is ProductType {
  * Type guard to check if a content type is an Activity (Layer 4).
  */
 export function isActivityType(type: string): type is ActivityType {
-  return ["Exercise", "Quiz", "Assessment", "Interactive Simulation", "Game"].includes(type)
+  return ["Exercise", "Quiz", "Assessment", "Interactive Simulation", "Game", "AI Chat"].includes(type)
 }
 
 /**
@@ -226,6 +226,7 @@ export function getLayerName(layer: AtlasLayer): string {
  * Source: UNESCO Institute for Statistics
  */
 export type ISCEDDomain =
+  | "Generic programmes and qualifications"
   | "Education"
   | "Arts and humanities"
   | "Social sciences, journalism and information"
@@ -307,6 +308,7 @@ export const ACTIVITY_TYPES: ActivityType[] = [
  * ISCED-F 2013 broad fields - official international classification.
  */
 export const ISCED_DOMAINS: ISCEDDomain[] = [
+  "Generic programmes and qualifications",
   "Education",
   "Arts and humanities",
   "Social sciences, journalism and information",

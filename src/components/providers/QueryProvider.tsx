@@ -21,7 +21,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
             // Retry once on failure before surfacing the error
             retry: 1,
             // Keep prior data visible while fetching the next result.
-            placeholderData: (previousData) => previousData,
+            placeholderData: (previousData: unknown) => previousData,
             // Avoid unexpected refetch flashes when tab focus changes.
             refetchOnWindowFocus: false,
           },

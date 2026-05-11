@@ -126,7 +126,7 @@ export function renderBasicChart(props: ChartEditorPreviewProps, commonProps: Co
           {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
           <XAxis dataKey={columns[0]} tick={{ fontSize: 10 }} />
           <YAxis tick={{ fontSize: 10 }} domain={[0, 100]} unit="%" />
-          <Tooltip formatter={(value: number) => `${Number(value).toFixed(1)}%`} />
+          <Tooltip formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`} />
           {showLegend && <Legend wrapperStyle={{ fontSize: 10 }} />}
           {seriesKeys.map((key, index) => (
             <Bar key={key} dataKey={key} stackId="stack100" fill={colors[index % colors.length]} />

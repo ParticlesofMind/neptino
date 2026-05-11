@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactElement } from "react"
 import type { CardType } from "../../types"
 import { AnimationEditor } from "./AnimationEditor"
 import { AudioEditor } from "./AudioEditor"
@@ -29,7 +30,7 @@ export interface EditorShellProps {
   onChange: (key: string, value: unknown) => void
 }
 
-type EditorRenderer = (props: EditorShellProps) => JSX.Element
+type EditorRenderer = (props: EditorShellProps) => ReactElement
 
 const EDITOR_RENDERERS: Partial<Record<CardType, EditorRenderer>> = {
   text: ({ content, onChange }) => <TextEditor content={content} onChange={onChange} />,
@@ -83,7 +84,7 @@ const EDITOR_RENDERERS: Partial<Record<CardType, EditorRenderer>> = {
   "layout-flipcard": ({ cardType, content, onChange }) => <LayoutTemplateEditor cardType={cardType} content={content} onChange={onChange} />,
 }
 
-export function renderEditor({ cardType, content, onChange }: EditorShellProps): JSX.Element | null {
+export function renderEditor({ cardType, content, onChange }: EditorShellProps): ReactElement | null {
   const renderer = EDITOR_RENDERERS[cardType]
   return renderer ? renderer({ cardType, content, onChange }) : null
 }

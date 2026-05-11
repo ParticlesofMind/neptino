@@ -50,6 +50,7 @@ export function groupStudioCardsByProject(
       id: projectId,
       title: projectTitle,
       cards: [card],
+      cardTypeGroups: [],
       isCurrent: Boolean(currentProjectId) && projectId === currentProjectId,
       latestCreatedAt: card.createdAt,
     })

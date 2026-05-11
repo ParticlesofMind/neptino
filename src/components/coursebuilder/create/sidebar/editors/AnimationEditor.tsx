@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import { Play, Pause, RotateCcw, Film } from "lucide-react"
+import type { LottieRefCurrentProps } from "lottie-react"
 import { MakeMotionToolbar } from "../make-motion-toolbar"
 import {
   StudioSection,
@@ -37,12 +38,7 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
   const [loading, setLoading] = useState(false)
   const showLoading = useSteadyLoading(loading)
   const [playing, setPlaying] = useState(true)
-  const lottieRef = useRef<{
-    play: () => void
-    pause: () => void
-    stop: () => void
-    setSpeed?: (value: number) => void
-  } | null>(null)
+  const lottieRef = useRef<LottieRefCurrentProps | null>(null)
 
   const url = typeof content.url === "string" ? content.url : ""
   const title = typeof content.title === "string" ? content.title : ""
@@ -200,11 +196,10 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
                   {lottieData && !loading && !loadError && (
                     <div className="overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]" style={{ aspectRatio: "4/3" }}>
                       <LottiePlayer
-                        lottieRef={lottieRef as React.RefObject<never>}
+                        lottieRef={lottieRef}
                         animationData={lottieData}
                         loop={loop}
                         autoplay
-                        speed={speed}
                         style={{ width: "100%", height: "100%" }}
                       />
                     </div>

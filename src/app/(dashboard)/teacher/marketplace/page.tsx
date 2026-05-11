@@ -1,4 +1,4 @@
-import { Download, Package, Search, ShoppingBag, Star, Layers, Gamepad2, BookTemplate, Cpu, Upload } from "lucide-react"
+import { Download, Package, Search, ShoppingBag, Star, Layers, Gamepad2, BookTemplate, Cpu, Upload, type LucideIcon } from "lucide-react"
 import type { MarketplaceAsset, MarketplaceAssetType } from "@/types/marketplace"
 
 const TYPE_META: Record<MarketplaceAssetType, { label: string; color: string }> = {
@@ -12,37 +12,37 @@ const TYPE_META: Record<MarketplaceAssetType, { label: string; color: string }> 
 const ASSETS: MarketplaceAsset[] = [
   {
     id: "a1", title: "Photosynthesis Interactive Sim", description: "A pre-configured simulation card for plant biology with scaffolded checkpoints and self-assessment prompts.", assetType: "simulation",
-    authorId: "u1", authorName: "Dr. Amara Osei", price: 0, currency: "USD", tags: ["biology", "science"], domain: "05",
+    authorId: "u1", authorName: "Dr. Amara Osei", price: 0, currency: "USD", tags: ["biology", "science"], domain: "Natural sciences, mathematics and statistics",
     createdAt: "2026-02-10", updatedAt: "2026-02-10", downloadCount: 412, rating: 4.7, ratingCount: 38,
   },
   {
     id: "a2", title: "Timeline + Map Blueprint", description: "A wired compound blueprint pairing a historical timeline with an interactive map. Ready to populate with your own content.", assetType: "compound_blueprint",
-    authorId: "u2", authorName: "Neptino Team", price: 0, currency: "USD", tags: ["history", "geography"], domain: "02",
+    authorId: "u2", authorName: "Neptino Team", price: 0, currency: "USD", tags: ["history", "geography"], domain: "Arts and humanities",
     createdAt: "2026-01-28", updatedAt: "2026-02-15", downloadCount: 891, rating: 4.9, ratingCount: 74,
   },
   {
     id: "a3", title: "Introductory Programming Unit", description: "Full session template for a 6-lesson introduction to programming: variables, loops, functions, and debugging.", assetType: "lesson_template",
-    authorId: "u3", authorName: "Carlos Mendes", price: 499, currency: "USD", tags: ["programming", "beginner"], domain: "06",
+    authorId: "u3", authorName: "Carlos Mendes", price: 499, currency: "USD", tags: ["programming", "beginner"], domain: "Information and Communication Technologies",
     createdAt: "2026-01-05", updatedAt: "2026-03-01", downloadCount: 265, rating: 4.5, ratingCount: 22,
   },
   {
     id: "a4", title: "Vocabulary Pairs Game — French B1", description: "Game card config for a French vocabulary matching exercise. 60 term pairs, timed rounds, and scoring variants.", assetType: "game_config",
-    authorId: "u4", authorName: "Hélène Bouchard", price: 199, currency: "USD", tags: ["french", "vocabulary", "language"], domain: "02",
+    authorId: "u4", authorName: "Hélène Bouchard", price: 199, currency: "USD", tags: ["french", "vocabulary", "language"], domain: "Arts and humanities",
     createdAt: "2026-02-20", updatedAt: "2026-02-20", downloadCount: 183, rating: 4.3, ratingCount: 17,
   },
   {
     id: "a5", title: "Climate Science Card Collection", description: "40 atlas-linked cards covering greenhouse gases, ocean systems, feedback loops, and climate policy — ready to drop into any course.", assetType: "card_collection",
-    authorId: "u2", authorName: "Neptino Team", price: 0, currency: "USD", tags: ["climate", "science", "environment"], domain: "05",
+    authorId: "u2", authorName: "Neptino Team", price: 0, currency: "USD", tags: ["climate", "science", "environment"], domain: "Natural sciences, mathematics and statistics",
     createdAt: "2026-03-01", updatedAt: "2026-03-14", downloadCount: 673, rating: 4.8, ratingCount: 51,
   },
   {
     id: "a6", title: "Newton's Laws Simulation Suite", description: "Three pre-configured physics simulations covering inertia, acceleration, and action-reaction with embedded quizzes.", assetType: "simulation",
-    authorId: "u5", authorName: "Prof. James Liu", price: 299, currency: "USD", tags: ["physics", "mechanics"], domain: "05",
+    authorId: "u5", authorName: "Prof. James Liu", price: 299, currency: "USD", tags: ["physics", "mechanics"], domain: "Natural sciences, mathematics and statistics",
     createdAt: "2026-02-08", updatedAt: "2026-02-08", downloadCount: 344, rating: 4.6, ratingCount: 31,
   },
 ]
 
-const TYPE_FILTERS: { key: MarketplaceAssetType | "all"; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+const TYPE_FILTERS: { key: MarketplaceAssetType | "all"; label: string; Icon: LucideIcon }[] = [
   { key: "all",               label: "All Assets",  Icon: ShoppingBag },
   { key: "simulation",        label: "Simulations", Icon: Cpu },
   { key: "compound_blueprint",label: "Blueprints",  Icon: Layers },
@@ -106,7 +106,7 @@ function AssetCard({ asset }: { asset: MarketplaceAsset }) {
 }
 
 export default function TeacherMarketplacePage() {
-  const metrics = [
+  const metrics: Array<{ label: string; value: string; sub: string; Icon: LucideIcon }> = [
     { label: "Assets Available", value: "1,240", sub: "+87 this month",       Icon: ShoppingBag },
     { label: "Free Assets",      value: "634",   sub: "51% of catalog",       Icon: Package },
     { label: "In My Library",    value: "14",    sub: "3 added this week",     Icon: Download },

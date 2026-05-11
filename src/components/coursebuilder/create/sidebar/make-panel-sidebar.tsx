@@ -312,7 +312,7 @@ export function MakePanelSidebar({
                         "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-all",
                         isActive ? [accent.border, "shadow-sm"].join(" ") : "bg-muted/40",
                       ].join(" ")}>
-                        <spec.Icon size={12} className={isActive ? spec.accent : "text-muted-foreground/70"} />
+                        <spec.Icon size={12} className={isActive ? accent.pill : "text-muted-foreground/70"} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className={["text-[12px] font-semibold leading-tight", isActive ? "text-foreground" : "text-foreground/70"].join(" ")}>
