@@ -16,6 +16,7 @@ import { useRef } from "react"
 import { useDroppable } from "@dnd-kit/core"
 import type {
   CanvasPage as CanvasPageModel,
+  CanvasRenderMode,
   CourseSession,
   PageDimensions,
   SessionId,
@@ -28,6 +29,7 @@ import { FooterBlock } from "../blocks/Footer"
 import { useCanvasStore } from "../store/canvasStore"
 import { useCourseStore } from "../store/courseStore"
 import { CardRenderer } from "../cards/CardRenderer"
+import { isFieldFillCardType } from "../cards/cardSizing"
 import { useCanvasOverflow } from "../hooks/useCanvasOverflow"
 
 function findFirstVisibleTaskId(session: CourseSession, page: CanvasPageModel): TaskId {
@@ -116,7 +118,6 @@ function InsertionLineSlot({
 interface CanvasNewPageProps {
   page:         CanvasPageModel
   session:      CourseSession
-  isLastPage:   boolean
   dims?:        PageDimensions
   /** Pre-computed effective scale (fitScale * zoomLevel/100). When provided,
    *  the store zoomLevel is ignored so the virtualizer stays as the single
@@ -130,6 +131,8 @@ interface CanvasNewPageProps {
   virtualIndex: number
   /** If true, disable automatic overflow detection (currently unused in this component) */
   disableOverflow?: boolean
+  /** Rendering mode for canvas edit affordances. */
+  renderMode?: CanvasRenderMode
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -137,13 +140,13 @@ interface CanvasNewPageProps {
 export function CanvasPage({
   page,
   session,
-  isLastPage,
   dims = DEFAULT_PAGE_DIMENSIONS,
   scale: scaleProp,
   fieldValues,
   bodyData = {},
   virtualIndex,
   disableOverflow = false,
+  renderMode = "editor",
 }: CanvasNewPageProps) {
   const bodyRef    = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -158,6 +161,7 @@ export function CanvasPage({
   const isActive = activeCanvasId === page.id
   const bodyDropTaskId = findFirstVisibleTaskId(session, page)
   const removeDroppedCard = useCourseStore((s) => s.removeDroppedCard)
+  const isEditor = renderMode === "editor"
 
   const isTemplateFreeCanvas = !page.blockKeys || page.blockKeys.length === 0
 
@@ -187,7 +191,7 @@ export function CanvasPage({
   // body target is erroneously detected the card will still be routed correctly.
   const { setNodeRef: setBodyDropRef } = useDroppable({
     id:       `${session.id as SessionId}:body`,
-    disabled: !isTemplateFreeCanvas,
+    disabled: !isEditor || !isTemplateFreeCanvas,
     data: {
       sessionId: session.id  as SessionId,
       canvasId: page.id,
@@ -254,52 +258,68 @@ export function CanvasPage({
           <section className="h-full min-h-[240px] w-full rounded-lg border border-dashed border-neutral-300 bg-white p-3">
             {visibleDroppedCards.length === 0 ? (
               <div className="px-1">
-                <InsertionLineSlot
-                  id={`${session.id as SessionId}:body:${page.id}:slot:0`}
-                  sessionId={session.id as SessionId}
-                  canvasId={page.id}
-                  taskId={bodyDropTaskId}
-                />
+                {isEditor && (
+                  <InsertionLineSlot
+                    id={`${session.id as SessionId}:body:${page.id}:slot:0`}
+                    sessionId={session.id as SessionId}
+                    canvasId={page.id}
+                    taskId={bodyDropTaskId}
+                  />
+                )}
                 <div className="flex h-full min-h-[200px] items-center justify-center text-xs text-neutral-400">
-                  Drop cards here
+                  {isEditor ? "Drop cards here" : "No cards on this page"}
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
                 {visibleDroppedCards.map((card, idx) => {
                   const prevOrder = idx > 0 ? visibleDroppedCards[idx - 1]?.order : undefined
+                  const fillField = visibleDroppedCards.length === 1 && isFieldFillCardType(card.cardType)
                   return (
-                    <div key={card.id} data-card-idx={cardStart + idx}>
-                      <InsertionLineSlot
-                        id={`${session.id as SessionId}:body:${page.id}:slot:${idx}`}
-                        sessionId={session.id as SessionId}
-                        canvasId={page.id}
-                        taskId={bodyDropTaskId}
-                        prevOrder={prevOrder}
-                        nextOrder={card.order}
-                      />
+                    <div
+                      key={card.id}
+                      data-card-idx={cardStart + idx}
+                      className={fillField ? "min-h-[min(72dvh,100%)]" : undefined}
+                    >
+                      {isEditor && (
+                        <InsertionLineSlot
+                          id={`${session.id as SessionId}:body:${page.id}:slot:${idx}`}
+                          sessionId={session.id as SessionId}
+                          canvasId={page.id}
+                          taskId={bodyDropTaskId}
+                          prevOrder={prevOrder}
+                          nextOrder={card.order}
+                        />
+                      )}
                       <CardRenderer
                         card={card}
-                        onRemove={() => {
-                          const ownerTaskId = findOwnerTaskIdForCard(session, card.id) ?? card.taskId
-                          removeDroppedCard(session.id as SessionId, ownerTaskId, card.id)
-                        }}
+                        mode={renderMode}
+                        className={fillField ? "min-h-[inherit]" : undefined}
+                        fillAvailable={fillField}
+                        onRemove={isEditor
+                          ? () => {
+                              const ownerTaskId = findOwnerTaskIdForCard(session, card.id) ?? card.taskId
+                              removeDroppedCard(session.id as SessionId, ownerTaskId, card.id)
+                            }
+                          : undefined}
                       />
                     </div>
                   )
                 })}
-                <InsertionLineSlot
-                  id={`${session.id as SessionId}:body:${page.id}:slot:${visibleDroppedCards.length}`}
-                  sessionId={session.id as SessionId}
-                  canvasId={page.id}
-                  taskId={bodyDropTaskId}
-                  prevOrder={visibleDroppedCards[visibleDroppedCards.length - 1]?.order}
-                />
+                {isEditor && (
+                  <InsertionLineSlot
+                    id={`${session.id as SessionId}:body:${page.id}:slot:${visibleDroppedCards.length}`}
+                    sessionId={session.id as SessionId}
+                    canvasId={page.id}
+                    taskId={bodyDropTaskId}
+                    prevOrder={visibleDroppedCards[visibleDroppedCards.length - 1]?.order}
+                  />
+                )}
               </div>
             )}
           </section>
         ) : (
-          <div ref={contentRef} className="max-h-full overflow-hidden">
+          <div ref={contentRef} className="h-full overflow-hidden">
             <BlockRenderer
               sessionId={session.id as SessionId}
               canvasId={page.id}
@@ -307,6 +327,7 @@ export function CanvasPage({
               data={bodyData}
               blockKeys={page.blockKeys}
               fieldEnabled={session.fieldEnabled}
+              renderMode={renderMode}
             />
           </div>
         )}

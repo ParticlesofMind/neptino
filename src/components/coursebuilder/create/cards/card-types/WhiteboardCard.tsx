@@ -1,7 +1,9 @@
 "use client"
 
 import dynamic from "next/dynamic"
+import type { SyntheticEvent } from "react"
 import type { CardRenderProps } from "../CardRegistry"
+import { resolveWhiteboardPersistenceKey } from "./whiteboard-card-utils"
 
 const WhiteboardCardInner = dynamic(
   () => import("./whiteboard-card-inner"),
@@ -16,17 +18,28 @@ const WhiteboardCardInner = dynamic(
   },
 )
 
-export function WhiteboardCard({ card, onRemove }: CardRenderProps) {
+function WhiteboardCardShell({
+  card,
+  onRemove,
+  fillAvailable,
+  readOnly = false,
+}: CardRenderProps & { readOnly?: boolean }) {
   const title = typeof card.content["title"] === "string" ? card.content["title"] : "Whiteboard"
   const prompt = typeof card.content["prompt"] === "string" ? card.content["prompt"] : ""
-  const boardKey = typeof card.content["boardKey"] === "string" ? card.content["boardKey"] : card.id
+  const persistenceKey = resolveWhiteboardPersistenceKey(card)
+
+  const stopCanvasEvent = (event: SyntheticEvent) => {
+    event.stopPropagation()
+  }
 
   return (
     <div
-      className="group relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
-      style={{ width: "100%", height: card.dimensions.height || 420 }}
+      className={[
+        "group relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm",
+        readOnly || !fillAvailable ? "min-h-[24rem]" : "h-full min-h-[inherit]",
+      ].join(" ")}
     >
-      {onRemove && (
+      {!readOnly && onRemove && (
         <button
           type="button"
           onClick={onRemove}
@@ -43,7 +56,28 @@ export function WhiteboardCard({ card, onRemove }: CardRenderProps) {
         {prompt && <p className="mt-1 max-w-64 text-[11px] text-neutral-500">{prompt}</p>}
       </div>
 
-      <WhiteboardCardInner persistenceKey={`coursebuilder-whiteboard-${boardKey}`} />
+      <div
+        className="h-full w-full"
+        onPointerDown={stopCanvasEvent}
+        onClick={stopCanvasEvent}
+        onDoubleClick={stopCanvasEvent}
+        onWheel={stopCanvasEvent}
+        onKeyDown={stopCanvasEvent}
+      >
+        <WhiteboardCardInner
+          persistenceKey={persistenceKey}
+          readOnly={readOnly}
+          hideUi={readOnly}
+        />
+      </div>
     </div>
   )
+}
+
+export function WhiteboardCard(props: CardRenderProps) {
+  return <WhiteboardCardShell {...props} />
+}
+
+export function WhiteboardPreviewCard(props: CardRenderProps) {
+  return <WhiteboardCardShell {...props} readOnly />
 }

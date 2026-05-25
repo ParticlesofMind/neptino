@@ -12,6 +12,7 @@ import type {
 } from "./atlas-page-utils"
 
 const PAGE_SIZE = 24
+const COMPENDIUM_MEDIA_TYPE = "Compendium"
 
 export type AtlasPageData = {
   // Params
@@ -147,7 +148,7 @@ export async function fetchAtlasPageData(rawParams: SearchParams): Promise<Atlas
       const types = mediaTypesByItem.get(row.item_id) ?? []
       if (!types.includes(row.media_type)) types.push(row.media_type)
       mediaTypesByItem.set(row.item_id, types)
-      if (row.media_type.toLowerCase() === "compendium") hasCompendiumByItem.set(row.item_id, true)
+      if (row.media_type.toLowerCase() === COMPENDIUM_MEDIA_TYPE.toLowerCase()) hasCompendiumByItem.set(row.item_id, true)
       const imageUrl = readMediaImageUrl(row)
       if (imageUrl && !mediaPreviewByItem.has(row.item_id) && isLikelyImageMediaType(row.media_type)) {
         mediaPreviewByItem.set(row.item_id, { url: imageUrl, title: row.title })
@@ -161,7 +162,7 @@ export async function fetchAtlasPageData(rawParams: SearchParams): Promise<Atlas
     }
   }
 
-  const mediaFilterActive = Boolean(selectedMediaType && selectedMediaType.toLowerCase() !== "compendium")
+  const mediaFilterActive = Boolean(selectedMediaType && selectedMediaType.toLowerCase() !== COMPENDIUM_MEDIA_TYPE.toLowerCase())
   const filteredMediaCards = mediaFilterActive
     ? items.flatMap(item =>
         (mediaByItem.get(item.id) ?? [])

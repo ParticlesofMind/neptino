@@ -14,8 +14,7 @@ vi.mock("@/app/(coursebuilder)/teacher/coursebuilder/page-section-registry", () 
 describe("CourseBuilderTopBar", () => {
   it("renders Setup back button when view is create", () => {
     render(<CourseBuilderTopBar view="create" setView={vi.fn()} />)
-    const setup = screen.getByRole("button", { name: /setup/i })
-    expect(setup).toBeInTheDocument()
+    expect(screen.getAllByRole("button", { name: /setup/i }).length).toBeGreaterThan(0)
     expect(screen.queryByRole("button", { name: /curate/i })).toBeNull()
   })
 

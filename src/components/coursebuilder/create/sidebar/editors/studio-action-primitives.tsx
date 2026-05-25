@@ -1,14 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 
 import {
   MAKE_BLUE_ACTIVE,
   MAKE_BLUE_ACTIVE_SOFT,
   MAKE_BLUE_BUTTON,
-  MAKE_BLUE_BORDER_HEX,
   MAKE_BLUE_INPUT_FOCUS,
-  MAKE_BLUE_SURFACE_HEX,
   MAKE_BLUE_TEXT,
 } from "../make-theme"
 import { SectionLabel } from "./studio-input-primitives"
@@ -46,14 +44,18 @@ export function StudioSegment<T extends string = string>({
   variant = "dark",
   size = "sm",
 }: StudioSegmentProps<T>) {
-  const pad = size === "xs" ? "px-2.5 py-1.5" : size === "sm" ? "px-3 py-2" : "px-4 py-2.5"
+  const pad = size === "xs" ? "px-2 py-1.5" : size === "sm" ? "px-2.5 py-1.5" : "px-3 py-2"
   const text = size === "xs" ? "text-[10px]" : size === "sm" ? "text-[10px]" : "text-[11px]"
   const activeClass = SEGMENT_ACTIVE[variant]
+  const useGrid = options.length >= 4
 
   return (
     <div className="space-y-1.5">
       {label && <SectionLabel>{label}</SectionLabel>}
-      <div className="flex overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
+      <div className={[
+        "overflow-hidden rounded-md border border-neutral-200 bg-neutral-50",
+        useGrid ? "grid grid-cols-2 gap-px p-px sm:grid-cols-3" : "flex",
+      ].join(" ")}>
         {options.map((opt, i) => {
           const active = opt.value === value
           return (
@@ -64,7 +66,7 @@ export function StudioSegment<T extends string = string>({
               className={[
                 `flex flex-1 items-center justify-center gap-1.5 font-bold uppercase tracking-wider transition-all ${pad} ${text}`,
                 active ? activeClass : "bg-white text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700",
-                i > 0 ? "border-l border-neutral-200" : "",
+                !useGrid && i > 0 ? "border-l border-neutral-200" : "",
               ].join(" ")}
             >
               {opt.icon}
@@ -106,7 +108,7 @@ export function StudioDropZone({ onDrop, accept, label, hint, icon, compact = fa
       onClick={() => inputRef.current?.click()}
       className={[
         "flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed transition-all",
-        compact ? "py-3" : "gap-2.5 py-8",
+        compact ? "py-2.5" : "gap-2 py-5",
         dragging
           ? "border-[#9eb9da] bg-[#dbe8f6]/50"
           : "border-neutral-200 bg-neutral-50 hover:border-neutral-300 hover:bg-white",
@@ -132,30 +134,26 @@ interface StudioUrlInputProps {
   label?: string
   value: string
   placeholder?: string
+  onValueChange?: (url: string) => void
   onCommit: (url: string) => void
   hint?: string
   icon?: ReactNode
   buttonLabel?: string
+  commitOnChange?: boolean
 }
 
 export function StudioUrlInput({
   label,
   value,
   placeholder,
+  onValueChange,
   onCommit,
   hint,
   icon,
   buttonLabel = "Load",
+  commitOnChange = true,
 }: StudioUrlInputProps) {
-  const [draft, setDraft] = useState(value)
-  const prevValueRef = useRef(value)
-
-  useEffect(() => {
-    if (value !== prevValueRef.current) {
-      setDraft(value)
-      prevValueRef.current = value
-    }
-  }, [value])
+  const inputRef = useRef<HTMLInputElement>(null)
 
   return (
     <div className="space-y-1.5">
@@ -167,18 +165,22 @@ export function StudioUrlInput({
       )}
       <div className="flex items-stretch gap-0 overflow-hidden rounded-md border border-neutral-200">
         <input
+          ref={inputRef}
           type="text"
-          value={draft}
+          value={value}
           placeholder={placeholder}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={() => onCommit(draft)}
-          onKeyDown={(e) => e.key === "Enter" && onCommit(draft)}
-          className={`min-h-10 min-w-0 flex-1 bg-neutral-50/80 px-3 py-2.5 text-[12px] text-neutral-800 placeholder:text-neutral-400 outline-none transition-all ${MAKE_BLUE_INPUT_FOCUS}`}
+          onChange={(e) => {
+            onValueChange?.(e.target.value)
+            if (commitOnChange) onCommit(e.target.value)
+          }}
+          onBlur={(e) => onCommit(e.currentTarget.value)}
+          onKeyDown={(e) => e.key === "Enter" && onCommit(e.currentTarget.value)}
+          className={`min-h-9 min-w-0 flex-1 bg-neutral-50/80 px-2.5 py-2 text-[12px] text-neutral-800 placeholder:text-neutral-400 outline-none transition-all ${MAKE_BLUE_INPUT_FOCUS}`}
         />
         <button
           type="button"
-          onClick={() => onCommit(draft)}
-          className="h-9 shrink-0 border-l border-neutral-200 bg-white px-3.5 py-2 text-[11px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+          onClick={() => onCommit(inputRef.current?.value ?? value)}
+          className="h-9 shrink-0 border-l border-neutral-200 bg-white px-3 py-2 text-[10px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
         >
           {buttonLabel}
         </button>
@@ -209,7 +211,7 @@ export function StudioPillGroup<T extends string = string>({
   return (
     <div className="space-y-1.5">
       {label && <SectionLabel>{label}</SectionLabel>}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex max-h-28 flex-wrap gap-1 overflow-y-auto pr-1">
         {options.map((opt) => {
           const active = opt.value === value
           return (
@@ -218,7 +220,7 @@ export function StudioPillGroup<T extends string = string>({
               type="button"
               onClick={() => onChange(opt.value)}
               className={[
-                "rounded-md border px-2.5 py-1 text-[11px] font-semibold transition-all",
+                "rounded-md border px-2 py-1 text-[10px] font-semibold transition-all",
                 active ? MAKE_BLUE_ACTIVE : "border-neutral-200 bg-neutral-50 text-neutral-500 hover:bg-white hover:text-neutral-700",
               ].join(" ")}
             >

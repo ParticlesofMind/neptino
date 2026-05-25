@@ -29,6 +29,7 @@ const LAYOUT_CARD_TYPES = new Set<CardType>([
   "layout-gallery",
   "layout-spotlight",
   "layout-flipcard",
+  "layout-resizable-grid",
 ])
 
 export function readTrimmedString(value: unknown): string {

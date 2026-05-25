@@ -253,7 +253,7 @@ export function InteractiveEditor({ content, onChange }: InteractiveEditorProps)
           </StudioSection>
         </div>
       )}
-      preview={<GenericEditorPreview cardType="interactive" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-3xl" />}
+      preview={<GenericEditorPreview cardType="interactive" content={content} onTitleChange={(next) => onChange("title", next)} />}
     />
   )
 }

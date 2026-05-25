@@ -429,4 +429,146 @@ describe("canvas drop acceptance", () => {
     expect(taskA?.droppedCards ?? []).toHaveLength(1)
     expect(taskA?.droppedCards[0]?.cardType).toBe("layout-sixgrid")
   })
+
+  it("keeps a placed card when re-drag ends without a valid target", () => {
+    const { session, taskAId } = buildSession()
+    session.topics[0]!.objectives[0]!.tasks[0]!.droppedCards = [
+      {
+        id: "drop-existing" as DroppedCardId,
+        cardId: "card-existing" as CardId,
+        cardType: "text",
+        taskId: taskAId,
+        areaKind: "instruction",
+        blockKey: "content",
+        position: { x: 0, y: 0 },
+        dimensions: { width: 0, height: 0 },
+        content: { title: "Existing text" },
+        order: 1,
+      },
+    ]
+    resetStoreWithSession(session)
+
+    const { result } = renderHook(() => useCardDrop())
+
+    act(() => {
+      result.current.onDragEnd({
+        active: {
+          data: {
+            current: {
+              type: "card",
+              cardId: "card-existing" as CardId,
+              cardType: "text",
+              title: "Existing text",
+              content: { title: "Existing text" },
+              droppedCardId: "drop-existing" as DroppedCardId,
+              sourceTaskId: taskAId,
+              sourceAreaKind: "instruction",
+              sourceBlockKey: "content",
+            },
+          },
+        },
+        over: null,
+        collisions: [],
+      } as never)
+    })
+
+    const updated = useCourseStore.getState().sessions[0]
+    const taskA = updated.topics[0].objectives[0].tasks.find((t) => t.id === taskAId)
+
+    expect(taskA?.droppedCards ?? []).toHaveLength(1)
+    expect(taskA?.droppedCards[0]?.id).toBe("drop-existing")
+  })
+
+  it("keeps a layout-slot card when the destination slot rejects the drop", () => {
+    const { session, sessionId, taskAId } = buildSession()
+    const sourceSlotCard = {
+      id: "drop-slot-source" as DroppedCardId,
+      cardId: "card-slot-source" as CardId,
+      cardType: "text",
+      taskId: taskAId,
+      areaKind: "instruction",
+      position: { x: 0, y: 0 },
+      dimensions: { width: 0, height: 0 },
+      content: { title: "Source slot card" },
+      order: 1,
+    }
+    const occupiedSlotCard = {
+      id: "drop-slot-occupied" as DroppedCardId,
+      cardId: "card-slot-occupied" as CardId,
+      cardType: "text",
+      taskId: taskAId,
+      areaKind: "instruction",
+      position: { x: 0, y: 0 },
+      dimensions: { width: 0, height: 0 },
+      content: { title: "Occupied slot card" },
+      order: 2,
+    }
+
+    session.topics[0]!.objectives[0]!.tasks[0]!.droppedCards = [
+      {
+        id: "drop-layout" as DroppedCardId,
+        cardId: "card-layout" as CardId,
+        cardType: "layout-split",
+        taskId: taskAId,
+        areaKind: "instruction",
+        blockKey: "content",
+        position: { x: 0, y: 0 },
+        dimensions: { width: 0, height: 0 },
+        content: {
+          title: "Split layout",
+          slots: {
+            0: [sourceSlotCard],
+            1: [occupiedSlotCard],
+          },
+        },
+        order: 1,
+      },
+    ]
+    resetStoreWithSession(session)
+
+    const { result } = renderHook(() => useCardDrop())
+
+    act(() => {
+      result.current.onDragEnd({
+        active: {
+          data: {
+            current: {
+              type: "card",
+              cardId: "card-slot-source" as CardId,
+              cardType: "text",
+              title: "Source slot card",
+              content: { title: "Source slot card" },
+              droppedCardId: "drop-slot-source" as DroppedCardId,
+              sourceTaskId: taskAId,
+              sourceLayoutCardId: "drop-layout",
+              sourceSlotIndex: 0,
+            },
+          },
+        },
+        over: {
+          id: `layout-slot:${sessionId}:${taskAId}:drop-layout:1`,
+          data: {
+            current: {
+              type: "layout-slot",
+              sessionId,
+              taskId: taskAId,
+              layoutCardId: "drop-layout",
+              slotIndex: 1,
+              accepts: [],
+              maxCards: 1,
+              currentCardCount: 1,
+            },
+          },
+        },
+        collisions: [],
+      } as never)
+    })
+
+    const updated = useCourseStore.getState().sessions[0]
+    const layoutCard = updated.topics[0].objectives[0].tasks[0].droppedCards[0]
+    const slots = (layoutCard?.content.slots ?? {}) as Record<string, Array<{ id: string }>>
+
+    expect(slots[0]?.map((card) => card.id)).toEqual(["drop-slot-source"])
+    expect(slots[1]?.map((card) => card.id)).toEqual(["drop-slot-occupied"])
+  })
 })

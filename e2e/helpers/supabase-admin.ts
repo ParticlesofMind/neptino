@@ -68,14 +68,3 @@ export async function deleteCourse(courseId: string): Promise<void> {
   const admin = createAdminClient()
   await admin.from("courses").delete().eq("id", courseId)
 }
-
-export async function fetchTemplatesForCourse(courseId: string) {
-  const admin = createAdminClient()
-  const { data, error } = await admin
-    .from("templates")
-    .select("*")
-    .eq("course_id", courseId)
-
-  if (error) throw new Error(`fetchTemplates failed: ${error.message}`)
-  return data ?? []
-}

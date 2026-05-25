@@ -13,7 +13,7 @@
  */
 
 import type { ComponentType } from "react"
-import type { DroppedCard, CardType } from "../types"
+import type { CanvasRenderMode, DroppedCard, CardType } from "../types"
 
 import { TextCard }  from "./card-types/TextCard"
 import { ImageCard } from "./card-types/ImageCard"
@@ -25,7 +25,16 @@ import { MapCard } from "./card-types/MapCard"
 import { ChatCard } from "./card-types/ChatCard"
 import { TextEditorCard } from "./card-types/TextEditorCard"
 import { CodeEditorCard } from "./card-types/CodeEditorCard"
-import { WhiteboardCard } from "./card-types/WhiteboardCard"
+import { WhiteboardCard, WhiteboardPreviewCard } from "./card-types/WhiteboardCard"
+import { DiagramCard } from "./card-types/DiagramCard"
+import {
+  AssessmentCard,
+  FlashcardActivityCard,
+  FormActivityCard,
+  GamesActivityCard,
+  SorterActivityCard,
+  VoiceRecorderActivityCard,
+} from "./card-types/ActivityCards"
 
 // ─── Shared prop contract ─────────────────────────────────────────────────────
 
@@ -33,6 +42,12 @@ export interface CardRenderProps {
   card: DroppedCard
   /** Optional remove handler — present in editor mode, absent in preview */
   onRemove?: () => void
+  /** Whether the card should consume the available field height. */
+  fillAvailable?: boolean
+  /** Canvas rendering mode for nested cards and read-only variants. */
+  mode?: CanvasRenderMode
+  /** True when the card is rendered in a teacher-editable canvas. */
+  isEditable?: boolean
 }
 
 // ─── Registry shape ───────────────────────────────────────────────────────────
@@ -58,17 +73,23 @@ export const DEFAULT_CARD_REGISTRY: CardRegistry = {
   video:      { Editor: VideoCard },
   map:        { Editor: MapCard   },
   timeline:   { Editor: TimelineCard },
+  diagram:    { Editor: DiagramCard },
+  flashcards: { Editor: FlashcardActivityCard },
+  interactive: { Editor: AssessmentCard },
+  form:       { Editor: FormActivityCard },
+  "voice-recorder": { Editor: VoiceRecorderActivityCard },
+  sorter:     { Editor: SorterActivityCard },
+  games:      { Editor: GamesActivityCard },
   chat:       { Editor: ChatCard },
   "text-editor": { Editor: TextEditorCard },
   "code-editor": { Editor: CodeEditorCard },
-  whiteboard: { Editor: WhiteboardCard },
+  whiteboard: { Editor: WhiteboardCard, Preview: WhiteboardPreviewCard },
   // audio / document / table use the generic fallback in CardRenderer
 
   // ── Canvas-backed types ────────────────────────────────────────────────────
-  // All three share RichCard as the host; the scene engine is resolved inside it
+  // Simulation/3D experiences share RichCard as the host.
   "rich-sim":   { Editor: RichCard },
   "village-3d": { Editor: RichCard },
-  interactive:  { Editor: RichCard },
   // ── Layout containers ─────────────────────────────────────────
   "layout-split":     { Editor: LayoutCard },
   "layout-stack":     { Editor: LayoutCard },
@@ -91,6 +112,7 @@ export const DEFAULT_CARD_REGISTRY: CardRegistry = {
   "layout-gallery": { Editor: LayoutCard },
   "layout-spotlight": { Editor: LayoutCard },
   "layout-flipcard": { Editor: LayoutCard },
+  "layout-resizable-grid": { Editor: LayoutCard },
 }
 
 // ─── Lookup helper ────────────────────────────────────────────────────────────

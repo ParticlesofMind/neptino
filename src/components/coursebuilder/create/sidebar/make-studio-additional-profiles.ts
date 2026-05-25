@@ -64,6 +64,142 @@ export const DOCUMENT_PROFILE: StudioProfile = {
   ],
 }
 
+export const EMBED_PROFILE: StudioProfile = {
+  mediaType: "Embed",
+  productType: "External Resource",
+  defaults: {
+    title: "",
+    url: "",
+    documentType: "web",
+    provider: "iframe",
+    caption: "",
+    attribution: "",
+    pages: 0,
+    excerpt: "",
+  },
+  sections: DOCUMENT_PROFILE.sections,
+}
+
+export const CODE_SNIPPET_PROFILE: StudioProfile = {
+  mediaType: "Code",
+  productType: "Read-Only Snippet",
+  defaults: {
+    title: "",
+    language: "javascript",
+    code: "",
+    caption: "",
+    prompt: "",
+    showLineNumbers: true,
+  },
+  sections: [
+    {
+      title: "Snippet",
+      fields: [
+        { key: "title", label: "Title", kind: "text", placeholder: "Example function" },
+        {
+          key: "language",
+          label: "Language",
+          kind: "select",
+          options: [
+            { label: "JavaScript", value: "javascript" },
+            { label: "TypeScript", value: "typescript" },
+            { label: "HTML", value: "html" },
+            { label: "CSS", value: "css" },
+            { label: "JSON", value: "json" },
+            { label: "Markdown", value: "markdown" },
+          ],
+        },
+        { key: "code", label: "Code", kind: "textarea", rows: 10, placeholder: "const answer = 42" },
+        { key: "caption", label: "Caption", kind: "textarea", rows: 3, placeholder: "What should students notice?" },
+      ],
+    },
+  ],
+}
+
+export const FLASHCARDS_PROFILE: StudioProfile = {
+  mediaType: "Flashcards",
+  productType: "Revision Deck",
+  defaults: {
+    title: "",
+    gameType: "word-match",
+    instructions: "",
+    pairs: [{ term: "", match: "" }],
+    tags: [] as string[],
+    difficulty: "intermediate",
+    timeLimit: 0,
+    showHints: true,
+  },
+  sections: [],
+}
+
+export const FORM_PROFILE: StudioProfile = {
+  mediaType: "Learner Input",
+  productType: "Structured Form",
+  defaults: {
+    title: "",
+    prompt: "",
+    submitLabel: "Submit",
+    fields: [
+      { id: "response", label: "Response", type: "textarea", required: true },
+    ],
+  },
+  sections: [],
+}
+
+export const VOICE_RECORDER_PROFILE: StudioProfile = {
+  mediaType: "Spoken Response",
+  productType: "Voice Recorder",
+  defaults: {
+    title: "",
+    prompt: "",
+    maxDurationSeconds: 60,
+    retryPolicy: "allow",
+    transcript: "",
+  },
+  sections: [],
+}
+
+export const SORTER_PROFILE: StudioProfile = {
+  mediaType: "Sorting Activity",
+  productType: "Matcher",
+  defaults: {
+    title: "",
+    mode: "match",
+    instructions: "",
+    pairs: [{ term: "", match: "" }],
+    items: ["", ""],
+    showHints: true,
+  },
+  sections: [],
+}
+
+export const TIMELINE_PROFILE: StudioProfile = {
+  mediaType: "Timeline",
+  productType: "Chronological Resource",
+  defaults: {
+    title: "",
+    orientation: "horizontal",
+    events: [],
+  },
+  sections: [
+    {
+      title: "Timeline",
+      fields: [
+        { key: "title", label: "Title", kind: "text", placeholder: "History of the Internet" },
+        {
+          key: "orientation",
+          label: "Orientation",
+          kind: "select",
+          options: [
+            { label: "Horizontal", value: "horizontal" },
+            { label: "Vertical", value: "vertical" },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 export const TABLE_PROFILE: StudioProfile = {
   mediaType: "Structured Data",
   productType: "Data Table",
@@ -89,8 +225,21 @@ export const TABLE_PROFILE: StudioProfile = {
 
 export const INTERACTIVE_PROFILE: StudioProfile = {
   mediaType: "Interactive",
-  productType: "Learner Interaction",
-  defaults: { title: "", interactionType: "sandbox", prompt: "", checkpoints: 0, hintsEnabled: true },
+  productType: "Assessment",
+  defaults: {
+    title: "",
+    interactionType: "multiple-choice",
+    prompt: "",
+    options: [
+      { text: "", correct: true, feedback: "" },
+      { text: "", correct: false, feedback: "" },
+    ],
+    tfCorrect: true,
+    sampleAnswer: "",
+    keywords: "",
+    hint: "",
+    points: 1,
+  },
   sections: [
     {
       title: "Experience",

@@ -16,9 +16,10 @@ describe("ModeBar", () => {
 
     expect(curate).toHaveClass("rounded-md")
     expect(curate).toHaveClass("border")
-    expect(curate).toHaveClass("bg-[#dbe8f6]")
-    expect(make).not.toHaveClass("border")
-    expect(fix).not.toHaveClass("border")
+    expect(curate).toHaveClass("border-primary/25")
+    expect(curate).toHaveClass("bg-primary/10")
+    expect(make).toHaveClass("border-transparent")
+    expect(fix).toHaveClass("border-transparent")
   })
 
   it("updates the store when a different mode is clicked", () => {

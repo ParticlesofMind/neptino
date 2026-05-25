@@ -197,7 +197,7 @@ function ResizeHandle({ axis, dividerIndex, fractions, containerRef, onUpdate, o
       document.addEventListener("mousemove", onMove)
       document.addEventListener("mouseup", onUp)
     },
-    [isCol, dividerIndex, fractions, containerRef, onUpdate, onDragStart, onDragEnd],
+    [isCol, dividerIndex, fractions, containerRef, onUpdate, onDragStart, onDragEnd, computeMinFracs],
   )
 
   return (
@@ -248,6 +248,8 @@ export function LayoutSandboxPreview({ layoutType }: { layoutType: CardType }) {
   // Tracks which handle (e.g. "col-0", "row-1") is currently being dragged.
   // Only that handle's indicator is shown; all others are suppressed.
   const [draggingKey, setDraggingKey] = useState<string | null>(null)
+  const header = spec?.header
+  const [headerText, setHeaderText] = useState(() => header?.label ?? "")
 
   if (!cfg) return null
 
@@ -265,9 +267,6 @@ export function LayoutSandboxPreview({ layoutType }: { layoutType: CardType }) {
     if (isLayoutType(nextType)) return
     setSlotCards((prev) => ({ ...prev, [slotIndex]: nextType }))
   }
-
-  const header = spec?.header
-  const [headerText, setHeaderText] = useState(() => header?.label ?? "")
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">

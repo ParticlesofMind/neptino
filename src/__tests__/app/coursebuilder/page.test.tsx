@@ -1,5 +1,6 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { vi } from "vitest"
 
 // we need to mock the hook used inside CourseBuilderPageInner
@@ -28,8 +29,10 @@ import { useCreateModeStore } from "@/components/coursebuilder/create/store/crea
 
 // stub out CreateEditorLayout to avoid heavy rendering
 vi.mock("@/components/coursebuilder/create/CreateEditorLayout", () => {
+  type CreateEditorLayoutProps = { showModeBar?: boolean }
+
   return {
-    CreateEditorLayout: ({ showModeBar }: any) => (
+    CreateEditorLayout: ({ showModeBar }: CreateEditorLayoutProps) => (
       <div data-testid="create-layout">layout (showModeBar={String(showModeBar)})</div>
     ),
   }
@@ -42,9 +45,14 @@ beforeEach(() => {
 
 describe("CourseBuilderPage", () => {
   it("renders a ModeBar above the editor when view=create", () => {
-    render(<CourseBuilderPage />)
-    const setup = screen.getByRole("button", { name: /setup/i })
-    expect(setup).toBeInTheDocument()
+    const queryClient = new QueryClient()
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CourseBuilderPage />
+      </QueryClientProvider>,
+    )
+    expect(screen.getAllByRole("button", { name: /setup/i }).length).toBeGreaterThan(0)
     expect(screen.queryByRole("button", { name: /curate/i })).toBeNull()
     // Create layout should render in create view.
     expect(screen.getByTestId("create-layout")).toBeInTheDocument()

@@ -2,7 +2,7 @@
 
 import { createClient, getSupabaseClientConfigError } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PublicShell } from '@/components/layout/public-shell'
 import { AuthErrorBanner, AuthInput, AuthSubmitButton } from '@/components/ui/auth-primitives'
@@ -29,8 +29,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [nextPath, setNextPath] = useState<string | null>(null)
   const router = useRouter()
   const configError = getSupabaseClientConfigError()
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const next = new URLSearchParams(window.location.search).get('next')
+      setNextPath(next?.startsWith('/') ? next : null)
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,7 +69,9 @@ export default function LoginPage() {
       .single()
 
     const role = profile?.role ?? 'student'
-    if (role === 'teacher') {
+    if (nextPath) {
+      router.push(nextPath)
+    } else if (role === 'teacher') {
       router.push('/teacher')
     } else if (role === 'admin') {
       router.push('/admin')
@@ -125,7 +136,7 @@ export default function LoginPage() {
             <div className="px-8 pb-7 text-center">
               <p className="text-sm text-muted-foreground">
                 Don&apos;t have an account?{' '}
-                <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
+                <Link href={nextPath ? `/signup?next=${encodeURIComponent(nextPath)}` : "/signup"} className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
                   Sign up
                 </Link>
               </p>

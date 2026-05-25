@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic"
 import type { CardRenderProps } from "../CardRegistry"
+import { ResourceCardFrame } from "./ResourceCardFrame"
 
 const TimelineCardInner = dynamic(
   () => import("./timeline-card-inner"),
@@ -16,10 +17,14 @@ const TimelineCardInner = dynamic(
   },
 )
 
-export function TimelineCard({ card }: CardRenderProps) {
+export function TimelineCard({ card, onRemove }: CardRenderProps) {
+  const bodyHeight = Math.max(160, (card.dimensions.height || 220) - 58)
+
   return (
-    <div style={{ width: "100%", height: 160 }}>
-      <TimelineCardInner content={card.content} />
-    </div>
+    <ResourceCardFrame card={card} onRemove={onRemove} bodyClassName="p-0">
+      <div style={{ width: "100%", height: bodyHeight }}>
+        <TimelineCardInner content={card.content} />
+      </div>
+    </ResourceCardFrame>
   )
 }

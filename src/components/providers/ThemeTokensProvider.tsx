@@ -14,7 +14,7 @@ export const DEFAULT_TOKENS: Record<string, string> = {
   "--muted":                "#f5f5f5",
   "--muted-foreground":     "#737373",
   "--accent":               "#f5f9ff",
-  "--accent-foreground":    "#1f5fb3",
+  "--accent-foreground":    "#3a6ea0",
   "--destructive":          "#ef4444",
   "--destructive-foreground": "#ffffff",
   "--border":               "#e5e5e5",

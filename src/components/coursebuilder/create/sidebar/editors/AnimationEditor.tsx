@@ -215,7 +215,7 @@ export function AnimationEditor({ content, onChange }: AnimationEditorProps) {
                       <button
                         type="button"
                         onClick={togglePlay}
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-colors hover:bg-[#cedef0]"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#9eb9da] bg-[#dbe8f6] text-[#3a6ea0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-colors hover:bg-[#cedef0]"
                       >
                         {playing ? <Pause size={14} /> : <Play size={14} />}
                       </button>

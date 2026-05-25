@@ -44,11 +44,12 @@ function buildPayload(session: CourseSession): Record<string, unknown> {
 
 const DEBOUNCE_MS = 1200
 
-export function useCanvasPersistence(): void {
+export function useCanvasPersistence({ enabled = true }: { enabled?: boolean } = {}): void {
   const sessions = useCourseStore((s) => s.sessions)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    if (!enabled) return
     if (sessions.length === 0) return
 
     if (timerRef.current) {
@@ -74,5 +75,5 @@ export function useCanvasPersistence(): void {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [sessions])
+  }, [enabled, sessions])
 }

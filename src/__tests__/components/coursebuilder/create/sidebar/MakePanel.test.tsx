@@ -78,6 +78,29 @@ describe("MakePanel integration", () => {
     expect(addButton).toBeEnabled()
   })
 
+  it("filters assessment blocks by template context", () => {
+    const sessions: CourseSession[] = [
+      {
+        id: "session-1" as SessionId,
+        courseId: "course-1" as CourseId,
+        order: 0,
+        title: "Lesson 1",
+        canvases: [],
+        topics: [],
+        templateType: "lesson",
+      },
+    ]
+
+    useCourseStore.setState({ sessions, activeSessionId: "session-1" as SessionId })
+    render(<MakePanel />)
+
+    expect(screen.queryByTestId("make-card-type-interactive")).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("Template"), { target: { value: "assessment" } })
+
+    expect(screen.getByTestId("make-card-type-interactive")).toBeInTheDocument()
+  })
+
   it("shows saved blocks grouped by project with counts and collapsible sections", () => {
     const sessions: CourseSession[] = [
       {

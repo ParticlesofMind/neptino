@@ -45,6 +45,18 @@ export type CreateAtlasSidebarPanelMedia = {
   media_type: string
 }
 
+export type CreateAtlasSidebarMediaItem = {
+  id: string
+  item_id: string
+  itemTitle: string
+  itemType: string
+  media_type: string
+  layer: number | null
+  title: string
+  description: string | null
+  url: string | null
+}
+
 export type CreateAtlasSidebarPanelMediaGroup = {
   mediaType: string
   resources: CreateAtlasSidebarPanelMedia[]
@@ -57,6 +69,7 @@ export type CreateAtlasSidebarResponse = {
   totalPages: number
   activePage: number
   items: CreateAtlasSidebarItem[]
+  mediaItems: CreateAtlasSidebarMediaItem[]
   panelItem: CreateAtlasSidebarPanelItem | null
   panelMediaByType: CreateAtlasSidebarPanelMediaGroup[]
 }

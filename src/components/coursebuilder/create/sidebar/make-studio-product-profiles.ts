@@ -34,7 +34,7 @@ export const CHART_PROFILE: StudioProfile = {
 export const DIAGRAM_PROFILE: StudioProfile = {
   mediaType: "Concept Model",
   productType: "Diagram Explanation",
-  defaults: { title: "", diagramType: "flowchart", nodes: 4, edges: 3, layout: "auto" },
+  defaults: { title: "", diagramType: "flowchart", nodes: [], edges: [], layout: "auto" },
   sections: [
     {
       title: "Structure",
@@ -50,8 +50,6 @@ export const DIAGRAM_PROFILE: StudioProfile = {
             { label: "Cycle", value: "cycle" },
           ],
         },
-        { key: "nodes", label: "Nodes", kind: "number", min: 1, max: 30, step: 1 },
-        { key: "edges", label: "Edges", kind: "number", min: 0, max: 60, step: 1 },
       ],
     },
     {

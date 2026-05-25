@@ -12,6 +12,10 @@ import { CourseBuilderMobileNav } from "./course-builder-mobile-nav"
 import { getSetupSectionIds, type SectionId } from "./page-section-registry"
 import { CURRICULUM_LOADER_SELECT } from "@/components/coursebuilder/sections/use-curriculum-loader"
 
+const VIEW_SURFACE_CLASS = "flex flex-1 min-h-0 overflow-hidden bg-background"
+const VIEW_FRAME_CLASS = "flex flex-1 min-w-0 overflow-hidden bg-background"
+const SETUP_FRAME_CLASS = "flex min-w-0 flex-1 flex-col overflow-hidden bg-background"
+
 const SECTION_SELECTS: Record<string, string[]> = {
   essentials: ["generation_settings"],
   students: ["students_overview"],
@@ -54,6 +58,7 @@ function CourseBuilderPageInner() {
     initialEssentials,
     pageConfig, setPageConfig,
     loadingCourse,
+    accessError,
     flashSectionId,
     completedSetupSections,
     handleCourseCreated,
@@ -103,12 +108,16 @@ function CourseBuilderPageInner() {
   }, [activeSection, courseId, queryClient, view])
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted/20">
       <CourseBuilderTopBar view={view} setView={setView} />
 
-      <div className="flex flex-1 overflow-x-visible overflow-y-hidden">
-        {view === "setup" ? (
-          <div className="flex flex-1 overflow-hidden bg-muted/10">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        {accessError ? (
+          <div className={VIEW_SURFACE_CLASS}>
+            <CourseAccessError message={accessError} />
+          </div>
+        ) : view === "setup" ? (
+          <div className={VIEW_SURFACE_CLASS}>
             <CourseBuilderSidebarNav
               activeSection={activeSection}
               setActiveSection={setActiveSection}
@@ -117,8 +126,8 @@ function CourseBuilderPageInner() {
               setupSectionsLocked={setupSectionsLocked}
             />
 
-            <div className="flex flex-1 flex-col overflow-hidden border-x border-b border-border bg-background">
-              <main className="flex-1 overflow-hidden p-4 md:p-5">
+            <div className={SETUP_FRAME_CLASS}>
+              <main className="min-w-0 flex-1 overflow-hidden p-4 md:p-5">
                 <div className="mx-auto flex h-full min-h-0 flex-col bg-background">
                   {showLoadingCourse ? (
                     <div className="flex items-center justify-center h-48">
@@ -126,6 +135,7 @@ function CourseBuilderPageInner() {
                     </div>
                   ) : (
                     <SectionContent
+                      key={courseId ? `${courseId}-${initialEssentials ? "loaded" : "loading"}` : "new"}
                       id={activeSection}
                       onCourseCreated={handleCourseCreated}
                       courseCreatedData={courseCreatedData}
@@ -147,26 +157,37 @@ function CourseBuilderPageInner() {
             </div>
           </div>
         ) : view === "create" ? (
-          <div className="flex flex-1 overflow-x-visible overflow-y-hidden bg-muted/10">
-            <div className="flex flex-1 overflow-hidden border-x border-b border-border bg-background">
+          <div className={VIEW_SURFACE_CLASS}>
+            <div className={VIEW_FRAME_CLASS}>
               <CreateEditorLayout courseId={courseId} />
             </div>
           </div>
         ) : view === "preview" ? (
-          <div className="flex flex-1 overflow-hidden bg-muted/10">
-            <div className="flex flex-1 overflow-hidden border-x border-b border-border bg-background">
+          <div className={VIEW_SURFACE_CLASS}>
+            <div className={VIEW_FRAME_CLASS}>
               <PreviewView courseId={courseId} courseData={courseCreatedData} />
             </div>
           </div>
         ) : (
-          <div className="no-scrollbar flex flex-1 overflow-y-auto bg-muted/10">
-            <div className="no-scrollbar flex flex-1 overflow-y-auto border-x border-b border-border bg-background p-4 md:p-5">
-              <div className="no-scrollbar flex flex-1 overflow-y-auto rounded-md border border-border bg-background">
-                <LaunchView courseId={courseId} courseData={courseCreatedData} onSetView={setView} />
+          <div className={VIEW_SURFACE_CLASS}>
+            <div className="no-scrollbar flex min-w-0 flex-1 overflow-y-auto bg-muted/20 p-4 md:p-5">
+              <div className="no-scrollbar flex min-h-full flex-1 overflow-y-auto rounded-xl border border-border bg-background shadow-sm">
+                <LaunchView courseId={courseId} />
               </div>
             </div>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+function CourseAccessError({ message }: { message: string }) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center justify-center bg-background p-6 text-center">
+      <div className="max-w-sm">
+        <p className="text-sm font-medium text-foreground">Cannot edit this course</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{message}</p>
       </div>
     </div>
   )

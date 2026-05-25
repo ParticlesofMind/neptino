@@ -30,7 +30,7 @@ function resolveExtension(language: CodeLanguage): Extension {
   }
 }
 
-export function CodeEditorCard({ card, onRemove }: CardRenderProps) {
+export function CodeEditorCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const title = typeof card.content["title"] === "string" ? card.content["title"] : "Code editor"
   const prompt = typeof card.content["prompt"] === "string" ? card.content["prompt"] : ""
   const initialLanguage = typeof card.content["language"] === "string"
@@ -47,8 +47,10 @@ export function CodeEditorCard({ card, onRemove }: CardRenderProps) {
 
   return (
     <div
-      className="group relative overflow-hidden rounded-xl border border-neutral-200 bg-[#0b1220] shadow-sm"
-      style={{ width: "100%", height: card.dimensions.height || 380 }}
+      className={[
+        "group relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-[#0b1220] shadow-sm",
+        fillAvailable ? "h-full min-h-[inherit]" : "min-h-[24rem]",
+      ].join(" ")}
     >
       {onRemove && (
         <button
@@ -91,7 +93,7 @@ export function CodeEditorCard({ card, onRemove }: CardRenderProps) {
         </div>
       )}
 
-      <div className="h-[calc(100%-95px)] overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <CodeMirror
           value={code}
           height="100%"

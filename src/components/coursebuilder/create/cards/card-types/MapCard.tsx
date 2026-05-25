@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic"
 import type { CardRenderProps } from "../CardRegistry"
+import { ResourceCardFrame } from "./ResourceCardFrame"
 
 const MapCardInner = dynamic(
   () => import("./map-card-inner"),
@@ -16,10 +17,14 @@ const MapCardInner = dynamic(
   },
 )
 
-export function MapCard({ card }: CardRenderProps) {
+export function MapCard({ card, onRemove }: CardRenderProps) {
+  const bodyHeight = Math.max(200, (card.dimensions.height || 300) - 58)
+
   return (
-    <div style={{ width: "100%", height: "100%", minHeight: 200 }}>
-      <MapCardInner card={card} />
-    </div>
+    <ResourceCardFrame card={card} onRemove={onRemove} bodyClassName="p-0">
+      <div style={{ width: "100%", height: bodyHeight, minHeight: 200 }}>
+        <MapCardInner card={card} />
+      </div>
+    </ResourceCardFrame>
   )
 }

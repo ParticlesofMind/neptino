@@ -1,7 +1,7 @@
 "use client"
 
 import { Trash2 } from "lucide-react"
-import { MAKE_BLUE_ACTIVE_SOFT, MAKE_BLUE_INPUT_FOCUS } from "../make-theme"
+import { MAKE_BLUE_INPUT_FOCUS } from "../make-theme"
 
 interface Chapter {
   time: string
@@ -85,14 +85,14 @@ export function ChapterTimeline({
               <div
                 className={[
                   "absolute inset-y-0 w-px transition-colors",
-                  active ? "bg-[#233f5d]" : "bg-neutral-300 group-hover:bg-neutral-400",
+                  active ? "bg-[#3a6ea0]" : "bg-neutral-300 group-hover:bg-neutral-400",
                 ].join(" ")}
               />
               <div
                 className={[
                   "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex h-5 w-5 items-center justify-center rounded-full border-2 text-[9px] font-bold transition-all",
                   active
-                    ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[0_0_8px_rgba(219,232,246,0.8)]"
+                    ? "border-[#9eb9da] bg-[#dbe8f6] text-[#3a6ea0] shadow-[0_0_8px_rgba(219,232,246,0.8)]"
                     : "border-neutral-300 bg-white text-neutral-500 group-hover:border-neutral-400 group-hover:text-neutral-700",
                 ].join(" ")}
               >
@@ -101,7 +101,7 @@ export function ChapterTimeline({
               <div
                 className={[
                   "absolute bottom-1.5 -translate-x-1/2 whitespace-nowrap text-[8px] font-mono transition-opacity",
-                  active ? "text-[#233f5d] opacity-100" : "text-neutral-500 opacity-0 group-hover:opacity-100",
+                  active ? "text-[#3a6ea0] opacity-100" : "text-neutral-500 opacity-0 group-hover:opacity-100",
                 ].join(" ")}
               >
                 {chapter.time}
@@ -121,7 +121,7 @@ export function ChapterTimeline({
 export function ChapterEditRow({ chapter, idx, onUpdate, onDelete }: ChapterEditRowProps) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-[#9eb9da]/40 bg-[#dbe8f6]/45 px-3 py-2">
-      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#233f5d] text-[9px] font-bold text-white">
+      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#3a6ea0] text-[9px] font-bold text-white">
         {idx + 1}
       </div>
       <input

@@ -75,7 +75,7 @@ export const GROUPS: { id: CardGroup; label: string }[] = [
   { id: "resources", label: "Resources" },
   { id: "activities", label: "Activities" },
   { id: "experiences", label: "Experiences" },
-  { id: "layout", label: "Layout" },
+  { id: "layout", label: "Compositions" },
 ]
 
 const CARD_TYPE_DEFINITIONS: CardTypeDefinition[] = [
@@ -129,6 +129,7 @@ const CARD_TYPE_DEFINITIONS: CardTypeDefinition[] = [
   { cardType: "layout-gallery", label: "Gallery", icon: Grid3X3, sidebar: { description: "Media-only grid for image/video/animation collections.", detail: "A constrained gallery layout for visual media collections where each cell expects media content.", fields: ["Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"], group: "layout" } },
   { cardType: "layout-spotlight", label: "Spotlight", icon: Layout, sidebar: { description: "One focal center with surrounding supporting context.", detail: "Focus-first composition: dominant center slot surrounded by smaller context slots.", fields: ["Focus", "Context A", "Context B", "Context C"], group: "layout" } },
   { cardType: "layout-flipcard", label: "Flipcard", icon: LayoutTemplate, sidebar: { description: "Two-face layout for reveal interactions.", detail: "Front and back faces for question/explanation or before/after moments. Adds stateful reveal semantics to an experience.", fields: ["Front face", "Back face"], group: "layout" } },
+  { cardType: "layout-resizable-grid", label: "Resizable Grid", icon: LayoutDashboard, sidebar: { description: "Experimental resizable composition grid powered by React Grid Layout.", detail: "Four semantic slots that can be resized and repositioned inside the composition card while keeping the outer lesson canvas untouched.", fields: ["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Resize handles"], group: "layout" } },
 ]
 
 export const CARD_TYPE_META: Record<CardType, CardTypeMeta> = Object.fromEntries(

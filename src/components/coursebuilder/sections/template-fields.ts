@@ -3,10 +3,13 @@
  */
 
 import { getDefaultBlocksForType, ALL_TEMPLATE_TYPES, type TemplateType, type TemplateBlockType } from "@/lib/curriculum/template-blocks"
+import { createPartitionState, type TemplatePartition } from "@/lib/curriculum/template-partitions"
 
 export type BlockId = TemplateBlockType
 
-export type TemplateFieldState = Partial<Record<BlockId, Record<string, boolean>>>
+export type TemplateFieldValue = boolean | string | TemplatePartition[]
+
+export type TemplateFieldState = Partial<Record<BlockId, Record<string, TemplateFieldValue>>>
 
 export interface TemplateFieldDef {
   key: string
@@ -70,15 +73,12 @@ export function createDefaultTemplateFieldState(type: TemplateType): TemplateFie
     const defs = BLOCK_FIELDS[block] ?? []
     const fieldMap = defs
       .filter((field) => field.forTypes.includes(type))
-      .reduce<Record<string, boolean>>((fieldAcc, field) => {
+      .reduce<Record<string, TemplateFieldValue>>((fieldAcc, field) => {
         fieldAcc[field.key] = field.required
         return fieldAcc
       }, {})
-    // Default to single-area mode for content/assignment blocks.
-    // _split: true = three labeled phases (Instruction / Practice / Feedback)
-    // _split: false = one generic drop zone per task
     if (block === "content" || block === "assignment") {
-      fieldMap._split = false
+      Object.assign(fieldMap, createPartitionState(block, "ipf"))
     }
     acc[block] = fieldMap
     return acc

@@ -80,8 +80,8 @@ export function AudioWaveformPreview({
               className="group absolute inset-y-0 -translate-x-1/2 pointer-events-auto"
               title={chapter.title || `Chapter ${index + 1}`}
             >
-              <div className="absolute inset-y-0 w-px bg-[#8ea9c8] group-hover:bg-[#233f5d]" />
-              <div className="absolute top-0 -translate-x-1/2 flex h-4 w-4 items-center justify-center rounded-b bg-[#233f5d] text-[8px] font-bold text-white shadow-sm">
+              <div className="absolute inset-y-0 w-px bg-[#8ea9c8] group-hover:bg-[#3a6ea0]" />
+              <div className="absolute top-0 -translate-x-1/2 flex h-4 w-4 items-center justify-center rounded-b bg-[#3a6ea0] text-[8px] font-bold text-white shadow-sm">
                 {index + 1}
               </div>
             </button>

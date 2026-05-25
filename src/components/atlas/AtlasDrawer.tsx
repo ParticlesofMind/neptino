@@ -35,35 +35,17 @@ import {
   ENTITY_TYPES,
   type AtlasItem,
   type EntityType,
-  type EntitySubType,
   type AtlasReferenceEntry,
   type AtlasCustomEntry,
-  type AtlasContributionStatus,
+  type AtlasCourseExtension,
 } from "@/types/atlas"
+import { ENTITY_TYPE_COLORS, CONTRIBUTION_STATUS_COLORS } from "./atlas-constants"
 import { AtlasEntitySearch } from "./AtlasEntitySearch"
 
-// ─── Entity type badge colour ──────────────────────────────────────────────────
+// ─── Constants (imported from atlas-constants.ts) ────────────────────────────
 
-const TYPE_PILL: Record<EntityType, string> = {
-  Concept:     "bg-[#dbe8f6] text-[#3a6ea0]",
-  Process:     "bg-[#d6ede3] text-[#2e6b4a]",
-  Instance:    "bg-[#f0e6cc] text-[#7a5010]",
-  Person:      "bg-[#ecdcec] text-[#622c6a]",
-  State:       "bg-[#f0e8cc] text-[#7a6010]",
-  Time:        "bg-[#f0d8d8] text-[#8a3030]",
-  Environment: "bg-[#d6ede3] text-[#2e6b4a]",
-  Work:        "bg-[#f0e8cc] text-[#7a6010]",
-  Technology:  "bg-[#dbe8f6] text-[#3a6ea0]",
-  Institution: "bg-[#ecdcec] text-[#622c6a]",
-  Movement:    "bg-[#f0e8cc] text-[#7a6010]",
-}
-
-const CONTRIBUTION_PILL: Record<AtlasContributionStatus, string> = {
-  draft:          "bg-muted text-muted-foreground",
-  pending:        "bg-[#f0e8cc] text-[#7a6010]",
-  approved:       "bg-[#d6ede3] text-[#2e6b4a]",
-  rejected:       "bg-destructive/10 text-destructive",
-}
+const TYPE_PILL = ENTITY_TYPE_COLORS
+const CONTRIBUTION_PILL = CONTRIBUTION_STATUS_COLORS
 
 // ─── Entry kind meta ──────────────────────────────────────────────────────────
 
@@ -248,9 +230,10 @@ function EntryDetail({ entry, onBack }: { entry: AtlasReferenceEntry; onBack: ()
   const isCustom = entry.kind === "custom_entry"
   const isExt    = entry.kind === "course_extension"
 
-  const title      = isAtlas || isExt ? entry.atlasItem.title : (entry as AtlasCustomEntry).title
-  const entityType = isAtlas || isExt ? entry.atlasItem.knowledge_type : (entry as AtlasCustomEntry).entityType
-  const summary    = isAtlas || isExt ? entry.atlasItem.summary : (entry as AtlasCustomEntry).summary
+  // Type-safe extraction: explicitly verify discriminator before unsafe cast
+  const title = isAtlas || isExt ? entry.atlasItem.title : (isCustom ? (entry as AtlasCustomEntry).title : "")
+  const entityType = isAtlas || isExt ? entry.atlasItem.knowledge_type : (isCustom ? (entry as AtlasCustomEntry).entityType : "Concept")
+  const summary = isAtlas || isExt ? entry.atlasItem.summary : (isCustom ? (entry as AtlasCustomEntry).summary : null)
   const km         = KIND_META[entry.kind]
 
   return (
@@ -273,8 +256,8 @@ function EntryDetail({ entry, onBack }: { entry: AtlasReferenceEntry; onBack: ()
             {km.label}
           </span>
           {isCustom && (
-            <span className={["rounded px-2 py-0.5 text-[10px] font-semibold", CONTRIBUTION_PILL[(entry as AtlasCustomEntry).contributionStatus]].join(" ")}>
-              {(entry as AtlasCustomEntry).contributionStatus}
+            <span className={["rounded px-2 py-0.5 text-[10px] font-semibold", CONTRIBUTION_PILL[isCustom ? (entry as AtlasCustomEntry).contributionStatus : "draft"]].join(" ")}>
+              {isCustom ? (entry as AtlasCustomEntry).contributionStatus : ""}
             </span>
           )}
         </div>
@@ -325,12 +308,15 @@ function EntryDetail({ entry, onBack }: { entry: AtlasReferenceEntry; onBack: ()
         })()}
 
         {/* Course extension notes */}
-        {isExt && (entry as { teacherNotes: string }).teacherNotes && (
-          <div>
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Course notes</p>
-            <p className="text-[12px] leading-relaxed text-foreground/70">{(entry as { teacherNotes: string }).teacherNotes}</p>
-          </div>
-        )}
+        {isExt && (() => {
+          const ext = entry as AtlasCourseExtension
+          return ext.teacherNotes ? (
+            <div>
+              <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Course notes</p>
+              <p className="text-[12px] leading-relaxed text-foreground/70">{ext.teacherNotes}</p>
+            </div>
+          ) : null
+        })()}
       </div>
     </div>
   )
@@ -346,12 +332,13 @@ function EntryRow({
   onClick: () => void
 }) {
   const isAtlas = entry.kind === "atlas_stub" || entry.kind === "course_extension"
+  const isCustom = entry.kind === "custom_entry"
   const title   = isAtlas
     ? (entry as { atlasItem: AtlasItem }).atlasItem.title
-    : (entry as AtlasCustomEntry).title
+    : (isCustom ? (entry as AtlasCustomEntry).title : "")
   const type    = isAtlas
     ? (entry as { atlasItem: AtlasItem }).atlasItem.knowledge_type
-    : (entry as AtlasCustomEntry).entityType
+    : (isCustom ? (entry as AtlasCustomEntry).entityType : "Concept")
   const km      = KIND_META[entry.kind]
 
   return (

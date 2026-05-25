@@ -14,12 +14,14 @@
  */
 
 import { useDraggable } from "@dnd-kit/core"
-import type { DroppedCard } from "../types"
+import { GripVertical, X } from "lucide-react"
+import type { CanvasRenderMode, DroppedCard } from "../types"
 import { DEFAULT_CARD_REGISTRY, resolveCardRenderer } from "./CardRegistry"
 import type { CardRenderProps } from "./CardRegistry"
-import { CARD_TYPE_META, CardTypePreview } from "./CardTypePreview"
+import { CardTypePreview } from "./CardTypePreview"
 import { useCanvasStore } from "../store/canvasStore"
 import type { DragSourceData } from "../hooks/useCardDrop"
+import { ResourceCardFrame } from "./card-types/ResourceCardFrame"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -27,7 +29,7 @@ interface CardRendererProps {
   card: DroppedCard
   onRemove?: () => void
   /** Render mode — defaults to "editor" */
-  mode?: "editor" | "preview"
+  mode?: CanvasRenderMode
   /**
    * When true, the card is treated as a placed canvas card and wrapped in
    * useDraggable so it can be re-ordered by dragging.
@@ -37,17 +39,35 @@ interface CardRendererProps {
   /** Set when this card is rendered inside a layout slot so re-drag can remove it from the correct source. */
   sourceLayoutCardId?: string
   sourceSlotIndex?: number
+  /** Block context for legacy cards that do not yet have card.blockKey set. */
+  dragSourceBlockKey?: DroppedCard["blockKey"]
+  /** Additional sizing/layout class for the placed card wrapper. */
+  className?: string
+  /** Ask field-aware card renderers to consume the available field height. */
+  fillAvailable?: boolean
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function CardRenderer({ card, onRemove, mode = "editor", draggable, sourceLayoutCardId, sourceSlotIndex }: CardRendererProps) {
+export function CardRenderer({
+  card,
+  onRemove,
+  mode = "editor",
+  draggable,
+  sourceLayoutCardId,
+  sourceSlotIndex,
+  dragSourceBlockKey,
+  className,
+  fillAvailable,
+}: CardRendererProps) {
   const Component   = resolveCardRenderer(DEFAULT_CARD_REGISTRY, card.cardType, mode)
   const selectId    = useCanvasStore((s) => s.selectId)
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   const isSelected  = selectedIds.includes(card.id)
 
-  const isDraggable = draggable ?? (mode === "editor")
+  const isEditor = mode === "editor"
+  const isDraggable = isEditor && (draggable ?? true)
+  const showEditorControls = isEditor && (isDraggable || onRemove)
 
   const dragData: DragSourceData = {
     type:                "card",
@@ -58,17 +78,20 @@ export function CardRenderer({ card, onRemove, mode = "editor", draggable, sourc
     droppedCardId:       card.id,
     sourceTaskId:        card.taskId,
     sourceOrder:         card.order,
+    sourceAreaKind:      card.areaKind,
+    sourceBlockKey:      card.blockKey ?? dragSourceBlockKey,
     sourceLayoutCardId,
     sourceSlotIndex,
   }
 
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
     id:       `placed:${card.id}`,
     data:     dragData,
     disabled: !isDraggable,
   })
 
   const handleClick = (e: React.MouseEvent) => {
+    if (!isEditor) return
     e.stopPropagation()
     selectId(card.id, e.metaKey || e.ctrlKey)
   }
@@ -77,18 +100,66 @@ export function CardRenderer({ card, onRemove, mode = "editor", draggable, sourc
     ? "ring-2 ring-primary ring-offset-1 rounded"
     : undefined
 
-  const content = Component
-    ? <Component card={card} onRemove={onRemove} />
-    : <GenericDomCard card={card} onRemove={onRemove} />
+  let content: React.ReactElement
+  if (Component) {
+    // eslint-disable-next-line react-hooks/static-components -- registry entries are static component references.
+    content = <Component card={card} fillAvailable={fillAvailable} mode={mode} isEditable={isEditor} />
+  } else {
+    content = <GenericDomCard card={card} fillAvailable={fillAvailable} mode={mode} isEditable={isEditor} />
+  }
 
   return (
     <div
       ref={isDraggable ? setNodeRef : undefined}
-      className={[selectionRing, isDragging ? "opacity-40" : undefined].filter(Boolean).join(" ")}
-      style={{ touchAction: "none" }}
+      className={[
+        "group/placed-card relative",
+        className,
+        selectionRing,
+        isDragging ? "opacity-40" : undefined,
+      ].filter(Boolean).join(" ")}
       onClick={handleClick}
-      {...(isDraggable ? { ...attributes, ...listeners } : {})}
     >
+      {showEditorControls && (
+        <div className="absolute right-1.5 top-1.5 z-30 flex items-center gap-1">
+          {isDraggable && (
+            <button
+              ref={setActivatorNodeRef}
+              type="button"
+              aria-label="Move card"
+              title="Move card"
+              onClick={(event) => event.stopPropagation()}
+              className={[
+                "flex h-6 w-6 items-center justify-center rounded-md border border-neutral-200 bg-white/95 text-neutral-500 shadow-sm backdrop-blur-sm",
+                "cursor-grab transition-colors hover:border-neutral-300 hover:bg-white hover:text-neutral-700 active:cursor-grabbing",
+                "focus:outline-none focus:ring-[3px] focus:ring-primary/15",
+              ].join(" ")}
+              style={{ touchAction: "none" }}
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical size={13} strokeWidth={1.75} />
+            </button>
+          )}
+          {onRemove && (
+            <button
+              type="button"
+              aria-label="Remove block"
+              title="Remove block"
+              onClick={(event) => {
+                event.stopPropagation()
+                onRemove()
+              }}
+              className={[
+                "flex h-6 w-6 items-center justify-center rounded-md border border-neutral-200 bg-white/95 text-neutral-400 shadow-sm backdrop-blur-sm",
+                "transition-colors hover:border-destructive/20 hover:bg-destructive/10 hover:text-destructive",
+                "focus:outline-none focus:ring-[3px] focus:ring-primary/15",
+              ].join(" ")}
+            >
+              <X size={12} strokeWidth={1.8} />
+            </button>
+          )}
+        </div>
+      )}
       {content}
     </div>
   )
@@ -99,32 +170,9 @@ export function CardRenderer({ card, onRemove, mode = "editor", draggable, sourc
 // canvas renderer (audio, document, table, etc.) so curate stays aligned.
 
 function GenericDomCard({ card, onRemove }: CardRenderProps) {
-  const meta = CARD_TYPE_META[card.cardType]
-  const title = typeof card.content["title"] === "string" && card.content["title"]
-    ? card.content["title"]
-    : meta.label
-
   return (
-    <div className="group relative rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
-      {onRemove && (
-        <button
-          onClick={onRemove}
-          className="absolute right-2 top-2 z-10 hidden h-5 w-5 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 group-hover:flex"
-          aria-label="Remove block"
-        >
-          &times;
-        </button>
-      )}
-      <div className="mb-3 flex items-center gap-2 pr-5">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600">
-          <meta.icon size={14} />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-[11px] font-semibold text-neutral-900">{title}</p>
-          <p className="text-[9px] uppercase tracking-wide text-neutral-400">{meta.label}</p>
-        </div>
-      </div>
+    <ResourceCardFrame card={card} onRemove={onRemove}>
       <CardTypePreview cardType={card.cardType} content={card.content} hideTitle />
-    </div>
+    </ResourceCardFrame>
   )
 }

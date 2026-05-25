@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import { computePageConfig } from "@/lib/page-config"
 import type { CanvasPageConfig } from "@/lib/page-config"
-import { selectCourseById } from "@/components/coursebuilder"
+import { getCurrentAuthUser, selectCourseById } from "@/components/coursebuilder"
 import type { View, CourseCreatedData } from "@/components/coursebuilder/builder-types"
 import {
   type SectionId,
@@ -37,6 +37,7 @@ export function useCourseBuilderState() {
   const [initialEssentials, setInitialEssentials] = useState<CourseCreatedData | null>(null)
   const [pageConfig, setPageConfig] = useState<CanvasPageConfig | null>(null)
   const [loadingCourse, setLoadingCourse] = useState(!!resolvedUrlCourseId)
+  const [accessError, setAccessError] = useState<string | null>(null)
   const [flashSectionId, setFlashSectionId] = useState<SectionId | null>(null)
   const [completedSetupSections, setCompletedSetupSections] = useState<Record<string, boolean>>({})
   const completionFetchRef = useRef<{ courseId: string | null; at: number }>({ courseId: null, at: 0 })
@@ -84,11 +85,21 @@ export function useCourseBuilderState() {
   useEffect(() => {
     if (!urlCourseId) return
     void (async () => {
+      setAccessError(null)
       const { data, error } = await selectCourseById<Record<string, unknown>>(
         urlCourseId,
         "id, course_name, course_subtitle, course_description, course_language, course_type, course_image, teacher_id, institution, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout",
       )
       if (!error && data) {
+        const ownerId = typeof data.teacher_id === "string" ? data.teacher_id : null
+        const user = await getCurrentAuthUser()
+
+        if (!user || !ownerId || user.id !== ownerId) {
+          setAccessError("This course can be viewed, but the current account cannot edit its setup.")
+          setLoadingCourse(false)
+          return
+        }
+
         const gs = (data.generation_settings as Record<string, unknown> | null) ?? null
         const loaded: CourseCreatedData = {
           title: (data.course_name as string) ?? "",
@@ -177,6 +188,7 @@ export function useCourseBuilderState() {
   const handleCourseCreated = useCallback((id: string, essentials: CourseCreatedData) => {
     setCourseId(id)
     setCourseCreatedData(essentials)
+    setInitialEssentials(essentials)
   }, [])
 
   return {
@@ -187,6 +199,7 @@ export function useCourseBuilderState() {
     initialEssentials,
     pageConfig, setPageConfig,
     loadingCourse,
+    accessError,
     flashSectionId,
     completedSetupSections,
     handleCourseCreated,

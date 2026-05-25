@@ -75,12 +75,6 @@ export const CATEGORIES: Category[] = [
     Icon: Gamepad2,
     types: ["rich-sim", "village-3d", "games"],
   },
-  {
-    id: "layout",
-    label: "Layout",
-    Icon: LayoutGrid,
-    types: ["layout-split", "layout-stack", "layout-feature", "layout-sidebar", "layout-quad", "layout-mosaic", "layout-triptych", "layout-trirow", "layout-banner", "layout-broadside", "layout-tower", "layout-pinboard", "layout-annotated", "layout-sixgrid", "layout-comparison", "layout-stepped", "layout-hero", "layout-dialogue", "layout-gallery", "layout-spotlight", "layout-flipcard"],
-  },
 ]
 
 export const LIBRARY_ITEMS: LibraryItem[] = [
@@ -133,20 +127,6 @@ export const LIBRARY_ITEMS: LibraryItem[] = [
   { id: "lib-game-1" as CardId, cardType: "games", title: "Cell Biology Vocabulary Match" },
   { id: "lib-game-2" as CardId, cardType: "games", title: "Apollo 11 Mission Sequence" },
   { id: "lib-game-3" as CardId, cardType: "games", title: "Periodic Elements Memory Game" },
-  { id: "lib-layout-split" as CardId, cardType: "layout-split", title: "Split — Two Equal Columns" },
-  { id: "lib-layout-stack" as CardId, cardType: "layout-stack", title: "Stack — Primary / Secondary Rows" },
-  { id: "lib-layout-feature" as CardId, cardType: "layout-feature", title: "Feature — Anchor + Content + Strip" },
-  { id: "lib-layout-sidebar" as CardId, cardType: "layout-sidebar", title: "Sidebar — 30 / 70 Columns" },
-  { id: "lib-layout-quad" as CardId, cardType: "layout-quad", title: "Quad — 2 × 2 Grid" },
-  { id: "lib-layout-mosaic" as CardId, cardType: "layout-mosaic", title: "Mosaic — 3 × 3 Grid" },
-  { id: "lib-layout-triptych" as CardId, cardType: "layout-triptych", title: "Triptych — Three Equal Columns" },
-  { id: "lib-layout-trirow" as CardId, cardType: "layout-trirow", title: "Trirow — Header / Body / Footer" },
-  { id: "lib-layout-banner" as CardId, cardType: "layout-banner", title: "Banner — Full-Width Header + Two Columns" },
-  { id: "lib-layout-broadside" as CardId, cardType: "layout-broadside", title: "Broadside — Full-Width Header + Three Cols" },
-  { id: "lib-layout-tower" as CardId, cardType: "layout-tower", title: "Tower — Wide Feature + Three Side Panels" },
-  { id: "lib-layout-pinboard" as CardId, cardType: "layout-pinboard", title: "Pinboard — Header + 2 × 2 Blocks" },
-  { id: "lib-layout-annotated" as CardId, cardType: "layout-annotated", title: "Annotated — Margin Notes + 2 × 2 Grid" },
-  { id: "lib-layout-sixgrid" as CardId, cardType: "layout-sixgrid", title: "Six-Grid — 3 × 2 Storyboard" },
 ]
 
 export const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = {
@@ -200,6 +180,7 @@ export const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = 
   "layout-gallery": { bg: "bg-muted", text: "text-muted-foreground" },
   "layout-spotlight": { bg: "bg-muted", text: "text-muted-foreground" },
   "layout-flipcard": { bg: "bg-muted", text: "text-muted-foreground" },
+  "layout-resizable-grid": { bg: "bg-muted", text: "text-muted-foreground" },
 }
 
 export const TYPE_LABEL: Partial<Record<CardType, string>> = {
@@ -237,6 +218,7 @@ export const TYPE_LABEL: Partial<Record<CardType, string>> = {
   "layout-gallery": "Gallery",
   "layout-spotlight": "Spotlight",
   "layout-flipcard": "Flipcard",
+  "layout-resizable-grid": "Resizable Grid",
 }
 
 export const TYPE_ICONS: Partial<Record<CardType, ComponentType<{ size?: number; className?: string }>>> = {
@@ -286,4 +268,5 @@ export const TYPE_ICONS: Partial<Record<CardType, ComponentType<{ size?: number;
   "layout-gallery": Grid3X3,
   "layout-spotlight": Layout,
   "layout-flipcard": LayoutTemplate,
+  "layout-resizable-grid": LayoutDashboard,
 }

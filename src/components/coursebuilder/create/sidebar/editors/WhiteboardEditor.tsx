@@ -44,7 +44,7 @@ export function WhiteboardEditor({ content, onChange }: EditorProps) {
           </StudioSection>
         </div>
       )}
-      preview={<GenericEditorPreview cardType="whiteboard" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-4xl" />}
+      preview={<GenericEditorPreview cardType="whiteboard" content={content} onTitleChange={(next) => onChange("title", next)} />}
     />
   )
 }

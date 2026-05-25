@@ -205,7 +205,7 @@ export const ANIMATION_PROFILE: StudioProfile = {
 }
 
 export const MODEL_3D_PROFILE: StudioProfile = {
-  mediaType: "3D Asset",
+  mediaType: "3D Model",
   productType: "Spatial Model",
   defaults: {
     title: "",

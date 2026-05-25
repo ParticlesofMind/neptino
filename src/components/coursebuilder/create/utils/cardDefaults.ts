@@ -46,7 +46,7 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     "voice-recorder": { width: 420, height: 220 },
     sorter:       { width: 520, height: 320 },
     games:        { width: 560, height: 360 },
-    chat:         { width: 420, height: 320 },
+    chat:         { width: 642, height: 640 },
     "text-editor": { width: 520, height: 360 },
     "code-editor": { width: 560, height: 380 },
     whiteboard:   { width: 640, height: 420 },
@@ -75,6 +75,7 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     "layout-gallery": { width: 780, height: 520 },
     "layout-spotlight": { width: 760, height: 520 },
     "layout-flipcard": { width: 700, height: 420 },
+    "layout-resizable-grid": { width: 780, height: 460 },
   }
 
   return dimensionMap[cardType] ?? { width: 420, height: 220 }
@@ -207,9 +208,19 @@ export function getSampleCardContent(
     case "diagram":
       return {
         title,
-        diagramType: "flowchart",
-        nodes: 7,
-        edges: 7,
+        diagramType: "cycle",
+        nodes: [
+          { id: "a", label: "Question", x: 80, y: 80, shape: "rect" },
+          { id: "b", label: "Evidence", x: 270, y: 30, shape: "rect" },
+          { id: "c", label: "Pattern", x: 460, y: 80, shape: "rect" },
+          { id: "d", label: "Conclusion", x: 270, y: 190, shape: "oval" },
+        ],
+        edges: [
+          { from: "a", to: "b" },
+          { from: "b", to: "c" },
+          { from: "c", to: "d" },
+          { from: "d", to: "a" },
+        ],
         layout: "auto",
       }
 
@@ -333,7 +344,7 @@ export function getSampleCardContent(
     case "whiteboard":
       return {
         title,
-        boardKey: "whiteboard-sample",
+        boardKey: "",
         prompt: "Sketch a concept map, diagram a process, or collect quick visual notes.",
       }
 
@@ -380,6 +391,7 @@ export function getSampleCardContent(
     case "layout-gallery":
     case "layout-spotlight":
     case "layout-flipcard":
+    case "layout-resizable-grid":
       return { slots: {} }
 
     default:

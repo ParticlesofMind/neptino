@@ -32,15 +32,142 @@ import {
   computeAvailableBodyHeight,
   computeFixedPlacement,
   computeFlatCardOffset,
+  computeScopedFlatCardRange,
   computeFlatTaskOffset,
+  estimatePageAssignmentHeight,
   isBootstrappedTopic,
   objectivesInBudget,
   tasksInBudget,
+  topLevelCardsInTaskBudget,
   topicsInBudget,
+  visibleAreas,
 } from "./layout-engine-helpers"
 import type { PageAssignment } from "./layout-engine-types"
 
 export type { PageAssignment } from "./layout-engine-types"
+
+function sameBlockFlow(left: PageAssignment, right: PageAssignment): boolean {
+  return (
+    left.blockKeys.length === 1 &&
+    right.blockKeys.length === 1 &&
+    left.blockKeys[0] === right.blockKeys[0] &&
+    CONTENT_TYPE.has(left.blockKeys[0]!)
+  )
+}
+
+function sameMaybeNumber(left: number | undefined, right: number | undefined): boolean {
+  return left === right
+}
+
+function mergeRange(
+  left: { start: number; end?: number } | undefined,
+  right: { start: number; end?: number } | undefined,
+): { start: number; end?: number } | null | undefined {
+  if (!left && !right) return undefined
+  if (!left || !right) return null
+
+  if (left.start === right.start && sameMaybeNumber(left.end, right.end)) {
+    return { ...left }
+  }
+
+  if (left.end !== undefined && left.end === right.start) {
+    return {
+      start: left.start,
+      ...(right.end !== undefined ? { end: right.end } : {}),
+    }
+  }
+
+  return null
+}
+
+function mergeTaskRange(
+  left: PageAssignment["taskRange"],
+  right: PageAssignment["taskRange"],
+): PageAssignment["taskRange"] | null | undefined {
+  if (!left && !right) return undefined
+  if (!left || !right) return null
+
+  if (left.start === right.start && sameMaybeNumber(left.end, right.end)) {
+    return { ...left }
+  }
+
+  if (left.end !== undefined && left.end === right.start) {
+    return {
+      start: left.start,
+      ...(right.end !== undefined ? { end: right.end } : {}),
+    }
+  }
+
+  return null
+}
+
+function mergeCardRange(
+  left: PageAssignment["cardRange"],
+  right: PageAssignment["cardRange"],
+): PageAssignment["cardRange"] | null | undefined {
+  if (!left && !right) return undefined
+  if (!left || !right) return null
+  if (left.end !== undefined && left.end === right.start) {
+    return {
+      start: left.start,
+      ...(right.end !== undefined ? { end: right.end } : {}),
+    }
+  }
+  return null
+}
+
+function mergeAdjacentAssignment(
+  left: PageAssignment,
+  right: PageAssignment,
+): PageAssignment | null {
+  if (!sameBlockFlow(left, right)) return null
+  if (left.layoutSlotRange || right.layoutSlotRange) return null
+
+  const topicRange = mergeRange(left.topicRange, right.topicRange)
+  if (topicRange === null) return null
+
+  const objectiveRange = mergeRange(left.objectiveRange, right.objectiveRange)
+  if (objectiveRange === null) return null
+
+  const taskRange = mergeTaskRange(left.taskRange, right.taskRange)
+  if (taskRange === null) return null
+
+  const cardRange = mergeCardRange(left.cardRange, right.cardRange)
+  if (cardRange === null) return null
+
+  return {
+    blockKeys: left.blockKeys,
+    ...(topicRange ? { topicRange } : {}),
+    ...(objectiveRange ? { objectiveRange } : {}),
+    ...(taskRange ? { taskRange } : {}),
+    ...(cardRange ? { cardRange } : {}),
+  }
+}
+
+function compactPageAssignments(
+  session: CourseSession,
+  assignments: PageAssignment[],
+  available: number,
+  fieldEnabled?: Partial<Record<string, Record<string, unknown>>>,
+): PageAssignment[] {
+  const compacted: PageAssignment[] = []
+
+  for (const assignment of assignments) {
+    const previous = compacted[compacted.length - 1]
+    const merged = previous ? mergeAdjacentAssignment(previous, assignment) : null
+    if (
+      previous &&
+      merged &&
+      estimatePageAssignmentHeight(session, merged, fieldEnabled) <= available
+    ) {
+      compacted[compacted.length - 1] = merged
+    } else {
+      compacted.push(assignment)
+    }
+  }
+
+  return compacted
+}
 
 // ─── Engine ───────────────────────────────────────────────────────────────────
 
@@ -55,9 +182,10 @@ export type { PageAssignment } from "./layout-engine-types"
 export function computePageAssignments(
   session: CourseSession,
   dims: PageDimensions,
-  fieldEnabled?: Partial<Record<string, Record<string, boolean>>>,
+  fieldEnabled?: Partial<Record<string, Record<string, unknown>>>,
 ): PageAssignment[] {
   const available = computeAvailableBodyHeight(dims)
+  const resolvedFieldEnabled = fieldEnabled ?? session.fieldEnabled
 
   const templateBlocks = getDefaultBlocksForType(
     (session.templateType ?? "lesson") as TemplateType,
@@ -95,6 +223,7 @@ export function computePageAssignments(
     let topicIdx = 0
     let objStartWithinTopic = 0
     let taskStartWithinObj = 0
+    let cardStartWithinTask = 0
 
     while (topicIdx < session.topics.length) {
       const topic = session.topics[topicIdx]!
@@ -104,7 +233,92 @@ export function computePageAssignments(
         .slice(0, topicIdx)
         .reduce((s, t) => s + t.objectives.length, 0)
 
-      if (taskStartWithinObj > 0) {
+      const pushCardSlicePage = (
+        budget: number,
+        pageBlockKeys: BlockKey[],
+      ): boolean => {
+        const obj = topic.objectives[objStartWithinTopic]
+        const task = obj?.tasks[taskStartWithinObj]
+        if (!obj || !task) return false
+
+        const hasObjLabel = !isBootstrapped && obj.label !== ""
+        const hasTaskLabel = !isBootstrapped && task.label !== ""
+        const objChromeH = OBJ_CHROME + (hasObjLabel ? OBJ_LABEL : 0)
+        const taskBudget = Math.max(0, budget - contentBlockFixedCost - K * topicChromeH - K * objChromeH)
+        const blockAreas = visibleAreas(flowKey, resolvedFieldEnabled)
+        const scopedCards = task.droppedCards
+          .filter((card) => {
+            const blockMatch = !card.blockKey || card.blockKey === flowKey
+            const areaMatch = blockAreas.includes(card.areaKind)
+            return blockMatch && areaMatch
+          })
+          .sort((left, right) => left.order - right.order)
+
+        if (scopedCards.length === 0 || cardStartWithinTask >= scopedCards.length) return false
+
+        const cardCount = topLevelCardsInTaskBudget(
+          task,
+          cardStartWithinTask,
+          taskBudget,
+          flowKey,
+          blockAreas,
+          hasTaskLabel,
+        )
+        if (cardCount <= 0) return false
+
+        const cardEndWithinTask = Math.min(scopedCards.length, cardStartWithinTask + cardCount)
+        const allCardsDone = cardEndWithinTask >= scopedCards.length
+        const flatAbsObj = flatObjOffset + objStartWithinTopic
+        const flatTaskBase = computeFlatTaskOffset(session, topicIdx, objStartWithinTopic)
+        const flatTaskIdx = flatTaskBase + taskStartWithinObj
+        const scopedCardRange = computeScopedFlatCardRange(
+          session,
+          topicIdx,
+          objStartWithinTopic,
+          taskStartWithinObj,
+          cardStartWithinTask,
+          cardEndWithinTask,
+          flowKey,
+          blockAreas,
+        )
+        const isLastObj = objStartWithinTopic + 1 >= topic.objectives.length
+        const isLastTopic = topicIdx + 1 >= session.topics.length
+
+        pages.push({
+          blockKeys: pageBlockKeys,
+          topicRange: { start: topicIdx, end: allCardsDone && isLastObj && isLastTopic ? undefined : topicIdx + 1 },
+          objectiveRange: { start: flatAbsObj, end: flatAbsObj + 1 },
+          taskRange: { start: flatTaskIdx, end: flatTaskIdx + 1 },
+          ...(scopedCardRange ? { cardRange: scopedCardRange } : {}),
+        })
+        hasEmittedFirstPage = true
+
+        if (allCardsDone) {
+          cardStartWithinTask = 0
+          taskStartWithinObj++
+          if (taskStartWithinObj >= obj.tasks.length) {
+            objStartWithinTopic++
+            taskStartWithinObj = 0
+            if (objStartWithinTopic >= topic.objectives.length) {
+              topicIdx++
+              objStartWithinTopic = 0
+            }
+          }
+        } else {
+          cardStartWithinTask = cardEndWithinTask
+        }
+
+        return true
+      }
+
+      if (cardStartWithinTask > 0) {
+        const pageBlockKeys = hasEmittedFirstPage ? [...activeContentKeys] : [...firstPageFixedKeys, flowKey]
+        if (!pushCardSlicePage(hasEmittedFirstPage ? available : firstPageBudget, pageBlockKeys)) {
+          cardStartWithinTask = 0
+          taskStartWithinObj++
+        }
+
+      } else if (taskStartWithinObj > 0) {
         const obj = topic.objectives[objStartWithinTopic]!
         const hasObjLabel = !isBootstrapped && obj.label !== ""
         const objChromeH = OBJ_CHROME + (hasObjLabel ? OBJ_LABEL : 0)
@@ -112,7 +326,10 @@ export function computePageAssignments(
         const taskBudget = Math.max(0, objBudget - K * objChromeH)
         const flatTaskBase = computeFlatTaskOffset(session, topicIdx, objStartWithinTopic)
 
-        let taskCount = tasksInBudget(obj, taskStartWithinObj, taskBudget, activeContentKeys, isBootstrapped, fieldEnabled)
+        let taskCount = tasksInBudget(obj, taskStartWithinObj, taskBudget, activeContentKeys, isBootstrapped, resolvedFieldEnabled)
+        if (taskCount === 0 && pushCardSlicePage(available, [...activeContentKeys])) {
+          continue
+        }
         taskCount = Math.max(1, taskCount)
 
         const newTaskEnd   = taskStartWithinObj + taskCount
@@ -156,7 +373,7 @@ export function computePageAssignments(
         const objBudget = available - contentBlockFixedCost - K * topicChromeH
 
         const objCount = objectivesInBudget(
-          topic, objStartWithinTopic, objBudget, activeContentKeys, isBootstrapped, fieldEnabled,
+            topic, objStartWithinTopic, objBudget, activeContentKeys, isBootstrapped, resolvedFieldEnabled,
         )
 
         if (objCount === 0) {
@@ -167,7 +384,10 @@ export function computePageAssignments(
           const flatTaskBase = computeFlatTaskOffset(session, topicIdx, objStartWithinTopic)
           const flatAbsObj   = flatObjOffset + objStartWithinTopic
 
-          let taskCount = tasksInBudget(obj, 0, taskBudget, activeContentKeys, isBootstrapped, fieldEnabled)
+          let taskCount = tasksInBudget(obj, 0, taskBudget, activeContentKeys, isBootstrapped, resolvedFieldEnabled)
+          if (taskCount === 0 && pushCardSlicePage(available, [...activeContentKeys])) {
+            continue
+          }
           taskCount = Math.max(1, taskCount)
 
           const newTaskEnd   = taskCount
@@ -226,7 +446,7 @@ export function computePageAssignments(
 
       } else {
         const budget = hasEmittedFirstPage ? available : firstPageBudget
-        const count = topicsInBudget(session, topicIdx, budget, activeContentKeys, fieldEnabled)
+        const count = topicsInBudget(session, topicIdx, budget, activeContentKeys, resolvedFieldEnabled)
 
         if (count > 0) {
           const sliceEnd = Math.min(topicIdx + count, session.topics.length)
@@ -241,7 +461,7 @@ export function computePageAssignments(
           const rawObjBudget = budget - contentBlockFixedCost - K * topicChromeH
           const objBudget    = Math.max(0, rawObjBudget)
 
-          const objCount = objectivesInBudget(topic, 0, objBudget, activeContentKeys, isBootstrapped, fieldEnabled)
+          const objCount = objectivesInBudget(topic, 0, objBudget, activeContentKeys, isBootstrapped, resolvedFieldEnabled)
 
           if (objCount === 0 && !hasEmittedFirstPage) {
             if (firstPageFixedKeys.length > 0) {
@@ -255,7 +475,11 @@ export function computePageAssignments(
             const taskBudget  = Math.max(0, objBudget - K * objChromeH)
             const flatTaskBase = computeFlatTaskOffset(session, topicIdx, 0)
 
-            let taskCount = tasksInBudget(obj, 0, taskBudget, activeContentKeys, isBootstrapped, fieldEnabled)
+            let taskCount = tasksInBudget(obj, 0, taskBudget, activeContentKeys, isBootstrapped, resolvedFieldEnabled)
+            const pageBlockKeys = !hasEmittedFirstPage ? [...firstPageFixedKeys, flowKey] : [...activeContentKeys]
+            if (taskCount === 0 && pushCardSlicePage(budget, pageBlockKeys)) {
+              continue
+            }
             taskCount = Math.max(1, taskCount)
 
             const newTaskEnd   = taskCount
@@ -313,7 +537,8 @@ export function computePageAssignments(
     }
   }
 
-  return pages.length > 0 ? pages : [{ blockKeys: bodyKeys }]
+  const rawPages = pages.length > 0 ? pages : [{ blockKeys: bodyKeys }]
+  return compactPageAssignments(session, rawPages, available, resolvedFieldEnabled)
 }
 
 // ─── Full blockKeys reconstruction ────────────────────────────────────────────

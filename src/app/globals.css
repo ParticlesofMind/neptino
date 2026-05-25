@@ -57,7 +57,7 @@
 
   /* Accent */
   --accent: #f5f9ff;
-  --accent-foreground: #1f5fb3;
+  --accent-foreground: #3a6ea0;
 
   /* Destructive */
   --destructive: #ef4444;
@@ -84,7 +84,7 @@
   --muted: #262626;
   --muted-foreground: #a3a3a3;
 
-  --accent: #134080;
+  --accent: #3a6ea0;
   --accent-foreground: #ffffff;
 
   --destructive: #991b1b;

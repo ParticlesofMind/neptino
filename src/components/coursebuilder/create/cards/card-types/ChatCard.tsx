@@ -25,7 +25,7 @@ function buildSystemPrompt(card: CardRenderProps["card"]): string {
   ].filter(Boolean).join("\n")
 }
 
-export function ChatCard({ card, onRemove }: CardRenderProps) {
+export function ChatCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const title = typeof card.content["title"] === "string" ? card.content["title"] : "Chat with character"
   const persona = typeof card.content["aiPersona"] === "string" ? card.content["aiPersona"] : "AI Tutor"
   const openingMessage = typeof card.content["openingMessage"] === "string"
@@ -84,8 +84,10 @@ export function ChatCard({ card, onRemove }: CardRenderProps) {
 
   return (
     <div
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
-      style={{ width: "100%", height: card.dimensions.height || 320 }}
+      className={[
+        "group relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm",
+        fillAvailable ? "h-full min-h-[inherit]" : "",
+      ].join(" ")}
     >
       {onRemove && (
         <button
@@ -130,7 +132,7 @@ export function ChatCard({ card, onRemove }: CardRenderProps) {
         </div>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-auto bg-[linear-gradient(180deg,#fbfdff_0%,#f8fafc_100%)] px-4 py-3">
+      <div className="min-h-0 flex-1 space-y-3 overflow-auto bg-[linear-gradient(180deg,#fbfdff_0%,#f8fafc_100%)] px-4 py-3">
         {messages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}

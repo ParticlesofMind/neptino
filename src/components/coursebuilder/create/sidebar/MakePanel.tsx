@@ -10,8 +10,9 @@
  * Motion toolbar strip rendered at bottom for animation-capable types.
  */
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Plus, Check } from "lucide-react"
+import { ALL_TEMPLATE_TYPES, getDefaultBlocksForType, type TemplateType } from "@/lib/curriculum/template-blocks"
 import type { CardType } from "../types"
 import { CARD_TYPE_META } from "../cards/CardTypePreview"
 import { getBlockReadiness } from "./make-panel-readiness"
@@ -40,7 +41,23 @@ const GROUP_LABEL: Record<CardGroup, string> = {
   resources: "Resource",
   activities: "Activity",
   experiences: "Experience",
-  layout: "Layout",
+  layout: "Composition",
+}
+
+function isTemplateType(value: unknown): value is TemplateType {
+  return typeof value === "string" && (ALL_TEMPLATE_TYPES as string[]).includes(value)
+}
+
+function isCompatibleWithTemplate(spec: { cardType: CardType; group: CardGroup }, templateType: TemplateType): boolean {
+  const blocks = getDefaultBlocksForType(templateType)
+  const hasScoring = blocks.includes("scoring")
+  const hasLearnerWork = hasScoring || blocks.includes("assignment")
+  const hasContentSurface = blocks.some((block) => block === "content" || block === "resources" || block === "assignment" || block === "scoring")
+
+  if (spec.cardType === "interactive") return hasScoring
+  if (spec.group === "activities") return hasLearnerWork
+  if (spec.group === "experiences" || spec.group === "layout") return hasContentSurface
+  return true
 }
 
 // ─── Make Panel ────────────────────────────────────────────────────────────────
@@ -53,16 +70,37 @@ export function MakePanel() {
   const [showLibrary, setShowLibrary] = useState(true)
   const [addedFeedback, setAddedFeedback] = useState(false)
   const [selectedLibraryCardId, setSelectedLibraryCardId] = useState<string | null>(null)
+  const [templateContext, setTemplateContext] = useState<TemplateType>("lesson")
 
   const addCard = useMakeLibraryStore((s) => s.addCard)
   const studioCards = useMakeLibraryStore((s) => s.cards)
   const setMode = useCreateModeStore((s) => s.setMode)
   const sessions = useCourseStore((s) => s.sessions)
   const activeSessionId = useCourseStore((s) => s.activeSessionId)
+  const activeSession = sessions.find((session) => session.id === activeSessionId) ?? sessions[0]
+  const currentProjectId = activeSession?.courseId ? String(activeSession.courseId) : undefined
+  const currentProjectTitle = activeSession?.courseTitle?.trim() || activeSession?.title?.trim() || "Untitled course"
+  const rawTemplateType = activeSession?.templateType
+  const activeTemplateType = isTemplateType(rawTemplateType) ? rawTemplateType : "lesson"
 
   const selectedContent = contentByType[selected] ?? getStudioDefaults(selected)
   const readiness = getBlockReadiness(selected, selectedContent)
   const canAddToCanvas = readiness.canAddToCanvas
+
+  useEffect(() => {
+    setTemplateContext(activeTemplateType)
+  }, [activeTemplateType])
+
+  const templateFilteredSpecs = useMemo(
+    () => CARD_SPECS.filter((spec) => isCompatibleWithTemplate(spec, templateContext)),
+    [templateContext],
+  )
+
+  useEffect(() => {
+    if (templateFilteredSpecs.some((spec) => spec.cardType === selected)) return
+    const firstCompatible = templateFilteredSpecs[0]?.cardType
+    if (firstCompatible) setSelected(firstCompatible)
+  }, [selected, templateFilteredSpecs])
 
   const handleChange = useCallback((key: string, value: unknown) => {
     setContentByType((prev) => ({
@@ -74,7 +112,7 @@ export function MakePanel() {
     }))
   }, [selected])
 
-  const filtered = CARD_SPECS.filter((spec) => {
+  const filtered = templateFilteredSpecs.filter((spec) => {
     const matchesGroup = activeGroup === "all" || activeGroup === "library" || spec.group === activeGroup
     const q = search.toLowerCase()
     const matchesSearch = spec.label.toLowerCase().includes(q) || spec.description.toLowerCase().includes(q)
@@ -85,11 +123,6 @@ export function MakePanel() {
     ...g,
     items: filtered.filter((s) => s.group === g.id),
   })).filter((g) => g.items.length > 0)
-  const totalCards = CARD_SPECS.length
-  const visibleCards = filtered.length
-  const activeSession = sessions.find((session) => session.id === activeSessionId) ?? sessions[0]
-  const currentProjectId = activeSession?.courseId ? String(activeSession.courseId) : undefined
-  const currentProjectTitle = activeSession?.courseTitle?.trim() || activeSession?.title?.trim() || "Untitled course"
   const libraryGroups = groupStudioCardsByProject(studioCards, search, currentProjectId)
 
   const handleAddToCanvas = () => {
@@ -136,16 +169,15 @@ export function MakePanel() {
         showSidebar={showLibrary}
         selectedCardType={selected}
         selectedLibraryCardId={selectedLibraryCardId}
-        visibleCards={visibleCards}
-        totalCards={totalCards}
-        libraryVisibleCount={libraryGroups.reduce((sum, group) => sum + group.cards.length, 0)}
         libraryTotalCount={studioCards.length}
         filteredGroups={grouped}
         libraryGroups={libraryGroups}
+        templateContext={templateContext}
         onFilterChange={setActiveGroup}
         onSearchChange={setSearch}
         onSelectCardType={handleSelectCardType}
         onSelectLibraryCard={handleSelectLibraryCard}
+        onTemplateContextChange={setTemplateContext}
         onToggleSidebar={setShowLibrary}
       />
 
@@ -174,6 +206,7 @@ export function MakePanel() {
             )}
             <button
               type="button"
+              data-testid="make-add-block"
               onClick={handleAddToCanvas}
               title={canAddToCanvas ? `Add ${itemLabel} to canvas` : `Complete this ${itemLabel} before adding it to the canvas`}
               disabled={!canAddToCanvas}

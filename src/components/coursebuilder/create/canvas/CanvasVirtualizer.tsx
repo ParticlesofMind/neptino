@@ -19,7 +19,7 @@
 
 import { useRef, useMemo, useEffect, useLayoutEffect, useCallback, useState } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import type { CourseSession, CanvasPage, PageDimensions } from "../types"
+import type { CanvasRenderMode, CourseSession, CanvasPage, CanvasId, PageDimensions } from "../types"
 import { DEFAULT_PAGE_DIMENSIONS } from "../types"
 import { CanvasPage as CanvasPageView } from "./CanvasPage"
 import { useCanvasStore }    from "../store/canvasStore"
@@ -31,6 +31,7 @@ import { useLayoutEngine } from "../hooks/useLayoutEngine"
 const PAGE_GAP = 32
 // Visual side-padding on each row: PAGE_H_PADDING / 2 per side.
 const PAGE_H_PADDING = 32
+const COMPACT_PAGE_H_PADDING = 16
 // Extra horizontal reserve used only in the fit-scale calculation.  The total
 // reserved space (PAGE_H_PADDING + FIT_EXTRA_RESERVE) ensures the page is always
 // visibly smaller than the workspace — when panels grow the fit-scale shrinks
@@ -38,6 +39,7 @@ const PAGE_H_PADDING = 32
 // panel edges.
 const FIT_EXTRA_RESERVE = 64
 const OVERLAY_STRIP_WIDTH = 56
+const SCROLL_TO_CANVAS_EVENT = "coursebuilder:scroll-to-canvas"
 // Render enough extra rows so continuation canvas pages (created dynamically by
 // useCanvasOverflow splits) are mounted and measured before the user scrolls to
 // them.  Each session may need several overflow splits to converge, so keeping
@@ -50,12 +52,14 @@ interface CanvasVirtualizerProps {
   sessions:  CourseSession[]
   dims?:     PageDimensions
   bodyData?: Record<string, Record<string, unknown>>
-  /** If true, disable automatic overflow detection and page splitting */
+  /** If true, disable DOM-measured overflow splitting. Deterministic layout sync still runs. */
   disableOverflow?: boolean
   /** Left-side overlay inset in px (e.g. file browser width + gap) */
   leftOverlayInset?: number
   /** Right-side overlay inset in px (e.g. layers panel width + gap) */
   rightOverlayInset?: number
+  /** Canvas rendering mode. Preview mode suppresses edit-only card controls. */
+  renderMode?: CanvasRenderMode
 }
 
 // ─── Field values helper ───────────────────────────────────────────────────────
@@ -113,7 +117,6 @@ type VirtualRow =
       kind:        "canvas"
       page:        CanvasPage
       session:     CourseSession
-      isLastPage:  boolean
       fieldValues: Record<string, string>
     }
 
@@ -124,18 +127,15 @@ const SESSION_LABEL_HEIGHT = 48
 /**
  * Renders nothing. Runs useLayoutEngine for a single session so that the
  * hook is called once per session (hooks cannot be called inside loops).
- * If disableOverflow is true, the layout engine is skipped.
  */
 function SessionLayoutSyncer({
   session,
   dims,
-  disableOverflow,
 }: {
   session: CourseSession
   dims:    PageDimensions
-  disableOverflow: boolean
 }) {
-  useLayoutEngine({ session, dims, disabled: disableOverflow })
+  useLayoutEngine({ session, dims, disabled: false })
   return null
 }
 
@@ -148,6 +148,7 @@ export function CanvasVirtualizer({
   disableOverflow = false,
   leftOverlayInset = 16,
   rightOverlayInset = 8,
+  renderMode = "editor",
 }: CanvasVirtualizerProps) {
   const scrollParentRef = useRef<HTMLDivElement>(null)
   const zoomLevel       = useCanvasStore((s) => s.zoomLevel)
@@ -155,10 +156,10 @@ export function CanvasVirtualizer({
   const panOffset       = useCanvasStore((s) => s.panOffset)
   const panOffsetRef    = useRef(panOffset)
   panOffsetRef.current  = panOffset
-  const activeCanvasId  = useCanvasStore((s) => s.activeCanvasId)
   const activeTool      = useCanvasStore((s) => s.activeTool)
   const setPan          = useCanvasStore((s) => s.setPan)
   const setFitScale     = useCanvasStore((s) => s.setFitScale)
+  const setViewportCanvas = useCanvasStore((s) => s.setViewportCanvas)
 
   const clearSelection = useCanvasStore((s) => s.clearSelection)
 
@@ -178,6 +179,8 @@ export function CanvasVirtualizer({
     () => rightOverlayInset + OVERLAY_STRIP_WIDTH,
     [rightOverlayInset],
   )
+  const isCompactViewport = viewportWidth > 0 && viewportWidth < 640
+  const pageHorizontalPadding = isCompactViewport ? COMPACT_PAGE_H_PADDING : PAGE_H_PADDING
 
   // 100% is the natural page size. We scale down when the viewport is narrower
   // than the page plus overlay rails plus breathing room.
@@ -186,11 +189,13 @@ export function CanvasVirtualizer({
 
     // FIT_EXTRA_RESERVE adds extra room beyond the visual padding so the page
     // is always visibly smaller than the workspace when panels are open.
-    const reserved = leftWorkspaceInset + rightWorkspaceInset + PAGE_H_PADDING + FIT_EXTRA_RESERVE
+    const reserved = isCompactViewport
+      ? leftWorkspaceInset + rightWorkspaceInset + pageHorizontalPadding * 2
+      : leftWorkspaceInset + rightWorkspaceInset + pageHorizontalPadding + FIT_EXTRA_RESERVE
 
-    const availableWidth = Math.max(320, viewportWidth - reserved)
-    return Math.max(0.5, Math.min(1, availableWidth / dims.widthPx))
-  }, [dims.widthPx, leftWorkspaceInset, rightWorkspaceInset, viewportWidth])
+    const availableWidth = Math.max(1, viewportWidth - reserved)
+    return Math.max(isCompactViewport ? 0.28 : 0.5, Math.min(1, availableWidth / dims.widthPx))
+  }, [dims.widthPx, isCompactViewport, leftWorkspaceInset, pageHorizontalPadding, rightWorkspaceInset, viewportWidth])
 
   useEffect(() => {
     setFitScale(fitScale)
@@ -205,9 +210,9 @@ export function CanvasVirtualizer({
   const contentWidth = useMemo(
     () => Math.max(
       viewportWidth,
-      PAGE_H_PADDING * 2 + canvasDisplayWidth,
+      pageHorizontalPadding * 2 + canvasDisplayWidth,
     ),
-    [canvasDisplayWidth, viewportWidth],
+    [canvasDisplayWidth, pageHorizontalPadding, viewportWidth],
   )
 
   // Center the page in the full viewport.  Panels are absolutely-positioned overlays
@@ -330,7 +335,6 @@ export function CanvasVirtualizer({
           kind:        "canvas",
           page,
           session,
-          isLastPage:  idx === total - 1,
           fieldValues: makeFieldValues(session, idx, total),
         })
       })
@@ -357,11 +361,35 @@ export function CanvasVirtualizer({
     // the virtualizer schedule a normal async re-render instead.
     useFlushSync: false,
   })
+  const virtualRows = virtualizer.getVirtualItems()
 
   // Re-measure rows whenever effective page scale changes.
   useEffect(() => {
     virtualizer.measure()
   }, [effectiveScale, sessionLabelHeight, virtualizer])
+
+  useEffect(() => {
+    const el = scrollParentRef.current
+    if (!el) return
+
+    let nearestCanvasId: CanvasId | null = null
+    let nearestDistance = Number.POSITIVE_INFINITY
+    const viewportCenter = el.scrollTop + el.clientHeight / 2
+
+    for (const virtualRow of virtualRows) {
+      const row = allRows[virtualRow.index]
+      if (row?.kind !== "canvas") continue
+
+      const rowCenter = virtualRow.start + virtualRow.size / 2
+      const distance = Math.abs(rowCenter - viewportCenter)
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        nearestCanvasId = row.page.id
+      }
+    }
+
+    setViewportCanvas(nearestCanvasId)
+  }, [allRows, setViewportCanvas, virtualRows])
 
   const handlePanPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -453,18 +481,21 @@ export function CanvasVirtualizer({
     [canvasIdToRowIndex, virtualizer],
   )
 
-  // Keep the viewport synced when active canvas is changed externally
-  // (e.g. via page nav controls rendered in the Atlas overlay layer).
   useEffect(() => {
-    if (!activeCanvasId) return
-    scrollToCanvasId(activeCanvasId)
-  }, [activeCanvasId, scrollToCanvasId])
+    const handleScrollRequest = (event: Event) => {
+      const canvasId = (event as CustomEvent<{ canvasId?: string }>).detail?.canvasId
+      if (canvasId) scrollToCanvasId(canvasId)
+    }
+
+    window.addEventListener(SCROLL_TO_CANVAS_EVENT, handleScrollRequest)
+    return () => window.removeEventListener(SCROLL_TO_CANVAS_EVENT, handleScrollRequest)
+  }, [scrollToCanvasId])
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* One layout syncer per session — runs useLayoutEngine for each session */}
       {sessions.map((session) => (
-        <SessionLayoutSyncer key={session.id} session={session} dims={dims} disableOverflow={disableOverflow} />
+        <SessionLayoutSyncer key={session.id} session={session} dims={dims} />
       ))}
 
       {/* Canvas area: full-width scroll viewport with overlay controls */}
@@ -500,7 +531,7 @@ export function CanvasVirtualizer({
               position: "relative",
             }}
           >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
+            {virtualRows.map((virtualRow) => {
               const row = allRows[virtualRow.index]
               if (!row) return null
 
@@ -565,13 +596,13 @@ export function CanvasVirtualizer({
                   <CanvasPageView
                     page={row.page}
                     session={row.session}
-                    isLastPage={row.isLastPage}
                     dims={dims}
                     scale={effectiveScale}
                     fieldValues={row.fieldValues}
                     bodyData={bodyData}
                     virtualIndex={virtualRow.index}
                     disableOverflow={disableOverflow}
+                    renderMode={renderMode}
                   />
                 </div>
               )
@@ -593,4 +624,3 @@ export function CanvasVirtualizer({
     </div>
   )
 }
-

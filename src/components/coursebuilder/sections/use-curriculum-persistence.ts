@@ -29,6 +29,27 @@ export interface CurriculumPersistenceParams {
   generationSettingsRef: MutableRefObject<Record<string, unknown> | null>
 }
 
+export function serializeCurriculumSessionRows(sessionRows: CurriculumSessionRow[]) {
+  return sessionRows.map((row, i) => ({
+    id: row.id,
+    schedule_entry_id: row.schedule_entry_id,
+    session_number: i + 1,
+    title: row.title,
+    notes: row.notes,
+    duration_minutes: row.duration_minutes,
+    topics: row.topics,
+    objectives: row.objectives,
+    tasks: row.tasks,
+    topic_names: row.topic_names,
+    objective_names: row.objective_names,
+    task_names: row.task_names,
+    competencies: row.competencies,
+    template_id: row.template_id,
+    template_type: row.template_type,
+    template_design: row.template_design,
+  }))
+}
+
 export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
   // Stable ref so callbacks never go stale with rapidly changing params.
   const paramsRef = useRef(params)
@@ -38,21 +59,7 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
     const p = paramsRef.current
     if (!p.courseId) return
 
-    const serializedRows = p.sessionRows.map((row, i) => ({
-      id: row.id,
-      schedule_entry_id: row.schedule_entry_id,
-      session_number: i + 1,
-      title: row.title,
-      notes: row.notes,
-      duration_minutes: row.duration_minutes,
-      topics: row.topics,
-      objectives: row.objectives,
-      tasks: row.tasks,
-      topic_names: row.topic_names,
-      objective_names: row.objective_names,
-      task_names: row.task_names,
-      competencies: row.competencies,
-    }))
+    const serializedRows = serializeCurriculumSessionRows(p.sessionRows)
 
     const sessions = p.sessionRows.map((row, i) => {
       const schedule = p.scheduleEntries[i]
@@ -153,7 +160,9 @@ export function useCurriculumPersistence(params: CurriculumPersistenceParams) {
       (r.topic_names ?? []).join("~"),
       (r.objective_names ?? []).join("~"),
       (r.task_names ?? []).join("~"),
+      r.template_id ?? "",
       r.template_type ?? "",
+      JSON.stringify(r.template_design ?? null),
     ].join(":"))
     .join("|")
   const moduleNamesFingerprint = params.moduleNames.join(",")

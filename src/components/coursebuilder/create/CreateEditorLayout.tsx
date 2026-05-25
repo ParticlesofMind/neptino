@@ -16,13 +16,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
-  type CollisionDetection,
   DndContext,
   DragOverlay,
   MeasuringStrategy,
   PointerSensor,
-  pointerWithin,
-  rectIntersection,
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
@@ -47,6 +44,7 @@ import { DEFAULT_PAGE_DIMENSIONS } from "@/components/coursebuilder/create/types
 import type { SessionId } from "@/components/coursebuilder/create/types"
 import type { DragSourceData } from "@/components/coursebuilder/create/hooks/useCardDrop"
 import { DragOverlayCard } from "@/components/coursebuilder/create/drag/DragOverlayCard"
+import { courseEditorCollisionDetection } from "@/components/coursebuilder/create/drag/course-editor-collision"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -79,10 +77,10 @@ import { ModeBar } from "./ModeBar"
 
 function FixView() {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-3 text-neutral-400">
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-background p-6 text-muted-foreground">
       <Wrench size={24} strokeWidth={1.5} />
-      <p className="text-sm font-medium text-neutral-500">Fix mode</p>
-      <p className="text-xs max-w-xs text-center leading-relaxed">
+      <p className="text-sm font-medium text-foreground">Fix mode</p>
+      <p className="max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
         Review and repair blocks on the canvas. Coming soon.
       </p>
     </div>
@@ -187,11 +185,11 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
   }, [])
 
   // Load sessions from Supabase whenever courseId changes
-  const { loading } = useCourseSessionLoader(courseId)
+  const { loading, error } = useCourseSessionLoader(courseId, { requireEditable: true })
   const showLoading = useSteadyLoading(loading)
 
   // Persist canvas state (topics tree, canvas pages) back to Supabase
-  useCanvasPersistence()
+  useCanvasPersistence({ enabled: !loading && !error })
 
   const sessions         = useCourseStore((s) => s.sessions)
   const activeSessionId  = useCourseStore((s) => s.activeSessionId)
@@ -214,12 +212,6 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   )
-
-  const collisionDetection: CollisionDetection = useCallback((args) => {
-    const pointerHits = pointerWithin(args)
-    if (pointerHits.length > 0) return pointerHits
-    return rectIntersection(args)
-  }, [])
 
   const { onDragEnd: onCardDrop } = useCardDrop()
 
@@ -252,27 +244,28 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
     <DndContext
       id="course-editor-dnd"
       sensors={sensors}
-      collisionDetection={collisionDetection}
+      collisionDetection={courseEditorCollisionDetection}
+      autoScroll={false}
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className={`flex flex-col w-full h-full overflow-x-visible overflow-y-hidden bg-neutral-100 ${className ?? ""}`}>
+      <div className={`flex h-full w-full flex-col overflow-hidden bg-muted/20 ${className ?? ""}`}>
         {/* Top mode bar */}
         {showModeBar !== false && <ModeBar />}
 
         {/* Mobile panel toggle bar — curate mode only, hidden above md */}
         {mode === "curate" && (
-          <div className="flex items-center shrink-0 h-9 px-3 gap-1.5 border-b border-neutral-200 bg-white md:hidden">
-            <span className="flex-1 text-[11px] font-medium text-neutral-400">Canvas</span>
+          <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border bg-background px-3 md:hidden">
+            <span className="flex-1 font-sans text-[11px] font-medium text-muted-foreground">Canvas</span>
             <button
               onClick={toggleCards}
               title="Files browser"
-              className={`p-1.5 rounded transition-colors ${
+              className={`rounded-md border p-1.5 transition-colors ${
                 cardsPanelWidth > 0
-                  ? "bg-[#dbe8f6] text-[#233f5d]"
-                  : "text-neutral-400 hover:text-neutral-600"
+                  ? "border-primary/25 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               }`}
             >
               <PanelLeft size={15} strokeWidth={1.75} />
@@ -280,10 +273,10 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
             <button
               onClick={toggleAtlas}
               title="Atlas"
-              className={`p-1.5 rounded transition-colors ${
+              className={`rounded-md border p-1.5 transition-colors ${
                 atlasWidth > 0
-                  ? "bg-[#dbe8f6] text-[#233f5d]"
-                  : "text-neutral-400 hover:text-neutral-600"
+                  ? "border-primary/25 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               }`}
             >
               <PanelRight size={15} strokeWidth={1.75} />
@@ -296,8 +289,10 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
           <div className="relative flex flex-1 min-h-0 overflow-hidden">
             <EditorNoticeBanner />
             {/* Full-width canvas viewport */}
-            <div className="flex-1 flex flex-col overflow-x-visible overflow-y-hidden bg-neutral-200">
-              {sessions.length > 0 ? (
+            <div className="flex flex-1 flex-col overflow-hidden bg-neutral-200">
+              {error ? (
+                <EditorLoadError message={error} />
+              ) : sessions.length > 0 ? (
                 <CanvasVirtualizer
                   sessions={sessions}
                   dims={DEFAULT_PAGE_DIMENSIONS}
@@ -355,11 +350,20 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
 
 function EmptyState({ courseId }: { courseId: string | null }) {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-3 text-neutral-400">
-      <p className="text-sm">No sessions found{courseId ? ` for course ${courseId}` : ""}.</p>
-      <p className="text-xs max-w-xs text-center">
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-muted-foreground">
+      <p className="text-sm font-medium text-foreground">No sessions found{courseId ? ` for course ${courseId}` : ""}.</p>
+      <p className="max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
         Create a course in the setup wizard and return here to start building.
       </p>
+    </div>
+  )
+}
+
+function EditorLoadError({ message }: { message: string }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+      <p className="text-sm font-medium text-foreground">Cannot open this course in Create</p>
+      <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">{message}</p>
     </div>
   )
 }
@@ -367,12 +371,12 @@ function EmptyState({ courseId }: { courseId: string | null }) {
 function LoadingSessionsPlaceholder() {
   return (
     <div className="flex flex-1 items-center justify-center px-6">
-      <div className="w-full max-w-3xl rounded-xl border border-neutral-300/70 bg-white/80 p-6">
-        <div className="h-4 w-44 rounded bg-neutral-200" />
+      <div className="w-full max-w-3xl rounded-xl border border-border bg-background/90 p-6 shadow-sm">
+        <div className="h-4 w-44 rounded bg-muted" />
         <div className="mt-4 space-y-3">
-          <div className="h-10 rounded bg-neutral-100" />
-          <div className="h-10 rounded bg-neutral-100" />
-          <div className="h-10 rounded bg-neutral-100" />
+          <div className="h-10 rounded bg-muted/70" />
+          <div className="h-10 rounded bg-muted/70" />
+          <div className="h-10 rounded bg-muted/70" />
         </div>
       </div>
     </div>

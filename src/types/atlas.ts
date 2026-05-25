@@ -1,3 +1,15 @@
+import {
+  ATLAS_ACTIVITY_TYPES,
+  ATLAS_ENTITY_TYPES,
+  ATLAS_MEDIA_TYPES,
+  ATLAS_PRODUCT_TYPES,
+  type AtlasActivityTypeId,
+  type AtlasEntitySubtypeId,
+  type AtlasEntityTypeId,
+  type AtlasMediaTypeId,
+  type AtlasProductTypeId,
+} from "@/lib/atlas/taxonomy"
+
 /**
  * Atlas Knowledge System Types
  * 
@@ -15,38 +27,12 @@
 /**
  * The 11 fundamental ontological categories that define what knowledge is about.
  */
-export type EntityType =
-  | "Concept"
-  | "Process"
-  | "Instance"
-  | "Person"
-  | "State"
-  | "Time"
-  | "Environment"
-  | "Work"
-  | "Technology"
-  | "Institution"
-  | "Movement"
+export type EntityType = AtlasEntityTypeId
 
 /**
  * Sub-types within Entity Types for more granular classification.
  */
-export type EntitySubType =
-  // Concept sub-types
-  | "Theory"
-  | "Theorem"
-  | "Law"
-  | "Principle"
-  | "Model"
-  | "Definition"
-  // Time sub-types
-  | "Event"
-  | "Period"
-  | "Epoch"
-  // Environment sub-types
-  | "Place"
-  | "Organism"
-  | "Matter"
+export type EntitySubType = AtlasEntitySubtypeId
 
 /**
  * Atlas Item (Layer 1 — Entity)
@@ -75,7 +61,7 @@ export interface AtlasItem {
 /**
  * The 6 primitive formats that knowledge arrives in — the raw material.
  */
-export type MediaType = "Text" | "Image" | "Audio" | "Video" | "Dataset" | "3D Model"
+export type MediaType = AtlasMediaTypeId
 
 // ═══════════════════════════════════════════════════════════════════════
 // Layer 3 — PRODUCTS
@@ -88,15 +74,7 @@ export type MediaType = "Text" | "Image" | "Audio" | "Video" | "Dataset" | "3D M
  * - Map: spatial view over Place entities
  * - Timeline: temporal view over Event and Period entities
  */
-export type ProductType =
-  | "Map"
-  | "Timeline"
-  | "Simulation"
-  | "Documentary"
-  | "Diagram"
-  | "Narrative"
-  | "Profile"
-  | "Game"
+export type ProductType = AtlasProductTypeId
 
 // ═══════════════════════════════════════════════════════════════════════
 // Layer 4 — ACTIVITIES
@@ -110,13 +88,7 @@ export type ProductType =
  * active student participation as an Activity. Filtering logic should check both
  * layers where relevant rather than assuming Game is exclusive to one.
  */
-export type ActivityType =
-  | "Exercise"
-  | "Quiz"
-  | "Assessment"
-  | "Interactive Simulation"
-  | "Game"
-  | "AI Chat"
+export type ActivityType = AtlasActivityTypeId
 
 // ═══════════════════════════════════════════════════════════════════════
 // COMBINED TYPES
@@ -155,21 +127,21 @@ export interface AtlasContent {
  * Type guard to check if a content type is a Media Type (Layer 2).
  */
 export function isMediaType(type: string): type is MediaType {
-  return ["Text", "Image", "Audio", "Video", "Dataset", "3D Model"].includes(type)
+  return ATLAS_MEDIA_TYPES.some((term) => term.id === type)
 }
 
 /**
  * Type guard to check if a content type is a Product (Layer 3).
  */
 export function isProductType(type: string): type is ProductType {
-  return ["Map", "Timeline", "Simulation", "Documentary", "Diagram", "Narrative", "Profile", "Game"].includes(type)
+  return ATLAS_PRODUCT_TYPES.some((term) => term.id === type)
 }
 
 /**
  * Type guard to check if a content type is an Activity (Layer 4).
  */
 export function isActivityType(type: string): type is ActivityType {
-  return ["Exercise", "Quiz", "Assessment", "Interactive Simulation", "Game", "AI Chat"].includes(type)
+  return ATLAS_ACTIVITY_TYPES.some((term) => term.id === type)
 }
 
 /**
@@ -268,41 +240,13 @@ export interface AtlasSearchResult {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════
 
-export const ENTITY_TYPES: EntityType[] = [
-  "Concept",
-  "Process",
-  "Instance",
-  "Person",
-  "State",
-  "Time",
-  "Environment",
-  "Work",
-  "Technology",
-  "Institution",
-  "Movement",
-]
+export const ENTITY_TYPES: EntityType[] = ATLAS_ENTITY_TYPES.map((term) => term.id)
 
-export const MEDIA_TYPES: MediaType[] = ["Text", "Image", "Audio", "Video", "Dataset", "3D Model"]
+export const MEDIA_TYPES: MediaType[] = ATLAS_MEDIA_TYPES.map((term) => term.id)
 
-export const PRODUCT_TYPES: ProductType[] = [
-  "Map",
-  "Timeline",
-  "Simulation",
-  "Documentary",
-  "Diagram",
-  "Narrative",
-  "Profile",
-  "Game",
-]
+export const PRODUCT_TYPES: ProductType[] = ATLAS_PRODUCT_TYPES.map((term) => term.id)
 
-export const ACTIVITY_TYPES: ActivityType[] = [
-  "Exercise",
-  "Quiz",
-  "Assessment",
-  "Interactive Simulation",
-  "Game",
-  "AI Chat",
-]
+export const ACTIVITY_TYPES: ActivityType[] = ATLAS_ACTIVITY_TYPES.map((term) => term.id)
 
 /**
  * ISCED-F 2013 broad fields - official international classification.

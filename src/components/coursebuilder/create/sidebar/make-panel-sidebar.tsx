@@ -1,12 +1,13 @@
 import { ChevronDown, ChevronRight, FolderOpen } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useMemo, useState } from "react"
 
+import { ALL_TEMPLATE_TYPES, type TemplateType } from "@/lib/curriculum/template-blocks"
 import { CARD_TYPE_META } from "../cards/CardTypePreview"
 import type { StudioCard } from "../store/makeLibraryStore"
 import type { CardType } from "../types"
 import { type CardGroup, type CardSpec } from "./make-panel-data"
 import type { LibraryProjectGroup } from "./make-panel-library"
-import { MAKE_BLUE_ACTIVE_SOFT, MAKE_BLUE_BADGE, MAKE_BLUE_INPUT_FOCUS, MAKE_RESOURCE_ACCENT } from "./make-theme"
+import { MAKE_BLUE_ACTIVE_SOFT, MAKE_BLUE_INPUT_FOCUS, MAKE_RESOURCE_ACCENT } from "./make-theme"
 
 const GROUP_ACCENT: Record<string, { pill: string; pillActive: string; border: string; dot: string }> = {
   resources: MAKE_RESOURCE_ACCENT,
@@ -17,10 +18,19 @@ const GROUP_ACCENT: Record<string, { pill: string; pillActive: string; border: s
 
 const FILTER_LABELS: Record<string, string> = {
   all: "All",
-  resources: "Res",
-  activities: "Act",
-  experiences: "Exp",
+  resources: "Resources",
+  activities: "Activities",
+  experiences: "Experiences",
+  layout: "Compositions",
   library: "Library",
+}
+
+const TEMPLATE_LABELS: Record<TemplateType, string> = {
+  lesson: "Lesson",
+  certificate: "Certificate",
+  quiz: "Quiz",
+  assessment: "Assessment",
+  exam: "Exam",
 }
 
 export type MakePanelFilter = "all" | CardGroup | "library"
@@ -31,16 +41,15 @@ interface MakePanelSidebarProps {
   showSidebar: boolean
   selectedCardType: CardType
   selectedLibraryCardId: string | null
-  visibleCards: number
-  totalCards: number
-  libraryVisibleCount: number
   libraryTotalCount: number
   filteredGroups: Array<{ id: CardGroup; label: string; items: CardSpec[] }>
   libraryGroups: LibraryProjectGroup[]
+  templateContext: TemplateType
   onFilterChange: (filter: MakePanelFilter) => void
   onSearchChange: (value: string) => void
   onSelectCardType: (cardType: CardType) => void
   onSelectLibraryCard: (card: StudioCard) => void
+  onTemplateContextChange: (templateType: TemplateType) => void
   onToggleSidebar: (visible: boolean) => void
 }
 
@@ -50,53 +59,47 @@ export function MakePanelSidebar({
   showSidebar,
   selectedCardType,
   selectedLibraryCardId,
-  visibleCards,
-  totalCards,
-  libraryVisibleCount,
   libraryTotalCount,
   filteredGroups,
   libraryGroups,
+  templateContext,
   onFilterChange,
   onSearchChange,
   onSelectCardType,
   onSelectLibraryCard,
+  onTemplateContextChange,
   onToggleSidebar,
 }: MakePanelSidebarProps) {
-  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({})
-  const [expandedTypeGroups, setExpandedTypeGroups] = useState<Record<string, boolean>>({})
+  const [expandedProjectOverrides, setExpandedProjectOverrides] = useState<Record<string, boolean>>({})
+  const [expandedTypeGroupOverrides, setExpandedTypeGroupOverrides] = useState<Record<string, boolean>>({})
 
-  useEffect(() => {
-    if (libraryGroups.length === 0) return
-    setExpandedProjects((prev) => {
-      const next = { ...prev }
-      let changed = false
-      for (const [index, group] of libraryGroups.entries()) {
-        if (group.id in next) continue
-        next[group.id] = group.isCurrent || index === 0
-        changed = true
-      }
-      return changed ? next : prev
-    })
+  const defaultExpandedProjects = useMemo(() => {
+    const next: Record<string, boolean> = {}
+    for (const [index, group] of libraryGroups.entries()) {
+      next[group.id] = group.isCurrent || index === 0
+    }
+    return next
   }, [libraryGroups])
 
-  useEffect(() => {
-    if (libraryGroups.length === 0) return
-    setExpandedTypeGroups((prev) => {
-      const next = { ...prev }
-      let changed = false
+  const expandedProjects = useMemo(
+    () => ({ ...defaultExpandedProjects, ...expandedProjectOverrides }),
+    [defaultExpandedProjects, expandedProjectOverrides],
+  )
 
-      for (const group of libraryGroups) {
-        for (const [index, cardTypeGroup] of group.cardTypeGroups.entries()) {
-          const key = `${group.id}:${cardTypeGroup.id}`
-          if (key in next) continue
-          next[key] = index === 0
-          changed = true
-        }
+  const defaultExpandedTypeGroups = useMemo(() => {
+    const next: Record<string, boolean> = {}
+    for (const group of libraryGroups) {
+      for (const [index, cardTypeGroup] of group.cardTypeGroups.entries()) {
+        next[`${group.id}:${cardTypeGroup.id}`] = index === 0
       }
-
-      return changed ? next : prev
-    })
+    }
+    return next
   }, [libraryGroups])
+
+  const expandedTypeGroups = useMemo(
+    () => ({ ...defaultExpandedTypeGroups, ...expandedTypeGroupOverrides }),
+    [defaultExpandedTypeGroups, expandedTypeGroupOverrides],
+  )
 
   if (!showSidebar) {
     return (
@@ -121,74 +124,77 @@ export function MakePanelSidebar({
   }
 
   const isLibraryView = activeFilter === "library"
+  const creationFilters = ["all", "resources", "activities", "experiences", "layout", "library"] as const
 
   return (
-    <div className="flex w-full shrink flex-col overflow-hidden border-r border-border bg-background md:w-[19rem] md:min-w-[15.5rem] md:max-w-[19rem]">
-      <div className="shrink-0 border-b border-border/50 px-4 pb-3 pt-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-xs font-bold tracking-tight text-foreground">Block library</p>
-            <p className="mt-0.5 text-[10px] text-muted-foreground/70">
-              {isLibraryView ? "Browse saved blocks by project" : "Choose a block to configure"}
-            </p>
-          </div>
+    <div className="flex w-full shrink flex-col overflow-hidden border-r border-border bg-background md:w-[27rem] md:min-w-[22rem] md:max-w-[29rem]">
+      <div className="shrink-0 border-b border-border/50 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-bold tracking-tight text-foreground">Make</p>
           <button
             type="button"
             onClick={() => onToggleSidebar(false)}
             title="Collapse block library"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           >
             <ChevronRight size={15} className="rotate-180" />
           </button>
         </div>
-        <div className="mt-2 flex items-center gap-1.5">
-          <span className={["rounded px-2 py-1 text-[9px] font-semibold", MAKE_BLUE_BADGE].join(" ")}>
-            {isLibraryView ? libraryVisibleCount : visibleCards} visible
-          </span>
-          <span className="rounded bg-muted/60 px-2 py-1 text-[9px] font-semibold text-muted-foreground">
-            {isLibraryView ? libraryTotalCount : totalCards} total
-          </span>
-        </div>
       </div>
 
-      <div className="shrink-0 px-3 pb-2 pt-2.5">
+      <div className="shrink-0 px-3 pb-2 pt-2">
+        <div className="mb-2 grid grid-cols-6 items-center gap-1 rounded-lg border border-border bg-muted/40 p-1">
+          {creationFilters.map((filter) => {
+            const isActive = activeFilter === filter
+            const groupAccent = filter !== "all" && filter !== "library" ? GROUP_ACCENT[filter] : null
+            return (
+              <button
+                key={filter}
+                type="button"
+                data-testid={`make-filter-${filter}`}
+                onClick={() => onFilterChange(filter)}
+                className={[
+                  "flex h-7 min-w-0 items-center justify-center rounded-md px-0.5 text-[8px] font-bold uppercase leading-none transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15",
+                  isActive
+                    ? groupAccent
+                      ? groupAccent.pillActive
+                      : MAKE_BLUE_ACTIVE_SOFT
+                    : groupAccent
+                      ? `text-muted-foreground ${groupAccent.pill} hover:bg-background`
+                      : "text-muted-foreground hover:bg-background hover:text-foreground",
+                ].join(" ")}
+              >
+                {FILTER_LABELS[filter]}
+              </button>
+            )
+          })}
+        </div>
         <input
           type="search"
           placeholder={isLibraryView ? "Search saved blocks…" : "Search block types…"}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          className={`min-h-10 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-[12px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 ${MAKE_BLUE_INPUT_FOCUS}`}
+          className={`min-h-9 w-full rounded-lg border border-border bg-background px-3 py-2 text-[12px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 ${MAKE_BLUE_INPUT_FOCUS}`}
         />
-      </div>
-
-      <div className="shrink-0 flex gap-1 px-3 pb-2.5">
-        {(["all", "resources", "activities", "experiences", "library"] as const).map((filter) => {
-          const isActive = activeFilter === filter
-          const groupAccent = filter !== "all" && filter !== "library" ? GROUP_ACCENT[filter] : null
-          return (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => onFilterChange(filter)}
-              className={[
-                "flex min-h-8 flex-1 items-center justify-center rounded-md px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15",
-                isActive
-                  ? groupAccent
-                    ? groupAccent.pillActive
-                    : filter === "library"
-                      ? "bg-neutral-900 text-white"
-                      : MAKE_BLUE_ACTIVE_SOFT
-                  : groupAccent
-                    ? `bg-muted/60 ${groupAccent.pill} hover:opacity-80`
-                    : filter === "library"
-                      ? "bg-muted/60 text-foreground/70 hover:bg-muted"
-                      : "bg-muted/60 text-muted-foreground hover:bg-muted",
-              ].join(" ")}
+        {!isLibraryView && (
+          <>
+            <label htmlFor="make-template-context" className="sr-only">
+              Template
+            </label>
+            <select
+              id="make-template-context"
+              value={templateContext}
+              onChange={(event) => onTemplateContextChange(event.target.value as TemplateType)}
+              className={`mt-2 min-h-9 w-full rounded-lg border border-border bg-background px-3 py-2 text-[12px] font-semibold text-foreground outline-none transition-colors ${MAKE_BLUE_INPUT_FOCUS}`}
             >
-              {FILTER_LABELS[filter]}
-            </button>
-          )
-        })}
+              {ALL_TEMPLATE_TYPES.map((templateType) => (
+                <option key={templateType} value={templateType}>
+                  {TEMPLATE_LABELS[templateType]}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -200,7 +206,7 @@ export function MakePanelSidebar({
                 <section key={group.id} className="mb-2 overflow-hidden rounded-xl border border-border bg-muted/30">
                   <button
                     type="button"
-                    onClick={() => setExpandedProjects((prev) => ({ ...prev, [group.id]: !isExpanded }))}
+                    onClick={() => setExpandedProjectOverrides((prev) => ({ ...prev, [group.id]: !isExpanded }))}
                     className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-background focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   >
                     {isExpanded ? <ChevronDown size={14} className="shrink-0 text-muted-foreground" /> : <ChevronRight size={14} className="shrink-0 text-muted-foreground" />}
@@ -226,7 +232,7 @@ export function MakePanelSidebar({
                             type="button"
                             onClick={() => {
                               const key = `${group.id}:${cardTypeGroup.id}`
-                              setExpandedTypeGroups((prev) => ({ ...prev, [key]: !(prev[key] ?? true) }))
+                              setExpandedTypeGroupOverrides((prev) => ({ ...prev, [key]: !expandedTypeGroups[key] }))
                             }}
                             className="mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/30 focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                           >
@@ -305,6 +311,7 @@ export function MakePanelSidebar({
                     <button
                       key={spec.cardType}
                       type="button"
+                      data-testid={`make-card-type-${spec.cardType}`}
                       onClick={() => onSelectCardType(spec.cardType)}
                       className={["mx-auto flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15", isActive ? "" : "hover:bg-muted/30"].join(" ")}
                     >

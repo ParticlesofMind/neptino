@@ -3,7 +3,7 @@
 import { createClient, getSupabaseClientConfigError } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PublicShell } from '@/components/layout/public-shell'
 import { AuthErrorBanner, AuthInput, AuthSubmitButton } from '@/components/ui/auth-primitives'
 import { buttonVariants } from '@/components/ui/button'
@@ -80,8 +80,18 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [nextPath, setNextPath] = useState<string | null>(null)
   const configError = getSupabaseClientConfigError()
   const router = useRouter()
+  const loginHref = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const next = new URLSearchParams(window.location.search).get('next')
+      setNextPath(next?.startsWith('/') ? next : null)
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -123,7 +133,7 @@ export default function SignupPage() {
           teacher: '/teacher',
           administrator: '/admin',
         }
-        router.push(roleRoutes[role])
+        router.push(nextPath ?? roleRoutes[role])
       } else {
         setSuccess(true)
         setLoading(false)
@@ -137,7 +147,7 @@ export default function SignupPage() {
   if (success) {
     return (
       <PublicShell hideNavActions navActions={
-        <Link href="/login" className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <Link href={loginHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
           Sign In
         </Link>
       }>
@@ -155,7 +165,7 @@ export default function SignupPage() {
                 <span className="font-semibold text-foreground/80">{email}</span>. Click it to activate your <span className="font-semibold">{role}</span> account.
               </p>
             </div>
-            <Link href="/login" className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}>
+            <Link href={loginHref} className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}>
               Go to Sign In
             </Link>
           </div>
@@ -166,7 +176,7 @@ export default function SignupPage() {
 
   return (
     <PublicShell hideNavActions navActions={
-      <Link href="/login" className={buttonVariants({ variant: "outline", size: "sm" })}>
+      <Link href={loginHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
         Sign In
       </Link>
     }>
@@ -284,7 +294,7 @@ export default function SignupPage() {
             <div className="px-8 pb-7 text-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
+                <Link href={loginHref} className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
                   Sign in
                 </Link>
               </p>

@@ -4,15 +4,12 @@ import {
   estimateProgramHeight,
   estimateTopicHeight,
   isBootstrappedTopic,
-  CONTENT_BLOCK_FIXED,
-  BLOCK_RENDERER_VERT,
-  BLOCK_GAP,
 } from "@/components/coursebuilder/create/layout/blockHeightModel"
 import {
   DEFAULT_PAGE_DIMENSIONS,
-  bodyHeightPx,
 } from "@/components/coursebuilder/create/types"
 import type {
+  CardId,
   CourseSession,
   Topic,
   SessionId,
@@ -21,6 +18,7 @@ import type {
   TaskId,
   CanvasId,
   CourseId,
+  DroppedCardId,
 } from "@/components/coursebuilder/create/types"
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -69,7 +67,6 @@ function makeSession(
 }
 
 const DIMS = DEFAULT_PAGE_DIMENSIONS
-const AVAILABLE = bodyHeightPx(DIMS) - BLOCK_RENDERER_VERT
 
 // ─── blockHeightModel ────────────────────────────────────────────────────────
 
@@ -204,7 +201,13 @@ describe("computePageAssignments — topic splitting", () => {
         (second.objectiveRange?.start ?? 0) === (first.objectiveRange?.start ?? 0) &&
         second.taskRange !== undefined &&
         second.taskRange.start > (first.taskRange?.start ?? 0)
-      expect(advancedTopic || advancedObjective || advancedTask).toBe(true)
+      const advancedCard =
+        second.topicRange!.start === first.topicRange!.start &&
+        (second.objectiveRange?.start ?? 0) === (first.objectiveRange?.start ?? 0) &&
+        (second.taskRange?.start ?? 0) === (first.taskRange?.start ?? 0) &&
+        second.cardRange !== undefined &&
+        second.cardRange.start > (first.cardRange?.start ?? 0)
+      expect(advancedTopic || advancedObjective || advancedTask || advancedCard).toBe(true)
     }
   })
 
@@ -330,8 +333,8 @@ describe("computePageAssignments — topic splitting", () => {
       ...task,
       droppedCards: [
         {
-          id: `${task.id}-card-a` as any,
-          cardId: `${task.id}-base-a` as any,
+          id: `${task.id}-card-a` as DroppedCardId,
+          cardId: `${task.id}-base-a` as CardId,
           cardType: "text",
           taskId: task.id,
           areaKind: "instruction",
@@ -341,8 +344,8 @@ describe("computePageAssignments — topic splitting", () => {
           order: i * 2,
         },
         {
-          id: `${task.id}-card-b` as any,
-          cardId: `${task.id}-base-b` as any,
+          id: `${task.id}-card-b` as DroppedCardId,
+          cardId: `${task.id}-base-b` as CardId,
           cardType: "text",
           taskId: task.id,
           areaKind: "practice",
@@ -374,8 +377,8 @@ describe("computePageAssignments — topic splitting", () => {
     topic.objectives[0]!.tasks = topic.objectives[0]!.tasks.map((task, i) => ({
       ...task,
       droppedCards: Array.from({ length: cardCounts[i] ?? 1 }, (_, j) => ({
-        id: `${task.id}-card-${j}` as any,
-        cardId: `${task.id}-base-${j}` as any,
+        id: `${task.id}-card-${j}` as DroppedCardId,
+        cardId: `${task.id}-base-${j}` as CardId,
         cardType: "text",
         taskId: task.id,
         areaKind: "instruction",
@@ -408,6 +411,152 @@ describe("computePageAssignments — topic splitting", () => {
         expect(c!.end).toBe(taskToCardStart[t.end])
       }
     }
+  })
+
+  it("packs a trailing card slice with the following task when they fit", () => {
+    const topic = makeTopic("packing-topic", "Packing Topic", 1, 2)
+    const firstTask = topic.objectives[0]!.tasks[0]!
+    const secondTask = topic.objectives[0]!.tasks[1]!
+
+    firstTask.droppedCards = Array.from({ length: 3 }, (_, index) => ({
+      id: `${firstTask.id}-large-card-${index}` as DroppedCardId,
+      cardId: `${firstTask.id}-large-base-${index}` as CardId,
+      cardType: "text-editor",
+      taskId: firstTask.id,
+      areaKind: "instruction",
+      blockKey: "content",
+      position: { x: 0, y: 0 },
+      dimensions: { width: 520, height: 300 },
+      content: { title: `Large card ${index + 1}`, text: "Large card content" },
+      order: index,
+    }))
+
+    secondTask.droppedCards = [{
+      id: `${secondTask.id}-large-card` as DroppedCardId,
+      cardId: `${secondTask.id}-large-base` as CardId,
+      cardType: "text-editor",
+      taskId: secondTask.id,
+      areaKind: "instruction",
+      blockKey: "content",
+      position: { x: 0, y: 0 },
+      dimensions: { width: 520, height: 300 },
+      content: { title: "Following task card", text: "Following task content" },
+      order: 3,
+    }]
+
+    const session = makeSession([topic], "lesson", {
+      content: { _split: false },
+      assignment: { _split: false },
+    })
+    const result = computePageAssignments(session, DIMS)
+    const contentPages = result.filter((page) => page.blockKeys.includes("content") && page.cardRange)
+
+    expect(contentPages).toContainEqual(
+      expect.objectContaining({
+        taskRange: { start: 0 },
+        cardRange: { start: 2 },
+      }),
+    )
+    expect(contentPages).not.toContainEqual(
+      expect.objectContaining({
+        taskRange: { start: 0, end: 1 },
+        cardRange: { start: 2, end: 3 },
+      }),
+    )
+  })
+
+  it("splits an oversized single task at top-level layout-card boundaries", () => {
+    const topic = makeTopic("layout-topic", "Layout Topic", 1, 1)
+    const task = topic.objectives[0]!.tasks[0]!
+    const longText = "The water cycle describes the continuous movement of water through Earth's systems. ".repeat(8)
+    task.droppedCards = Array.from({ length: 5 }, (_, i) => ({
+      id: `${task.id}-layout-${i}` as DroppedCardId,
+      cardId: `${task.id}-layout-base-${i}` as CardId,
+      cardType: "layout-split",
+      taskId: task.id,
+      areaKind: "instruction",
+      blockKey: "content",
+      position: { x: 0, y: 0 },
+      dimensions: { width: 520, height: 120 },
+      content: {
+        slots: {
+          0: [{
+            id: `${task.id}-layout-${i}-left` as DroppedCardId,
+            cardId: `${task.id}-text-left-${i}` as CardId,
+            cardType: "text",
+            taskId: task.id,
+            areaKind: "instruction",
+            blockKey: "content",
+            position: { x: 0, y: 0 },
+            dimensions: { width: 250, height: 72 },
+            content: { title: `Left ${i + 1}`, text: longText },
+            order: i * 10,
+          }],
+          1: [{
+            id: `${task.id}-layout-${i}-right` as DroppedCardId,
+            cardId: `${task.id}-text-right-${i}` as CardId,
+            cardType: "text",
+            taskId: task.id,
+            areaKind: "instruction",
+            blockKey: "content",
+            position: { x: 0, y: 0 },
+            dimensions: { width: 250, height: 72 },
+            content: { title: `Right ${i + 1}`, text: longText },
+            order: i * 10 + 1,
+          }],
+        },
+      },
+      order: i,
+    }))
+
+    const session = makeSession([topic])
+    const result = computePageAssignments(session, DIMS)
+    const cardPages = result.filter((page) => page.cardRange !== undefined)
+
+    expect(cardPages.length).toBeGreaterThan(1)
+    expect(cardPages[0]!.cardRange!.start).toBe(0)
+    expect(cardPages[0]!.cardRange!.end).toBeLessThan(task.droppedCards.length)
+    expect(cardPages[1]!.cardRange!.start).toBe(cardPages[0]!.cardRange!.end)
+  })
+
+  it("uses global card bounds that match block-scoped card budgeting", () => {
+    const topic = makeTopic("mixed-topic", "Mixed Topic", 1, 1)
+    const task = topic.objectives[0]!.tasks[0]!
+
+    task.droppedCards = [
+      { blockKey: "assignment", order: 0, suffix: "assignment-a" },
+      { blockKey: "content", order: 1, suffix: "content-a" },
+      { blockKey: "assignment", order: 2, suffix: "assignment-b" },
+      { blockKey: "content", order: 3, suffix: "content-b" },
+    ].map(({ blockKey, order, suffix }) => ({
+      id: `${task.id}-${suffix}` as DroppedCardId,
+      cardId: `${task.id}-base-${suffix}` as CardId,
+      cardType: "text-editor",
+      taskId: task.id,
+      areaKind: "instruction",
+      blockKey,
+      position: { x: 0, y: 0 },
+      dimensions: { width: 520, height: 420 },
+      content: { title: suffix, text: "Large scoped card" },
+      order,
+    }))
+
+    const session = makeSession([topic])
+    const result = computePageAssignments(session, DIMS)
+
+    const contentCardPages = result.filter((page) =>
+      page.blockKeys.includes("content") && page.cardRange,
+    )
+    const assignmentCardPages = result.filter((page) =>
+      page.blockKeys.includes("assignment") && page.cardRange,
+    )
+
+    expect(contentCardPages.length).toBeGreaterThanOrEqual(2)
+    expect(assignmentCardPages.length).toBeGreaterThanOrEqual(2)
+    expect(contentCardPages[0]!.cardRange).toEqual({ start: 1, end: 2 })
+    expect(contentCardPages[1]!.cardRange).toEqual({ start: 3, end: 4 })
+    expect(assignmentCardPages[0]!.cardRange).toEqual({ start: 0, end: 1 })
+    expect(assignmentCardPages[1]!.cardRange).toEqual({ start: 2, end: 3 })
   })
 })
 

@@ -59,3 +59,27 @@ export async function selectTeacherCourseCount(teacherId: string, excludeCourseI
     error,
   }
 }
+
+// ─── Enrollment queries ──────────────────────────────────────────────────────
+
+export interface CourseEnrollmentRow {
+  id:          string
+  student_id: string
+  enrolled_at: string
+  status:      string
+  metadata:    Record<string, unknown> | null
+}
+
+export async function selectEnrollmentsByCourseId(courseId: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("enrollments")
+    .select("id, student_id, enrolled_at, status, metadata")
+    .eq("course_id", courseId)
+    .order("enrolled_at", { ascending: false })
+
+  return {
+    data: (data as CourseEnrollmentRow[] | null) ?? [],
+    error,
+  }
+}

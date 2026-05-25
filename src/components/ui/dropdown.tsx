@@ -5,6 +5,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useId,
   type ReactNode,
   type KeyboardEvent,
 } from "react"
@@ -58,6 +59,7 @@ export function Dropdown<V extends string = string>({
   const [query, setQuery] = useState("")
   const [activeIndex, setActiveIndex] = useState<number>(-1)
 
+  const listboxId = useId()
   const wrapperRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
@@ -73,16 +75,22 @@ export function Dropdown<V extends string = string>({
 
   const selected = options.find((o) => o.value === value) ?? null
 
+  const closeDropdown = useCallback(() => {
+    setOpen(false)
+    setQuery("")
+    setActiveIndex(-1)
+  }, [])
+
   // ── Close on outside click ──────────────────────────────────────────────────
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false)
+        closeDropdown()
       }
     }
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
-  }, [])
+  }, [closeDropdown])
 
   // ── Focus search when opening ───────────────────────────────────────────────
   useEffect(() => {
@@ -90,10 +98,6 @@ export function Dropdown<V extends string = string>({
       // Small delay allows the panel's entrance animation to start
       const t = setTimeout(() => searchRef.current?.focus(), 30)
       return () => clearTimeout(t)
-    }
-    if (!open) {
-      setQuery("")
-      setActiveIndex(-1)
     }
   }, [open, showSearch])
 
@@ -119,13 +123,13 @@ export function Dropdown<V extends string = string>({
             const opt = filtered[activeIndex]
             if (!opt.disabled) {
               onChange?.(opt.value)
-              setOpen(false)
+              closeDropdown()
             }
           }
           break
         case "Escape":
           e.preventDefault()
-          setOpen(false)
+          closeDropdown()
           break
         case "ArrowDown":
           e.preventDefault()
@@ -142,17 +146,17 @@ export function Dropdown<V extends string = string>({
           setActiveIndex((i) => Math.max(i - 1, 0))
           break
         case "Tab":
-          setOpen(false)
+          closeDropdown()
           break
       }
     },
-    [disabled, open, activeIndex, filtered, onChange]
+    [disabled, open, activeIndex, filtered, onChange, closeDropdown]
   )
 
   function handleSelect(opt: DropdownOption<V>) {
     if (opt.disabled) return
     onChange?.(opt.value)
-    setOpen(false)
+    closeDropdown()
   }
 
   return (
@@ -174,8 +178,15 @@ export function Dropdown<V extends string = string>({
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={listboxId}
         disabled={disabled}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (open) {
+            closeDropdown()
+          } else {
+            setOpen(true)
+          }
+        }}
         className={[
           "flex w-full items-center justify-between gap-2",
           "rounded-xl border border-[var(--border,#e5e5e5)] bg-[var(--background,#fff)]",
@@ -216,6 +227,7 @@ export function Dropdown<V extends string = string>({
 
       {/* Panel */}
       <div
+        id={listboxId}
         role="listbox"
         aria-label={label ?? "Options"}
         className={[

@@ -22,4 +22,5 @@ export const LAYOUT_SAMPLE_CONTENT: Partial<Record<CardType, Record<string, unkn
   "layout-gallery": { slots: {} },
   "layout-spotlight": { slots: {} },
   "layout-flipcard": { slots: {} },
+  "layout-resizable-grid": { slots: {} },
 }

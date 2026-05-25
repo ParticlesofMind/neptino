@@ -12,6 +12,7 @@ export function createCardActions(set: CourseStoreSet): Pick<
   | "removeDroppedCard"
   | "addCardToLayoutSlot"
   | "removeCardFromLayoutSlot"
+  | "updateLayoutCardContent"
   | "clearSessionCards"
 > {
   return {
@@ -182,6 +183,35 @@ export function createCardActions(set: CourseStoreSet): Pick<
                           ...slots,
                           [slotIndex]: (slots[slotIndex] ?? []).filter((entry) => entry.id !== cardId),
                         },
+                      },
+                    }
+                  }),
+                }
+              }),
+            })),
+          })),
+        })),
+      })),
+
+    updateLayoutCardContent: (sessionId, taskId, layoutCardId, contentPatch) =>
+      set((state) => ({
+        sessions: mapSession(state.sessions, sessionId, (session) => ({
+          ...session,
+          topics: session.topics.map((topic) => ({
+            ...topic,
+            objectives: topic.objectives.map((objective) => ({
+              ...objective,
+              tasks: objective.tasks.map((task) => {
+                if (task.id !== taskId) return task
+                return {
+                  ...task,
+                  droppedCards: task.droppedCards.map((droppedCard) => {
+                    if (droppedCard.id !== layoutCardId) return droppedCard
+                    return {
+                      ...droppedCard,
+                      content: {
+                        ...droppedCard.content,
+                        ...contentPatch,
                       },
                     }
                   }),

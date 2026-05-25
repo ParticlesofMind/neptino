@@ -96,7 +96,7 @@ export function TableEditor({ content, onChange }: TableEditorProps) {
 
   return (
     <EditorSplitLayout
-      sidebarWidthClassName="md:w-[26rem] xl:w-[30rem]"
+      sidebarWidthClassName="md:w-[29rem] md:flex-none xl:w-[31rem]"
       previewContentClassName="overflow-auto"
       sidebar={(
         <div className="space-y-3 px-4 py-4">

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" role="img" aria-labelledby="title desc">
+  <title id="title">Film and theatre opener</title>
+  <desc id="desc">A clapperboard, stage arch, and London theatre skyline for a Shakespeare in Love lesson.</desc>
+  <rect width="960" height="640" fill="#f7f8fb"/>
+  <rect x="70" y="70" width="820" height="500" rx="28" fill="#ffffff" stroke="#c9d4e2" stroke-width="4"/>
+  <path d="M140 500h680" stroke="#6f7c8f" stroke-width="8" stroke-linecap="round"/>
+  <path d="M205 480V235c0-92 75-167 167-167h216c92 0 167 75 167 167v245" fill="none" stroke="#3a6ea0" stroke-width="18"/>
+  <path d="M268 480V257c0-55 45-100 100-100h224c55 0 100 45 100 100v223" fill="none" stroke="#9eb9da" stroke-width="10"/>
+  <rect x="176" y="276" width="302" height="178" rx="14" fill="#27313f" stroke="#1b2430" stroke-width="4"/>
+  <path d="M176 316h302" stroke="#ffffff" stroke-width="8"/>
+  <path d="M196 276l42 40M270 276l42 40M344 276l42 40M418 276l42 40" stroke="#ffffff" stroke-width="10"/>
+  <rect x="528" y="285" width="230" height="150" rx="12" fill="#f0e8cc" stroke="#a89450" stroke-width="4"/>
+  <path d="M560 392c34-72 131-72 165 0" fill="none" stroke="#7a6010" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="606" cy="346" r="18" fill="#7a6010"/>
+  <circle cx="681" cy="346" r="18" fill="#7a6010"/>
+  <path d="M105 514c50-34 106-50 168-50s118 16 168 50M520 514c45-28 96-42 153-42s108 14 153 42" fill="none" stroke="#d6ede3" stroke-width="12" stroke-linecap="round"/>
+  <text x="480" y="108" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#27313f">A Film About Making Theatre</text>
+  <text x="480" y="548" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#5b6572">opening sequence, performance, audience, evidence</text>
+</svg>

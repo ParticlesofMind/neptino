@@ -43,7 +43,7 @@ export function AtlasLargeCard({
           <p className="mt-1 text-xs text-[var(--atlas-text-dim)]">
             {[item.domain, item.era_label, item.depth].filter(Boolean).join(" · ") || "No metadata"}
           </p>
-          <p className="mt-3 text-sm text-[var(--atlas-text-dim)] leading-relaxed">
+          <p className="mt-3 text-sm text-[var(--atlas-text-dim)] leading-relaxed line-clamp-6">
             {wikidataCard?.longDescription ?? wikidataCard?.description ?? item.summary ?? "No summary available yet."}
           </p>
 

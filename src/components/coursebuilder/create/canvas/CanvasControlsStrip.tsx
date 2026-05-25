@@ -90,7 +90,7 @@ function ControlBtn({
       className={[
         "flex flex-col items-center gap-0.5 w-10 py-1.5 rounded transition-colors",
         active
-          ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+          ? "bg-[#dbe8f6] text-[#3a6ea0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
           : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700",
       ].join(" ")}
     >

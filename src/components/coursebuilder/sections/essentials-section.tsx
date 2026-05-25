@@ -162,6 +162,7 @@ export function EssentialsSection({
   const [isManualSaving, setIsManualSaving] = useState(false)
   const [showManualSaving, setShowManualSaving] = useState(false)
   const [createdCourseId, setCreatedCourseId] = useState<string | null>(null)
+  const [persistedImageUrl, setPersistedImageUrl] = useState<string | null>(initialData?.imageUrl ?? null)
   const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null)
   const [cropModalOpen, setCropModalOpen] = useState(false)
   const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null)
@@ -181,8 +182,7 @@ export function EssentialsSection({
   const set = <K extends keyof CourseEssentials>(k: K, v: CourseEssentials[K]) =>
     setData((prev) => ({ ...prev, [k]: v }))
 
-  const initialImageUrl = initialData?.imageUrl ?? null
-  const previewImageUrl = imageObjectUrl ?? initialData?.imageUrl ?? null
+  const previewImageUrl = imageObjectUrl ?? persistedImageUrl
 
   const currentSnapshot = useMemo(
     () => buildEssentialsSnapshot(data, previewImageUrl),
@@ -243,6 +243,12 @@ export function EssentialsSection({
 
   useEffect(() => {
     setLastPersistedSnapshot(buildEssentialsSnapshot(data, previewImageUrl))
+    setPersistedImageUrl(initialData?.imageUrl ?? null)
+    imageFileRef.current = null
+    if (imageObjectUrl) {
+      URL.revokeObjectURL(imageObjectUrl)
+      setImageObjectUrl(null)
+    }
     // Intentionally baseline on incoming/loaded course identity.
     // Subsequent edits will diverge currentSnapshot and enable saving.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -274,12 +280,9 @@ export function EssentialsSection({
         return
       }
 
-      let imageUrl: string | null = initialImageUrl
+      let imageUrl: string | null = persistedImageUrl
       if (imageFileRef.current) {
-        const uploadedImageUrl = await uploadCourseImage(imageFileRef.current, user.id)
-        if (uploadedImageUrl) {
-          imageUrl = uploadedImageUrl
-        }
+        imageUrl = await uploadCourseImage(imageFileRef.current, user.id)
       }
 
       const payload: Record<string, unknown> = {
@@ -311,6 +314,11 @@ export function EssentialsSection({
         generationSettingsRef.current = payload.generation_settings as Record<string, unknown>
         onCourseCreated(activeCourseId, { ...data, title: data.title.trim(), imageUrl })
         imageFileRef.current = null
+        setPersistedImageUrl(imageUrl)
+        if (imageObjectUrl) {
+          URL.revokeObjectURL(imageObjectUrl)
+          setImageObjectUrl(null)
+        }
         setLastPersistedSnapshot(buildEssentialsSnapshot(data, imageUrl))
       } else {
         if (!allowCreate) {
@@ -334,14 +342,20 @@ export function EssentialsSection({
         generationSettingsRef.current = generationSettingsPayload
         onCourseCreated(course.id, { ...data, title: data.title.trim(), imageUrl })
         imageFileRef.current = null
+        setPersistedImageUrl(imageUrl)
+        if (imageObjectUrl) {
+          URL.revokeObjectURL(imageObjectUrl)
+          setImageObjectUrl(null)
+        }
         setLastPersistedSnapshot(buildEssentialsSnapshot(data, imageUrl))
       }
 
       markSaved()
-    } catch {
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Failed to save course essentials.")
       markError()
     }
-  }, [data, courseId, createdCourseId, initialImageUrl, onCourseCreated, markEmpty, markError, markSaved, markSaving])
+  }, [data, courseId, createdCourseId, persistedImageUrl, imageObjectUrl, onCourseCreated, markEmpty, markError, markSaved, markSaving])
 
   useDebouncedChangeSave(() => {
     if (!(courseId ?? createdCourseId)) return

@@ -12,7 +12,8 @@
  *   Resources   — passive reference and display blocks
  *   Activities  — learner-input blocks and response widgets
  *   Experiences — composed learning units
- *   Layout      — structural arrangements
+ *
+ * Layout blocks are authored in Make. Curate only places authored blocks.
  */
 
 import { Search } from "lucide-react"
@@ -20,7 +21,6 @@ import { useState } from "react"
 import { MAKE_BLUE_TEXT } from "./make-theme"
 
 import { useMakeLibraryStore } from "../store/makeLibraryStore"
-import { useCourseStore } from "../store/courseStore"
 import type { CardType } from "../types"
 import { CategoryButton } from "./files-browser-filters"
 import { DraggableItem, DraggableUserCard } from "./files-browser-draggables"
@@ -34,17 +34,6 @@ export function FilesBrowser() {
 
   const studioCards  = useMakeLibraryStore((s) => s.cards)
   const removeCard   = useMakeLibraryStore((s) => s.removeCard)
-
-  const sessions = useCourseStore((s) => s.sessions)
-  const needsLayoutHint = !sessions.some((session) =>
-    session.topics.some((topic) =>
-      topic.objectives.some((obj) =>
-        obj.tasks.some((task) =>
-          task.droppedCards.some((c) => c.cardType.startsWith("layout-"))
-        )
-      )
-    )
-  )
 
   const cat = CATEGORIES.find((c) => c.id === activeCategory)!
 
@@ -85,7 +74,6 @@ export function FilesBrowser() {
                 key={c.id}
                 cat={c}
                 isActive={activeCategory === c.id}
-                needsLayout={needsLayoutHint}
                 onClick={() => setActiveCategory(c.id)}
               />
             ))}
@@ -97,16 +85,6 @@ export function FilesBrowser() {
           className="flex-1 overflow-y-auto p-2.5"
           style={{ scrollbarWidth: "none" }}
         >
-          {/* Layout guidance banner ──────────────────────────────── */}
-          {needsLayoutHint && activeCategory !== "layout" && (
-            <button
-              type="button"
-              onClick={() => setActiveCategory("layout")}
-              className="mb-2 w-full rounded border border-[#a89450]/30 bg-[#a89450]/5 px-2 py-1.5 text-left text-[9px] text-[#7a6010] transition-colors hover:bg-[#a89450]/10"
-            >
-              Start by placing a layout block. <span className="underline">Go to Layout</span>
-            </button>
-          )}
           <div className="flex flex-col gap-1.5">
             {/* Studio cards (user-created) */}
             {visibleStudio.length > 0 && (

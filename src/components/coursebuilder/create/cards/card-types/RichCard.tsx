@@ -23,6 +23,7 @@ const CARD_TYPE_LABELS: Partial<Record<CardType, string>> = {
 }
 
 export function RichCard({ card, onRemove }: RichCardProps) {
+  const frameRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const label = CARD_TYPE_LABELS[card.cardType] ?? "Rich Card"
 
@@ -34,10 +35,34 @@ export function RichCard({ card, onRemove }: RichCardProps) {
     }
   }, [card.cardId])
 
+  useEffect(() => {
+    const frame = frameRef.current
+    const canvas = canvasRef.current
+    if (!frame || !canvas) return
+
+    const syncCanvasSize = () => {
+      const rect = frame.getBoundingClientRect()
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = Math.max(1, Math.round(rect.width * dpr))
+      canvas.height = Math.max(1, Math.round(rect.height * dpr))
+    }
+
+    syncCanvasSize()
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", syncCanvasSize)
+      return () => window.removeEventListener("resize", syncCanvasSize)
+    }
+
+    const observer = new ResizeObserver(syncCanvasSize)
+    observer.observe(frame)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div
+      ref={frameRef}
       className="group relative rounded border border-neutral-200 bg-neutral-900 shadow-sm overflow-hidden"
-      style={{ width: card.dimensions.width || "100%", height: card.dimensions.height || 160 }}
+      style={{ width: "100%", height: card.dimensions.height || 160 }}
     >
       {onRemove && (
         <button

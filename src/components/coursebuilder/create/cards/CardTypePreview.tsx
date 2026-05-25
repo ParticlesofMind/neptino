@@ -16,12 +16,16 @@ import {
   Bot,
   Box,
   Check,
+  ClipboardList,
   Database,
+  ExternalLink,
+  FileCode2,
   Gamepad2,
   Image as ImageIcon,
   Layers,
   List,
   MessageSquare,
+  Mic,
   ScrollText,
   Timer,
 } from "lucide-react"
@@ -227,7 +231,20 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       const pages = typeof content["pages"] === "number" ? content["pages"] : 0
       const excerpt = typeof content["excerpt"] === "string" ? content["excerpt"] : ""
       const sections: { heading: string; body: string }[] = (() => {
-        try { return content["sections"] ? JSON.parse(content["sections"] as string) : [] } catch { return [] }
+        const raw = content["sections"]
+        const normalize = (value: unknown) => Array.isArray(value)
+          ? value
+            .filter((section): section is { heading?: unknown; body?: unknown } => typeof section === "object" && section !== null)
+            .map((section) => ({
+              heading: typeof section.heading === "string" ? section.heading : "",
+              body: typeof section.body === "string" ? section.body : "",
+            }))
+          : []
+
+        if (Array.isArray(raw)) return normalize(raw)
+        if (typeof raw !== "string") return []
+
+        try { return normalize(JSON.parse(raw) as unknown) } catch { return [] }
       })()
       return (
         <div className="space-y-3">
@@ -262,6 +279,92 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-6 gap-2">
               <ScrollText className="h-6 w-6 text-muted-foreground/30" />
               <span className="text-[11px] text-muted-foreground">Add content to preview the document.</span>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // ─── Embed ─────────────────────────────────────────────────────────────────
+    case "embed": {
+      const url = typeof content["url"] === "string" ? content["url"] : ""
+      const provider = typeof content["provider"] === "string" ? content["provider"] : ""
+      const caption = typeof content["caption"] === "string" ? content["caption"] : ""
+      const attribution = typeof content["attribution"] === "string" ? content["attribution"] : ""
+
+      return (
+        <div className="space-y-3">
+          {url ? (
+            <div className="overflow-hidden rounded-xl border border-border bg-muted/20" style={{ aspectRatio: "16 / 9" }}>
+              <iframe
+                src={url}
+                className="h-full w-full border-0"
+                title={title || "Embedded resource"}
+                sandbox="allow-same-origin allow-scripts allow-popups"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-8">
+              <ExternalLink className="h-6 w-6 text-muted-foreground/30" />
+              <span className="mt-2 text-[11px] text-muted-foreground">Add an embeddable URL.</span>
+            </div>
+          )}
+          {(provider || caption || attribution || url) && (
+            <div className="space-y-1">
+              {(provider || url) && (
+                <p className="truncate text-[11px] font-medium text-foreground">
+                  {provider || url}
+                </p>
+              )}
+              {caption && <p className="text-[11px] leading-relaxed text-muted-foreground">{caption}</p>}
+              {attribution && <p className="text-[10px] text-muted-foreground/60 italic">{attribution}</p>}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // ─── Flashcards ─────────────────────────────────────────────────────────────
+    case "flashcards": {
+      const rawPairs = Array.isArray(content["pairs"])
+        ? (content["pairs"] as Array<{ term?: string; match?: string }>)
+        : []
+      const difficulty = typeof content["difficulty"] === "string" ? content["difficulty"] : ""
+      const tags = Array.isArray(content["tags"]) ? content["tags"].map(String).filter(Boolean) : []
+
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4 text-muted-foreground/60" />
+            <span className="text-[12px] font-semibold text-foreground">
+              {rawPairs.length} card{rawPairs.length === 1 ? "" : "s"}
+            </span>
+            {difficulty && (
+              <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{difficulty}</span>
+            )}
+          </div>
+          {rawPairs.length > 0 ? (
+            <div className="grid gap-2">
+              {rawPairs.slice(0, 4).map((pair, index) => (
+                <div key={index} className="rounded-lg border border-border bg-background px-3 py-2">
+                  <p className="text-[11px] font-semibold text-foreground">{pair.term || `Prompt ${index + 1}`}</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{pair.match || "Answer not set"}</p>
+                </div>
+              ))}
+              {rawPairs.length > 4 && (
+                <p className="text-center text-[10px] text-muted-foreground">+{rawPairs.length - 4} more cards</p>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-border px-3 py-5 text-center">
+              <span className="text-[11px] text-muted-foreground">Add prompt and answer pairs.</span>
+            </div>
+          )}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.slice(0, 5).map((tag) => (
+                <span key={tag} className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">{tag}</span>
+              ))}
             </div>
           )}
         </div>
@@ -341,6 +444,113 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       )
     }
 
+    // ─── Form ───────────────────────────────────────────────────────────────────
+    case "form": {
+      const prompt = typeof content["prompt"] === "string" ? content["prompt"] : ""
+      const submitLabel = typeof content["submitLabel"] === "string" ? content["submitLabel"] : "Submit"
+      const fields = Array.isArray(content["fields"])
+        ? content["fields"]
+          .filter((field): field is Record<string, unknown> => typeof field === "object" && field !== null)
+          .map((field, index) => ({
+            label: typeof field.label === "string" && field.label.trim() ? field.label : `Field ${index + 1}`,
+            type: typeof field.type === "string" ? field.type : "text",
+            required: Boolean(field.required),
+          }))
+        : []
+
+      return (
+        <div className="space-y-3">
+          {prompt && <p className="text-[12px] leading-relaxed text-muted-foreground">{prompt}</p>}
+          <div className="space-y-2">
+            {(fields.length > 0 ? fields : [{ label: "Response", type: "textarea", required: true }]).slice(0, 4).map((field, index) => (
+              <div key={`${field.label}-${index}`} className="rounded-lg border border-border bg-background px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-3.5 w-3.5 text-muted-foreground/50" />
+                  <span className="text-[11px] font-semibold text-foreground">{field.label}</span>
+                  {field.required && <span className="ml-auto text-[10px] font-semibold text-muted-foreground">Required</span>}
+                </div>
+                <div className="mt-2 h-8 rounded-md border border-dashed border-border bg-muted/20" />
+              </div>
+            ))}
+          </div>
+          <button type="button" className="min-h-8 rounded-md border border-border bg-background px-3 text-[11px] font-semibold text-muted-foreground">
+            {submitLabel}
+          </button>
+        </div>
+      )
+    }
+
+    // ─── Voice Recorder ──────────────────────────────────────────────────────────
+    case "voice-recorder": {
+      const prompt = typeof content["prompt"] === "string" ? content["prompt"] : ""
+      const maxDurationSeconds = typeof content["maxDurationSeconds"] === "number" ? content["maxDurationSeconds"] : 60
+      const retryPolicy = typeof content["retryPolicy"] === "string" ? content["retryPolicy"] : "allow"
+
+      return (
+        <div className="space-y-3">
+          {prompt && <p className="text-[12px] leading-relaxed text-muted-foreground">{prompt}</p>}
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-4">
+            <div className="flex items-center justify-between">
+              <Mic className="h-5 w-5 text-muted-foreground/60" />
+              <span className="font-mono text-[22px] font-semibold text-foreground">0:00</span>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-background">
+              <div className="h-full w-1/4 rounded-full bg-[#00ccb3]" />
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <Timer className="h-3.5 w-3.5" />
+              <span>{maxDurationSeconds}s limit</span>
+              <span className="ml-auto capitalize">{retryPolicy === "single" ? "One take" : "Retries allowed"}</span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ─── Sorter / Matcher ───────────────────────────────────────────────────────
+    case "sorter": {
+      const mode = typeof content["mode"] === "string" ? content["mode"] : "match"
+      const pairs = Array.isArray(content["pairs"])
+        ? content["pairs"]
+          .filter((pair): pair is Record<string, unknown> => typeof pair === "object" && pair !== null)
+          .map((pair, index) => ({
+            term: typeof pair.term === "string" && pair.term.trim() ? pair.term : `Term ${index + 1}`,
+            match: typeof pair.match === "string" && pair.match.trim() ? pair.match : `Match ${index + 1}`,
+          }))
+        : []
+      const items = Array.isArray(content["items"]) ? content["items"].map(String).filter(Boolean) : []
+
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <List className="h-4 w-4 text-muted-foreground/60" />
+            <span className="text-[12px] font-semibold text-foreground">{mode === "order" ? "Ordering task" : "Matching task"}</span>
+          </div>
+
+          {mode === "order" ? (
+            <div className="space-y-1.5">
+              {(items.length > 0 ? items : pairs.map((pair) => pair.term)).slice(0, 4).map((item, index) => (
+                <div key={`${item}-${index}`} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-[11px]">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-muted-foreground">{index + 1}</span>
+                  <span className="min-w-0 truncate text-muted-foreground">{item || `Item ${index + 1}`}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {(pairs.length > 0 ? pairs : [{ term: "Term", match: "Match" }]).slice(0, 4).map((pair, index) => (
+                <div key={`${pair.term}-${index}`} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-lg border border-border px-3 py-2 text-[11px]">
+                  <span className="min-w-0 truncate font-medium text-foreground/80">{pair.term}</span>
+                  <span className="text-muted-foreground/40">to</span>
+                  <span className="min-w-0 truncate text-right text-muted-foreground">{pair.match}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )
+    }
+
     // ─── Simulation ─────────────────────────────────────────────────────────────
     case "rich-sim": {
       const url = typeof content["url"] === "string" ? content["url"] : ""
@@ -368,6 +578,7 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       const rows = typeof content["rows"] === "number" ? content["rows"] : 0
       const cols = typeof content["columns"] === "number" ? content["columns"] : 0
       const fmt  = typeof content["format"] === "string" ? content["format"] : ""
+      const source = typeof content["source"] === "string" ? content["source"] : typeof content["url"] === "string" ? content["url"] : ""
       return (
         <div>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -375,8 +586,9 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             {cols > 0 && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{cols} columns</span>}
             {fmt && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{fmt}</span>}
           </div>
-          <div className="flex flex-col items-center justify-center rounded-xl bg-muted/30 border border-border h-24">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-muted/30 border border-border h-24 px-3 text-center">
             <Database className="h-6 w-6 text-muted-foreground/40" />
+            {source && <span className="mt-2 max-w-full truncate text-[11px] text-muted-foreground">{source}</span>}
           </div>
         </div>
       )
@@ -525,15 +737,20 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       )
     }
 
+    case "code-snippet":
     case "code-editor": {
       const code = typeof content["code"] === "string" ? content["code"] : ""
       const lines = code.split("\n").filter(Boolean).slice(0, 5)
       const language = typeof content["language"] === "string" ? content["language"] : "javascript"
+      const caption = typeof content["caption"] === "string" ? content["caption"] : typeof content["prompt"] === "string" ? content["prompt"] : ""
 
       return (
         <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-3 py-2">
-            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">CodeMirror</span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">
+              <FileCode2 className="h-3 w-3" />
+              {cardType === "code-snippet" ? "Snippet" : "CodeMirror"}
+            </span>
             <span className="rounded-full border border-[#5c9970]/30 bg-[#5c9970]/15 px-2 py-0.5 text-[9px] font-medium text-[#5c9970]">
               {language}
             </span>
@@ -548,6 +765,11 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
               <p className="text-slate-400">Add starter code to preview the editor.</p>
             )}
           </div>
+          {caption && (
+            <div className="border-t border-slate-800 bg-slate-900/70 px-3 py-2 text-[11px] leading-relaxed text-slate-400">
+              {caption}
+            </div>
+          )}
         </div>
       )
     }

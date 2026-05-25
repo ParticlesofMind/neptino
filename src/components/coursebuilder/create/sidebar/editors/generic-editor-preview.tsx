@@ -16,7 +16,7 @@ interface GenericEditorPreviewProps {
 export function GenericEditorPreview({
   cardType,
   content,
-  maxWidthClassName = "max-w-3xl",
+  maxWidthClassName = "",
   frameClassName,
   bodyClassName = "p-5",
   onTitleChange,

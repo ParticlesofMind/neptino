@@ -73,6 +73,12 @@ export function AtlasPanelItem({ panelItem, panelMediaByType, params, activePage
         </div>
       )}
 
+      {panelMediaByType.length === 0 && (
+        <div className="mt-4 rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg)]/30 p-3 text-center">
+          <p className="text-xs text-[var(--atlas-text-dim)]">No media resources available</p>
+        </div>
+      )}
+
       {panelItem.metadata && Object.keys(panelItem.metadata).length > 0 && (
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {Object.entries(panelItem.metadata)

@@ -6,9 +6,7 @@ import {
   MAKE_BLUE_ACTIVE,
   MAKE_BLUE_ACTIVE_SOFT,
   MAKE_BLUE_AXIS_HEX,
-  MAKE_BLUE_BORDER_HEX,
   MAKE_BLUE_BUTTON,
-  MAKE_BLUE_SURFACE_HEX,
   MAKE_BLUE_TEXT_HEX,
 } from "./make-theme"
 import { SectionLabel } from "./editors/studio-primitives"
@@ -164,7 +162,7 @@ export function MakeMotionToolbar({ content, onChange, compact = false }: MakeMo
                   strokeLinecap="round"
                 />
               </svg>
-              <span className={`text-[8px] font-semibold uppercase tracking-wider ${easing === e ? "text-[#233f5d]" : "text-muted-foreground"}`}>
+              <span className={`text-[8px] font-semibold uppercase tracking-wider ${easing === e ? "text-[#3a6ea0]" : "text-muted-foreground"}`}>
                 {e === "ease-in-out" ? "ease" : e === "spring" ? "spring" : e.replace("ease-", "")}
               </span>
             </button>

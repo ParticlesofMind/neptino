@@ -1,10 +1,4 @@
-import type { TaskAreaKind, TaskId, Topic } from "../types"
-
-export const AREA_LABELS: Record<TaskAreaKind, string> = {
-  instruction: "Instruction",
-  practice: "Practice",
-  feedback: "Feedback",
-}
+import type { TaskId, Topic } from "../types"
 
 export const DEFAULT_TASK_SUFFIX = "-default-task"
 

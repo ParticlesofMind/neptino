@@ -12,28 +12,38 @@ import { useCanvasStore } from "../store/canvasStore"
 
 // ─── Right page navigation strip ─────────────────────────────────────────────
 
+const SCROLL_TO_CANVAS_EVENT = "coursebuilder:scroll-to-canvas"
+
 interface PageNavStripProps {
   sessions:   CourseSession[]
   onScrollTo?: (canvasId: string) => void
 }
 
 export function PageNavStrip({ sessions, onScrollTo }: PageNavStripProps) {
-  const activeCanvasId  = useCanvasStore((s) => s.activeCanvasId)
-  const setActiveCanvas = useCanvasStore((s) => s.setActiveCanvas)
+  const activeCanvasId    = useCanvasStore((s) => s.activeCanvasId)
+  const viewportCanvasId  = useCanvasStore((s) => s.viewportCanvasId)
+  const setActiveCanvas   = useCanvasStore((s) => s.setActiveCanvas)
+  const setViewportCanvas = useCanvasStore((s) => s.setViewportCanvas)
 
   const pages = useMemo(() => sessions.flatMap((s) => s.canvases), [sessions])
   const total = pages.length
 
-  const currentIndex = useMemo(
-    () => Math.max(0, pages.findIndex((p) => p.id === activeCanvasId)),
-    [pages, activeCanvasId],
-  )
+  const currentCanvasId = viewportCanvasId ?? activeCanvasId
+  const currentIndex = useMemo(() => {
+    const viewportIndex = pages.findIndex((p) => p.id === currentCanvasId)
+    if (viewportIndex >= 0) return viewportIndex
+
+    const activeIndex = pages.findIndex((p) => p.id === activeCanvasId)
+    return Math.max(0, activeIndex)
+  }, [pages, currentCanvasId, activeCanvasId])
   const currentPage = currentIndex + 1
 
   const goTo = (index: number) => {
     const page = pages[Math.max(0, Math.min(total - 1, index))]
     if (page) {
       setActiveCanvas(page.id as CanvasId)
+      setViewportCanvas(page.id as CanvasId)
+      window.dispatchEvent(new CustomEvent(SCROLL_TO_CANVAS_EVENT, { detail: { canvasId: page.id } }))
       onScrollTo?.(page.id)
     }
   }

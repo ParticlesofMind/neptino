@@ -17,8 +17,14 @@
  */
 
 import { useDroppable, useDndContext } from "@dnd-kit/core"
-import { X } from "lucide-react"
-import type { CardType, DroppedCard, SessionId } from "../../types"
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type SyntheticEvent } from "react"
+import ReactGridLayout, {
+  noCompactor,
+  useContainerWidth,
+  type Layout as ReactGridLayoutItems,
+  type LayoutItem as ReactGridLayoutItem,
+} from "react-grid-layout"
+import type { CanvasRenderMode, CardType, DroppedCard, SessionId } from "../../types"
 import type { CardRenderProps } from "../CardRegistry"
 import type { DragSourceData, LayoutSlotDropTargetData } from "../../hooks/useCardDrop"
 import { useCourseStore } from "../../store/courseStore"
@@ -48,6 +54,7 @@ export type LayoutKind =
   | "gallery"
   | "spotlight"
   | "flipcard"
+  | "resizable-grid"
 
 export type SlotConstraint = "hard" | "soft"
 
@@ -75,7 +82,7 @@ export interface LayoutDef {
   kind: LayoutKind
   label: string
   slotCount: number
-  gridStyle: React.CSSProperties
+  gridStyle: CSSProperties
   slots: SlotSpec[]
 }
 
@@ -498,6 +505,24 @@ export const LAYOUT_DEFS: Record<LayoutKind, LayoutDef> = {
       { role: "back", sizeClass: "Full", minHeight: 170, label: "Back", accepts: ANY_CONTENT, constraint: "soft" },
     ],
   },
+
+  "resizable-grid": {
+    kind: "resizable-grid",
+    label: "Resizable Grid",
+    slotCount: 4,
+    gridStyle: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gridTemplateRows: "1fr 1fr",
+      gap: "2px",
+    },
+    slots: [
+      { role: "grid-cell", sizeClass: "Resizable", minHeight: 120, label: "Cell 1", accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "grid-cell", sizeClass: "Resizable", minHeight: 120, label: "Cell 2", accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "grid-cell", sizeClass: "Resizable", minHeight: 120, label: "Cell 3", accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "grid-cell", sizeClass: "Resizable", minHeight: 120, label: "Cell 4", accepts: ANY_CONTENT, maxCards: 1 },
+    ],
+  },
 }
 
 function formatSlotAccepts(accepts: CardType[]): string {
@@ -527,6 +552,158 @@ function extractLayoutKind(cardType: string): LayoutKind {
   return kind in LAYOUT_DEFS ? kind : "split"
 }
 
+const RESIZABLE_GRID_COLS = 12
+const RESIZABLE_GRID_ROW_HEIGHT = 34
+const RESIZABLE_GRID_MARGIN = [8, 8] as const
+const RESIZABLE_GRID_MAX_ROWS = 120
+const RESIZABLE_GRID_SLOT_HEADER_HEIGHT = 28
+const RESIZABLE_GRID_SLOT_BODY_VERTICAL_PADDING = 12
+
+const DEFAULT_RESIZABLE_GRID_LAYOUT: ReactGridLayoutItems = [
+  { i: "0", x: 0, y: 0, w: 6, h: 4, minW: 3, minH: 3, maxW: 12, maxH: RESIZABLE_GRID_MAX_ROWS },
+  { i: "1", x: 6, y: 0, w: 6, h: 4, minW: 3, minH: 3, maxW: 12, maxH: RESIZABLE_GRID_MAX_ROWS },
+  { i: "2", x: 0, y: 4, w: 4, h: 4, minW: 3, minH: 3, maxW: 12, maxH: RESIZABLE_GRID_MAX_ROWS },
+  { i: "3", x: 4, y: 4, w: 8, h: 4, minW: 3, minH: 3, maxW: 12, maxH: RESIZABLE_GRID_MAX_ROWS },
+]
+
+function isStoredGridLayoutItem(value: unknown): value is ReactGridLayoutItem {
+  if (!value || typeof value !== "object") return false
+  const item = value as Partial<ReactGridLayoutItem>
+  return (
+    typeof item.i === "string" &&
+    typeof item.x === "number" &&
+    typeof item.y === "number" &&
+    typeof item.w === "number" &&
+    typeof item.h === "number"
+  )
+}
+
+export function normalizeResizableGridLayout(raw: unknown): ReactGridLayoutItems {
+  const storedItems = Array.isArray(raw)
+    ? raw.filter(isStoredGridLayoutItem)
+    : []
+  const byId = new Map(storedItems.map((item) => [item.i, item]))
+
+  return DEFAULT_RESIZABLE_GRID_LAYOUT.map((defaultItem) => {
+    const stored = byId.get(defaultItem.i)
+    const minW = defaultItem.minW ?? 1
+    const maxW = Math.max(defaultItem.maxW ?? RESIZABLE_GRID_COLS, stored?.maxW ?? 0)
+    const minH = defaultItem.minH ?? 1
+    const maxH = Math.max(defaultItem.maxH ?? RESIZABLE_GRID_MAX_ROWS, stored?.maxH ?? 0, RESIZABLE_GRID_MAX_ROWS)
+    const x = Math.max(0, Math.min(RESIZABLE_GRID_COLS - minW, stored?.x ?? defaultItem.x))
+    return {
+      ...defaultItem,
+      ...stored,
+      minH,
+      maxH,
+      x,
+      y: Math.max(0, stored?.y ?? defaultItem.y),
+      w: Math.max(minW, Math.min(maxW, RESIZABLE_GRID_COLS - x, stored?.w ?? defaultItem.w)),
+      h: Math.max(minH, Math.min(maxH, stored?.h ?? defaultItem.h)),
+    }
+  })
+}
+
+export function rowsForResizableGridSlotHeight(contentHeight: number): number {
+  const safeContentHeight = Math.max(0, Math.ceil(contentHeight))
+  const itemHeight = RESIZABLE_GRID_SLOT_HEADER_HEIGHT + RESIZABLE_GRID_SLOT_BODY_VERTICAL_PADDING + safeContentHeight
+  const rowUnit = RESIZABLE_GRID_ROW_HEIGHT + RESIZABLE_GRID_MARGIN[1]
+  return Math.max(1, Math.ceil((itemHeight + RESIZABLE_GRID_MARGIN[1]) / rowUnit))
+}
+
+function gridItemsOverlap(a: ReactGridLayoutItem, b: ReactGridLayoutItem): boolean {
+  if (a.i === b.i) return false
+  const aRight = a.x + a.w
+  const bRight = b.x + b.w
+  const aBottom = a.y + a.h
+  const bBottom = b.y + b.h
+  return a.x < bRight && aRight > b.x && a.y < bBottom && aBottom > b.y
+}
+
+export function growResizableGridLayoutForContent(
+  layout: ReactGridLayoutItems,
+  measuredRows: Record<string, number>,
+): ReactGridLayoutItems {
+  const grown = layout.map((item) => {
+    const requiredRows = measuredRows[item.i] ?? 0
+    const minH = item.minH ?? 1
+    const maxH = Math.max(item.maxH ?? RESIZABLE_GRID_MAX_ROWS, requiredRows, RESIZABLE_GRID_MAX_ROWS)
+    return {
+      ...item,
+      minH,
+      maxH,
+      h: Math.max(minH, item.h, requiredRows),
+    }
+  })
+
+  const placed: ReactGridLayoutItem[] = []
+  const sorted = [...grown].sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y))
+
+  sorted.forEach((item) => {
+    const next = { ...item }
+    let changed = true
+
+    while (changed) {
+      changed = false
+      placed.forEach((placedItem) => {
+        if (!gridItemsOverlap(next, placedItem)) return
+        next.y = Math.max(next.y, placedItem.y + placedItem.h)
+        changed = true
+      })
+    }
+
+    placed.push(next)
+  })
+
+  const byId = new Map(placed.map((item) => [item.i, item]))
+  return grown.map((item) => byId.get(item.i) ?? item)
+}
+
+function sameMeasuredRows(left: Record<string, number>, right: Record<string, number>): boolean {
+  const leftKeys = Object.keys(left)
+  const rightKeys = Object.keys(right)
+  if (leftKeys.length !== rightKeys.length) return false
+  return leftKeys.every((key) => left[key] === right[key])
+}
+
+function readLayoutSlotRange(content: DroppedCard["content"]): { start: number; end?: number } | null {
+  const raw = content.__layoutSlotRange
+  if (!raw || typeof raw !== "object") return null
+  const range = raw as Record<string, unknown>
+  const start = Number(range.start)
+  const end = range.end === undefined ? undefined : Number(range.end)
+  if (!Number.isFinite(start) || start < 0) return null
+  if (end !== undefined && (!Number.isFinite(end) || end < start)) return null
+  return { start, ...(end !== undefined ? { end } : {}) }
+}
+
+function visibleSlotIndexesFromOrder(order: number[], range: { start: number; end?: number } | null): Set<number> {
+  if (!range) return new Set(order)
+  const start = Math.max(0, range.start)
+  const end = Math.min(order.length, range.end ?? order.length)
+  return new Set(order.slice(start, end))
+}
+
+function shiftVisibleLayoutToTop(layout: ReactGridLayoutItems): ReactGridLayoutItems {
+  if (layout.length === 0) return layout
+  const minY = Math.min(...layout.map((item) => item.y))
+  return layout.map((item) => ({ ...item, y: Math.max(0, item.y - minY) }))
+}
+
+function toStoredResizableGridLayout(layout: ReactGridLayoutItems): ReactGridLayoutItems {
+  return layout.map((item) => ({
+    i: item.i,
+    x: item.x,
+    y: item.y,
+    w: item.w,
+    h: item.h,
+    minW: item.minW,
+    minH: item.minH,
+    maxW: item.maxW,
+    maxH: item.maxH,
+  }))
+}
+
 // ─── Slot ─────────────────────────────────────────────────────────────────────
 
 function LayoutSlot({
@@ -535,14 +712,17 @@ function LayoutSlot({
   sessionId,
   spec,
   slotCards,
+  mode,
 }: {
   layoutCard: DroppedCard
   slotIndex: number
   sessionId: SessionId
   spec: SlotSpec
   slotCards: DroppedCard[]
+  mode: CanvasRenderMode
 }) {
   const removeCardFromLayoutSlot = useCourseStore((s) => s.removeCardFromLayoutSlot)
+  const isEditor = mode === "editor"
 
   const { active } = useDndContext()
   const activeCardType = (active?.data?.current as DragSourceData | undefined)?.cardType
@@ -601,15 +781,15 @@ function LayoutSlot({
     <div
       ref={setNodeRef}
       aria-label={spec.label}
+      data-layout-card-id={layoutCard.id}
+      data-layout-slot-idx={slotIndex}
+      data-layout-slot-frame
       style={{
         gridArea: spec.gridArea,
         minHeight: spec.minHeight,
-        maxHeight: spec.maxCards != null
-          ? spec.maxCards * Math.max(spec.minHeight, 80) + 8
-          : spec.minHeight * 5,
       }}
       className={[
-        "relative rounded border border-dashed transition-colors overflow-hidden",
+        "relative rounded border border-dashed transition-colors overflow-visible",
         borderClass,
       ].join(" ")}
     >
@@ -630,17 +810,19 @@ function LayoutSlot({
             <CardRenderer
               key={slotCard.id}
               card={slotCard}
+              mode={mode}
               sourceLayoutCardId={layoutCard.id}
               sourceSlotIndex={slotIndex}
-              onRemove={() =>
-                removeCardFromLayoutSlot(
-                  sessionId,
-                  layoutCard.taskId,
-                  layoutCard.id,
-                  slotIndex,
-                  slotCard.id,
-                )
-              }
+              onRemove={isEditor
+                ? () =>
+                    removeCardFromLayoutSlot(
+                      sessionId,
+                      layoutCard.taskId,
+                      layoutCard.id,
+                      slotIndex,
+                      slotCard.id,
+                    )
+                : undefined}
             />
           ))}
         </div>
@@ -649,42 +831,213 @@ function LayoutSlot({
   )
 }
 
+function ResizableGridLayoutCard({
+  card,
+  def,
+  sessionId,
+  slots,
+  mode,
+  editable,
+}: {
+  card: DroppedCard
+  def: LayoutDef
+  sessionId: SessionId
+  slots: Record<string, DroppedCard[]>
+  mode: CanvasRenderMode
+  editable: boolean
+}) {
+  const updateLayoutCardContent = useCourseStore((s) => s.updateLayoutCardContent)
+  const { width, containerRef, mounted } = useContainerWidth({ initialWidth: card.dimensions.width || 640 })
+  const normalizedLayout = useMemo(
+    () => normalizeResizableGridLayout(card.content.gridLayout),
+    [card.content.gridLayout],
+  )
+  const [gridLayout, setGridLayout] = useState<ReactGridLayoutItems>(normalizedLayout)
+  const [measuredRows, setMeasuredRows] = useState<Record<string, number>>({})
+  const slotContentRefs = useRef(new Map<string, HTMLDivElement>())
+  const slotRange = readLayoutSlotRange(card.content)
+  const displayLayout = useMemo(
+    () => growResizableGridLayoutForContent(gridLayout, measuredRows),
+    [gridLayout, measuredRows],
+  )
+  const visualSlotOrder = useMemo(
+    () => [...displayLayout].sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y)).map((item) => Number(item.i)),
+    [displayLayout],
+  )
+  const visibleSlotIndexes = useMemo(
+    () => visibleSlotIndexesFromOrder(visualSlotOrder, slotRange),
+    [visualSlotOrder, slotRange],
+  )
+  const visibleDisplayLayout = useMemo(
+    () => shiftVisibleLayoutToTop(displayLayout.filter((item) => visibleSlotIndexes.has(Number(item.i)))),
+    [displayLayout, visibleSlotIndexes],
+  )
+  const canEditGrid = editable && !slotRange
+
+  useEffect(() => {
+    setGridLayout(normalizedLayout)
+  }, [normalizedLayout])
+
+  useEffect(() => {
+    if (!mounted) return
+
+    const measure = () => {
+      const nextRows: Record<string, number> = {}
+      slotContentRefs.current.forEach((element, slotIndex) => {
+        nextRows[slotIndex] = rowsForResizableGridSlotHeight(element.scrollHeight)
+      })
+      setMeasuredRows((current) => sameMeasuredRows(current, nextRows) ? current : nextRows)
+    }
+
+    measure()
+
+    const observer = new ResizeObserver(measure)
+    slotContentRefs.current.forEach((element) => observer.observe(element))
+
+    return () => observer.disconnect()
+  })
+
+  const stopCanvasEvent = (event: SyntheticEvent) => {
+    event.stopPropagation()
+  }
+
+  const persistLayout = (nextLayout: ReactGridLayoutItems) => {
+    updateLayoutCardContent(
+      sessionId,
+      card.taskId,
+      card.id,
+      { gridLayout: toStoredResizableGridLayout(normalizeResizableGridLayout(nextLayout)) },
+    )
+  }
+
+  const commitUserLayout = (nextLayout: ReactGridLayoutItems) => {
+    const normalized = normalizeResizableGridLayout(nextLayout)
+    setGridLayout(normalized)
+    persistLayout(normalized)
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative min-h-[320px] overflow-visible bg-neutral-50/70 p-1.5"
+      onPointerDown={stopCanvasEvent}
+      onClick={stopCanvasEvent}
+      onDoubleClick={stopCanvasEvent}
+      onWheel={stopCanvasEvent}
+    >
+      {!mounted ? (
+        <div className="flex min-h-[320px] items-center justify-center rounded border border-dashed border-neutral-200 bg-white text-[11px] text-neutral-400">
+          Measuring grid
+        </div>
+      ) : (
+        <ReactGridLayout
+          width={width}
+          layout={visibleDisplayLayout}
+          autoSize
+          compactor={noCompactor}
+          gridConfig={{
+            cols: RESIZABLE_GRID_COLS,
+            rowHeight: RESIZABLE_GRID_ROW_HEIGHT,
+            margin: RESIZABLE_GRID_MARGIN,
+            containerPadding: [0, 0],
+            maxRows: RESIZABLE_GRID_MAX_ROWS,
+          }}
+          dragConfig={{
+            enabled: canEditGrid,
+            bounded: true,
+            handle: ".rgl-slot-handle",
+            cancel: ".rgl-slot-body",
+            threshold: 4,
+          }}
+          resizeConfig={{
+            enabled: canEditGrid,
+            handles: ["se"],
+          }}
+          onDragStop={(nextLayout) => commitUserLayout(nextLayout)}
+          onResizeStop={(nextLayout) => commitUserLayout(nextLayout)}
+        >
+          {def.slots.map((spec, index) => visibleSlotIndexes.has(index) && (
+            <div
+              key={String(index)}
+              data-layout-card-id={card.id}
+              data-layout-slot-idx={index}
+              data-layout-slot-frame
+              className="overflow-visible rounded-md border border-neutral-200 bg-white shadow-sm"
+            >
+              <div className="rgl-slot-handle flex h-7 cursor-move items-center justify-between border-b border-neutral-100 bg-white px-2 text-[9px] font-semibold uppercase tracking-wide text-neutral-500">
+                <span>{spec.label}</span>
+                <span className="text-neutral-300">Resize</span>
+              </div>
+              <div className="rgl-slot-body h-[calc(100%-1.75rem)] p-1.5" data-no-grid-drag="true">
+                <div
+                  ref={(element) => {
+                    const slotKey = String(index)
+                    if (element) {
+                      slotContentRefs.current.set(slotKey, element)
+                    } else {
+                      slotContentRefs.current.delete(slotKey)
+                    }
+                  }}
+                >
+                  <LayoutSlot
+                    layoutCard={card}
+                    slotIndex={index}
+                    sessionId={sessionId}
+                    spec={{ ...spec, minHeight: 54 }}
+                    slotCards={slots[index] ?? []}
+                    mode={mode}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </ReactGridLayout>
+      )}
+    </div>
+  )
+}
+
 // ─── Layout Card ──────────────────────────────────────────────────────────────
 
-export function LayoutCard({ card, onRemove }: CardRenderProps) {
+export function LayoutCard({ card, mode = "editor", isEditable }: CardRenderProps) {
   const kind    = extractLayoutKind(card.cardType)
   const def     = LAYOUT_DEFS[kind]
   const activeSessionId = useCourseStore((s) => s.activeSessionId) as SessionId
+  const editable = isEditable ?? mode === "editor"
 
   const slots = (card.content.slots ?? {}) as Record<string, DroppedCard[]>
+  const slotRange = readLayoutSlotRange(card.content)
+  const visibleSlotIndexes = visibleSlotIndexesFromOrder(
+    def.slots.map((_, index) => index),
+    slotRange,
+  )
 
   return (
-    <div className="group relative h-full rounded-lg border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Remove button — absolute overlay, visible on hover */}
-      {onRemove && (
-        <button
-          type="button"
-          onClick={onRemove}
-          className="absolute top-1 right-1 z-10 flex h-4 w-4 items-center justify-center rounded bg-white/80 text-neutral-400 opacity-0 group-hover:opacity-100 hover:bg-neutral-100 hover:text-neutral-600 transition-opacity"
-          aria-label="Remove layout"
-        >
-          <X size={10} />
-        </button>
+    <div className="group relative rounded-lg border border-neutral-200 bg-white overflow-visible shadow-sm">
+      {kind === "resizable-grid" ? (
+        <ResizableGridLayoutCard
+          card={card}
+          def={def}
+          sessionId={activeSessionId}
+          slots={slots}
+          mode={mode}
+          editable={editable}
+        />
+      ) : (
+        <div style={def.gridStyle}>
+          {def.slots.map((spec, i) => visibleSlotIndexes.has(i) && (
+            <LayoutSlot
+              key={i}
+              layoutCard={card}
+              slotIndex={i}
+              sessionId={activeSessionId}
+              spec={spec}
+              slotCards={slots[i] ?? []}
+              mode={mode}
+            />
+          ))}
+        </div>
       )}
-
-      {/* Grid of droppable slots */}
-      <div style={def.gridStyle} className="h-full">
-        {def.slots.map((spec, i) => (
-          <LayoutSlot
-            key={i}
-            layoutCard={card}
-            slotIndex={i}
-            sessionId={activeSessionId}
-            spec={spec}
-            slotCards={slots[i] ?? []}
-          />
-        ))}
-      </div>
     </div>
   )
 }

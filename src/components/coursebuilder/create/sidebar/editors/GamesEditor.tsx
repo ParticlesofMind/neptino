@@ -2,6 +2,7 @@
 
 import type { ComponentType } from "react"
 import { Plus, Trash2, Gamepad2, ArrowUpDown, BookOpen, MousePointer, PenLine } from "lucide-react"
+import type { CardType } from "../../types"
 import {
   StudioSection,
   StudioSegment,
@@ -12,9 +13,10 @@ import {
 } from "./studio-primitives"
 import { EditorSplitLayout } from "./editor-split-layout"
 import { GenericEditorPreview } from "./generic-editor-preview"
-import { MAKE_BLUE_BADGE, MAKE_BLUE_INPUT_FOCUS, MAKE_BLUE_TEXT } from "../make-theme"
+import { MAKE_BLUE_BADGE, MAKE_BLUE_INPUT_FOCUS } from "../make-theme"
 
 interface GamesEditorProps {
+  cardType?: CardType
   content: Record<string, unknown>
   onChange: (key: string, value: unknown) => void
 }
@@ -64,7 +66,7 @@ function WordMatchEditor({ pairs, onChange }: { pairs: Pair[]; onChange: (p: Pai
           type="button"
           onClick={addPair}
           disabled={pairs.length >= 16}
-          className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-medium text-neutral-600 transition-colors hover:border-[#9eb9da] hover:bg-[#dbe8f6]/45 hover:text-[#233f5d] disabled:opacity-40"
+          className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-medium text-neutral-600 transition-colors hover:border-[#9eb9da] hover:bg-[#dbe8f6]/45 hover:text-[#3a6ea0] disabled:opacity-40"
         >
           <Plus size={10} /> Add pair
         </button>
@@ -140,7 +142,7 @@ function DragOrderEditor({ items, onChange }: { items: string[]; onChange: (item
           type="button"
           onClick={addItem}
           disabled={items.length >= 12}
-          className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-medium text-neutral-600 transition-colors hover:border-[#9eb9da] hover:bg-[#dbe8f6]/45 hover:text-[#233f5d] disabled:opacity-40"
+          className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-medium text-neutral-600 transition-colors hover:border-[#9eb9da] hover:bg-[#dbe8f6]/45 hover:text-[#3a6ea0] disabled:opacity-40"
         >
           <Plus size={10} /> Add
         </button>
@@ -173,7 +175,7 @@ function parseItems(raw: unknown): string[] {
   return ["", ""]
 }
 
-export function GamesEditor({ content, onChange }: GamesEditorProps) {
+export function GamesEditor({ cardType = "games", content, onChange }: GamesEditorProps) {
   const gameType = (typeof content.gameType === "string" ? content.gameType : "word-match") as GameType
   const title = typeof content.title === "string" ? content.title : ""
   const instructions = typeof content.instructions === "string" ? content.instructions : ""
@@ -185,6 +187,7 @@ export function GamesEditor({ content, onChange }: GamesEditorProps) {
 
   return (
     <EditorSplitLayout
+      sidebarWidthClassName="md:w-[30rem] md:flex-none xl:w-[32rem]"
       sidebar={(
         <div className="flex h-full flex-col overflow-auto bg-white">
 
@@ -199,20 +202,20 @@ export function GamesEditor({ content, onChange }: GamesEditorProps) {
           </StudioSection>
 
           <StudioSection label="Setup">
-        <StudioInput
-          label="Title"
-          value={title}
-          placeholder="e.g. Cell biology vocabulary match"
-          onChange={(e) => onChange("title", e.target.value)}
-        />
-        <StudioTextarea
-          label="Instructions"
-          badge="shown to students"
-          value={instructions}
-          rows={2}
-          placeholder="Match each term on the left to its definition on the right."
-          onChange={(e) => onChange("instructions", e.target.value)}
-        />
+            <StudioInput
+              label="Title"
+              value={title}
+              placeholder="e.g. Cell biology vocabulary match"
+              onChange={(e) => onChange("title", e.target.value)}
+            />
+            <StudioTextarea
+              label="Instructions"
+              badge="shown to students"
+              value={instructions}
+              rows={2}
+              placeholder="Match each term on the left to its definition on the right."
+              onChange={(e) => onChange("instructions", e.target.value)}
+            />
           </StudioSection>
 
           <div className="flex-1 overflow-auto px-4 py-4">
@@ -247,7 +250,7 @@ export function GamesEditor({ content, onChange }: GamesEditorProps) {
           </div>
         </div>
       )}
-      preview={<GenericEditorPreview cardType="games" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-4xl" />}
+      preview={<GenericEditorPreview cardType={cardType} content={content} onTitleChange={(next) => onChange("title", next)} />}
     />
   )
 }
