@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 import { ArrowDown, ArrowUp, Check, Mic, RotateCcw, Send, Square } from "lucide-react"
 import type { CardRenderProps } from "../CardRegistry"
 import { ResourceCardFrame } from "./ResourceCardFrame"
+import { PretextText } from "../../text/PretextText"
 
 type AssessmentOption = {
   text: string
@@ -140,7 +141,15 @@ export function AssessmentCard({ card, onRemove, fillAvailable }: CardRenderProp
   return (
     <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
-        <p className="text-[13px] font-semibold leading-snug text-neutral-900">{prompt}</p>
+        <PretextText
+          text={prompt}
+          className="text-[13px] font-semibold leading-snug text-neutral-900"
+          tone="soft"
+          fontSizePx={13}
+          fontWeight={600}
+          lineHeightPx={18}
+          maxLines={fillAvailable ? undefined : 6}
+        />
 
         {!isRanking && !isShort && !isTrueFalse && (
           <div className="space-y-2">
@@ -163,7 +172,14 @@ export function AssessmentCard({ card, onRemove, fillAvailable }: CardRenderProp
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-current text-[10px] font-semibold">
                     {String.fromCharCode(65 + index)}
                   </span>
-                  <span>{option.text}</span>
+                  <PretextText
+                    text={option.text}
+                    className="min-w-0 flex-1 text-[12px]"
+                    fontSizePx={12}
+                    lineHeightPx={17}
+                    maxLines={2}
+                    preserveWhitespace={false}
+                  />
                 </button>
               )
             })}
@@ -239,7 +255,14 @@ export function AssessmentCard({ card, onRemove, fillAvailable }: CardRenderProp
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold text-neutral-500">
                   {index + 1}
                 </span>
-                <span className="min-w-0 flex-1 text-[12px] text-neutral-700">{item}</span>
+                <PretextText
+                  text={item}
+                  className="min-w-0 flex-1 text-[12px] text-neutral-700"
+                  fontSizePx={12}
+                  lineHeightPx={17}
+                  maxLines={2}
+                  preserveWhitespace={false}
+                />
                 <button type="button" onClick={() => setRanked((current) => move(current, index, -1))} className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
                   <ArrowUp size={13} />
                 </button>
@@ -275,7 +298,16 @@ export function FormActivityCard({ card, onRemove, fillAvailable }: CardRenderPr
           if (!missingRequired) setSubmitted(true)
         }}
       >
-        {prompt && <p className="text-[12px] leading-relaxed text-neutral-600">{prompt}</p>}
+        {prompt && (
+          <PretextText
+            text={prompt}
+            className="text-[12px] leading-relaxed text-neutral-600"
+            tone="soft"
+            fontSizePx={12}
+            lineHeightPx={19}
+            maxLines={fillAvailable ? undefined : 5}
+          />
+        )}
         {fields.map((field) => (
           <label key={field.id} className="block space-y-1.5">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
@@ -403,7 +435,14 @@ export function VoiceRecorderActivityCard({ card, onRemove, fillAvailable }: Car
   return (
     <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
-        <p className="text-[12px] leading-relaxed text-neutral-600">{prompt}</p>
+        <PretextText
+          text={prompt}
+          className="text-[12px] leading-relaxed text-neutral-600"
+          tone="soft"
+          fontSizePx={12}
+          lineHeightPx={19}
+          maxLines={fillAvailable ? undefined : 5}
+        />
         <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-4">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[22px] font-semibold text-neutral-800">
@@ -450,7 +489,15 @@ function MatchActivity({ pairs }: { pairs: Pair[] }) {
         const correct = value === pair.match
         return (
           <label key={pair.term} className="grid gap-1.5 rounded-md border border-neutral-200 bg-white px-3 py-2 md:grid-cols-[1fr_1.2fr] md:items-center">
-            <span className="text-[12px] font-semibold text-neutral-700">{pair.term}</span>
+            <PretextText
+              text={pair.term}
+              className="text-[12px] font-semibold text-neutral-700"
+              fontSizePx={12}
+              fontWeight={600}
+              lineHeightPx={17}
+              maxLines={2}
+              preserveWhitespace={false}
+            />
             <select
               value={value}
               onChange={(event) => setAnswers((current) => ({ ...current, [pair.term]: event.target.value }))}
@@ -483,7 +530,14 @@ function OrderActivity({ items }: { items: string[] }) {
       {order.map((item, index) => (
         <div key={`${item}-${index}`} className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-2 py-2">
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold text-neutral-500">{index + 1}</span>
-          <span className="min-w-0 flex-1 text-[12px] text-neutral-700">{item}</span>
+          <PretextText
+            text={item}
+            className="min-w-0 flex-1 text-[12px] text-neutral-700"
+            fontSizePx={12}
+            lineHeightPx={17}
+            maxLines={2}
+            preserveWhitespace={false}
+          />
           <button type="button" onClick={() => setOrder((current) => move(current, index, -1))} className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700">
             <ArrowUp size={13} />
           </button>
@@ -509,7 +563,15 @@ function FillBlankActivity({ text }: { text: string }) {
 
   return (
     <div className="space-y-2">
-      <p className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-[12px] leading-relaxed text-neutral-700">{display}</p>
+      <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2">
+        <PretextText
+          text={display}
+          className="text-[12px] leading-relaxed text-neutral-700"
+          tone="paper"
+          fontSizePx={12}
+          lineHeightPx={19}
+        />
+      </div>
       {blanks.map((blank, index) => (
         <input
           key={`${blank}-${index}`}
@@ -531,11 +593,21 @@ export function SorterActivityCard({ card, onRemove, fillAvailable }: CardRender
   const pairs = parsePairs(card.content.pairs)
   const items = parseItems(card.content.items)
   const mode = readString(card.content.mode, pairs.length > 0 ? "match" : "order")
+  const instructions = readString(card.content.instructions)
 
   return (
     <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
-        {readString(card.content.instructions) && <p className="text-[12px] leading-relaxed text-neutral-600">{readString(card.content.instructions)}</p>}
+        {instructions && (
+          <PretextText
+            text={instructions}
+            className="text-[12px] leading-relaxed text-neutral-600"
+            tone="soft"
+            fontSizePx={12}
+            lineHeightPx={19}
+            maxLines={fillAvailable ? undefined : 5}
+          />
+        )}
         {mode === "match" && pairs.length > 0 ? <MatchActivity pairs={pairs} /> : <OrderActivity items={items.length > 0 ? items : pairs.map((pair) => pair.term)} />}
       </div>
     </ResourceCardFrame>
@@ -547,11 +619,21 @@ export function GamesActivityCard({ card, onRemove, fillAvailable }: CardRenderP
   const pairs = parsePairs(card.content.pairs)
   const items = parseItems(card.content.items)
   const fillText = readString(card.content.fillText)
+  const instructions = readString(card.content.instructions)
 
   return (
     <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
-        {readString(card.content.instructions) && <p className="text-[12px] leading-relaxed text-neutral-600">{readString(card.content.instructions)}</p>}
+        {instructions && (
+          <PretextText
+            text={instructions}
+            className="text-[12px] leading-relaxed text-neutral-600"
+            tone="soft"
+            fontSizePx={12}
+            lineHeightPx={19}
+            maxLines={fillAvailable ? undefined : 5}
+          />
+        )}
         {(gameType === "word-match" || gameType === "memory") && <MatchActivity pairs={pairs} />}
         {gameType === "fill-blank" && <FillBlankActivity text={fillText || "Add [answers] in the Make panel."} />}
         {gameType === "drag-order" && <OrderActivity items={items.length > 0 ? items : pairs.map((pair) => pair.term)} />}
@@ -574,7 +656,15 @@ export function FlashcardActivityCard({ card, onRemove, fillAvailable }: CardRen
           onClick={() => setFlipped((currentValue) => !currentValue)}
           className="flex min-h-32 w-full items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 px-5 py-6 text-center transition-colors hover:bg-white"
         >
-          <span className="text-[14px] font-semibold text-neutral-800">{flipped ? current.match : current.term}</span>
+          <PretextText
+            text={flipped ? current.match : current.term}
+            className="text-center text-[14px] font-semibold text-neutral-800"
+            tone="soft"
+            fontSizePx={14}
+            fontWeight={600}
+            lineHeightPx={20}
+            maxLines={6}
+          />
         </button>
         <div className="flex items-center justify-between gap-2">
           <button type="button" onClick={() => { setIndex((currentIndex) => Math.max(0, currentIndex - 1)); setFlipped(false) }} className="min-h-9 rounded-md border border-neutral-200 bg-white px-3 py-2 text-[12px] font-semibold text-neutral-700 hover:bg-neutral-50">

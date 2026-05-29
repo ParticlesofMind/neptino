@@ -6,12 +6,8 @@
  */
 
 import type { CardType } from "../types"
-import {
-  CANVAS_COMPOSITION_CONTENT_WIDTH_PX,
-  STANDARD_COMPOSITION_DIMENSIONS,
-  TALL_COMPOSITION_DIMENSIONS,
-  type CardDimensions,
-} from "../cards/cardSizing"
+import { getPreferredCardDimensions } from "../cards/cardLayoutPolicies"
+import type { CardDimensions } from "../cards/cardSizing"
 
 // ─── Default dimensions ───────────────────────────────────────────────────────
 
@@ -20,72 +16,7 @@ import {
  * These sizes are chosen to balance visual clarity with canvas space efficiency.
  */
 export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
-  const dimensionMap: Record<CardType, CardDimensions> = {
-    // ── Media cards ──
-    text:       { width: 420, height: 320 },
-    image:      { width: 400, height: 300 },
-    audio:      { width: 420, height: 180 },
-    video:      { width: 480, height: 270 },
-    animation:  { width: 480, height: 270 },
-    dataset:    { width: 480, height: 200 },
-    embed:      { width: 520, height: 320 },
-    flashcards: { width: 520, height: 340 },
-    "code-snippet": { width: 560, height: 300 },
-    "model-3d": { width: 520, height: 280 },
-    map:        { width: CANVAS_COMPOSITION_CONTENT_WIDTH_PX, height: 380 },
-    chart:      { width: 480, height: 320 },
-    diagram:    { width: 480, height: 320 },
-    media:      { width: 460, height: 240 },
-    document:   { width: 420, height: 560 },
-    table:      { width: 520, height: 360 },
-    "source-excerpt": { width: 440, height: 300 },
-    citation:    { width: 380, height: 220 },
-    bibliography: { width: 460, height: 320 },
-    "gis-layer": { width: 420, height: 260 },
-
-    // ── Interactive cards ──
-    "rich-sim":   { width: 520, height: 320 },
-    "village-3d": { width: 560, height: 360 },
-    interactive:  { width: 480, height: 280 },
-    form:         { width: 500, height: 320 },
-    "voice-recorder": { width: 420, height: 220 },
-    sorter:       { width: 520, height: 320 },
-    games:        { width: 560, height: 360 },
-    chat:         { width: 642, height: 640 },
-    "text-editor": { width: 520, height: 360 },
-    "code-editor": { width: 560, height: 380 },
-    whiteboard:   { width: 640, height: 420 },
-    slides:       { width: 720, height: 430 },
-    timeline:     { width: CANVAS_COMPOSITION_CONTENT_WIDTH_PX, height: 180 },
-    legend:       { width: 240, height: 320 },
-
-    // ── Layout cards ──
-    "layout-split":     STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-stack":     STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-feature":   STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-sidebar":   STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-quad":      STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-mosaic":    TALL_COMPOSITION_DIMENSIONS,
-    "layout-triptych":  STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-trirow":    STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-banner":    STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-broadside": STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-tower":     STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-pinboard":  STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-annotated": TALL_COMPOSITION_DIMENSIONS,
-    "layout-sixgrid":   TALL_COMPOSITION_DIMENSIONS,
-    "layout-comparison": STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-stepped": STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-hero": STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-dialogue": STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-gallery": TALL_COMPOSITION_DIMENSIONS,
-    "layout-spotlight": TALL_COMPOSITION_DIMENSIONS,
-    "layout-flipcard": STANDARD_COMPOSITION_DIMENSIONS,
-    "layout-resizable-grid": STANDARD_COMPOSITION_DIMENSIONS,
-  }
-
-  const dimensions = dimensionMap[cardType]
-  return dimensions ? { ...dimensions } : { width: 420, height: 220 }
+  return getPreferredCardDimensions(cardType)
 }
 
 // ─── Sample content ───────────────────────────────────────────────────────────

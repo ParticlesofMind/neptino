@@ -41,6 +41,7 @@ import {
   RichSimPlaceholder,
   VideoPreview,
 } from "./card-type-preview-subviews"
+import { PretextText, type PretextTextTone } from "../text/PretextText"
 
 const Model3DViewer = dynamic(
   () => import("@/components/coursebuilder/model-3d-viewer").then((m) => m.Model3DViewer),
@@ -59,6 +60,42 @@ const TimelineJSPreview = dynamic(
     ),
   },
 )
+
+function PreviewText({
+  text,
+  emptyText,
+  className,
+  tone = "plain",
+  fontSizePx = 11,
+  lineHeightPx = 17,
+  fontWeight = 400,
+  maxLines,
+  italic = false,
+}: {
+  text: string
+  emptyText?: string
+  className?: string
+  tone?: PretextTextTone
+  fontSizePx?: number
+  lineHeightPx?: number
+  fontWeight?: number
+  maxLines?: number
+  italic?: boolean
+}) {
+  return (
+    <PretextText
+      text={text}
+      emptyText={emptyText}
+      className={className}
+      tone={tone}
+      fontSizePx={fontSizePx}
+      lineHeightPx={lineHeightPx}
+      fontWeight={fontWeight}
+      maxLines={maxLines}
+      italic={italic}
+    />
+  )
+}
 
 export { CARD_TYPE_META } from "./card-type-registry"
 export type { CardTypeMeta } from "./card-type-registry"
@@ -86,9 +123,15 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       const plain = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
       return (
         <div className="overflow-auto">
-          <p className="text-sm leading-relaxed text-muted-foreground line-clamp-8">
-            {plain || "Add your copy here."}
-          </p>
+          <PreviewText
+            text={plain}
+            emptyText="Add your copy here."
+            className="text-sm leading-relaxed text-muted-foreground"
+            tone="soft"
+            fontSizePx={14}
+            lineHeightPx={22}
+            maxLines={8}
+          />
         </div>
       )
     }
@@ -116,7 +159,16 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
           }
           {(caption || attribution) && (
             <div className="mt-2 space-y-0.5">
-              {caption && <p className="text-[11px] text-muted-foreground">{caption}</p>}
+              {caption && (
+                <PreviewText
+                  text={caption}
+                  className="text-[11px] leading-relaxed text-muted-foreground"
+                  tone="caption"
+                  fontSizePx={11}
+                  lineHeightPx={16}
+                  maxLines={3}
+                />
+              )}
               {attribution && <p className="text-[10px] text-muted-foreground/60 italic">{attribution}</p>}
             </div>
           )}
@@ -230,15 +282,30 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       return (
         <div className="space-y-3">
           <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
-            <p className="text-[13px] leading-relaxed text-foreground line-clamp-6">
-              {excerpt || "Add a quoted or paraphrased source passage."}
-            </p>
+            <PreviewText
+              text={excerpt}
+              emptyText="Add a quoted or paraphrased source passage."
+              className="text-[13px] leading-relaxed text-foreground"
+              tone="source"
+              fontSizePx={13}
+              lineHeightPx={20}
+              maxLines={6}
+            />
           </div>
           {(context || locator || citationTitle) && (
             <div className="space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
               {citationTitle && <p className="font-semibold text-foreground/80">{citationTitle}</p>}
               {locator && <p>{locator}</p>}
-              {context && <p className="line-clamp-3">{context}</p>}
+              {context && (
+                <PreviewText
+                  text={context}
+                  className="text-[11px] leading-relaxed text-muted-foreground"
+                  tone="paper"
+                  fontSizePx={11}
+                  lineHeightPx={17}
+                  maxLines={3}
+                />
+              )}
             </div>
           )}
         </div>
@@ -305,7 +372,16 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
               )
             })}
           </div>
-          {notes && <p className="text-[11px] leading-relaxed text-muted-foreground line-clamp-3">{notes}</p>}
+          {notes && (
+            <PreviewText
+              text={notes}
+              className="text-[11px] leading-relaxed text-muted-foreground"
+              tone="paper"
+              fontSizePx={11}
+              lineHeightPx={17}
+              maxLines={3}
+            />
+          )}
         </div>
       )
     }
@@ -390,12 +466,28 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
           </div>
           {/* Content preview lines */}
           {excerpt && (
-            <p className="text-[12px] text-muted-foreground leading-relaxed italic line-clamp-3">{excerpt}</p>
+            <PreviewText
+              text={excerpt}
+              className="text-[12px] text-muted-foreground leading-relaxed italic"
+              tone="paper"
+              fontSizePx={12}
+              lineHeightPx={18}
+              maxLines={3}
+              italic
+            />
           )}
           {sections.slice(0, 2).map((sec, i) => (
             <div key={i} className="border-l-2 border-border pl-3">
               {sec.heading && <p className="text-[11px] font-semibold text-foreground mb-0.5">{sec.heading}</p>}
-              <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{sec.body || "Section body…"}</p>
+              <PreviewText
+                text={sec.body}
+                emptyText="Section body..."
+                className="text-[11px] text-muted-foreground leading-relaxed"
+                tone="plain"
+                fontSizePx={11}
+                lineHeightPx={17}
+                maxLines={2}
+              />
             </div>
           ))}
           {sections.length === 0 && !excerpt && (
@@ -439,7 +531,16 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
                   {provider || url}
                 </p>
               )}
-              {caption && <p className="text-[11px] leading-relaxed text-muted-foreground">{caption}</p>}
+              {caption && (
+                <PreviewText
+                  text={caption}
+                  className="text-[11px] leading-relaxed text-muted-foreground"
+                  tone="caption"
+                  fontSizePx={11}
+                  lineHeightPx={17}
+                  maxLines={3}
+                />
+              )}
               {attribution && <p className="text-[10px] text-muted-foreground/60 italic">{attribution}</p>}
             </div>
           )}
@@ -471,7 +572,14 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
               {rawPairs.slice(0, 4).map((pair, index) => (
                 <div key={index} className="rounded-lg border border-border bg-background px-3 py-2">
                   <p className="text-[11px] font-semibold text-foreground">{pair.term || `Prompt ${index + 1}`}</p>
-                  <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{pair.match || "Answer not set"}</p>
+                  <PreviewText
+                    text={pair.match || "Answer not set"}
+                    className="mt-1 text-[11px] leading-relaxed text-muted-foreground"
+                    tone="paper"
+                    fontSizePx={11}
+                    lineHeightPx={17}
+                    maxLines={2}
+                  />
                 </div>
               ))}
               {rawPairs.length > 4 && (
@@ -508,7 +616,16 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
 
       return (
         <div className="space-y-3">
-          <p className="text-[13px] font-medium text-foreground leading-snug">{prompt || "Your question will appear here…"}</p>
+          <PreviewText
+            text={prompt}
+            emptyText="Your question will appear here..."
+            className="text-[13px] font-medium leading-snug text-foreground"
+            tone="soft"
+            fontSizePx={13}
+            fontWeight={500}
+            lineHeightPx={18}
+            maxLines={3}
+          />
 
           {interactionType === "multiple-choice" && rawOpts.length > 0 && (
             <div className="space-y-2">
@@ -583,7 +700,16 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
 
       return (
         <div className="space-y-3">
-          {prompt && <p className="text-[12px] leading-relaxed text-muted-foreground">{prompt}</p>}
+          {prompt && (
+            <PreviewText
+              text={prompt}
+              className="text-[12px] leading-relaxed text-muted-foreground"
+              tone="soft"
+              fontSizePx={12}
+              lineHeightPx={19}
+              maxLines={3}
+            />
+          )}
           <div className="space-y-2">
             {(fields.length > 0 ? fields : [{ label: "Response", type: "textarea", required: true }]).slice(0, 4).map((field, index) => (
               <div key={`${field.label}-${index}`} className="rounded-lg border border-border bg-background px-3 py-2">
@@ -611,7 +737,16 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
 
       return (
         <div className="space-y-3">
-          {prompt && <p className="text-[12px] leading-relaxed text-muted-foreground">{prompt}</p>}
+          {prompt && (
+            <PreviewText
+              text={prompt}
+              className="text-[12px] leading-relaxed text-muted-foreground"
+              tone="soft"
+              fontSizePx={12}
+              lineHeightPx={19}
+              maxLines={3}
+            />
+          )}
           <div className="rounded-xl border border-border bg-muted/20 px-4 py-4">
             <div className="flex items-center justify-between">
               <Mic className="h-5 w-5 text-muted-foreground/60" />
@@ -771,9 +906,15 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
           )}
 
           {gameType === "fill-blank" && fillText && (
-            <div className="rounded-lg bg-muted/20 border border-border px-3 py-2.5 text-[12px] text-foreground/80 leading-relaxed">
-              {fillText.replace(/\[[^\]]+\]/g, "___").slice(0, 120)}
-              {fillText.length > 120 && "…"}
+            <div className="rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+              <PreviewText
+                text={fillText.replace(/\[[^\]]+\]/g, "___")}
+                className="text-[12px] leading-relaxed text-foreground/80"
+                tone="paper"
+                fontSizePx={12}
+                lineHeightPx={19}
+                maxLines={4}
+              />
             </div>
           )}
 
@@ -806,9 +947,15 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             </div>
             <div className="rounded-2xl rounded-tl-sm bg-muted/50 border border-border px-3 py-2 max-w-[90%]">
               <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">{aiPersona}</p>
-              <p className="text-[12px] text-foreground leading-relaxed">
-                {openingMessage || "Hello! I'm here to help you learn. What would you like to explore?"}
-              </p>
+              <PreviewText
+                text={openingMessage}
+                emptyText="Hello! I'm here to help you learn. What would you like to explore?"
+                className="text-[12px] leading-relaxed text-foreground"
+                tone="soft"
+                fontSizePx={12}
+                lineHeightPx={19}
+                maxLines={4}
+              />
             </div>
           </div>
 
@@ -852,9 +999,15 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
           </div>
           <div className="space-y-2 px-4 py-3">
             <div className="h-3 w-24 rounded bg-[#dbe8f6]" />
-            <p className="text-[12px] leading-6 text-muted-foreground line-clamp-5">
-              {plain || "A barebones rich-text writing area for notes, drafting, and guided responses."}
-            </p>
+            <PreviewText
+              text={plain}
+              emptyText="A barebones rich-text writing area for notes, drafting, and guided responses."
+              className="text-[12px] leading-6 text-muted-foreground"
+              tone="paper"
+              fontSizePx={12}
+              lineHeightPx={24}
+              maxLines={5}
+            />
           </div>
         </div>
       )
@@ -889,8 +1042,14 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             )}
           </div>
           {caption && (
-            <div className="border-t border-slate-800 bg-slate-900/70 px-3 py-2 text-[11px] leading-relaxed text-slate-400">
-              {caption}
+            <div className="border-t border-slate-800 bg-slate-900/70 px-3 py-2">
+              <PreviewText
+                text={caption}
+                className="text-[11px] leading-relaxed text-slate-400"
+                fontSizePx={11}
+                lineHeightPx={17}
+                maxLines={3}
+              />
             </div>
           )}
         </div>
@@ -936,11 +1095,26 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             </div>
             <div className="min-h-40 p-4">
               <p className="text-[15px] font-bold text-foreground">{slides[0]?.title || title || "Slide deck"}</p>
-              <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">{slides[0]?.body || "Add slide content."}</p>
+              <PreviewText
+                text={slides[0]?.body || ""}
+                emptyText="Add slide content."
+                className="mt-3 text-[12px] leading-relaxed text-muted-foreground"
+                tone="paper"
+                fontSizePx={12}
+                lineHeightPx={19}
+                maxLines={5}
+              />
               {slides[0]?.notes && (
-                <p className="mt-4 rounded-lg bg-muted/50 px-3 py-2 text-[10px] leading-relaxed text-muted-foreground">
-                  {slides[0].notes}
-                </p>
+                <div className="mt-4 rounded-lg bg-muted/50 px-3 py-2">
+                  <PreviewText
+                    text={slides[0].notes}
+                    className="text-[10px] leading-relaxed text-muted-foreground"
+                    tone="caption"
+                    fontSizePx={10}
+                    lineHeightPx={15}
+                    maxLines={4}
+                  />
+                </div>
               )}
             </div>
           </div>

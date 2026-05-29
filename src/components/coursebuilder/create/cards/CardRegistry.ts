@@ -13,7 +13,7 @@
  */
 
 import type { ComponentType } from "react"
-import type { CanvasRenderMode, DroppedCard, CardType } from "../types"
+import type { CanvasRenderMode, DroppedCard, CardType, PageDimensions } from "../types"
 
 import { TextCard }  from "./card-types/TextCard"
 import { ImageCard } from "./card-types/ImageCard"
@@ -46,6 +46,8 @@ export interface CardRenderProps {
   fillAvailable?: boolean
   /** Canvas rendering mode for nested cards and read-only variants. */
   mode?: CanvasRenderMode
+  /** Canonical page dimensions for policy-driven sizing. */
+  pageDimensions?: PageDimensions
   /** True when the card is rendered in a teacher-editable canvas. */
   isEditable?: boolean
 }

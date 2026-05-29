@@ -24,7 +24,8 @@ import ReactGridLayout, {
   type Layout as ReactGridLayoutItems,
   type LayoutItem as ReactGridLayoutItem,
 } from "react-grid-layout"
-import type { CanvasRenderMode, CardType, DroppedCard, SessionId } from "../../types"
+import type { CanvasRenderMode, CardType, DroppedCard, PageDimensions, SessionId } from "../../types"
+import { DEFAULT_PAGE_DIMENSIONS } from "../../types"
 import type { CardRenderProps } from "../CardRegistry"
 import type { DragSourceData, LayoutSlotDropTargetData } from "../../hooks/useCardDrop"
 import { useCourseStore } from "../../store/courseStore"
@@ -763,6 +764,7 @@ function LayoutSlot({
   spec,
   slotCards,
   mode,
+  pageDimensions,
 }: {
   layoutCard: DroppedCard
   slotIndex: number
@@ -770,6 +772,7 @@ function LayoutSlot({
   spec: SlotSpec
   slotCards: DroppedCard[]
   mode: CanvasRenderMode
+  pageDimensions: PageDimensions
 }) {
   const removeCardFromLayoutSlot = useCourseStore((s) => s.removeCardFromLayoutSlot)
   const isEditor = mode === "editor"
@@ -861,6 +864,7 @@ function LayoutSlot({
               key={slotCard.id}
               card={{ ...slotCard, taskId: layoutCard.taskId, areaKind: layoutCard.areaKind }}
               mode={mode}
+              pageDimensions={pageDimensions}
               className={slotCards.length === 1 ? "h-full min-h-0 w-full" : "min-h-0 w-full"}
               fillAvailable={slotCards.length === 1}
               sourceLayoutCardId={layoutCard.id}
@@ -890,6 +894,7 @@ function ResizableGridLayoutCard({
   slots,
   mode,
   editable,
+  pageDimensions,
 }: {
   card: DroppedCard
   def: LayoutDef
@@ -897,6 +902,7 @@ function ResizableGridLayoutCard({
   slots: Record<string, DroppedCard[]>
   mode: CanvasRenderMode
   editable: boolean
+  pageDimensions: PageDimensions
 }) {
   const updateLayoutCardContent = useCourseStore((s) => s.updateLayoutCardContent)
   const { width, containerRef, mounted } = useContainerWidth({ initialWidth: card.dimensions.width || 640 })
@@ -1038,6 +1044,7 @@ function ResizableGridLayoutCard({
                     spec={{ ...spec, minHeight: 54 }}
                     slotCards={slots[index] ?? []}
                     mode={mode}
+                    pageDimensions={pageDimensions}
                   />
                 </div>
               </div>
@@ -1051,7 +1058,13 @@ function ResizableGridLayoutCard({
 
 // ─── Layout Card ──────────────────────────────────────────────────────────────
 
-export function LayoutCard({ card, mode = "editor", isEditable, fillAvailable }: CardRenderProps) {
+export function LayoutCard({
+  card,
+  mode = "editor",
+  isEditable,
+  fillAvailable,
+  pageDimensions = DEFAULT_PAGE_DIMENSIONS,
+}: CardRenderProps) {
   const kind    = extractLayoutKind(card.cardType)
   const def     = LAYOUT_DEFS[kind]
   const activeSessionId = useCourseStore((s) => s.activeSessionId) as SessionId
@@ -1104,6 +1117,7 @@ export function LayoutCard({ card, mode = "editor", isEditable, fillAvailable }:
           slots={slots}
           mode={mode}
           editable={editable}
+          pageDimensions={pageDimensions}
         />
       ) : (
         <div
@@ -1119,6 +1133,7 @@ export function LayoutCard({ card, mode = "editor", isEditable, fillAvailable }:
               spec={spec}
               slotCards={slots[i] ?? []}
               mode={mode}
+              pageDimensions={pageDimensions}
             />
           ))}
         </div>

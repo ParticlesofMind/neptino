@@ -13,6 +13,7 @@ import {
 import type { CardRenderProps } from "../CardRegistry"
 import { parseEdges, parseNodes, type DiagramNodeData, type DiagramShape } from "../../sidebar/editors/diagram-flow-utils"
 import { ResourceCardFrame } from "./ResourceCardFrame"
+import { PretextText } from "../../text/PretextText"
 
 const shapeClasses: Record<DiagramShape, string> = {
   rect: "rounded-md",
@@ -32,7 +33,15 @@ const ShapeNode = memo(function ShapeNode({ data, selected }: NodeProps<Node<Dia
         selected ? "border-[#9eb9da] ring-2 ring-[#dbe8f6]" : "border-neutral-300",
       ].join(" ")}
     >
-      <span className={isDiamond ? "inline-block -rotate-45" : ""}>{data.label || "Node"}</span>
+      <PretextText
+        text={data.label || "Node"}
+        className={isDiamond ? "inline-block -rotate-45" : ""}
+        fontSizePx={12}
+        fontWeight={500}
+        lineHeightPx={16}
+        maxLines={3}
+        preserveWhitespace={false}
+      />
     </div>
   )
 })
@@ -65,9 +74,13 @@ export function DiagramCard({ card, onRemove, fillAvailable }: CardRenderProps) 
           className="flex items-center justify-center bg-neutral-50 px-4 text-center"
           style={{ height: graphHeight }}
         >
-          <p className="max-w-64 text-[12px] leading-relaxed text-neutral-500">
-            Add diagram nodes in the Make panel to render a navigable concept map here.
-          </p>
+          <PretextText
+            text="Add diagram nodes in the Make panel to render a navigable concept map here."
+            className="max-w-64 text-[12px] leading-relaxed text-neutral-500"
+            tone="soft"
+            fontSizePx={12}
+            lineHeightPx={19}
+          />
         </div>
       ) : (
         <div

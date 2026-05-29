@@ -245,6 +245,8 @@ export interface BlockRenderProps {
   sessionId: SessionId
   /** The canvas page this block is being rendered on — used by ContentBlock for topic-range slicing */
   canvasId?: CanvasId
+  /** Canonical page dimensions for resolving print-native zones and card policies. */
+  pageDimensions?: PageDimensions
   /** The block key for this rendered block — forwarded to drop zones so useCardDrop can validate accepts */
   blockKey?: BlockKey
   /** Field values sourced from the course/session metadata */

@@ -12,7 +12,7 @@
  */
 
 import type { ComponentType } from "react"
-import type { BlockKey, BlockRenderProps, CanvasId, CanvasRenderMode, SessionId } from "../types"
+import type { BlockKey, BlockRenderProps, CanvasId, CanvasRenderMode, PageDimensions, SessionId } from "../types"
 
 import { HeaderBlock }    from "../blocks/Header"
 import { FooterBlock }    from "../blocks/Footer"
@@ -42,6 +42,7 @@ export const BLOCK_REGISTRY: BlockRegistry = {
 interface BlockRendererProps {
   sessionId:    SessionId
   canvasId?:    CanvasId
+  pageDimensions?: PageDimensions
   fieldValues:  Record<string, string>
   data?:        Record<string, Record<string, unknown>>
   /** Which body blocks to render on this page, ordered. Resolved from the session template type. Renders empty when unset — no hardcoded default. */
@@ -62,6 +63,7 @@ interface BlockRendererProps {
 export function BlockRenderer({
   sessionId,
   canvasId,
+  pageDimensions,
   fieldValues,
   data = {},
   blockKeys,
@@ -84,6 +86,7 @@ export function BlockRenderer({
         const props: BlockRenderProps = {
           sessionId,
           canvasId,
+          pageDimensions,
           blockKey: key,
           fieldValues,
           data:        data[key],

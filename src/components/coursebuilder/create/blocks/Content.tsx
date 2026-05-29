@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import { useDroppable } from "@dnd-kit/core"
 import type { BlockRenderProps, CanvasId, DroppedCard, TaskAreaKind, TaskId } from "../types"
+import { DEFAULT_PAGE_DIMENSIONS } from "../types"
 import { useCourseStore } from "../store/courseStore"
 import type { DropTargetData } from "../hooks/useCardDrop"
 import { CardRenderer } from "../cards/CardRenderer"
@@ -14,8 +15,17 @@ import {
   isBootstrappedTopic,
 } from "./contentBlockUtils"
 import { resolveTemplatePartitions } from "@/lib/curriculum/template-partitions"
+import { computePageZones } from "../layout/pageZones"
+import { selectLayoutRecipe } from "../layout/layoutRecipes"
 
-export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, renderMode = "editor" }: BlockRenderProps) {
+export function ContentBlock({
+  sessionId,
+  canvasId,
+  pageDimensions = DEFAULT_PAGE_DIMENSIONS,
+  blockKey,
+  fieldEnabled,
+  renderMode = "editor",
+}: BlockRenderProps) {
   const isEditor = renderMode === "editor"
   // Full topic list for this session (drives the visible slice below)
   const topics = useCourseStore(
@@ -89,6 +99,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
   const cardEnd:   number | undefined = contentCardRange?.end
 
   const resolvedBlockKey = blockKey ?? "content"
+  const pageZones = useMemo(() => computePageZones(pageDimensions), [pageDimensions])
   const flattenedCards = useMemo(() => {
     return topics
       .flatMap((topic) => topic.objectives)
@@ -152,6 +163,10 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
   const pageCompositionCard = visibleCardsForBlock.length === 1 && isPageCompositionCard(visibleCardsForBlock[0])
     ? visibleCardsForBlock[0]
     : null
+  const layoutRecipe = useMemo(
+    () => selectLayoutRecipe(visibleCardsForBlock, pageZones),
+    [pageZones, visibleCardsForBlock],
+  )
 
   const visibleTopics = topics.slice(topicStart, topicEnd)
   const partitions = resolveTemplatePartitions(fieldEnabled?.[resolvedBlockKey], resolvedBlockKey)
@@ -239,6 +254,9 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
       <section
         ref={setCatchAllRef}
         className="relative flex h-full min-h-0 flex-col"
+        data-layout-recipe-id={layoutRecipe.id}
+        data-layout-recipe-label={layoutRecipe.label}
+        data-layout-dominant-card-id={layoutRecipe.dominantCardId}
       >
         <div
           className="h-full min-h-0 w-full"
@@ -250,6 +268,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
           <CardRenderer
             card={pageCompositionCard}
             mode={renderMode}
+            pageDimensions={pageDimensions}
             className="h-full min-h-0 w-full [&>div]:h-full [&>div]:min-h-0"
             fillAvailable
             dragSourceBlockKey={blockKey}
@@ -267,6 +286,9 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
         "relative flex flex-col",
         isContinuation ? "" : "overflow-hidden rounded-lg border border-border",
       ].join(" ")}
+      data-layout-recipe-id={layoutRecipe.id}
+      data-layout-recipe-label={layoutRecipe.label}
+      data-layout-dominant-card-id={layoutRecipe.dominantCardId}
     >
       {!isContinuation && (
         <div className="border-b border-border bg-muted/30 px-2 py-1 flex items-center gap-2">
@@ -294,6 +316,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
                       key={kind}
                       sessionId={sessionId}
                       canvasId={canvasId}
+                      pageDimensions={pageDimensions}
                       taskId={`${sessionId}${DEFAULT_TASK_SUFFIX}` as TaskId}
                       areaKind={kind}
                       blockKey={blockKey}
@@ -435,6 +458,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
                                       key={kind}
                                       sessionId={sessionId}
                                       canvasId={canvasId}
+                                      pageDimensions={pageDimensions}
                                       taskId={task.id}
                                       areaKind={kind}
                                       blockKey={blockKey}

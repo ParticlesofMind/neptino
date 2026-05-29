@@ -9,6 +9,7 @@ import { json } from "@codemirror/lang-json"
 import { markdown } from "@codemirror/lang-markdown"
 import type { Extension } from "@codemirror/state"
 import type { CardRenderProps } from "../CardRegistry"
+import { PretextText } from "../../text/PretextText"
 
 type CodeLanguage = "javascript" | "typescript" | "html" | "css" | "json" | "markdown"
 
@@ -88,8 +89,14 @@ export function CodeEditorCard({ card, onRemove, fillAvailable }: CardRenderProp
       </div>
 
       {prompt && (
-        <div className="border-b border-white/10 bg-[#0f1728] px-4 py-2 text-[11px] text-slate-400">
-          {prompt}
+        <div className="border-b border-white/10 bg-[#0f1728] px-4 py-2">
+          <PretextText
+            text={prompt}
+            className="text-[11px] text-slate-400"
+            fontSizePx={11}
+            lineHeightPx={17}
+            maxLines={4}
+          />
         </div>
       )}
 

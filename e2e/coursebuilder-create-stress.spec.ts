@@ -574,7 +574,7 @@ async function captureDomOverflowSummary(page: Page) {
   const pages = await page.locator('[role="region"][aria-label^="Page"]').evaluateAll((regions) =>
     regions.map((region, index) => {
       const canvas = region.firstElementChild as HTMLElement | null
-      const body = canvas?.children[1] as HTMLElement | undefined
+      const body = canvas?.querySelector<HTMLElement>('[data-canvas-layer="body"]') ?? undefined
       const content = body?.firstElementChild as HTMLElement | undefined
       const contentH = content?.scrollHeight ?? null
       const bodyH = body?.clientHeight ?? null
@@ -596,6 +596,75 @@ async function captureDomOverflowSummary(page: Page) {
     measuredPages: pages.filter((entry) => entry.contentH !== null && entry.bodyH !== null).length,
     overflowCount: pages.filter((entry) => entry.overflow).length,
     overflowExamples: pages.filter((entry) => entry.overflow).slice(0, 10),
+  }
+}
+
+async function capturePrintSafetySummary(page: Page) {
+  const pages = await page.locator('[data-canvas-page-surface]').evaluateAll((surfaces) =>
+    surfaces.map((surface, pageIndex) => {
+      const el = surface as HTMLElement
+      const rect = el.getBoundingClientRect()
+      const sheetWidth = Number(el.dataset.sheetWidth)
+      const sheetHeight = Number(el.dataset.sheetHeight)
+      const safeX = Number(el.dataset.printSafeX)
+      const safeY = Number(el.dataset.printSafeY)
+      const safeWidth = Number(el.dataset.printSafeWidth)
+      const safeHeight = Number(el.dataset.printSafeHeight)
+      const scaleX = Number.isFinite(sheetWidth) && sheetWidth > 0 ? rect.width / sheetWidth : 1
+      const scaleY = Number.isFinite(sheetHeight) && sheetHeight > 0 ? rect.height / sheetHeight : 1
+      const sheetRect = {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+      }
+      const safeRect = {
+        left: rect.left + safeX * scaleX,
+        top: rect.top + safeY * scaleY,
+        right: rect.left + (safeX + safeWidth) * scaleX,
+        bottom: rect.top + (safeY + safeHeight) * scaleY,
+      }
+
+      const within = (
+        item: { left: number; top: number; right: number; bottom: number },
+        bounds: { left: number; top: number; right: number; bottom: number },
+        tolerance = 2,
+      ) =>
+        item.left >= bounds.left - tolerance &&
+        item.top >= bounds.top - tolerance &&
+        item.right <= bounds.right + tolerance &&
+        item.bottom <= bounds.bottom + tolerance
+
+      const cards = Array.from(el.querySelectorAll<HTMLElement>("[data-card-layout-role]"))
+      const criticalCards = cards.filter((card) => card.dataset.printSafeCritical === "true")
+      const sheetOverflow = cards
+        .map((card) => ({ id: card.dataset.cardId ?? card.getAttribute("data-card-id"), rect: card.getBoundingClientRect() }))
+        .filter((entry) => !within(entry.rect, sheetRect, 2))
+      const criticalOverflow = criticalCards
+        .map((card) => ({
+          id: card.dataset.cardId ?? card.getAttribute("data-card-id"),
+          role: card.dataset.cardLayoutRole,
+          rect: card.getBoundingClientRect(),
+        }))
+        .filter((entry) => !within(entry.rect, safeRect, 2))
+
+      return {
+        pageIndex: pageIndex + 1,
+        sheetOverflowCount: sheetOverflow.length,
+        criticalContentOutsidePrintSafe: criticalOverflow.length,
+        sheetOverflowExamples: sheetOverflow.slice(0, 3).map((entry) => entry.id),
+        criticalExamples: criticalOverflow.slice(0, 3).map((entry) => ({ id: entry.id, role: entry.role })),
+      }
+    }),
+  )
+
+  return {
+    measuredPages: pages.length,
+    sheetOverflowCount: pages.reduce((sum, entry) => sum + entry.sheetOverflowCount, 0),
+    criticalContentOutsidePrintSafe: pages.reduce((sum, entry) => sum + entry.criticalContentOutsidePrintSafe, 0),
+    examples: pages
+      .filter((entry) => entry.sheetOverflowCount > 0 || entry.criticalContentOutsidePrintSafe > 0)
+      .slice(0, 10),
   }
 }
 
@@ -673,6 +742,7 @@ test.describe("Coursebuilder create stress", () => {
     const summaryAfterHeavy = await captureSettledSummaryFromClipboard(page)
     const statsAfterHeavy = await fetchPersistedStats(target.id)
     const domOverflowAfterHeavy = await captureDomOverflowSummary(page)
+    const printSafetyAfterHeavy = await capturePrintSafetySummary(page)
     await page.evaluate(() => window.dispatchEvent(new Event("beforeprint")))
     const printPageCount = await page.getByTestId("canvas-print-page").count()
     await page.evaluate(() => window.dispatchEvent(new Event("afterprint")))
@@ -708,6 +778,7 @@ test.describe("Coursebuilder create stress", () => {
         statsBeforeBrowser,
         statsAfterHeavy,
         domOverflowAfterHeavy,
+        printSafetyAfterHeavy,
         printPageCount,
       },
       debugSummaryBeforeHeavy: summaryBeforeHeavy,
@@ -726,6 +797,8 @@ test.describe("Coursebuilder create stress", () => {
 
     expect(statsAfterHeavy.cards).toBeGreaterThanOrEqual(EXPECTED_TOTAL_AFTER_HEAVY)
     expect(domOverflowAfterHeavy.overflowCount).toBe(0)
+    expect(printSafetyAfterHeavy.sheetOverflowCount).toBe(0)
+    expect(printSafetyAfterHeavy.criticalContentOutsidePrintSafe).toBe(0)
     expect(printPageCount).toBe(statsAfterHeavy.canvases)
   })
 })

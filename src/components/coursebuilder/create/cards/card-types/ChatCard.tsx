@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Bot, Loader2, RefreshCw, Send } from "lucide-react"
 import type { CardRenderProps } from "../CardRegistry"
 import { AVAILABLE_MODELS, DEFAULT_MODEL } from "@/lib/ollama/models"
+import { PretextText } from "../../text/PretextText"
 
 interface ChatMessage {
   role: "assistant" | "user"
@@ -145,11 +146,21 @@ export function ChatCard({ card, onRemove, fillAvailable }: CardRenderProps) {
             )}
             <div
               className={message.role === "assistant"
-                ? "max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 text-[12px] leading-5 text-neutral-700 shadow-sm"
-                : "max-w-[85%] rounded-2xl rounded-tr-sm bg-neutral-900 px-3 py-2 text-[12px] leading-5 text-white"
+                ? "max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 shadow-sm"
+                : "max-w-[85%] rounded-2xl rounded-tr-sm bg-neutral-900 px-3 py-2"
               }
             >
-              {message.content}
+              <PretextText
+                text={message.content}
+                className={message.role === "assistant"
+                  ? "text-[12px] leading-5 text-neutral-700"
+                  : "text-[12px] leading-5 text-white"
+                }
+                tone={message.role === "assistant" ? "soft" : "plain"}
+                fontSizePx={12}
+                lineHeightPx={20}
+                maxLines={fillAvailable ? undefined : 12}
+              />
             </div>
           </div>
         ))}
@@ -171,7 +182,14 @@ export function ChatCard({ card, onRemove, fillAvailable }: CardRenderProps) {
                 onClick={() => void sendMessage(starter)}
                 className="block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-left text-[11px] text-neutral-600 shadow-sm hover:border-neutral-300 hover:bg-neutral-50"
               >
-                {starter}
+                <PretextText
+                  text={starter}
+                  className="text-[11px] text-neutral-600"
+                  fontSizePx={11}
+                  lineHeightPx={16}
+                  maxLines={2}
+                  preserveWhitespace={false}
+                />
               </button>
             ))}
           </div>

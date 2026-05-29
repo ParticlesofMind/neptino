@@ -16,13 +16,15 @@
 import { useDraggable } from "@dnd-kit/core"
 import { GripVertical, X } from "lucide-react"
 import type { CSSProperties } from "react"
-import type { CanvasRenderMode, DroppedCard } from "../types"
+import type { CanvasRenderMode, DroppedCard, PageDimensions } from "../types"
+import { DEFAULT_PAGE_DIMENSIONS } from "../types"
 import { DEFAULT_CARD_REGISTRY, resolveCardRenderer } from "./CardRegistry"
 import type { CardRenderProps } from "./CardRegistry"
 import { CardTypePreview } from "./CardTypePreview"
 import { useCanvasStore } from "../store/canvasStore"
 import type { DragSourceData } from "../hooks/useCardDrop"
 import { ResourceCardFrame } from "./card-types/ResourceCardFrame"
+import { resolveCardLayoutDimensions } from "./cardLayoutPolicies"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +48,8 @@ interface CardRendererProps {
   className?: string
   /** Ask field-aware card renderers to consume the available field height. */
   fillAvailable?: boolean
+  /** Canonical page dimensions for resolving policy-driven card width/height. */
+  pageDimensions?: PageDimensions
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -60,6 +64,7 @@ export function CardRenderer({
   dragSourceBlockKey,
   className,
   fillAvailable,
+  pageDimensions = DEFAULT_PAGE_DIMENSIONS,
 }: CardRendererProps) {
   const Component   = resolveCardRenderer(DEFAULT_CARD_REGISTRY, card.cardType, mode)
   const selectId    = useCanvasStore((s) => s.selectId)
@@ -102,19 +107,20 @@ export function CardRenderer({
   const selectionRing = mode === "editor" && isSelected
     ? "ring-2 ring-primary ring-offset-1 rounded"
     : undefined
+  const resolvedLayout = resolveCardLayoutDimensions(card, pageDimensions)
   const cardStyle: CSSProperties | undefined = fillAvailable
     ? undefined
     : {
-        width: card.dimensions.width > 0 ? `min(100%, ${Math.round(card.dimensions.width)}px)` : undefined,
-        minHeight: card.dimensions.height > 0 ? Math.round(card.dimensions.height) : undefined,
+        width: `min(100%, ${resolvedLayout.width}px)`,
+        minHeight: resolvedLayout.height,
       }
 
   let content: React.ReactElement
   if (Component) {
     // eslint-disable-next-line react-hooks/static-components -- registry entries are static component references.
-    content = <Component card={card} fillAvailable={fillAvailable} mode={mode} isEditable={isEditor} />
+    content = <Component card={card} fillAvailable={fillAvailable} mode={mode} pageDimensions={pageDimensions} isEditable={isEditor} />
   } else {
-    content = <GenericDomCard card={card} fillAvailable={fillAvailable} mode={mode} isEditable={isEditor} />
+    content = <GenericDomCard card={card} fillAvailable={fillAvailable} mode={mode} pageDimensions={pageDimensions} isEditable={isEditor} />
   }
 
   return (
@@ -127,6 +133,16 @@ export function CardRenderer({
         isDragging ? "opacity-40" : undefined,
       ].filter(Boolean).join(" ")}
       style={cardStyle}
+      data-card-layout-role={resolvedLayout.policy.role}
+      data-card-id={card.id}
+      data-card-layout-density={resolvedLayout.policy.density}
+      data-card-layout-zones={resolvedLayout.policy.allowedZones.join(" ")}
+      data-print-safe-critical={resolvedLayout.policy.criticalContentMustStayPrintSafe ? "true" : "false"}
+      data-card-can-overlay={resolvedLayout.policy.canOverlay ? "true" : "false"}
+      data-card-can-paginate={resolvedLayout.policy.canPaginate ? "true" : "false"}
+      data-card-can-expand-immersive={resolvedLayout.policy.canExpandImmersive ? "true" : "false"}
+      data-resolved-card-width={resolvedLayout.width}
+      data-resolved-card-height={resolvedLayout.height}
       onClick={handleClick}
     >
       {showEditorControls && (

@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import type { SyntheticEvent } from "react"
 import type { CardRenderProps } from "../CardRegistry"
 import { resolveWhiteboardPersistenceKey } from "./whiteboard-card-utils"
+import { PretextText } from "../../text/PretextText"
 
 const WhiteboardCardInner = dynamic(
   () => import("./whiteboard-card-inner"),
@@ -53,7 +54,16 @@ function WhiteboardCardShell({
       <div className="absolute left-3 top-3 z-20 rounded-lg border border-neutral-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur-sm">
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-400">Whiteboard</p>
         <h3 className="mt-0.5 text-sm font-semibold text-neutral-800">{title}</h3>
-        {prompt && <p className="mt-1 max-w-64 text-[11px] text-neutral-500">{prompt}</p>}
+        {prompt && (
+          <PretextText
+            text={prompt}
+            className="mt-1 max-w-64 text-[11px] text-neutral-500"
+            tone="soft"
+            fontSizePx={11}
+            lineHeightPx={16}
+            maxLines={4}
+          />
+        )}
       </div>
 
       <div

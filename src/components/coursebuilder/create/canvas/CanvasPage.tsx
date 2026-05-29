@@ -12,7 +12,7 @@
  * DOM overflow — it only renders what the store tells it to.
  */
 
-import { useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useDroppable } from "@dnd-kit/core"
 import type {
   CanvasPage as CanvasPageModel,
@@ -31,6 +31,8 @@ import { useCourseStore } from "../store/courseStore"
 import { CardRenderer } from "../cards/CardRenderer"
 import { isFieldFillCardType } from "../cards/cardSizing"
 import { useCanvasOverflow } from "../hooks/useCanvasOverflow"
+import { computePageZones } from "../layout/pageZones"
+import { selectLayoutRecipe } from "../layout/layoutRecipes"
 
 function findFirstVisibleTaskId(session: CourseSession, page: CanvasPageModel): TaskId {
   const topicStart = page.contentTopicRange?.start ?? 0
@@ -156,6 +158,17 @@ export function CanvasPage({
   // Use the pre-computed scale from the virtualizer when available; fall back
   // to store zoomLevel for standalone usage (tests, storybook, etc.).
   const scale = scaleProp ?? (zoomLevel / 100)
+  const pageZones = useMemo(() => computePageZones(dims), [dims])
+  const [showPrintSafeDebug, setShowPrintSafeDebug] = useState(false)
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return
+    const frame = window.requestAnimationFrame(() => {
+      setShowPrintSafeDebug(new URLSearchParams(window.location.search).get("debugCanvas") === "1")
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   const bodyDropTaskId = findFirstVisibleTaskId(session, page)
   const removeDroppedCard = useCourseStore((s) => s.removeDroppedCard)
@@ -180,6 +193,10 @@ export function CanvasPage({
   const cardStart = useCardRange ? (page.contentCardRange?.start ?? 0) : 0
   const cardEnd = useCardRange ? (page.contentCardRange?.end ?? flatDroppedCards.length) : flatDroppedCards.length
   const visibleDroppedCards = flatDroppedCards.slice(cardStart, cardEnd)
+  const templateFreeRecipe = useMemo(
+    () => selectLayoutRecipe(visibleDroppedCards, pageZones),
+    [pageZones, visibleDroppedCards],
+  )
 
   // Body-level droppable: covers the full canvas body area for template-free canvases.
   // Disabled on template canvases — ContentBlock's task-area droppables handle all drops
@@ -215,12 +232,28 @@ export function CanvasPage({
     {/* Inner canvas: canonical dimensions, visually scaled */}
     <div
       data-canvas-page-surface
+      data-canvas-layer-root
+      data-sheet-width={pageZones.sheetBox.width}
+      data-sheet-height={pageZones.sheetBox.height}
+      data-print-safe-x={pageZones.printSafeBox.x}
+      data-print-safe-y={pageZones.printSafeBox.y}
+      data-print-safe-width={pageZones.printSafeBox.width}
+      data-print-safe-height={pageZones.printSafeBox.height}
+      data-body-x={pageZones.bodyBox.x}
+      data-body-y={pageZones.bodyBox.y}
+      data-body-width={pageZones.bodyBox.width}
+      data-body-height={pageZones.bodyBox.height}
+      data-layout-recipe-id={isTemplateFreeCanvas ? templateFreeRecipe.id : undefined}
+      data-layout-recipe-label={isTemplateFreeCanvas ? templateFreeRecipe.label : undefined}
+      data-print-safe-debug={showPrintSafeDebug ? "true" : undefined}
       style={{
         width:            dims.widthPx,
         height:           dims.heightPx,
         // Zones baked in as grid rows: header | body | footer
         display:          "grid",
         gridTemplateRows: `${dims.margins.top}px minmax(0, 1fr) ${dims.margins.bottom}px`,
+        position:         "relative",
+        overflow:         "hidden",
         transform:        `scale(${scale})`,
         transformOrigin:  "top left",
       }}
@@ -231,8 +264,49 @@ export function CanvasPage({
         .filter(Boolean)
         .join(" ")}
     >
+      <div
+        aria-hidden="true"
+        data-canvas-layer="sheet-background"
+        className="pointer-events-none absolute inset-0 z-0 bg-white"
+      />
+      <div
+        aria-hidden="true"
+        data-canvas-layer="margin"
+        className="pointer-events-none absolute inset-0 z-0"
+      >
+        {(["top", "right", "bottom", "left"] as const).map((zoneName) => {
+          const zone = pageZones.marginZones[zoneName]
+          return (
+            <div
+              key={zoneName}
+              data-page-zone={`margin-${zoneName}`}
+              style={{
+                position: "absolute",
+                left: zone.x,
+                top: zone.y,
+                width: zone.width,
+                height: zone.height,
+              }}
+            />
+          )
+        })}
+      </div>
+      {showPrintSafeDebug && (
+        <div
+          aria-hidden="true"
+          data-canvas-layer="print-safe-debug"
+          data-page-zone="print-safe"
+          className="pointer-events-none absolute z-30 border border-dashed border-[#0f766e]/70 bg-[#0f766e]/5"
+          style={{
+            left: pageZones.printSafeBox.x,
+            top: pageZones.printSafeBox.y,
+            width: pageZones.printSafeBox.width,
+            height: pageZones.printSafeBox.height,
+          }}
+        />
+      )}
       {/* Header zone — top margin row, baked into grid */}
-      <div className="overflow-hidden bg-white">
+      <div data-canvas-layer="margin-top-content" data-page-zone="margin-top" className="relative z-10 overflow-hidden bg-white">
         <HeaderBlock
           sessionId={session.id as SessionId}
           fieldValues={fieldValues}
@@ -242,6 +316,8 @@ export function CanvasPage({
 
       {/* Body zone — middle row (1fr), padded by left/right margins */}
       <div
+        data-canvas-layer="body"
+        data-page-zone="body"
         ref={(el) => {
           bodyRef.current = el
           setBodyDropRef(el)
@@ -252,9 +328,15 @@ export function CanvasPage({
           paddingLeft:  dims.margins.left,
           paddingRight: dims.margins.right,
         }}
+        className="relative z-10"
       >
         {isTemplateFreeCanvas ? (
-          <section className="h-full min-h-[240px] w-full rounded-lg border border-dashed border-neutral-300 bg-white p-3">
+          <section
+            className="h-full min-h-[240px] w-full rounded-lg border border-dashed border-neutral-300 bg-white p-3"
+            data-layout-recipe-id={templateFreeRecipe.id}
+            data-layout-recipe-label={templateFreeRecipe.label}
+            data-layout-dominant-card-id={templateFreeRecipe.dominantCardId}
+          >
             {visibleDroppedCards.length === 0 ? (
               <div className="px-1">
                 {isEditor && (
@@ -293,6 +375,7 @@ export function CanvasPage({
                       <CardRenderer
                         card={card}
                         mode={renderMode}
+                        pageDimensions={dims}
                         className={fillField ? "min-h-[inherit]" : undefined}
                         fillAvailable={fillField}
                         onRemove={isEditor
@@ -322,6 +405,7 @@ export function CanvasPage({
             <BlockRenderer
               sessionId={session.id as SessionId}
               canvasId={page.id}
+              pageDimensions={dims}
               fieldValues={fieldValues}
               data={bodyData}
               blockKeys={page.blockKeys}
@@ -333,7 +417,7 @@ export function CanvasPage({
       </div>
 
       {/* Footer zone — bottom margin row, baked into grid */}
-      <div className="overflow-hidden bg-white">
+      <div data-canvas-layer="margin-bottom-content" data-page-zone="margin-bottom" className="relative z-10 overflow-hidden bg-white">
         <FooterBlock
           sessionId={session.id as SessionId}
           fieldValues={fieldValues}
