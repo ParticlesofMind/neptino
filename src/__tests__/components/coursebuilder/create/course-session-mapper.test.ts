@@ -7,6 +7,7 @@ import {
   type CourseMeta,
 } from "@/components/coursebuilder/create/hooks/course-session-mapper"
 import { getDefaultBlocksForType } from "@/lib/curriculum/template-blocks"
+import { createPartitionState } from "@/lib/curriculum/template-partitions"
 import type { LessonRow } from "@/components/coursebuilder/course-queries"
 import type { CourseId } from "@/components/coursebuilder/create/types"
 
@@ -103,6 +104,44 @@ describe("mapRowToSession — template_type → blockKeys", () => {
 
     // getDefaultBlocksForType falls back to lesson for unknown types
     expect(session.canvases[0]!.blockKeys).toEqual(getDefaultBlocksForType("lesson"))
+  })
+
+  it("uses field configuration from the exact selected template id before type fallback", () => {
+    const byId = createPartitionState("content", "gradual-release")
+    const byType = createPartitionState("content", "ipf")
+    const session = mapRowToSession(
+      { id: "s7", session_number: 7, template_id: "tpl-gradual", template_type: "lesson" },
+      6,
+      COURSE_ID,
+      {
+        ...META,
+        fieldStateById: { "tpl-gradual": { content: byId } },
+        fieldStateByType: { lesson: { content: byType } },
+      },
+    )
+
+    expect(session.fieldEnabled?.content?._partitionPreset).toBe("gradual-release")
+  })
+
+  it("uses row template_design when no matching saved template id exists", () => {
+    const designState = createPartitionState("content", "inquiry")
+    const session = mapRowToSession(
+      {
+        id: "s8",
+        session_number: 8,
+        template_id: "missing-template",
+        template_type: "lesson",
+        template_design: { blockSettings: { content: designState } },
+      },
+      7,
+      COURSE_ID,
+      {
+        ...META,
+        fieldStateByType: { lesson: { content: createPartitionState("content", "ipf") } },
+      },
+    )
+
+    expect(session.fieldEnabled?.content?._partitionPreset).toBe("inquiry")
   })
 
   it("the canvas is NOT flagged as template-free (blockKeys are set)", () => {
@@ -279,6 +318,58 @@ describe("reconcileSavedLesson — continuation page range enforcement", () => {
     expect(reconciled.canvases[1]!.blockKeys).not.toContain("program")
     expect(reconciled.canvases[1]!.blockKeys).not.toContain("resources")
     expect(reconciled.canvases[1]!.blockKeys).not.toContain("footer")
+  })
+
+  it("drops stale fixed-table pages whose task range starts after the current task list", () => {
+    const derived = mapRowToSession(
+      { id: "s-stale-fixed", session_number: 1, template_type: "lesson" },
+      0,
+      COURSE_ID,
+      { ...META, topicsPerLesson: 1, objectivesPerTopic: 2, tasksPerObjective: 2 },
+    )
+    const saved: LessonRow = {
+      lesson_number: 1,
+      title: "Session 1",
+      payload: {
+        topics: [],
+        canvases: [
+          { id: "old-c1", sessionId: "old-s1", pageNumber: 1 },
+          {
+            id: "old-c2",
+            sessionId: "old-s1",
+            pageNumber: 2,
+            blockKeys: ["program", "resources"],
+            contentTopicRange: { start: 0, end: 1 },
+            contentObjectiveRange: { start: 0, end: 1 },
+            contentTaskRange: { start: 3, end: 4 },
+          },
+          {
+            id: "old-c3",
+            sessionId: "old-s1",
+            pageNumber: 3,
+            blockKeys: ["program", "resources"],
+            contentTopicRange: { start: 0, end: 1 },
+            contentObjectiveRange: { start: 0, end: 1 },
+            contentTaskRange: { start: 4 },
+          },
+        ],
+      },
+    }
+
+    const reconciled = reconcileSavedLesson(derived, saved)
+
+    expect(reconciled.canvases).toHaveLength(2)
+    expect(reconciled.canvases).not.toContainEqual(
+      expect.objectContaining({
+        blockKeys: ["program", "resources"],
+        contentTaskRange: { start: 4 },
+      }),
+    )
+    expect(reconciled.canvases.map((canvas) => canvas.pageNumber)).toEqual([1, 2])
+    expect(reconciled.canvases.map((canvas) => canvas.id)).toEqual([
+      "s-stale-fixed-canvas-1",
+      "s-stale-fixed-canvas-2",
+    ])
   })
 
   // ── Backward fill: missing-end normalisation (card-duplication bug fix) ──

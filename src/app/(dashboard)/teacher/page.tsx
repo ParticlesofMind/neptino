@@ -81,7 +81,7 @@ export default function TeacherHomePage() {
     </div>
   )
 
-  const HomeView = () => (
+  const homeView = (
     <div className="rounded-2xl border border-border bg-background overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-border px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
@@ -217,7 +217,7 @@ export default function TeacherHomePage() {
       case "submissions":   return placeholder("Submissions",   "Review and grade submitted work from learners.")
       case "announcements": return placeholder("Announcements", "Broadcast updates and notices to your classes.")
       case "earnings":      return placeholder("Earnings",      "Track revenue, payouts, and enrollment payments.")
-      default:              return <HomeView />
+      default:              return homeView
     }
   })()
 

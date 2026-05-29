@@ -16,12 +16,16 @@ import {
   Bot,
   Box,
   Check,
+  ClipboardList,
   Database,
+  ExternalLink,
+  FileCode2,
   Gamepad2,
   Image as ImageIcon,
   Layers,
   List,
   MessageSquare,
+  Mic,
   ScrollText,
   Timer,
 } from "lucide-react"
@@ -37,6 +41,7 @@ import {
   RichSimPlaceholder,
   VideoPreview,
 } from "./card-type-preview-subviews"
+import { PretextText, type PretextTextTone } from "../text/PretextText"
 
 const Model3DViewer = dynamic(
   () => import("@/components/coursebuilder/model-3d-viewer").then((m) => m.Model3DViewer),
@@ -55,6 +60,42 @@ const TimelineJSPreview = dynamic(
     ),
   },
 )
+
+function PreviewText({
+  text,
+  emptyText,
+  className,
+  tone = "plain",
+  fontSizePx = 11,
+  lineHeightPx = 17,
+  fontWeight = 400,
+  maxLines,
+  italic = false,
+}: {
+  text: string
+  emptyText?: string
+  className?: string
+  tone?: PretextTextTone
+  fontSizePx?: number
+  lineHeightPx?: number
+  fontWeight?: number
+  maxLines?: number
+  italic?: boolean
+}) {
+  return (
+    <PretextText
+      text={text}
+      emptyText={emptyText}
+      className={className}
+      tone={tone}
+      fontSizePx={fontSizePx}
+      lineHeightPx={lineHeightPx}
+      fontWeight={fontWeight}
+      maxLines={maxLines}
+      italic={italic}
+    />
+  )
+}
 
 export { CARD_TYPE_META } from "./card-type-registry"
 export type { CardTypeMeta } from "./card-type-registry"
@@ -82,9 +123,15 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       const plain = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
       return (
         <div className="overflow-auto">
-          <p className="text-sm leading-relaxed text-muted-foreground line-clamp-8">
-            {plain || "Add your copy here."}
-          </p>
+          <PreviewText
+            text={plain}
+            emptyText="Add your copy here."
+            className="text-sm leading-relaxed text-muted-foreground"
+            tone="soft"
+            fontSizePx={14}
+            lineHeightPx={22}
+            maxLines={8}
+          />
         </div>
       )
     }
@@ -112,7 +159,16 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
           }
           {(caption || attribution) && (
             <div className="mt-2 space-y-0.5">
-              {caption && <p className="text-[11px] text-muted-foreground">{caption}</p>}
+              {caption && (
+                <PreviewText
+                  text={caption}
+                  className="text-[11px] leading-relaxed text-muted-foreground"
+                  tone="caption"
+                  fontSizePx={11}
+                  lineHeightPx={16}
+                  maxLines={3}
+                />
+              )}
               {attribution && <p className="text-[10px] text-muted-foreground/60 italic">{attribution}</p>}
             </div>
           )}
@@ -218,6 +274,153 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       )
     }
 
+    case "source-excerpt": {
+      const excerpt = typeof content["excerpt"] === "string" ? content["excerpt"] : ""
+      const context = typeof content["context"] === "string" ? content["context"] : ""
+      const locator = typeof content["locator"] === "string" ? content["locator"] : ""
+      const citationTitle = typeof content["citationTitle"] === "string" ? content["citationTitle"] : typeof content["sourceTitle"] === "string" ? content["sourceTitle"] : ""
+      return (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+            <PreviewText
+              text={excerpt}
+              emptyText="Add a quoted or paraphrased source passage."
+              className="text-[13px] leading-relaxed text-foreground"
+              tone="source"
+              fontSizePx={13}
+              lineHeightPx={20}
+              maxLines={6}
+            />
+          </div>
+          {(context || locator || citationTitle) && (
+            <div className="space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
+              {citationTitle && <p className="font-semibold text-foreground/80">{citationTitle}</p>}
+              {locator && <p>{locator}</p>}
+              {context && (
+                <PreviewText
+                  text={context}
+                  className="text-[11px] leading-relaxed text-muted-foreground"
+                  tone="paper"
+                  fontSizePx={11}
+                  lineHeightPx={17}
+                  maxLines={3}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    case "citation": {
+      const creator = typeof content["creator"] === "string" ? content["creator"] : ""
+      const year = typeof content["year"] === "string" ? content["year"] : ""
+      const sourceType = typeof content["sourceType"] === "string" ? content["sourceType"] : ""
+      const sourceUrl = typeof content["sourceUrl"] === "string" ? content["sourceUrl"] : typeof content["url"] === "string" ? content["url"] : ""
+      const license = typeof content["license"] === "string" ? content["license"] : ""
+      const attribution = typeof content["attribution"] === "string" ? content["attribution"] : ""
+      return (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-background px-4 py-3">
+            <p className="text-[13px] font-semibold leading-snug text-foreground">{title || "Untitled source"}</p>
+            {(creator || year) && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {[creator, year].filter(Boolean).join(", ")}
+              </p>
+            )}
+            {(sourceType || license) && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {sourceType && <span className="rounded border border-border bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground">{sourceType}</span>}
+                {license && <span className="rounded border border-border bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground">{license}</span>}
+              </div>
+            )}
+          </div>
+          {sourceUrl && <p className="truncate text-[10px] text-muted-foreground">{sourceUrl}</p>}
+          {attribution && <p className="text-[10px] italic text-muted-foreground/70">{attribution}</p>}
+        </div>
+      )
+    }
+
+    case "bibliography": {
+      const entries = Array.isArray(content["entries"])
+        ? (content["entries"] as Array<Record<string, unknown>>)
+        : []
+      const notes = typeof content["notes"] === "string" ? content["notes"] : ""
+      const style = typeof content["style"] === "string" ? content["style"] : ""
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4 text-muted-foreground/60" />
+            <span className="text-[12px] font-semibold text-foreground">{entries.length} source{entries.length === 1 ? "" : "s"}</span>
+            {style && <span className="ml-auto rounded border border-border bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground">{style}</span>}
+          </div>
+          <div className="space-y-2">
+            {(entries.length > 0 ? entries : [{ title: "Add a citation", creator: "", year: "" }]).slice(0, 5).map((entry, index) => {
+              const entryTitle = typeof entry.title === "string" ? entry.title : `Source ${index + 1}`
+              const creator = typeof entry.creator === "string" ? entry.creator : ""
+              const year = typeof entry.year === "string" ? entry.year : ""
+              const license = typeof entry.license === "string" ? entry.license : ""
+              return (
+                <div key={`${entryTitle}-${index}`} className="rounded-lg border border-border bg-background px-3 py-2">
+                  <p className="text-[11px] font-semibold text-foreground line-clamp-1">{entryTitle}</p>
+                  {(creator || year || license) && (
+                    <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
+                      {[creator, year, license].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          {notes && (
+            <PreviewText
+              text={notes}
+              className="text-[11px] leading-relaxed text-muted-foreground"
+              tone="paper"
+              fontSizePx={11}
+              lineHeightPx={17}
+              maxLines={3}
+            />
+          )}
+        </div>
+      )
+    }
+
+    case "gis-layer": {
+      const layerType = typeof content["layerType"] === "string" ? content["layerType"] : "layer"
+      const geometryType = typeof content["geometryType"] === "string" ? content["geometryType"] : "GeoJSON"
+      const featureCount = typeof content["featureCount"] === "number" ? content["featureCount"] : 0
+      const dateRange = typeof content["dateRange"] === "string" ? content["dateRange"] : ""
+      const precision = typeof content["geometryPrecision"] === "string" ? content["geometryPrecision"] : ""
+      const warnings = Array.isArray(content["warnings"]) ? content["warnings"].map(String).filter(Boolean) : []
+      return (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[13px] font-semibold text-foreground">{title || "GIS layer"}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{layerType} · {geometryType}</p>
+              </div>
+              <span className="rounded border border-border bg-background px-2 py-1 text-[10px] font-semibold text-muted-foreground">{featureCount} feature{featureCount === 1 ? "" : "s"}</span>
+            </div>
+            {(dateRange || precision) && (
+              <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+                <div className="rounded border border-border bg-background px-2 py-1.5">{dateRange || "No date range"}</div>
+                <div className="rounded border border-border bg-background px-2 py-1.5">{precision || "Unknown precision"}</div>
+              </div>
+            )}
+          </div>
+          {warnings.length > 0 && (
+            <div className="space-y-1">
+              {warnings.slice(0, 2).map((warning, index) => (
+                <p key={`${warning}-${index}`} className="rounded border border-[#f1dfb8] bg-[#fff7e6] px-2 py-1 text-[10px] leading-relaxed text-[#8a5b16]">{warning}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )
+    }
+
     case "document": {
       const fileType = typeof content["documentType"] === "string"
         ? content["documentType"].toUpperCase()
@@ -227,7 +430,20 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       const pages = typeof content["pages"] === "number" ? content["pages"] : 0
       const excerpt = typeof content["excerpt"] === "string" ? content["excerpt"] : ""
       const sections: { heading: string; body: string }[] = (() => {
-        try { return content["sections"] ? JSON.parse(content["sections"] as string) : [] } catch { return [] }
+        const raw = content["sections"]
+        const normalize = (value: unknown) => Array.isArray(value)
+          ? value
+            .filter((section): section is { heading?: unknown; body?: unknown } => typeof section === "object" && section !== null)
+            .map((section) => ({
+              heading: typeof section.heading === "string" ? section.heading : "",
+              body: typeof section.body === "string" ? section.body : "",
+            }))
+          : []
+
+        if (Array.isArray(raw)) return normalize(raw)
+        if (typeof raw !== "string") return []
+
+        try { return normalize(JSON.parse(raw) as unknown) } catch { return [] }
       })()
       return (
         <div className="space-y-3">
@@ -250,18 +466,136 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
           </div>
           {/* Content preview lines */}
           {excerpt && (
-            <p className="text-[12px] text-muted-foreground leading-relaxed italic line-clamp-3">{excerpt}</p>
+            <PreviewText
+              text={excerpt}
+              className="text-[12px] text-muted-foreground leading-relaxed italic"
+              tone="paper"
+              fontSizePx={12}
+              lineHeightPx={18}
+              maxLines={3}
+              italic
+            />
           )}
           {sections.slice(0, 2).map((sec, i) => (
             <div key={i} className="border-l-2 border-border pl-3">
               {sec.heading && <p className="text-[11px] font-semibold text-foreground mb-0.5">{sec.heading}</p>}
-              <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{sec.body || "Section body…"}</p>
+              <PreviewText
+                text={sec.body}
+                emptyText="Section body..."
+                className="text-[11px] text-muted-foreground leading-relaxed"
+                tone="plain"
+                fontSizePx={11}
+                lineHeightPx={17}
+                maxLines={2}
+              />
             </div>
           ))}
           {sections.length === 0 && !excerpt && (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-6 gap-2">
               <ScrollText className="h-6 w-6 text-muted-foreground/30" />
               <span className="text-[11px] text-muted-foreground">Add content to preview the document.</span>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // ─── Embed ─────────────────────────────────────────────────────────────────
+    case "embed": {
+      const url = typeof content["url"] === "string" ? content["url"] : ""
+      const provider = typeof content["provider"] === "string" ? content["provider"] : ""
+      const caption = typeof content["caption"] === "string" ? content["caption"] : ""
+      const attribution = typeof content["attribution"] === "string" ? content["attribution"] : ""
+
+      return (
+        <div className="space-y-3">
+          {url ? (
+            <div className="overflow-hidden rounded-xl border border-border bg-muted/20" style={{ aspectRatio: "16 / 9" }}>
+              <iframe
+                src={url}
+                className="h-full w-full border-0"
+                title={title || "Embedded resource"}
+                sandbox="allow-same-origin allow-scripts allow-popups"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-8">
+              <ExternalLink className="h-6 w-6 text-muted-foreground/30" />
+              <span className="mt-2 text-[11px] text-muted-foreground">Add an embeddable URL.</span>
+            </div>
+          )}
+          {(provider || caption || attribution || url) && (
+            <div className="space-y-1">
+              {(provider || url) && (
+                <p className="truncate text-[11px] font-medium text-foreground">
+                  {provider || url}
+                </p>
+              )}
+              {caption && (
+                <PreviewText
+                  text={caption}
+                  className="text-[11px] leading-relaxed text-muted-foreground"
+                  tone="caption"
+                  fontSizePx={11}
+                  lineHeightPx={17}
+                  maxLines={3}
+                />
+              )}
+              {attribution && <p className="text-[10px] text-muted-foreground/60 italic">{attribution}</p>}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // ─── Flashcards ─────────────────────────────────────────────────────────────
+    case "flashcards": {
+      const rawPairs = Array.isArray(content["pairs"])
+        ? (content["pairs"] as Array<{ term?: string; match?: string }>)
+        : []
+      const difficulty = typeof content["difficulty"] === "string" ? content["difficulty"] : ""
+      const tags = Array.isArray(content["tags"]) ? content["tags"].map(String).filter(Boolean) : []
+
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4 text-muted-foreground/60" />
+            <span className="text-[12px] font-semibold text-foreground">
+              {rawPairs.length} card{rawPairs.length === 1 ? "" : "s"}
+            </span>
+            {difficulty && (
+              <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{difficulty}</span>
+            )}
+          </div>
+          {rawPairs.length > 0 ? (
+            <div className="grid gap-2">
+              {rawPairs.slice(0, 4).map((pair, index) => (
+                <div key={index} className="rounded-lg border border-border bg-background px-3 py-2">
+                  <p className="text-[11px] font-semibold text-foreground">{pair.term || `Prompt ${index + 1}`}</p>
+                  <PreviewText
+                    text={pair.match || "Answer not set"}
+                    className="mt-1 text-[11px] leading-relaxed text-muted-foreground"
+                    tone="paper"
+                    fontSizePx={11}
+                    lineHeightPx={17}
+                    maxLines={2}
+                  />
+                </div>
+              ))}
+              {rawPairs.length > 4 && (
+                <p className="text-center text-[10px] text-muted-foreground">+{rawPairs.length - 4} more cards</p>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-border px-3 py-5 text-center">
+              <span className="text-[11px] text-muted-foreground">Add prompt and answer pairs.</span>
+            </div>
+          )}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.slice(0, 5).map((tag) => (
+                <span key={tag} className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">{tag}</span>
+              ))}
             </div>
           )}
         </div>
@@ -282,7 +616,16 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
 
       return (
         <div className="space-y-3">
-          <p className="text-[13px] font-medium text-foreground leading-snug">{prompt || "Your question will appear here…"}</p>
+          <PreviewText
+            text={prompt}
+            emptyText="Your question will appear here..."
+            className="text-[13px] font-medium leading-snug text-foreground"
+            tone="soft"
+            fontSizePx={13}
+            fontWeight={500}
+            lineHeightPx={18}
+            maxLines={3}
+          />
 
           {interactionType === "multiple-choice" && rawOpts.length > 0 && (
             <div className="space-y-2">
@@ -341,6 +684,131 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       )
     }
 
+    // ─── Form ───────────────────────────────────────────────────────────────────
+    case "form": {
+      const prompt = typeof content["prompt"] === "string" ? content["prompt"] : ""
+      const submitLabel = typeof content["submitLabel"] === "string" ? content["submitLabel"] : "Submit"
+      const fields = Array.isArray(content["fields"])
+        ? content["fields"]
+          .filter((field): field is Record<string, unknown> => typeof field === "object" && field !== null)
+          .map((field, index) => ({
+            label: typeof field.label === "string" && field.label.trim() ? field.label : `Field ${index + 1}`,
+            type: typeof field.type === "string" ? field.type : "text",
+            required: Boolean(field.required),
+          }))
+        : []
+
+      return (
+        <div className="space-y-3">
+          {prompt && (
+            <PreviewText
+              text={prompt}
+              className="text-[12px] leading-relaxed text-muted-foreground"
+              tone="soft"
+              fontSizePx={12}
+              lineHeightPx={19}
+              maxLines={3}
+            />
+          )}
+          <div className="space-y-2">
+            {(fields.length > 0 ? fields : [{ label: "Response", type: "textarea", required: true }]).slice(0, 4).map((field, index) => (
+              <div key={`${field.label}-${index}`} className="rounded-lg border border-border bg-background px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-3.5 w-3.5 text-muted-foreground/50" />
+                  <span className="text-[11px] font-semibold text-foreground">{field.label}</span>
+                  {field.required && <span className="ml-auto text-[10px] font-semibold text-muted-foreground">Required</span>}
+                </div>
+                <div className="mt-2 h-8 rounded-md border border-dashed border-border bg-muted/20" />
+              </div>
+            ))}
+          </div>
+          <button type="button" className="min-h-8 rounded-md border border-border bg-background px-3 text-[11px] font-semibold text-muted-foreground">
+            {submitLabel}
+          </button>
+        </div>
+      )
+    }
+
+    // ─── Voice Recorder ──────────────────────────────────────────────────────────
+    case "voice-recorder": {
+      const prompt = typeof content["prompt"] === "string" ? content["prompt"] : ""
+      const maxDurationSeconds = typeof content["maxDurationSeconds"] === "number" ? content["maxDurationSeconds"] : 60
+      const retryPolicy = typeof content["retryPolicy"] === "string" ? content["retryPolicy"] : "allow"
+
+      return (
+        <div className="space-y-3">
+          {prompt && (
+            <PreviewText
+              text={prompt}
+              className="text-[12px] leading-relaxed text-muted-foreground"
+              tone="soft"
+              fontSizePx={12}
+              lineHeightPx={19}
+              maxLines={3}
+            />
+          )}
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-4">
+            <div className="flex items-center justify-between">
+              <Mic className="h-5 w-5 text-muted-foreground/60" />
+              <span className="font-mono text-[22px] font-semibold text-foreground">0:00</span>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-background">
+              <div className="h-full w-1/4 rounded-full bg-[#00ccb3]" />
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <Timer className="h-3.5 w-3.5" />
+              <span>{maxDurationSeconds}s limit</span>
+              <span className="ml-auto capitalize">{retryPolicy === "single" ? "One take" : "Retries allowed"}</span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ─── Sorter / Matcher ───────────────────────────────────────────────────────
+    case "sorter": {
+      const mode = typeof content["mode"] === "string" ? content["mode"] : "match"
+      const pairs = Array.isArray(content["pairs"])
+        ? content["pairs"]
+          .filter((pair): pair is Record<string, unknown> => typeof pair === "object" && pair !== null)
+          .map((pair, index) => ({
+            term: typeof pair.term === "string" && pair.term.trim() ? pair.term : `Term ${index + 1}`,
+            match: typeof pair.match === "string" && pair.match.trim() ? pair.match : `Match ${index + 1}`,
+          }))
+        : []
+      const items = Array.isArray(content["items"]) ? content["items"].map(String).filter(Boolean) : []
+
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <List className="h-4 w-4 text-muted-foreground/60" />
+            <span className="text-[12px] font-semibold text-foreground">{mode === "order" ? "Ordering task" : "Matching task"}</span>
+          </div>
+
+          {mode === "order" ? (
+            <div className="space-y-1.5">
+              {(items.length > 0 ? items : pairs.map((pair) => pair.term)).slice(0, 4).map((item, index) => (
+                <div key={`${item}-${index}`} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-[11px]">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-muted-foreground">{index + 1}</span>
+                  <span className="min-w-0 truncate text-muted-foreground">{item || `Item ${index + 1}`}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {(pairs.length > 0 ? pairs : [{ term: "Term", match: "Match" }]).slice(0, 4).map((pair, index) => (
+                <div key={`${pair.term}-${index}`} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-lg border border-border px-3 py-2 text-[11px]">
+                  <span className="min-w-0 truncate font-medium text-foreground/80">{pair.term}</span>
+                  <span className="text-muted-foreground/40">to</span>
+                  <span className="min-w-0 truncate text-right text-muted-foreground">{pair.match}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )
+    }
+
     // ─── Simulation ─────────────────────────────────────────────────────────────
     case "rich-sim": {
       const url = typeof content["url"] === "string" ? content["url"] : ""
@@ -368,6 +836,7 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       const rows = typeof content["rows"] === "number" ? content["rows"] : 0
       const cols = typeof content["columns"] === "number" ? content["columns"] : 0
       const fmt  = typeof content["format"] === "string" ? content["format"] : ""
+      const source = typeof content["source"] === "string" ? content["source"] : typeof content["url"] === "string" ? content["url"] : ""
       return (
         <div>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -375,8 +844,9 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             {cols > 0 && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{cols} columns</span>}
             {fmt && <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">{fmt}</span>}
           </div>
-          <div className="flex flex-col items-center justify-center rounded-xl bg-muted/30 border border-border h-24">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-muted/30 border border-border h-24 px-3 text-center">
             <Database className="h-6 w-6 text-muted-foreground/40" />
+            {source && <span className="mt-2 max-w-full truncate text-[11px] text-muted-foreground">{source}</span>}
           </div>
         </div>
       )
@@ -436,9 +906,15 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
           )}
 
           {gameType === "fill-blank" && fillText && (
-            <div className="rounded-lg bg-muted/20 border border-border px-3 py-2.5 text-[12px] text-foreground/80 leading-relaxed">
-              {fillText.replace(/\[[^\]]+\]/g, "___").slice(0, 120)}
-              {fillText.length > 120 && "…"}
+            <div className="rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+              <PreviewText
+                text={fillText.replace(/\[[^\]]+\]/g, "___")}
+                className="text-[12px] leading-relaxed text-foreground/80"
+                tone="paper"
+                fontSizePx={12}
+                lineHeightPx={19}
+                maxLines={4}
+              />
             </div>
           )}
 
@@ -471,9 +947,15 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             </div>
             <div className="rounded-2xl rounded-tl-sm bg-muted/50 border border-border px-3 py-2 max-w-[90%]">
               <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">{aiPersona}</p>
-              <p className="text-[12px] text-foreground leading-relaxed">
-                {openingMessage || "Hello! I'm here to help you learn. What would you like to explore?"}
-              </p>
+              <PreviewText
+                text={openingMessage}
+                emptyText="Hello! I'm here to help you learn. What would you like to explore?"
+                className="text-[12px] leading-relaxed text-foreground"
+                tone="soft"
+                fontSizePx={12}
+                lineHeightPx={19}
+                maxLines={4}
+              />
             </div>
           </div>
 
@@ -517,23 +999,34 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
           </div>
           <div className="space-y-2 px-4 py-3">
             <div className="h-3 w-24 rounded bg-[#dbe8f6]" />
-            <p className="text-[12px] leading-6 text-muted-foreground line-clamp-5">
-              {plain || "A barebones rich-text writing area for notes, drafting, and guided responses."}
-            </p>
+            <PreviewText
+              text={plain}
+              emptyText="A barebones rich-text writing area for notes, drafting, and guided responses."
+              className="text-[12px] leading-6 text-muted-foreground"
+              tone="paper"
+              fontSizePx={12}
+              lineHeightPx={24}
+              maxLines={5}
+            />
           </div>
         </div>
       )
     }
 
+    case "code-snippet":
     case "code-editor": {
       const code = typeof content["code"] === "string" ? content["code"] : ""
       const lines = code.split("\n").filter(Boolean).slice(0, 5)
       const language = typeof content["language"] === "string" ? content["language"] : "javascript"
+      const caption = typeof content["caption"] === "string" ? content["caption"] : typeof content["prompt"] === "string" ? content["prompt"] : ""
 
       return (
         <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-3 py-2">
-            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">CodeMirror</span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">
+              <FileCode2 className="h-3 w-3" />
+              {cardType === "code-snippet" ? "Snippet" : "CodeMirror"}
+            </span>
             <span className="rounded-full border border-[#5c9970]/30 bg-[#5c9970]/15 px-2 py-0.5 text-[9px] font-medium text-[#5c9970]">
               {language}
             </span>
@@ -548,6 +1041,17 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
               <p className="text-slate-400">Add starter code to preview the editor.</p>
             )}
           </div>
+          {caption && (
+            <div className="border-t border-slate-800 bg-slate-900/70 px-3 py-2">
+              <PreviewText
+                text={caption}
+                className="text-[11px] leading-relaxed text-slate-400"
+                fontSizePx={11}
+                lineHeightPx={17}
+                maxLines={3}
+              />
+            </div>
+          )}
         </div>
       )
     }
@@ -563,6 +1067,56 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             <div className="absolute left-6 top-6 rounded-lg border border-[#dbe8f6] bg-[#dbe8f6]/80 px-3 py-2 text-[11px] text-[#3a6ea0] shadow-sm">Main idea</div>
             <div className="absolute right-8 top-10 rounded-full border border-[#d6ede3] bg-[#d6ede3]/80 px-3 py-2 text-[11px] text-[#2e6b4a] shadow-sm">Sketch</div>
             <div className="absolute bottom-6 left-1/3 rounded-lg border border-[#f0e8cc] bg-[#f0e8cc]/80 px-3 py-2 text-[11px] text-[#7a6010] shadow-sm">Notes</div>
+          </div>
+        </div>
+      )
+    }
+
+    case "slides": {
+      const rawSlides = Array.isArray(content["slides"])
+        ? (content["slides"] as Array<{ title?: string; body?: string; notes?: string }>)
+        : []
+      const slides = rawSlides.length > 0
+        ? rawSlides
+        : [{ title: title || "Slide deck", body: "Add slides, notes, and embedded lesson materials." }]
+      return (
+        <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-border bg-neutral-50 px-3 py-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Slides</span>
+            <span className="text-[10px] text-muted-foreground">{slides.length} slides</span>
+          </div>
+          <div className="grid grid-cols-[4.5rem_1fr] gap-0">
+            <div className="space-y-1 border-r border-border bg-neutral-50 p-2">
+              {slides.slice(0, 4).map((slide, index) => (
+                <div key={`${slide.title ?? "slide"}-${index}`} className="rounded border border-border bg-white px-2 py-1.5">
+                  <p className="truncate text-[9px] font-semibold text-foreground">{index + 1}. {slide.title || "Untitled"}</p>
+                </div>
+              ))}
+            </div>
+            <div className="min-h-40 p-4">
+              <p className="text-[15px] font-bold text-foreground">{slides[0]?.title || title || "Slide deck"}</p>
+              <PreviewText
+                text={slides[0]?.body || ""}
+                emptyText="Add slide content."
+                className="mt-3 text-[12px] leading-relaxed text-muted-foreground"
+                tone="paper"
+                fontSizePx={12}
+                lineHeightPx={19}
+                maxLines={5}
+              />
+              {slides[0]?.notes && (
+                <div className="mt-4 rounded-lg bg-muted/50 px-3 py-2">
+                  <PreviewText
+                    text={slides[0].notes}
+                    className="text-[10px] leading-relaxed text-muted-foreground"
+                    tone="caption"
+                    fontSizePx={10}
+                    lineHeightPx={15}
+                    maxLines={4}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )

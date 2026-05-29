@@ -10,6 +10,11 @@ import type {
 } from "../types"
 import type { PageAssignment } from "../layout/layoutEngine"
 
+export type DroppedCardUpdate = Partial<Pick<
+  DroppedCard,
+  "areaKind" | "blockKey" | "content" | "dimensions" | "order" | "position"
+>>
+
 export interface CourseState {
   sessions: CourseSession[]
   activeSessionId: SessionId | null
@@ -26,6 +31,12 @@ export interface CourseState {
     canvasId?: CanvasId | null,
   ) => void
   removeDroppedCard: (sessionId: SessionId, taskId: TaskId, cardId: string) => void
+  updateDroppedCard: (
+    sessionId: SessionId,
+    taskId: TaskId,
+    cardId: string,
+    patch: DroppedCardUpdate,
+  ) => void
 
   addCardToLayoutSlot: (
     sessionId: SessionId,
@@ -41,11 +52,18 @@ export interface CourseState {
     slotIndex: number,
     cardId: string,
   ) => void
+  updateLayoutCardContent: (
+    sessionId: SessionId,
+    taskId: TaskId,
+    layoutCardId: string,
+    contentPatch: Record<string, unknown>,
+  ) => void
 
   appendCanvasPage: (
     sessionId: SessionId,
     contentTopicStart?: number,
     options?: {
+      afterCanvasId?: CanvasId
       topicEnd?: number
       objectiveStart?: number
       objectiveEnd?: number
@@ -53,6 +71,7 @@ export interface CourseState {
       taskEnd?: number
       cardStart?: number
       cardEnd?: number
+      layoutSlotRange?: { cardId: string; start: number; end?: number }
       blockKeys?: BlockKey[]
     },
   ) => void
@@ -75,6 +94,11 @@ export interface CourseState {
   setCanvasCardRange: (
     canvasId: CanvasId,
     range: { start: number; end?: number },
+  ) => void
+
+  setCanvasLayoutSlotRange: (
+    canvasId: CanvasId,
+    range: { cardId: string; start: number; end?: number },
   ) => void
 
   setCanvasMeasuredHeight: (canvasId: CanvasId, heightPx: number) => void

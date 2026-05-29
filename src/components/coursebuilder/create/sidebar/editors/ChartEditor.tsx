@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { Plus, Trash2 } from "lucide-react"
 import { EditorSplitLayout } from "./editor-split-layout"
 import { EditorPreviewFrame } from "./editor-preview-frame"
 
@@ -68,9 +68,6 @@ const CHART_TYPES: { id: ChartType; label: string }[] = [
 
 export function ChartEditor({ content, onChange }: ChartEditorProps) {
   const [colorScheme, setColorScheme] = useState(typeof content.colorScheme === "string" ? content.colorScheme : "Blue")
-  const typeRailRef = useRef<HTMLDivElement | null>(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
 
   const title = typeof content.title === "string" ? content.title : ""
   const chartType = (typeof content.chartType === "string" ? content.chartType : "line") as ChartType
@@ -86,38 +83,6 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
   const seriesKeys = columns.slice(1) // everything except first column (label)
 
   const setChartType = (t: ChartType) => onChange("chartType", t)
-
-  const refreshRailScrollState = useCallback(() => {
-    const rail = typeRailRef.current
-    if (!rail) return
-    setCanScrollLeft(rail.scrollLeft > 4)
-    setCanScrollRight(rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 4)
-  }, [])
-
-  const scrollTypeRail = useCallback((direction: "left" | "right") => {
-    const rail = typeRailRef.current
-    if (!rail) return
-    rail.scrollBy({
-      left: direction === "left" ? -180 : 180,
-      behavior: "smooth",
-    })
-  }, [])
-
-  useEffect(() => {
-    refreshRailScrollState()
-    const rail = typeRailRef.current
-    if (!rail) return
-
-    const selectedButton = rail.querySelector<HTMLButtonElement>(`button[data-chart-type="${chartType}"]`)
-    selectedButton?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
-
-    rail.addEventListener("scroll", refreshRailScrollState)
-    window.addEventListener("resize", refreshRailScrollState)
-    return () => {
-      rail.removeEventListener("scroll", refreshRailScrollState)
-      window.removeEventListener("resize", refreshRailScrollState)
-    }
-  }, [chartType, refreshRailScrollState])
 
   const setColumn = (i: number, val: string) => {
     const next = [...columns]
@@ -152,68 +117,40 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
 
   return (
     <EditorSplitLayout
-      sidebarWidthClassName="md:min-w-[28rem] md:flex-1 xl:min-w-[32rem]"
+      sidebarWidthClassName="md:w-[30rem] md:flex-none xl:w-[32rem]"
       previewContentClassName="overflow-auto"
       sidebar={(
         <div className="flex h-full flex-col bg-white">
-          <div className="relative flex shrink-0 border-b border-neutral-200 bg-white">
-            <button
-              type="button"
-              onClick={() => scrollTypeRail("left")}
-              disabled={!canScrollLeft}
-              className="absolute left-0 top-0 z-10 flex h-full w-9 items-center justify-center border-r border-neutral-200 bg-white text-neutral-500 transition-colors hover:text-neutral-700 disabled:cursor-not-allowed disabled:text-neutral-300"
-              aria-label="Scroll chart types left"
-            >
-              <ChevronLeft size={14} />
-            </button>
-
-            <div ref={typeRailRef} className="no-scrollbar mx-9 w-full overflow-x-auto">
-              <div className="flex min-w-max">
+          <div className="shrink-0 border-b border-neutral-100 bg-white px-3 py-2.5">
+            <label className="space-y-1">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Chart type</span>
+              <select
+                value={chartType}
+                onChange={(e) => setChartType(e.target.value as ChartType)}
+                className="min-h-9 w-full rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-2 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+              >
                 {CHART_TYPES.map(({ id, label }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    data-chart-type={id}
-                    onClick={() => setChartType(id)}
-                    className={[
-                      "shrink-0 border-b-2 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
-                      chartType === id
-                        ? "border-[#9eb9da] text-[#233f5d]"
-                        : "border-transparent text-neutral-400 hover:text-neutral-700",
-                    ].join(" ")}
-                  >
-                    {label}
-                  </button>
+                  <option key={id} value={id}>{label}</option>
                 ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => scrollTypeRail("right")}
-              disabled={!canScrollRight}
-              className="absolute right-0 top-0 z-10 flex h-full w-9 items-center justify-center border-l border-neutral-200 bg-white text-neutral-500 transition-colors hover:text-neutral-700 disabled:cursor-not-allowed disabled:text-neutral-300"
-              aria-label="Scroll chart types right"
-            >
-              <ChevronRight size={14} />
-            </button>
+              </select>
+            </label>
           </div>
 
-          <div className="space-y-2 border-b border-neutral-100 px-4 py-3 overflow-x-auto">
+          <div className="space-y-2 border-b border-neutral-100 px-3 py-2.5 overflow-x-auto">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">Data</p>
               <div className="flex gap-1">
                 <button
                   type="button"
                   onClick={addColumn}
-                  className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-medium text-neutral-600 hover:bg-neutral-50"
+                  className="flex min-h-8 items-center gap-1 rounded-md border border-neutral-200 px-2 py-1.5 text-[10px] font-medium text-neutral-600 hover:bg-neutral-50"
                 >
                   <Plus size={10} /> Column
                 </button>
                 <button
                   type="button"
                   onClick={addRow}
-                  className="flex min-h-9 items-center gap-1 rounded-md border border-neutral-200 px-3 py-2 text-[10px] font-medium text-neutral-600 hover:bg-neutral-50"
+                  className="flex min-h-8 items-center gap-1 rounded-md border border-neutral-200 px-2 py-1.5 text-[10px] font-medium text-neutral-600 hover:bg-neutral-50"
                 >
                   <Plus size={10} /> Row
                 </button>
@@ -231,7 +168,7 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
                             type="text"
                             value={col}
                             onChange={(e) => setColumn(ci, e.target.value)}
-                            className="w-full min-w-[70px] bg-transparent px-3 py-2 text-[11px] font-semibold text-neutral-700 outline-none"
+                            className="w-full min-w-[64px] bg-transparent px-2 py-1.5 text-[11px] font-semibold text-neutral-700 outline-none"
                           />
                           {ci > 1 && (
                             <button type="button" onClick={() => removeColumn(ci)} className="pr-1 text-neutral-300 hover:text-destructive">
@@ -253,7 +190,7 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
                             type="text"
                             value={row[ci] ?? ""}
                             onChange={(e) => setCell(ri, ci, e.target.value)}
-                            className="w-full min-w-[70px] bg-transparent px-3 py-2 text-[11px] text-neutral-700 outline-none hover:bg-neutral-50 focus:bg-white"
+                            className="w-full min-w-[64px] bg-transparent px-2 py-1.5 text-[11px] text-neutral-700 outline-none hover:bg-neutral-50 focus:bg-white"
                             placeholder={ci === 0 ? "Label" : "0"}
                           />
                         </td>
@@ -270,8 +207,8 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
             </div>
           </div>
 
-          <div className="space-y-3 px-4 py-3">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2.5 px-3 py-2.5">
+            <div className="grid grid-cols-2 gap-2">
               <label className="space-y-1">
                 <span className="text-[11px] font-medium text-neutral-600">X-axis label</span>
                 <input
@@ -279,7 +216,7 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
                   value={xLabel}
                   placeholder="e.g. Year"
                   onChange={(e) => onChange("xLabel", e.target.value)}
-                  className="min-h-10 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+                  className="min-h-9 w-full rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-2 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
                 />
               </label>
               <label className="space-y-1">
@@ -289,7 +226,7 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
                   value={yLabel}
                   placeholder="e.g. °C"
                   onChange={(e) => onChange("yLabel", e.target.value)}
-                  className="min-h-10 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
+                  className="min-h-9 w-full rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-2 text-[12px] text-neutral-700 outline-none focus:border-neutral-400"
                 />
               </label>
             </div>
@@ -303,8 +240,8 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
                     type="button"
                     onClick={() => { setColorScheme(name); onChange("colorScheme", name) }}
                     className={[
-                      "flex min-h-9 items-center gap-1.5 rounded-md border px-3 py-2 text-[10px] font-medium transition-colors",
-                      colorScheme === name ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
+                      "flex min-h-8 items-center gap-1.5 rounded-md border px-2 py-1.5 text-[10px] font-medium transition-colors",
+                      colorScheme === name ? "border-[#9eb9da] bg-[#dbe8f6] text-[#3a6ea0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
                     ].join(" ")}
                   >
                     <div className="flex gap-0.5">
@@ -342,25 +279,25 @@ export function ChartEditor({ content, onChange }: ChartEditorProps) {
         </div>
       )}
       preview={(
-        <div className="flex h-full min-h-0 items-center justify-center px-6 py-6 md:px-8">
+        <div className="flex h-full min-h-0 items-center justify-center px-4 py-5 md:px-6">
           <EditorPreviewFrame
             cardType="chart"
             title={title}
             onTitleChange={(next) => onChange("title", next)}
-            className="w-full max-w-5xl"
-            bodyClassName="h-[420px] p-5"
+            className="w-full"
+            bodyClassName="h-[340px] p-3"
           >
-              <ResponsiveChartEditorPreview
-                chartType={chartType}
-                chartData={chartData}
-                columns={columns}
-                seriesKeys={seriesKeys}
-                colors={colors}
-                showLegend={showLegend}
-                showGrid={showGrid}
-                xLabel={xLabel}
-                yLabel={yLabel}
-              />
+            <ResponsiveChartEditorPreview
+              chartType={chartType}
+              chartData={chartData}
+              columns={columns}
+              seriesKeys={seriesKeys}
+              colors={colors}
+              showLegend={showLegend}
+              showGrid={showGrid}
+              xLabel={xLabel}
+              yLabel={yLabel}
+            />
           </EditorPreviewFrame>
         </div>
       )}

@@ -13,6 +13,18 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "legacy/**",
+    "coverage/**",
+    "test-results/**",
+    ".playwright-cli/**",
+    "output/**",
+    "firefox-extension/**",
+    "chrome-extension/**",
+    "public/vendor/**",
+    "tmp-*.cjs",
+    "tmp-*.mjs",
+    "repro-*.cjs",
+    ".tmp-*.cjs",
+    "e2e/.tmp-*.spec.ts",
   ]),
 ]);
 

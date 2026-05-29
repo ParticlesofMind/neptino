@@ -3,9 +3,9 @@
  * Fields of Education and Training 2013
  *
  * Three-level hierarchy:
- *   Broad  (1-digit code, e.g. "01")   — 10 fields  (excl. "00 Generic")
- *   Narrow (3-digit code, e.g. "011")  — 26 fields
- *   Detailed (4-digit code, e.g. "0111") — ~80 fields
+ *   Broad  (1-digit code, e.g. "01")   — 11 fields
+ *   Narrow (3-digit code, e.g. "011")  — 29 fields
+ *   Detailed (4-digit code, e.g. "0111") — 80 fields
  *
  * The broadLabel values match the ISCED_DOMAINS constants in src/types/atlas.ts,
  * which are the values stored in the encyclopedia_items.domain DB column.
@@ -37,6 +37,36 @@ export interface ISCEDFBroadField {
 
 export const ISCED_F_2013: ISCEDFBroadField[] = [
   {
+    code: "00",
+    label: "Generic programmes and qualifications",
+    narrow: [
+      {
+        code: "001",
+        label: "Basic programmes and qualifications",
+        broadLabel: "Generic programmes and qualifications",
+        detailed: [
+          { code: "0011", label: "Basic programmes and qualifications", narrowCode: "001", broadLabel: "Generic programmes and qualifications" },
+        ],
+      },
+      {
+        code: "002",
+        label: "Literacy and numeracy",
+        broadLabel: "Generic programmes and qualifications",
+        detailed: [
+          { code: "0021", label: "Literacy and numeracy", narrowCode: "002", broadLabel: "Generic programmes and qualifications" },
+        ],
+      },
+      {
+        code: "003",
+        label: "Personal skills and development",
+        broadLabel: "Generic programmes and qualifications",
+        detailed: [
+          { code: "0031", label: "Personal skills and development", narrowCode: "003", broadLabel: "Generic programmes and qualifications" },
+        ],
+      },
+    ],
+  },
+  {
     code: "01",
     label: "Education",
     narrow: [
@@ -62,7 +92,7 @@ export const ISCED_F_2013: ISCEDFBroadField[] = [
         label: "Arts",
         broadLabel: "Arts and humanities",
         detailed: [
-          { code: "0211", label: "Fine arts", narrowCode: "021", broadLabel: "Arts and humanities" },
+          { code: "0211", label: "Audio-visual techniques and media production", narrowCode: "021", broadLabel: "Arts and humanities" },
           { code: "0212", label: "Fashion, interior and industrial design", narrowCode: "021", broadLabel: "Arts and humanities" },
           { code: "0213", label: "Fine arts (excluding music and performing arts)", narrowCode: "021", broadLabel: "Arts and humanities" },
           { code: "0214", label: "Handicrafts", narrowCode: "021", broadLabel: "Arts and humanities" },

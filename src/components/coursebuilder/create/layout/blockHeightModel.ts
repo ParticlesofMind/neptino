@@ -14,12 +14,13 @@
  * infinite split loop is not.
  */
 
+import { DEFAULT_PAGE_DIMENSIONS, bodyHeightPx } from "../types"
 import type { DroppedCard, TaskAreaKind, Topic } from "../types"
 
 // ─── CSS layout constants ─────────────────────────────────────────────────────
 
-/** BlockRenderer outer wrapper: py-2 (8px top + 8px bottom) */
-export const BLOCK_RENDERER_VERT = 16
+/** BlockRenderer outer wrapper: no vertical padding; the printable body owns the exact bounds. */
+export const BLOCK_RENDERER_VERT = 0
 
 /** gap-2 (8px) between block sections inside BlockRenderer */
 export const BLOCK_GAP = 8
@@ -30,32 +31,29 @@ const SECTION_HEADER = 24
 /** Table thead row: py-1 + text-[10px] font-medium */
 const TABLE_HEADER = 24
 
-/** Table tbody data row: py-1 + text-[11px] */
+/** Table tbody data row: py-1 + topic/objective/task hierarchy text scale */
 const TABLE_ROW = 25
 
 /** Topic container border + p-1.5 chrome (top + bottom only): 1+6+6+1 = 14px */
 export const TOPIC_CHROME = 14
 
-/** Topic label: text-[11px] (17px line) + mb-1.5 (6px) */
-export const TOPIC_LABEL = 23
+/** Topic label: text-[13px] leading-tight (~17px line) + mb-2 (8px) */
+export const TOPIC_LABEL = 25
 
 /** Objective container border + p-1.5 chrome (top + bottom): 14px */
 export const OBJ_CHROME = 14
 
-/** Objective label: text-[10px] (15px line) + mb-1.5 (6px) */
+/** Objective label: text-[11px] leading-snug (~15px line) + mb-1.5 (6px) */
 export const OBJ_LABEL = 21
 
 /** Task container border + p-1.5 chrome (top + bottom): 14px (only when has label) */
 const TASK_CHROME = 14
 
-/** Task label: text-[10px] (15px line) + mb-1.5 (6px) */
+/** Task label: text-[9.5px] leading-snug (~13px line) + mb-1.5 (6px), over-estimated slightly */
 const TASK_LABEL = 21
 
-/**
- * Single task area at rest (no cards, no drag):
- *   label(14) + space-y-0.5(2) + zone(border-2 + py-1.5-12 + inner-py-1.5-12 + h-6-24) = 66px
- */
-const TASK_AREA = 66
+/** Single task area at rest: fixed empty drop-zone height h-12. */
+const TASK_AREA = 48
 
 /** gap-2 (8px) between task areas inside a task's flex flex-col gap-2 */
 const AREA_GAP = 8
@@ -94,11 +92,8 @@ export const TABLE_ROW_HEIGHT = TABLE_ROW
 
 // ─── Text-wrapping row height estimation ──────────────────────────────────────
 
-/**
- * Usable inner canvas width in CSS pixels.
- * A4 page (794px) minus left (76px) and right (76px) margins.
- */
-const CANVAS_INNER_WIDTH_PX = 642
+const CANVAS_INNER_WIDTH_PX =
+  DEFAULT_PAGE_DIMENSIONS.widthPx - DEFAULT_PAGE_DIMENSIONS.margins.left - DEFAULT_PAGE_DIMENSIONS.margins.right
 
 /**
  * Average character width at text-[11px] in a typical sans-serif font.
@@ -130,7 +125,7 @@ const PROGRAM_TASK_COL_WIDTH_PX = Math.round(CANVAS_INNER_WIDTH_PX * 0.32)
 
 /**
  * Resources table: approximate CSS pixel width of the Task column.
- * The task label carries the full "1.1.1 topic: obj — task" string (~55% of width).
+ * The task label carries only the task name (~55% of width).
  */
 const RESOURCES_TASK_COL_WIDTH_PX = Math.round(CANVAS_INNER_WIDTH_PX * 0.55)
 
@@ -143,16 +138,14 @@ const RESOURCES_TASK_COL_WIDTH_PX = Math.round(CANVAS_INNER_WIDTH_PX * 0.55)
  */
 export function estimateBlockRowHeights(key: "program" | "resources", topics: Topic[]): number[] {
   const heights: number[] = []
-  topics.forEach((topic, ti) => {
-    topic.objectives.forEach((obj, oi) => {
+  topics.forEach((topic) => {
+    topic.objectives.forEach((obj) => {
       const tasks = obj.tasks.length > 0 ? obj.tasks : [{ label: "" }]
-      tasks.forEach((task, ki) => {
+      tasks.forEach((task) => {
         if (key === "program") {
           heights.push(estimateWrappedRowHeight(task.label, PROGRAM_TASK_COL_WIDTH_PX))
         } else {
-          // Resources label mirrors ResourcesBlock: `${ti+1}.${oi+1}.${ki+1} topic: obj — task`
-          const label = `${ti + 1}.${oi + 1}.${ki + 1} ${topic.label}: ${obj.label} \u2014 ${task.label}`
-          heights.push(estimateWrappedRowHeight(label, RESOURCES_TASK_COL_WIDTH_PX))
+          heights.push(estimateWrappedRowHeight(task.label, RESOURCES_TASK_COL_WIDTH_PX))
         }
       })
     })
@@ -184,34 +177,188 @@ export const CONTENT_BLOCK_FIXED = 2 + SECTION_HEADER + CONTENT_BODY_VERT
  */
 export const DROPPED_CARD_HEIGHT = 38
 
-/**
- * Base zone overhead when cards are present (the min-height constraint no longer
- * limits the zone): label (14px) + space-y-0.5 gap (2px) + zone chrome
- * (border 2px + py-1.5 12px) = 30px.  When zones are empty we use TASK_AREA
- * (66px) which includes the min-h-6 floor.
- */
-const TASK_AREA_BASE_CARDS = 30
+/** Base zone overhead when cards are present: border + p-1 top/bottom. */
+const TASK_AREA_BASE_CARDS = 10
+const FIELD_FILL_CARD_BODY_RATIO = 0.72
+const DEFAULT_FIELD_FILL_CARD_HEIGHT = Math.round(bodyHeightPx(DEFAULT_PAGE_DIMENSIONS) * FIELD_FILL_CARD_BODY_RATIO)
 
-function estimateDroppedCardHeight(card: DroppedCard): number {
+const LAYOUT_ROW_GAP = 2
+
+const LAYOUT_SLOT_MIN_HEIGHTS: Record<string, number[]> = {
+  split: [120, 120],
+  stack: [150, 100],
+  feature: [220, 84, 120],
+  sidebar: [120, 120],
+  quad: [110, 110, 110, 110],
+  mosaic: Array.from({ length: 9 }, () => 72),
+  triptych: [120, 120, 120],
+  trirow: [56, 180, 56],
+  banner: [72, 140, 140],
+  broadside: [64, 120, 120, 120],
+  tower: [240, 72, 72, 72],
+  pinboard: [56, 100, 100, 100, 100],
+  annotated: [200, 100, 100, 100, 100],
+  sixgrid: Array.from({ length: 6 }, () => 88),
+  comparison: [54, 54, 140, 140],
+  stepped: Array.from({ length: 4 }, () => 88),
+  hero: [190, 64, 64, 72],
+  dialogue: [170, 170],
+  gallery: Array.from({ length: 6 }, () => 90),
+  spotlight: [92, 220, 92, 92],
+  flipcard: [170, 170],
+  "resizable-grid": Array.from({ length: 4 }, () => 120),
+}
+
+function stripHtml(value: string): string {
+  return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+}
+
+function estimateTextCardHeight(card: DroppedCard): number {
+  const declaredHeight = readDeclaredHeight(card)
+  if (declaredHeight !== null) return declaredHeight
+
+  const rawText = typeof card.content.text === "string" ? card.content.text : ""
+  const title = typeof card.content.title === "string" ? card.content.title : ""
+  const text = stripHtml(rawText)
+  const charsPerLine = 42
+  const textLines = Math.max(1, Math.ceil(text.length / charsPerLine))
+  const titleHeight = title ? 18 : 0
+  return Math.max(44, 18 + titleHeight + textLines * 18)
+}
+
+function readDeclaredHeight(card: DroppedCard, min = 44, max = 1200): number | null {
   const raw = typeof card.dimensions?.height === "number" ? card.dimensions.height : 0
-  const base = raw > 0 ? raw : 120
+  if (!Number.isFinite(raw) || raw <= 0) return null
+  return Math.max(min, Math.min(max, Math.round(raw)))
+}
 
-  // Rich cards reserve most of their declared height; generic DOM cards use
-  // less vertical space than their source dimensions suggest.
-  const ratio = (
-    card.cardType === "village-3d" ||
+function stackedCardsHeight(cards: DroppedCard[]): number {
+  if (cards.length === 0) return 0
+  return cards.reduce((sum, card) => sum + estimateDroppedCardHeight(card), 0)
+    + Math.max(0, cards.length - 1) * 2
+}
+
+function rowMax(slotHeights: number[], indices: number[]): number {
+  return Math.max(...indices.map((idx) => slotHeights[idx] ?? 0), 0)
+}
+
+function estimateLayoutCardHeight(card: DroppedCard): number {
+  const kind = card.cardType.replace("layout-", "")
+  const slotMins = LAYOUT_SLOT_MIN_HEIGHTS[kind] ?? [120, 120]
+  const slots = (card.content.slots ?? {}) as Record<string, DroppedCard[]>
+  const slotHeights = slotMins.map((slotMin, index) => Math.max(slotMin, stackedCardsHeight(slots[index] ?? [])))
+
+  const rowsHeight = (rows: number[][]) =>
+    rows.reduce((sum, row, index) => sum + rowMax(slotHeights, row) + (index > 0 ? LAYOUT_ROW_GAP : 0), 0)
+
+  const contentHeight = (() => {
+    switch (kind) {
+      case "split":
+      case "sidebar":
+      case "triptych":
+      case "dialogue":
+      case "flipcard":
+        return rowMax(slotHeights, slotHeights.map((_, index) => index))
+      case "stack":
+      case "trirow":
+      case "stepped":
+        return rowsHeight(slotHeights.map((_, index) => [index]))
+      case "quad":
+        return rowsHeight([[0, 1], [2, 3]])
+      case "mosaic":
+        return rowsHeight([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+      case "sixgrid":
+      case "gallery":
+        return rowsHeight([[0, 1, 2], [3, 4, 5]])
+      case "banner":
+      case "broadside":
+      case "pinboard":
+      case "comparison":
+        return rowsHeight([[0], slotHeights.map((_, index) => index).slice(1)])
+      case "feature":
+        return Math.max(slotHeights[0] ?? 0, (slotHeights[1] ?? 0) + LAYOUT_ROW_GAP + (slotHeights[2] ?? 0))
+      case "tower":
+        return Math.max(
+          slotHeights[0] ?? 0,
+          (slotHeights[1] ?? 0) + LAYOUT_ROW_GAP + (slotHeights[2] ?? 0) + LAYOUT_ROW_GAP + (slotHeights[3] ?? 0),
+        )
+      case "annotated":
+        return Math.max(slotHeights[0] ?? 0, rowsHeight([[1, 2], [3, 4]]))
+      case "spotlight":
+        return Math.max(slotHeights[1] ?? 0, rowsHeight([[0, 2], [3]]))
+      case "hero":
+        return rowsHeight([[0], [1, 2], [3]])
+      case "resizable-grid": {
+        const layout = Array.isArray(card.content.gridLayout) ? card.content.gridLayout : []
+        const maxBottomRow = layout.reduce((max, item) => {
+          if (!item || typeof item !== "object") return max
+          const row = Number((item as Record<string, unknown>).y)
+          const height = Number((item as Record<string, unknown>).h)
+          if (!Number.isFinite(row) || !Number.isFinite(height)) return max
+          return Math.max(max, row + height)
+        }, 8)
+        return Math.max(rowsHeight([[0, 1], [2, 3]]), maxBottomRow * 34 + Math.max(0, maxBottomRow - 1) * 8)
+      }
+      default:
+        return rowMax(slotHeights, slotHeights.map((_, index) => index))
+    }
+  })()
+
+  const estimatedHeight = contentHeight + 2
+  if (kind === "resizable-grid") return estimatedHeight
+
+  return Math.max(estimatedHeight, readDeclaredHeight(card) ?? 0)
+}
+
+export function estimateDroppedCardHeight(card: DroppedCard): number {
+  if (card.cardType.startsWith("layout-")) {
+    return estimateLayoutCardHeight(card)
+  }
+
+  if (card.cardType === "text") {
+    return estimateTextCardHeight(card)
+  }
+
+  const raw = readDeclaredHeight(card)
+
+  if (card.cardType === "chat") {
+    return Math.max(DEFAULT_FIELD_FILL_CARD_HEIGHT, raw ?? DEFAULT_FIELD_FILL_CARD_HEIGHT)
+  }
+
+  // These canvas products render at (or very close to) their declared height.
+  // Treating them like light preview cards underestimates page demand and leaves
+  // real canvases overflowed even after layout has "finished".
+  if (
+    card.cardType === "text-editor" ||
+    card.cardType === "code-editor" ||
+    card.cardType === "whiteboard" ||
     card.cardType === "rich-sim" ||
-    card.cardType === "interactive" ||
-    card.cardType === "games" ||
-    card.cardType === "chat" ||
-    card.cardType === "model-3d"
-  )
-    ? 0.7
-    : card.cardType === "image" || card.cardType === "video"
-      ? 0.55
-      : 0.35
+    card.cardType === "village-3d" ||
+    card.cardType === "interactive"
+  ) {
+    return raw ?? 160
+  }
 
-  return Math.max(44, Math.min(420, Math.round(base * ratio) + 20))
+  // Media-backed cards occupy substantially more of their declared height than
+  // lightweight DOM previews. Bias conservative here so pagination errs on the
+  // side of an extra continuation page rather than persistent footer overflow.
+  if (card.cardType === "video") {
+    return raw ?? 270
+  }
+
+  if (card.cardType === "image") {
+    return raw ?? 240
+  }
+
+  if (card.cardType === "audio") {
+    return raw ?? 160
+  }
+
+  if (card.cardType === "model-3d") {
+    return raw ?? 260
+  }
+
+  return raw ?? DROPPED_CARD_HEIGHT
 }
 
 function areaHeight(emptyAreaH: number, cards: DroppedCard[] = []): number {
@@ -219,6 +366,12 @@ function areaHeight(emptyAreaH: number, cards: DroppedCard[] = []): number {
   const cardsH = cards.reduce((sum, card) => sum + estimateDroppedCardHeight(card), 0)
   // Include insertion slots between cards and one trailing slot.
   return TASK_AREA_BASE_CARDS + cardsH + cards.length * 8
+}
+
+function cardsByArea(cards: DroppedCard[], visibleAreas: TaskAreaKind[]): Partial<Record<TaskAreaKind, DroppedCard[]>> {
+  return Object.fromEntries(
+    visibleAreas.map((area) => [area, cards.filter((card) => card.areaKind === area)]),
+  ) as Partial<Record<TaskAreaKind, DroppedCard[]>>
 }
 
 function areaStackHeight(
@@ -262,11 +415,7 @@ export function singleObjHeight(
           return blockMatch && areaMatch
         })
       : []
-    const cardsPerArea: Partial<Record<TaskAreaKind, DroppedCard[]>> = {
-      instruction: dropped.filter((card) => card.areaKind === "instruction"),
-      practice: dropped.filter((card) => card.areaKind === "practice"),
-      feedback: dropped.filter((card) => card.areaKind === "feedback"),
-    }
+    const cardsPerArea = cardsByArea(dropped, visibleAreas)
     return sum + (ki > 0 ? SPACE_Y_1_5 : 0) + singleTaskHeight(hasLabel, areaCount, cardsPerArea, visibleAreas)
   }, 0)
   const hasObjLabel = !isBootstrapped && obj.label !== ""

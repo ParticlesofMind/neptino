@@ -3,6 +3,7 @@
 import { type MutableRefObject } from "react"
 import { useCourseRowLoader } from "@/components/coursebuilder"
 import { getPedagogyApproach } from "@/components/coursebuilder/sections/pedagogy-section"
+import { evaluateCourseSetupReadiness } from "@/lib/curriculum/setup-readiness"
 import { mergeResourcePreferences, type ResourcePreference } from "@/lib/curriculum/resources"
 import { normalizeContentLoadConfig, MIN_TASKS_PER_OBJECTIVE } from "@/lib/curriculum/content-load-service"
 import type {
@@ -52,12 +53,12 @@ export interface CurriculumLoaderSetters {
   setScheduleEntries: (v: ScheduleGeneratedEntry[]) => void
   setSessionRows: (v: CurriculumSessionRow[]) => void
   setReadinessIssues: (v: string[]) => void
-  setMissing: (v: { essentials: boolean; students: boolean; schedule: boolean; curriculum: boolean }) => void
+  setMissing: (v: Record<string, boolean>) => void
   generationSettingsRef: MutableRefObject<Record<string, unknown> | null>
 }
 
 export const CURRICULUM_LOADER_SELECT =
-  "course_name, course_description, course_language, curriculum_data, schedule_settings, generation_settings, classification_data, course_layout, students_overview"
+  "course_name, course_description, course_language, course_type, teacher_id, institution_id, institution, curriculum_data, schedule_settings, generation_settings, classification_data, course_layout, students_overview, template_settings, visibility_settings, pricing_settings, marketplace_settings, integration_settings, communication_settings"
 
 export function useCurriculumLoader(courseId: string | null, setters: CurriculumLoaderSetters) {
   const { loading, refreshing, hasData } = useCourseRowLoader<Record<string, unknown>>({
@@ -111,13 +112,10 @@ function applyLoadedCourseData(data: Record<string, unknown>, s: CurriculumLoade
   if (cd.subject || cd.domain || cd.topic) {
     s.setClassificationData({
       classYear: (cd.class_year as string) ?? "",
-      framework: (cd.curricular_framework as string) ?? "",
-      domain: (cd.domain as string) ?? "",
-      subject: (cd.subject as string) ?? "",
-      topic: (cd.topic as string) ?? "",
-      subtopic: (cd.subtopic as string) ?? "",
-      previousCourse: (cd.previous_course as string) ?? "",
-      nextCourse: (cd.next_course as string) ?? "",
+      domain: (cd.domain_label as string) ?? (cd.domain as string) ?? "",
+      subject: (cd.subject_label as string) ?? (cd.subject as string) ?? "",
+      topic: (cd.topic_label as string) ?? (cd.topic as string) ?? "",
+      subtopic: (cd.subtopic_label as string) ?? (cd.subtopic as string) ?? "",
     })
     if (Array.isArray(cd.key_terms)) s.setKeyTerms(cd.key_terms as string[])
     if (Array.isArray(cd.mandatory_topics)) s.setMandatoryTopics(cd.mandatory_topics as string[])
@@ -189,20 +187,27 @@ function applyLoadedCourseData(data: Record<string, unknown>, s: CurriculumLoade
   s.setScheduleEntries(loadedScheduleEntries)
   s.setSessionRows(syncedRows)
 
-  const issues: string[] = []
-  const essentialsReady =
-    Boolean((data.course_name as string | undefined)?.trim()) &&
-    Boolean((data.course_description as string | undefined)?.trim())
-  const studentsReady = totalStudents > 0
-  if (!essentialsReady) issues.push("Complete Essentials (title and description).")
-  if (!studentsReady) issues.push("Add at least 1 student in Students.")
-  if (loadedScheduleEntries.length === 0) issues.push("Generate a schedule with at least 1 session.")
-  if (syncedRows.length === 0) issues.push("Set up curriculum session rows in Curriculum.")
-  s.setReadinessIssues(issues)
-  s.setMissing({
-    essentials: !essentialsReady,
-    students: !studentsReady,
-    schedule: loadedScheduleEntries.length === 0,
-    curriculum: syncedRows.length === 0,
+  const report = evaluateCourseSetupReadiness({
+    ...data,
+    schedule_settings: {
+      ...sch,
+      generated_entries: loadedScheduleEntries,
+    },
+    curriculum_data: {
+      ...c,
+      session_count: loadedScheduleEntries.length > 0 ? loadedScheduleEntries.length : ((c.session_count as number) ?? (c.lesson_count as number) ?? 8),
+      session_rows: syncedRows,
+    },
   })
+
+  s.setReadinessIssues(
+    report.requiredSections
+      .filter((section) => !section.complete)
+      .map((section) => {
+        const missing = section.missing.slice(0, 3).join(", ")
+        const suffix = section.missing.length > 3 ? `, and ${section.missing.length - 3} more` : ""
+        return `Complete ${section.label}: ${missing}${suffix}.`
+      }),
+  )
+  s.setMissing(report.missingBySection)
 }

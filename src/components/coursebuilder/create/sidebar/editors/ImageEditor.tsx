@@ -9,6 +9,7 @@ import {
   type FitMode,
   type Preset,
 } from "./image-editor-sidebar"
+import { EditorSplitLayout } from "./editor-split-layout"
 import { EditorPreviewFrame } from "./editor-preview-frame"
 import { MAKE_BLUE_BUTTON } from "../make-theme"
 
@@ -113,8 +114,10 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white md:flex-row">
-      <div className="make-editor-split-sidebar w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:min-w-[26rem] md:flex-1 md:border-b-0 md:border-r md:border-neutral-200 xl:min-w-[30rem]">
+    <EditorSplitLayout
+      sidebarWidthClassName="md:w-[30rem] md:flex-none xl:w-[32rem]"
+      previewClassName="bg-[#f5f7fb]"
+      sidebar={(
         <ImageEditorSidebar
           sourceTab={sourceTab}
           urlDraft={urlDraft}
@@ -149,78 +152,77 @@ export function ImageEditor({ content, onChange }: ImageEditorProps) {
             setZoom(1)
           }}
         />
-      </div>
-
-      <div className="min-h-0 min-w-0 md:w-[min(44rem,40vw)] md:max-w-[44rem] md:flex-none bg-[#f5f7fb]">
+      )}
+      preview={(
         <div className="relative min-h-0 h-full overflow-hidden">
-            {url ? (
-              cropMode ? (
-                <>
-                  <Cropper
-                    image={url}
-                    crop={crop}
-                    zoom={zoom}
-                    aspect={undefined}
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onCropComplete={(_, px) => setCropPixels(px)}
-                    style={{ containerStyle: { position: "absolute", inset: 0 } }}
-                  />
-                  <div className="absolute bottom-2.5 right-2.5 z-20 flex gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setCropMode(false)}
-                      className="flex h-9 items-center gap-1 rounded-md border border-neutral-200 bg-white px-3.5 py-2 text-[11px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-[3px] focus:ring-primary/15"
-                    >
-                      <X size={10} /> Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleApplyCrop}
-                      disabled={applying}
-                      className={`flex h-9 items-center gap-1 rounded-md border px-3.5 py-2 text-[11px] font-semibold transition-colors focus:outline-none focus:ring-[3px] focus:ring-primary/15 ${MAKE_BLUE_BUTTON} disabled:opacity-60`}
-                    >
-                      <Check size={10} /> Apply
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="flex h-full items-center justify-center p-4 md:p-6">
-                  <EditorPreviewFrame
-                    cardType="image"
-                    title={title}
-                    onTitleChange={(next) => onChange("title", next)}
-                    className="h-full w-full"
-                    bodyClassName="relative h-[calc(100%-4.5rem)] min-h-[20rem] overflow-hidden bg-[repeating-conic-gradient(#f0f0f0_0%_25%,transparent_0%_50%)] bg-[length:12px_12px]"
+          {url ? (
+            cropMode ? (
+              <>
+                <Cropper
+                  image={url}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={undefined}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={(_, px) => setCropPixels(px)}
+                  style={{ containerStyle: { position: "absolute", inset: 0 } }}
+                />
+                <div className="absolute bottom-2.5 right-2.5 z-20 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setCropMode(false)}
+                    className="flex h-9 items-center gap-1 rounded-md border border-neutral-200 bg-white px-3.5 py-2 text-[11px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt={alt || "Preview"}
-                      style={imgStyle}
-                    />
-                  </EditorPreviewFrame>
+                    <X size={10} /> Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleApplyCrop}
+                    disabled={applying}
+                    className={`flex h-9 items-center gap-1 rounded-md border px-3.5 py-2 text-[11px] font-semibold transition-colors focus:outline-none focus:ring-[3px] focus:ring-primary/15 ${MAKE_BLUE_BUTTON} disabled:opacity-60`}
+                  >
+                    <Check size={10} /> Apply
+                  </button>
                 </div>
-              )
+              </>
             ) : (
-              <div className="flex h-full items-center justify-center px-4 md:px-6">
+              <div className="flex h-full items-center justify-center p-4 md:p-6">
                 <EditorPreviewFrame
                   cardType="image"
                   title={title}
                   onTitleChange={(next) => onChange("title", next)}
-                  className="w-full max-w-md"
-                  bodyClassName="flex flex-col items-center gap-3 bg-white/75 px-8 py-12 text-center"
+                  className="h-full w-full"
+                  bodyClassName="relative h-[calc(100%-4.5rem)] min-h-[20rem] overflow-hidden bg-[repeating-conic-gradient(#f0f0f0_0%_25%,transparent_0%_50%)] bg-[length:12px_12px]"
                 >
-                  <ImageIcon size={28} className="text-neutral-300" />
-                  <p className="text-[13px] font-medium text-neutral-700">No image loaded</p>
-                  <p className="text-[11px] leading-relaxed text-neutral-400">
-                    Add a remote image URL or upload a file from the source panel.
-                  </p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={alt || "Preview"}
+                    style={imgStyle}
+                  />
                 </EditorPreviewFrame>
               </div>
-            )}
+            )
+          ) : (
+            <div className="flex h-full items-center justify-center px-4 md:px-6">
+              <EditorPreviewFrame
+                cardType="image"
+                title={title}
+                onTitleChange={(next) => onChange("title", next)}
+                className="w-full max-w-md"
+                bodyClassName="flex flex-col items-center gap-3 bg-white/75 px-8 py-12 text-center"
+              >
+                <ImageIcon size={28} className="text-neutral-300" />
+                <p className="text-[13px] font-medium text-neutral-700">No image loaded</p>
+                <p className="text-[11px] leading-relaxed text-neutral-400">
+                  Add a remote image URL or upload a file from the source panel.
+                </p>
+              </EditorPreviewFrame>
+            </div>
+          )}
         </div>
-      </div>
-    </div>
+      )}
+    />
   )
 }

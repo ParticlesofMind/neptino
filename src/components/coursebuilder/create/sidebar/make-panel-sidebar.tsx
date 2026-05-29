@@ -1,46 +1,61 @@
 import { ChevronDown, ChevronRight, FolderOpen } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useMemo, useState } from "react"
 
+import { ALL_TEMPLATE_TYPES, type TemplateType } from "@/lib/curriculum/template-blocks"
 import { CARD_TYPE_META } from "../cards/CardTypePreview"
 import type { StudioCard } from "../store/makeLibraryStore"
 import type { CardType } from "../types"
 import { type CardGroup, type CardSpec } from "./make-panel-data"
 import type { LibraryProjectGroup } from "./make-panel-library"
-import { MAKE_BLUE_ACTIVE_SOFT, MAKE_BLUE_BADGE, MAKE_BLUE_INPUT_FOCUS, MAKE_RESOURCE_ACCENT } from "./make-theme"
+import { MAKE_BLUE_ACTIVE_SOFT, MAKE_BLUE_INPUT_FOCUS, MAKE_RESOURCE_ACCENT } from "./make-theme"
 
 const GROUP_ACCENT: Record<string, { pill: string; pillActive: string; border: string; dot: string }> = {
-  resources: MAKE_RESOURCE_ACCENT,
-  activities: { pill: "text-[#00ccb3]", pillActive: "bg-[#00ccb3] text-white", border: "border-[#00ccb3]/20 bg-[#00ccb3]/5", dot: "bg-[#00ccb3]" },
-  experiences: { pill: "text-[#a89450]", pillActive: "bg-[#a89450] text-white", border: "border-[#a89450]/20 bg-[#a89450]/10", dot: "bg-[#a89450]" },
-  layout: { pill: "text-muted-foreground", pillActive: "bg-foreground/80 text-white", border: "border-border bg-muted/40", dot: "bg-muted-foreground/60" },
+  materials: MAKE_RESOURCE_ACCENT,
+  compositions: { pill: "text-[#00ccb3]", pillActive: "bg-[#00ccb3] text-white", border: "border-[#00ccb3]/20 bg-[#00ccb3]/5", dot: "bg-[#00ccb3]" },
 }
 
 const FILTER_LABELS: Record<string, string> = {
-  all: "All",
-  resources: "Res",
-  activities: "Act",
-  experiences: "Exp",
-  library: "Library",
+  materials: "Materials",
+  compositions: "Compositions",
+  library: "Saved",
 }
 
-export type MakePanelFilter = "all" | CardGroup | "library"
+const TEMPLATE_LABELS: Record<TemplateType, string> = {
+  lesson: "Lesson",
+  certificate: "Certificate",
+  quiz: "Quiz",
+  assessment: "Assessment",
+  exam: "Exam",
+}
+
+export type MakePanelFilter = CardGroup | "library"
+export type MakePanelSidebarItem = CardSpec & {
+  presetId?: string
+  layoutLabel?: string
+}
 
 interface MakePanelSidebarProps {
   activeFilter: MakePanelFilter
   search: string
   showSidebar: boolean
   selectedCardType: CardType
+  selectedCompositionPresetId: string | null
   selectedLibraryCardId: string | null
-  visibleCards: number
-  totalCards: number
-  libraryVisibleCount: number
   libraryTotalCount: number
-  filteredGroups: Array<{ id: CardGroup; label: string; items: CardSpec[] }>
+  filteredGroups: Array<{
+    id: CardGroup
+    label: string
+    items: MakePanelSidebarItem[]
+    subgroups: Array<{ id: string; label: string; description: string; items: MakePanelSidebarItem[] }>
+  }>
   libraryGroups: LibraryProjectGroup[]
+  templateContext: TemplateType
   onFilterChange: (filter: MakePanelFilter) => void
   onSearchChange: (value: string) => void
   onSelectCardType: (cardType: CardType) => void
+  onSelectCompositionPreset: (presetId: string) => void
   onSelectLibraryCard: (card: StudioCard) => void
+  onTemplateContextChange: (templateType: TemplateType) => void
   onToggleSidebar: (visible: boolean) => void
 }
 
@@ -49,54 +64,50 @@ export function MakePanelSidebar({
   search,
   showSidebar,
   selectedCardType,
+  selectedCompositionPresetId,
   selectedLibraryCardId,
-  visibleCards,
-  totalCards,
-  libraryVisibleCount,
   libraryTotalCount,
   filteredGroups,
   libraryGroups,
+  templateContext,
   onFilterChange,
   onSearchChange,
   onSelectCardType,
+  onSelectCompositionPreset,
   onSelectLibraryCard,
+  onTemplateContextChange,
   onToggleSidebar,
 }: MakePanelSidebarProps) {
-  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({})
-  const [expandedTypeGroups, setExpandedTypeGroups] = useState<Record<string, boolean>>({})
+  const [expandedProjectOverrides, setExpandedProjectOverrides] = useState<Record<string, boolean>>({})
+  const [expandedTypeGroupOverrides, setExpandedTypeGroupOverrides] = useState<Record<string, boolean>>({})
 
-  useEffect(() => {
-    if (libraryGroups.length === 0) return
-    setExpandedProjects((prev) => {
-      const next = { ...prev }
-      let changed = false
-      for (const [index, group] of libraryGroups.entries()) {
-        if (group.id in next) continue
-        next[group.id] = group.isCurrent || index === 0
-        changed = true
-      }
-      return changed ? next : prev
-    })
+  const defaultExpandedProjects = useMemo(() => {
+    const next: Record<string, boolean> = {}
+    for (const [index, group] of libraryGroups.entries()) {
+      next[group.id] = group.isCurrent || index === 0
+    }
+    return next
   }, [libraryGroups])
 
-  useEffect(() => {
-    if (libraryGroups.length === 0) return
-    setExpandedTypeGroups((prev) => {
-      const next = { ...prev }
-      let changed = false
+  const expandedProjects = useMemo(
+    () => ({ ...defaultExpandedProjects, ...expandedProjectOverrides }),
+    [defaultExpandedProjects, expandedProjectOverrides],
+  )
 
-      for (const group of libraryGroups) {
-        for (const [index, cardTypeGroup] of group.cardTypeGroups.entries()) {
-          const key = `${group.id}:${cardTypeGroup.id}`
-          if (key in next) continue
-          next[key] = index === 0
-          changed = true
-        }
+  const defaultExpandedTypeGroups = useMemo(() => {
+    const next: Record<string, boolean> = {}
+    for (const group of libraryGroups) {
+      for (const [index, cardTypeGroup] of group.cardTypeGroups.entries()) {
+        next[`${group.id}:${cardTypeGroup.id}`] = index === 0
       }
-
-      return changed ? next : prev
-    })
+    }
+    return next
   }, [libraryGroups])
+
+  const expandedTypeGroups = useMemo(
+    () => ({ ...defaultExpandedTypeGroups, ...expandedTypeGroupOverrides }),
+    [defaultExpandedTypeGroups, expandedTypeGroupOverrides],
+  )
 
   if (!showSidebar) {
     return (
@@ -104,7 +115,7 @@ export function MakePanelSidebar({
         <button
           type="button"
           onClick={() => onToggleSidebar(true)}
-          title="Expand block library"
+          title="Expand card library"
           className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15"
         >
           <ChevronRight size={16} className="rotate-180" />
@@ -114,81 +125,85 @@ export function MakePanelSidebar({
           onClick={() => onToggleSidebar(true)}
           className="mt-3 rounded-md px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15 [writing-mode:vertical-rl] [text-orientation:mixed]"
         >
-          Blocks
+          Cards
         </button>
       </div>
     )
   }
 
   const isLibraryView = activeFilter === "library"
+  const creationFilters = ["materials", "compositions", "library"] as const
 
   return (
-    <div className="flex w-full shrink flex-col overflow-hidden border-r border-border bg-background md:w-[19rem] md:min-w-[15.5rem] md:max-w-[19rem]">
-      <div className="shrink-0 border-b border-border/50 px-4 pb-3 pt-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-xs font-bold tracking-tight text-foreground">Block library</p>
-            <p className="mt-0.5 text-[10px] text-muted-foreground/70">
-              {isLibraryView ? "Browse saved blocks by project" : "Choose a block to configure"}
-            </p>
-          </div>
+    <div className="flex w-full shrink flex-col overflow-hidden border-r border-border bg-background md:w-[27rem] md:min-w-[22rem] md:max-w-[29rem]">
+      <div className="shrink-0 border-b border-border/50 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-bold tracking-tight text-foreground">Add Card</p>
           <button
             type="button"
             onClick={() => onToggleSidebar(false)}
-            title="Collapse block library"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            title="Collapse card library"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted/60 hover:text-foreground focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           >
             <ChevronRight size={15} className="rotate-180" />
           </button>
         </div>
-        <div className="mt-2 flex items-center gap-1.5">
-          <span className={["rounded px-2 py-1 text-[9px] font-semibold", MAKE_BLUE_BADGE].join(" ")}>
-            {isLibraryView ? libraryVisibleCount : visibleCards} visible
-          </span>
-          <span className="rounded bg-muted/60 px-2 py-1 text-[9px] font-semibold text-muted-foreground">
-            {isLibraryView ? libraryTotalCount : totalCards} total
-          </span>
-        </div>
       </div>
 
-      <div className="shrink-0 px-3 pb-2 pt-2.5">
+      <div className="shrink-0 px-3 pb-2 pt-2">
+        <div className="mb-2 grid grid-cols-3 items-center gap-1 rounded-lg border border-border bg-muted/40 p-1">
+          {creationFilters.map((filter) => {
+            const isActive = activeFilter === filter
+            const groupAccent = filter !== "library" ? GROUP_ACCENT[filter] : null
+            return (
+              <button
+                key={filter}
+                type="button"
+                data-testid={`make-filter-${filter}`}
+                onClick={() => onFilterChange(filter)}
+                className={[
+                  "flex h-7 min-w-0 items-center justify-center rounded-md px-1 text-[9px] font-bold uppercase leading-none transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15",
+                  isActive
+                    ? groupAccent
+                      ? groupAccent.pillActive
+                      : MAKE_BLUE_ACTIVE_SOFT
+                    : groupAccent
+                      ? `text-muted-foreground ${groupAccent.pill} hover:bg-background`
+                      : "text-muted-foreground hover:bg-background hover:text-foreground",
+                ].join(" ")}
+              >
+                {FILTER_LABELS[filter]}
+              </button>
+            )
+          })}
+        </div>
+        {!isLibraryView && (
+          <>
+            <label htmlFor="make-template-context" className="mb-1 block text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+              Template type
+            </label>
+            <select
+              id="make-template-context"
+              aria-label="Template"
+              value={templateContext}
+              onChange={(event) => onTemplateContextChange(event.target.value as TemplateType)}
+              className={`min-h-9 w-full rounded-lg border border-border bg-background px-3 py-2 text-[12px] font-semibold text-foreground outline-none transition-colors ${MAKE_BLUE_INPUT_FOCUS}`}
+            >
+              {ALL_TEMPLATE_TYPES.map((templateType) => (
+                <option key={templateType} value={templateType}>
+                  {TEMPLATE_LABELS[templateType]}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
         <input
           type="search"
-          placeholder={isLibraryView ? "Search saved blocks…" : "Search block types…"}
+          placeholder={isLibraryView ? "Search saved cards..." : "Search card types..."}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          className={`min-h-10 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-[12px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 ${MAKE_BLUE_INPUT_FOCUS}`}
+          className={`mt-2 min-h-9 w-full rounded-lg border border-border bg-background px-3 py-2 text-[12px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 ${MAKE_BLUE_INPUT_FOCUS}`}
         />
-      </div>
-
-      <div className="shrink-0 flex gap-1 px-3 pb-2.5">
-        {(["all", "resources", "activities", "experiences", "library"] as const).map((filter) => {
-          const isActive = activeFilter === filter
-          const groupAccent = filter !== "all" && filter !== "library" ? GROUP_ACCENT[filter] : null
-          return (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => onFilterChange(filter)}
-              className={[
-                "flex min-h-8 flex-1 items-center justify-center rounded-md px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15",
-                isActive
-                  ? groupAccent
-                    ? groupAccent.pillActive
-                    : filter === "library"
-                      ? "bg-neutral-900 text-white"
-                      : MAKE_BLUE_ACTIVE_SOFT
-                  : groupAccent
-                    ? `bg-muted/60 ${groupAccent.pill} hover:opacity-80`
-                    : filter === "library"
-                      ? "bg-muted/60 text-foreground/70 hover:bg-muted"
-                      : "bg-muted/60 text-muted-foreground hover:bg-muted",
-              ].join(" ")}
-            >
-              {FILTER_LABELS[filter]}
-            </button>
-          )
-        })}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -200,7 +215,7 @@ export function MakePanelSidebar({
                 <section key={group.id} className="mb-2 overflow-hidden rounded-xl border border-border bg-muted/30">
                   <button
                     type="button"
-                    onClick={() => setExpandedProjects((prev) => ({ ...prev, [group.id]: !isExpanded }))}
+                    onClick={() => setExpandedProjectOverrides((prev) => ({ ...prev, [group.id]: !isExpanded }))}
                     className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-background focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   >
                     {isExpanded ? <ChevronDown size={14} className="shrink-0 text-muted-foreground" /> : <ChevronRight size={14} className="shrink-0 text-muted-foreground" />}
@@ -226,7 +241,7 @@ export function MakePanelSidebar({
                             type="button"
                             onClick={() => {
                               const key = `${group.id}:${cardTypeGroup.id}`
-                              setExpandedTypeGroups((prev) => ({ ...prev, [key]: !(prev[key] ?? true) }))
+                              setExpandedTypeGroupOverrides((prev) => ({ ...prev, [key]: !expandedTypeGroups[key] }))
                             }}
                             className="mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/30 focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                           >
@@ -282,7 +297,7 @@ export function MakePanelSidebar({
             {libraryGroups.length === 0 && (
               <div className="px-3 py-8 text-center">
                 <p className="text-[12px] text-muted-foreground/70">
-                  {libraryTotalCount > 0 ? "No saved blocks match your search." : "No saved blocks yet."}
+                  {libraryTotalCount > 0 ? "No saved cards match your search." : "No saved cards yet."}
                 </p>
               </div>
             )}
@@ -299,38 +314,69 @@ export function MakePanelSidebar({
                   </p>
                 </div>
 
-                {group.items.map((spec) => {
-                  const isActive = spec.cardType === selectedCardType
-                  return (
-                    <button
-                      key={spec.cardType}
-                      type="button"
-                      onClick={() => onSelectCardType(spec.cardType)}
-                      className={["mx-auto flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15", isActive ? "" : "hover:bg-muted/30"].join(" ")}
-                    >
-                      <div className={[
-                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-all",
-                        isActive ? [accent.border, "shadow-sm"].join(" ") : "bg-muted/40",
-                      ].join(" ")}>
-                        <spec.Icon size={12} className={isActive ? spec.accent : "text-muted-foreground/70"} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className={["text-[12px] font-semibold leading-tight", isActive ? "text-foreground" : "text-foreground/70"].join(" ")}>
-                          {spec.label}
-                        </p>
-                        <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-muted-foreground/70">
-                          {spec.description}
-                        </p>
-                        {spec.group === "layout" && spec.fields.length > 0 && (
-                          <p className="mt-0.5 line-clamp-2 text-[9px] leading-snug text-muted-foreground/60">
-                            {spec.fields.slice(0, 3).join(" • ")}
-                          </p>
+                {group.subgroups.map((subgroup) => (
+                  <section key={subgroup.id} className="pb-1">
+                    <div className="px-4 pb-1.5 pt-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[13px] font-bold leading-tight text-foreground/85">{subgroup.label}</p>
+                        {group.id === "compositions" && (
+                          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                            {subgroup.id === "layout-templates" ? "Custom" : "Pre-built"}
+                          </span>
                         )}
                       </div>
-                      {isActive && <div className={["mt-1 h-1.5 w-1.5 shrink-0 rounded-full", accent.dot].join(" ")} />}
-                    </button>
-                  )
-                })}
+                      <p className="mt-1 line-clamp-1 text-[11px] leading-snug text-muted-foreground/70">{subgroup.description}</p>
+                    </div>
+
+                    {subgroup.items.map((spec) => {
+                      const isPreset = typeof spec.presetId === "string"
+                      const isActive = isPreset
+                        ? spec.presetId === selectedCompositionPresetId
+                        : spec.cardType === selectedCardType && selectedCompositionPresetId == null
+                      return (
+                        <button
+                          key={spec.presetId ?? spec.cardType}
+                          type="button"
+                          data-testid={spec.presetId ? `make-composition-preset-${spec.presetId}` : `make-card-type-${spec.cardType}`}
+                          onClick={() => {
+                            if (spec.presetId) {
+                              onSelectCompositionPreset(spec.presetId)
+                            } else {
+                              onSelectCardType(spec.cardType)
+                            }
+                          }}
+                          className={["mx-auto flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all focus:outline-none focus:ring-[3px] focus:ring-primary/15", isActive ? "" : "hover:bg-muted/30"].join(" ")}
+                        >
+                          <div className={[
+                            "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-all",
+                            isActive ? [accent.border, "shadow-sm"].join(" ") : "bg-muted/40",
+                          ].join(" ")}>
+                            <spec.Icon size={12} className={isActive ? accent.pill : "text-muted-foreground/70"} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={["text-[12px] font-semibold leading-tight", isActive ? "text-foreground" : "text-foreground/70"].join(" ")}>
+                              {spec.label}
+                            </p>
+                            <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-muted-foreground/70">
+                              {spec.description}
+                            </p>
+                            {spec.layoutLabel && (
+                              <p className="mt-0.5 line-clamp-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+                                {spec.layoutLabel} layout
+                              </p>
+                            )}
+                            {spec.cardType.startsWith("layout-") && spec.fields.length > 0 && (
+                              <p className="mt-0.5 line-clamp-2 text-[9px] leading-snug text-muted-foreground/60">
+                                {spec.fields.slice(0, 3).join(" • ")}
+                              </p>
+                            )}
+                          </div>
+                          {isActive && <div className={["mt-1 h-1.5 w-1.5 shrink-0 rounded-full", accent.dot].join(" ")} />}
+                        </button>
+                      )
+                    })}
+                  </section>
+                ))}
               </div>
             )
           })
@@ -338,7 +384,7 @@ export function MakePanelSidebar({
 
         {!isLibraryView && filteredGroups.length === 0 && (
           <div className="px-4 py-8 text-center">
-            <p className="text-[12px] text-muted-foreground/70">No block types match your search.</p>
+            <p className="text-[12px] text-muted-foreground/70">No card types match your search.</p>
           </div>
         )}
       </div>

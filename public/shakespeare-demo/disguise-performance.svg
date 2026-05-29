@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" role="img" aria-labelledby="title desc">
+  <title id="title">Love, disguise, and performance</title>
+  <desc id="desc">Two theatre masks, a rehearsal mark, and stage lights for identity and performance.</desc>
+  <rect width="960" height="640" fill="#f7f8fb"/>
+  <rect x="92" y="78" width="776" height="486" rx="28" fill="#ffffff" stroke="#c9d4e2" stroke-width="4"/>
+  <path d="M228 190c58-40 164-40 222 0v112c0 82-50 148-111 148s-111-66-111-148Z" fill="#dbe8f6" stroke="#3a6ea0" stroke-width="6"/>
+  <path d="M510 190c58-40 164-40 222 0v112c0 82-50 148-111 148s-111-66-111-148Z" fill="#f0e8cc" stroke="#a89450" stroke-width="6"/>
+  <circle cx="300" cy="282" r="20" fill="#27313f"/>
+  <circle cx="379" cy="282" r="20" fill="#27313f"/>
+  <path d="M292 360c38 30 68 30 102 0" fill="none" stroke="#27313f" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="582" cy="282" r="20" fill="#27313f"/>
+  <circle cx="661" cy="282" r="20" fill="#27313f"/>
+  <path d="M573 382c42-30 75-30 108 0" fill="none" stroke="#27313f" stroke-width="9" stroke-linecap="round"/>
+  <path d="M148 496h664" stroke="#6f7c8f" stroke-width="9" stroke-linecap="round"/>
+  <path d="M190 496l86-68M770 496l-86-68" stroke="#d6ede3" stroke-width="14" stroke-linecap="round"/>
+  <text x="480" y="120" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700" fill="#27313f">Identity Is Rehearsed In Public</text>
+  <text x="480" y="532" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#5b6572">Viola, disguise, desire, role-play, stage truth</text>
+</svg>

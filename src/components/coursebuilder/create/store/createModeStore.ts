@@ -1,6 +1,6 @@
 import { create } from "zustand"
 
-export type CreateMode = "curate" | "make" | "fix"
+export type CreateMode = "curate" | "make"
 
 interface CreateModeState {
   mode: CreateMode

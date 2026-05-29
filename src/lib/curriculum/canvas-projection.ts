@@ -1,6 +1,7 @@
 import { getDefaultBlocksForType, type TemplateBlockType, type TemplateDesignConfig, type TemplateType } from "@/lib/curriculum/template-blocks"
-import { BLOCK_FIELDS, type BlockId, type TemplateFieldState } from "@/components/coursebuilder/sections/template-fields"
-import { resolveTemplateSelection, type NormalizedTemplateConfig } from "@/lib/curriculum/template-source-of-truth"
+import { BLOCK_FIELDS, type BlockId, type TemplateFieldState, type TemplateFieldValue } from "@/components/coursebuilder/sections/template-fields"
+import type { NormalizedTemplateConfig } from "@/lib/curriculum/template-source-of-truth"
+import { createPartitionState, getPartitionPresetId, resolveTemplatePartitions } from "@/lib/curriculum/template-partitions"
 
 export interface RawCurriculumSessionRow {
   id: string
@@ -213,13 +214,17 @@ export function buildTemplateFieldState(type: TemplateType): TemplateFieldState 
 
   TEMPLATE_BLOCK_ORDER.forEach((blockId) => {
     const blockFields = BLOCK_FIELDS[blockId] ?? []
-    const fieldState: Record<string, boolean> = {}
+    const fieldState: Record<string, TemplateFieldValue> = {}
 
     blockFields
       .filter((field) => field.forTypes.includes(type as never))
       .forEach((field) => {
         fieldState[field.key] = field.required
       })
+
+    if (blockId === "content" || blockId === "assignment") {
+      Object.assign(fieldState, createPartitionState(blockId, "ipf"))
+    }
 
     state[blockId] = fieldState
   })
@@ -243,7 +248,7 @@ export function resolveTemplateFieldState(
     const fromTemplate = templateConfig?.fieldEnabled?.[blockId] ?? {}
     const fromDesign = (blockSettings?.[blockId] as Record<string, unknown> | undefined) ?? {}
 
-    const nextFields: Record<string, boolean> = {}
+    const nextFields: Record<string, TemplateFieldValue> = {}
     fields.forEach((field) => {
       const defaultEnabled = enabledSet.has(blockId) && Boolean(defaultState[blockId]?.[field.key])
       const templateValue = fromTemplate[field.key]
@@ -262,9 +267,16 @@ export function resolveTemplateFieldState(
       nextFields[field.key] = defaultEnabled
     })
 
+    if (blockId === "content" || blockId === "assignment") {
+      const partitionSource = Object.keys(fromDesign).length > 0
+        ? fromDesign
+        : (Object.keys(fromTemplate).length > 0 ? fromTemplate : defaultState[blockId])
+      const partitions = resolveTemplatePartitions(partitionSource, blockId)
+      Object.assign(nextFields, createPartitionState(blockId, getPartitionPresetId(partitionSource), partitions))
+    }
+
     resolved[blockId] = nextFields
   })
 
   return resolved
 }
-

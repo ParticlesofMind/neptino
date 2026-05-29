@@ -34,6 +34,10 @@ export type CardType =
   | "media"
   | "document"
   | "table" // legacy standalone type; new create flow prefers dataset views
+  | "source-excerpt"
+  | "citation"
+  | "bibliography"
+  | "gis-layer"
   | "rich-sim"    // interactive simulation — canvas-backed
   | "village-3d"  // 3D exploration card — canvas-backed
   | "interactive" // assessment / interactive — canvas-backed
@@ -45,6 +49,7 @@ export type CardType =
   | "text-editor" // embedded writing workspace product
   | "code-editor" // embedded code workspace product
   | "whiteboard"  // embedded whiteboard product
+  | "slides"      // presentation deck composition
   | "timeline"    // chronological event timeline
   | "legend"      // legacy standalone legend; now treated as map/chart config
   | "layout-split"      // two equal columns
@@ -68,9 +73,10 @@ export type CardType =
   | "layout-gallery"    // media-first gallery grid with optional captions
   | "layout-spotlight"  // central focus with surrounding context nodes
   | "layout-flipcard"   // two-face flip container (front/back)
+  | "layout-resizable-grid" // React Grid Layout experiment with resizable slots
 
 // ─── Task area kinds ─────────────────────────────────────────────────────────
-export type TaskAreaKind = "instruction" | "practice" | "feedback"
+export type TaskAreaKind = string
 
 // ─── Dropped card ────────────────────────────────────────────────────────────
 export interface DroppedCard {
@@ -163,6 +169,12 @@ export interface CanvasPage {
    * across the session's flattened dropped-card list sorted by `order`.
    */
   contentCardRange?: { start: number; end?: number }
+  /**
+   * Slot-level continuation for a single oversized layout/composition card.
+   * The card itself remains visible on each continuation page, but its
+   * internal slots are sliced by visual slot order.
+   */
+  contentLayoutSlotRange?: { cardId: string; start: number; end?: number }
   /** Ephemeral — set by useCanvasOverflow, not persisted */
   measuredContentHeightPx?: number
 }
@@ -183,11 +195,11 @@ export interface CourseSession {
   templateType?: string
   /**
    * Per-block field visibility flags sourced from the active template's fieldState.
-   * Shape: { [blockKey]: { [fieldKey]: boolean } }
+   * Shape: { [blockKey]: { [fieldKey]: boolean | partition metadata } }
    * Forwarded to BlockRenderer and individual block components to
    * show/hide optional columns and task-area zones.
    */
-  fieldEnabled?: Partial<Record<string, Record<string, boolean>>>
+  fieldEnabled?: Partial<Record<string, Record<string, unknown>>>
   // ── Course-level metadata — sourced at load time, used by Header/Footer ──
   courseTitle?: string
   institution?: string
@@ -215,6 +227,8 @@ export function bodyHeightPx(dims: PageDimensions): number {
   return dims.heightPx - dims.margins.top - dims.margins.bottom
 }
 
+export type CanvasRenderMode = "editor" | "preview"
+
 // ─── Block key ───────────────────────────────────────────────────────────────
 export type BlockKey =
   | "header"
@@ -231,6 +245,8 @@ export interface BlockRenderProps {
   sessionId: SessionId
   /** The canvas page this block is being rendered on — used by ContentBlock for topic-range slicing */
   canvasId?: CanvasId
+  /** Canonical page dimensions for resolving print-native zones and card policies. */
+  pageDimensions?: PageDimensions
   /** The block key for this rendered block — forwarded to drop zones so useCardDrop can validate accepts */
   blockKey?: BlockKey
   /** Field values sourced from the course/session metadata */
@@ -239,11 +255,13 @@ export interface BlockRenderProps {
   data?: Record<string, unknown>
   /**
    * Per-block field visibility flags sourced from the active template's fieldState.
-   * Shape: { [blockKey]: { [fieldKey]: boolean } }
+   * Shape: { [blockKey]: { [fieldKey]: boolean | partition metadata } }
    * Blocks use this to show/hide optional columns or task-area zones.
    * When absent, blocks default all fields to visible.
    */
-  fieldEnabled?: Partial<Record<string, Record<string, boolean>>>
+  fieldEnabled?: Partial<Record<string, Record<string, unknown>>>
+  /** Rendering mode for canvas-only edit affordances. */
+  renderMode?: CanvasRenderMode
 }
 
 // ─── Draft persistence ────────────────────────────────────────────────────────

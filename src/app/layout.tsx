@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Open_Sans } from "next/font/google";
+import { StyleInspectorOverlay } from "@/components/dev/StyleInspectorOverlay";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeTokensProvider } from "@/components/providers/ThemeTokensProvider";
 import "./globals.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@xyflow/react/dist/style.css";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +48,7 @@ export default function RootLayout({
         <QueryProvider>
           {children}
         </QueryProvider>
+        {process.env.NODE_ENV === "development" && <StyleInspectorOverlay />}
       </body>
     </html>
   );

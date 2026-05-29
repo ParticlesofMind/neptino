@@ -19,6 +19,7 @@ const LAYOUT_SCHEMATICS = {
   "layout-pinboard":  { cols: 2, rows: 3, custom: "pinboard" },
   "layout-annotated": { cols: 3, rows: 2, custom: "annotated" },
   "layout-sixgrid":   { cols: 3, rows: 2 },
+  "layout-resizable-grid": { cols: 2, rows: 2 },
 } as const
 
 type LayoutKindKey = keyof typeof LAYOUT_SCHEMATICS

@@ -64,6 +64,142 @@ export const DOCUMENT_PROFILE: StudioProfile = {
   ],
 }
 
+export const EMBED_PROFILE: StudioProfile = {
+  mediaType: "Embed",
+  productType: "External Resource",
+  defaults: {
+    title: "",
+    url: "",
+    documentType: "web",
+    provider: "iframe",
+    caption: "",
+    attribution: "",
+    pages: 0,
+    excerpt: "",
+  },
+  sections: DOCUMENT_PROFILE.sections,
+}
+
+export const CODE_SNIPPET_PROFILE: StudioProfile = {
+  mediaType: "Code",
+  productType: "Read-Only Snippet",
+  defaults: {
+    title: "",
+    language: "javascript",
+    code: "",
+    caption: "",
+    prompt: "",
+    showLineNumbers: true,
+  },
+  sections: [
+    {
+      title: "Snippet",
+      fields: [
+        { key: "title", label: "Title", kind: "text", placeholder: "Example function" },
+        {
+          key: "language",
+          label: "Language",
+          kind: "select",
+          options: [
+            { label: "JavaScript", value: "javascript" },
+            { label: "TypeScript", value: "typescript" },
+            { label: "HTML", value: "html" },
+            { label: "CSS", value: "css" },
+            { label: "JSON", value: "json" },
+            { label: "Markdown", value: "markdown" },
+          ],
+        },
+        { key: "code", label: "Code", kind: "textarea", rows: 10, placeholder: "const answer = 42" },
+        { key: "caption", label: "Caption", kind: "textarea", rows: 3, placeholder: "What should students notice?" },
+      ],
+    },
+  ],
+}
+
+export const FLASHCARDS_PROFILE: StudioProfile = {
+  mediaType: "Flashcards",
+  productType: "Revision Deck",
+  defaults: {
+    title: "",
+    gameType: "word-match",
+    instructions: "",
+    pairs: [{ term: "", match: "" }],
+    tags: [] as string[],
+    difficulty: "intermediate",
+    timeLimit: 0,
+    showHints: true,
+  },
+  sections: [],
+}
+
+export const FORM_PROFILE: StudioProfile = {
+  mediaType: "Learner Input",
+  productType: "Structured Form",
+  defaults: {
+    title: "",
+    prompt: "",
+    submitLabel: "Submit",
+    fields: [
+      { id: "response", label: "Response", type: "textarea", required: true },
+    ],
+  },
+  sections: [],
+}
+
+export const VOICE_RECORDER_PROFILE: StudioProfile = {
+  mediaType: "Spoken Response",
+  productType: "Voice Recorder",
+  defaults: {
+    title: "",
+    prompt: "",
+    maxDurationSeconds: 60,
+    retryPolicy: "allow",
+    transcript: "",
+  },
+  sections: [],
+}
+
+export const SORTER_PROFILE: StudioProfile = {
+  mediaType: "Sorting Activity",
+  productType: "Matcher",
+  defaults: {
+    title: "",
+    mode: "match",
+    instructions: "",
+    pairs: [{ term: "", match: "" }],
+    items: ["", ""],
+    showHints: true,
+  },
+  sections: [],
+}
+
+export const TIMELINE_PROFILE: StudioProfile = {
+  mediaType: "Timeline",
+  productType: "Chronological Resource",
+  defaults: {
+    title: "",
+    orientation: "horizontal",
+    events: [],
+  },
+  sections: [
+    {
+      title: "Timeline",
+      fields: [
+        { key: "title", label: "Title", kind: "text", placeholder: "History of the Internet" },
+        {
+          key: "orientation",
+          label: "Orientation",
+          kind: "select",
+          options: [
+            { label: "Horizontal", value: "horizontal" },
+            { label: "Vertical", value: "vertical" },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 export const TABLE_PROFILE: StudioProfile = {
   mediaType: "Structured Data",
   productType: "Data Table",
@@ -87,10 +223,171 @@ export const TABLE_PROFILE: StudioProfile = {
   ],
 }
 
+export const SOURCE_EXCERPT_PROFILE: StudioProfile = {
+  mediaType: "Source Excerpt",
+  productType: "Evidence Material",
+  defaults: {
+    title: "",
+    excerpt: "",
+    context: "",
+    locator: "",
+    citationTitle: "",
+    sourceUrl: "",
+    license: "",
+  },
+  sections: [
+    {
+      title: "Passage",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        { key: "excerpt", label: "Excerpt", kind: "textarea", rows: 6, placeholder: "Quoted or paraphrased passage" },
+        { key: "context", label: "Context", kind: "textarea", rows: 4, placeholder: "Authorship, audience, purpose, uncertainty" },
+        { key: "locator", label: "Locator", kind: "text", placeholder: "Page, paragraph, timestamp, map sheet" },
+      ],
+    },
+  ],
+}
+
+export const CITATION_PROFILE: StudioProfile = {
+  mediaType: "Citation",
+  productType: "Source Reference",
+  defaults: {
+    title: "",
+    creator: "",
+    year: "",
+    sourceType: "web",
+    sourceUrl: "",
+    license: "",
+    attribution: "",
+  },
+  sections: [
+    {
+      title: "Reference",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        { key: "creator", label: "Creator", kind: "text" },
+        { key: "year", label: "Year", kind: "text" },
+        { key: "sourceType", label: "Type", kind: "text", placeholder: "book, map, dataset, web" },
+      ],
+    },
+  ],
+}
+
+export const BIBLIOGRAPHY_PROFILE: StudioProfile = {
+  mediaType: "Bibliography",
+  productType: "Source List",
+  defaults: {
+    title: "",
+    style: "short",
+    entries: [],
+    notes: "",
+  },
+  sections: [
+    {
+      title: "Sources",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        {
+          key: "style",
+          label: "Style",
+          kind: "select",
+          options: [
+            { label: "Short", value: "short" },
+            { label: "MLA", value: "mla" },
+            { label: "APA", value: "apa" },
+            { label: "Chicago", value: "chicago" },
+          ],
+        },
+        { key: "notes", label: "Notes", kind: "textarea", rows: 4 },
+      ],
+    },
+  ],
+}
+
+export const GIS_LAYER_PROFILE: StudioProfile = {
+  mediaType: "GIS Layer",
+  productType: "Map Data",
+  defaults: {
+    title: "",
+    layerType: "boundary",
+    geometryType: "GeoJSON",
+    featureCount: 0,
+    dateRange: "",
+    geometryPrecision: "",
+    sourceUrl: "",
+    warnings: [],
+  },
+  sections: [
+    {
+      title: "Layer",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        {
+          key: "layerType",
+          label: "Layer type",
+          kind: "select",
+          options: [
+            { label: "Boundary", value: "boundary" },
+            { label: "Route", value: "route" },
+            { label: "Point set", value: "point" },
+            { label: "Raster reference", value: "raster" },
+            { label: "Choropleth", value: "choropleth" },
+          ],
+        },
+        { key: "geometryType", label: "Geometry type", kind: "text" },
+        { key: "dateRange", label: "Date range", kind: "text" },
+      ],
+    },
+  ],
+}
+
+export const LEGEND_PROFILE: StudioProfile = {
+  mediaType: "Legend",
+  productType: "Visual Key",
+  defaults: {
+    title: "",
+    layout: "list",
+    items: [
+      { color: "#2563eb", label: "Layer", description: "Layer description" },
+    ],
+  },
+  sections: [
+    {
+      title: "Legend",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        {
+          key: "layout",
+          label: "Layout",
+          kind: "select",
+          options: [
+            { label: "List", value: "list" },
+            { label: "Chips", value: "chips" },
+            { label: "Grid", value: "grid" },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 export const INTERACTIVE_PROFILE: StudioProfile = {
   mediaType: "Interactive",
-  productType: "Learner Interaction",
-  defaults: { title: "", interactionType: "sandbox", prompt: "", checkpoints: 0, hintsEnabled: true },
+  productType: "Assessment",
+  defaults: {
+    title: "",
+    interactionType: "multiple-choice",
+    prompt: "",
+    options: [
+      { text: "", correct: true, feedback: "" },
+      { text: "", correct: false, feedback: "" },
+    ],
+    tfCorrect: true,
+    sampleAnswer: "",
+    keywords: "",
+    hint: "",
+    points: 1,
+  },
   sections: [
     {
       title: "Experience",

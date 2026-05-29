@@ -36,6 +36,7 @@ export function useCurriculumSessionRows(params: {
         const schedule = scheduleEntries[index]
         const scheduleDuration = calculateSessionDuration(schedule?.start_time, schedule?.end_time)
         const durationForCaps = existing?.duration_minutes ?? scheduleDuration ?? null
+        const defaultTemplateType = certificateLessonIndexes.has(index) ? "certificate" : "lesson"
         const norm = normalizeContentLoadConfig(
           { topicsPerLesson: topics, objectivesPerTopic: objectives, tasksPerObjective: tasks },
           durationForCaps,
@@ -55,7 +56,9 @@ export function useCurriculumSessionRows(params: {
           objective_names: normalizeObjectiveNames(existing?.objective_names, norm.topicsPerLesson, norm.objectivesPerTopic),
           task_names: normalizeTaskNames(existing?.task_names, norm.topicsPerLesson, norm.objectivesPerTopic, norm.tasksPerObjective),
           competencies: existing?.competencies,
-          template_type: existing?.template_type ?? "lesson",
+          template_id: existing?.template_id,
+          template_type: existing?.template_type ?? defaultTemplateType,
+          template_design: existing?.template_design,
         }
 
         if (!existing) { changed = true; return nextRow }
@@ -68,7 +71,10 @@ export function useCurriculumSessionRows(params: {
           (existing.topic_names?.length ?? 0) !== (nextRow.topic_names?.length ?? 0) ||
           (existing.objective_names?.length ?? 0) !== (nextRow.objective_names?.length ?? 0) ||
           (existing.task_names?.length ?? 0) !== (nextRow.task_names?.length ?? 0) ||
-          existing.schedule_entry_id !== nextRow.schedule_entry_id
+          existing.schedule_entry_id !== nextRow.schedule_entry_id ||
+          existing.template_id !== nextRow.template_id ||
+          existing.template_type !== nextRow.template_type ||
+          existing.template_design !== nextRow.template_design
         ) changed = true
 
         return nextRow
@@ -76,12 +82,13 @@ export function useCurriculumSessionRows(params: {
 
       return changed ? next : prev
     })
-  }, [effectiveSessionCount, scheduleEntries, topics, objectives, tasks, setSessionRows])
+  }, [certificateLessonIndexes, effectiveSessionCount, scheduleEntries, topics, objectives, tasks, setSessionRows])
 
   const sessionRowsForPreview = useMemo(
     () =>
       Array.from({ length: effectiveSessionCount }, (_, index) => {
         const row = sessionRows[index]
+        const defaultTemplateType = certificateLessonIndexes.has(index) ? "certificate" : "lesson"
         const norm = normalizeContentLoadConfig(
           {
             topicsPerLesson: row?.topics ?? topics,
@@ -101,10 +108,12 @@ export function useCurriculumSessionRows(params: {
           topic_names: Array.from({ length: norm.topicsPerLesson }, (_, i) => row?.topic_names?.[i] || ""),
           objective_names: normalizeObjectiveNames(row?.objective_names, norm.topicsPerLesson, norm.objectivesPerTopic),
           task_names: normalizeTaskNames(row?.task_names, norm.topicsPerLesson, norm.objectivesPerTopic, norm.tasksPerObjective),
-          template_type: row?.template_type ?? "lesson",
+          template_id: row?.template_id,
+          template_type: row?.template_type ?? defaultTemplateType,
+          template_design: row?.template_design,
         }
       }),
-    [effectiveSessionCount, sessionRows, topics, objectives, tasks],
+    [certificateLessonIndexes, effectiveSessionCount, sessionRows, topics, objectives, tasks],
   )
 
   const upsertSessionRow = useCallback(
@@ -128,14 +137,16 @@ export function useCurriculumSessionRows(params: {
           objective_names: preview.objective_names,
           task_names: preview.task_names,
           competencies: preview.competencies,
-          template_type: preview.template_type ?? "lesson",
+          template_id: preview.template_id,
+          template_type: preview.template_type ?? (certificateLessonIndexes.has(index) ? "certificate" : "lesson"),
+          template_design: preview.template_design,
         }
 
         next[index] = { ...existing, ...updates }
         return next
       })
     },
-    [setSessionRows, sessionRowsForPreview],
+    [certificateLessonIndexes, setSessionRows, sessionRowsForPreview],
   )
 
   return { sessionRowsForPreview, upsertSessionRow }

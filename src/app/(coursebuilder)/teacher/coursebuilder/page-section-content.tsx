@@ -14,6 +14,7 @@ import { MarketplaceSection } from "@/components/coursebuilder/sections/marketpl
 import { PricingSection } from "@/components/coursebuilder/sections/pricing-section"
 import { IntegrationsSection } from "@/components/coursebuilder/sections/integrations-section"
 import { CommunicationSection } from "@/components/coursebuilder/sections/communication-section"
+import { DataManagementSection } from "@/components/coursebuilder/sections/data-management-section"
 import { PageSetupSection } from "@/components/coursebuilder/sections/page-setup-section"
 import { AdvancedSection } from "@/components/coursebuilder/sections/advanced-section"
 import { PreviewView } from "@/components/coursebuilder/sections/preview-view"
@@ -59,6 +60,7 @@ export function SectionContent({
     case "integrations":   return <IntegrationsSection   courseId={courseId} />
     case "communication":  return <CommunicationSection  courseId={courseId} />
     case "page-setup":     return <PageSetupSection key={`${courseId ?? "new"}-${pageConfig?.pageCount ?? 1}`} courseId={courseId} initialConfig={pageConfig} onSaved={onPageConfigChange} />
+    case "data-management": return <DataManagementSection courseId={courseId} />
     case "advanced":       return <AdvancedSection courseId={courseId} />
     default:               return <Placeholder />
   }

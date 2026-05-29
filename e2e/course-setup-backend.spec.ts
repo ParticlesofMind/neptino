@@ -4,7 +4,6 @@ import {
   createAdminClient,
   deleteCourse,
   fetchCourse,
-  fetchTemplatesForCourse,
 } from "./helpers/supabase-admin"
 import { captureInsertedCourseId, goToSection, waitForDebounce } from "./helpers/course-test-utils"
 
@@ -167,10 +166,9 @@ test.describe("Course Setup Backend Persistence", () => {
     const templatesCourseRow = await fetchCourse(courseId)
     const templateSettings = (templatesCourseRow?.template_settings ?? {}) as Record<string, unknown>
     const templates = (templateSettings.templates ?? []) as Array<Record<string, unknown>>
-    expect(templates.some((template) => template.label === "Backend Quiz Template")).toBe(true)
-
-    const templatesTableRows = await fetchTemplatesForCourse(courseId)
-    expect(templatesTableRows.some((template) => template.name === "Backend Quiz Template")).toBe(true)
+    const createdTemplate = templates.find((template) => template.label === "Backend Quiz Template")
+    expect(createdTemplate?.type).toBe("quiz")
+    expect(templateSettings.active_template_type).toBe("quiz")
 
     // Schedule
     await goToSection(page, "Schedule")

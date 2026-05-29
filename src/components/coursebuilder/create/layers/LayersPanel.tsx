@@ -6,15 +6,16 @@
  * Matches the original coursebuilder design:
  *   - "Layers" / "Navigation" tab row
  *   - Session meta header (module · session title · dropped asset count)
- *   - Block-level layer rows with drag-handle, eye toggle, protect icon
+ *   - Card-level layer rows with drag-handle, eye toggle, protect icon
  */
 
 import { useState } from "react"
 import { Eye, EyeOff, Lock, GripVertical, Map } from "lucide-react"
 import type { CourseSession, BlockKey } from "../types"
 import { useCanvasStore }         from "../store/canvasStore"
+import { resolveTemplatePartitions } from "@/lib/curriculum/template-partitions"
 
-// ─── Block → layer label map ──────────────────────────────────────────────────
+// ─── Block key to layer label map ─────────────────────────────────────────────
 
 interface LayerEntry {
   id:     string
@@ -25,23 +26,30 @@ interface LayerEntry {
 const BLOCK_LAYER_LABELS: Partial<Record<BlockKey, Array<{ suffix: string; label: string }>>> = {
   header:     [{ suffix: "header",      label: "Session Meta"     }],
   program:    [{ suffix: "program",     label: "Program"          }],
-  resources:  [{ suffix: "resources",   label: "Resources"        }],
-  content:    [
-    { suffix: "instruction", label: "Instruction Area" },
-    { suffix: "student",     label: "Student Area"     },
-    { suffix: "teacher",     label: "Teacher Area"     },
-  ],
-  assignment: [{ suffix: "assignment",  label: "Assignment"       }],
+  resources:  [{ suffix: "resources",   label: "Materials"        }],
   scoring:    [{ suffix: "scoring",     label: "Scoring"          }],
   project:    [{ suffix: "project",     label: "Project"          }],
   footer:     [{ suffix: "footer",      label: "Footer Meta"      }],
+}
+
+const PARTITIONED_LAYER_BLOCKS: ReadonlySet<BlockKey> = new Set(["content", "assignment"])
+
+function labelsForBlock(session: CourseSession, key: BlockKey): Array<{ suffix: string; label: string }> {
+  if (PARTITIONED_LAYER_BLOCKS.has(key)) {
+    return resolveTemplatePartitions(session.fieldEnabled?.[key], key).map((partition) => ({
+      suffix: partition.id,
+      label: `${partition.label} Area`,
+    }))
+  }
+
+  return BLOCK_LAYER_LABELS[key] ?? []
 }
 
 function deriveLayerEntries(session: CourseSession): LayerEntry[] {
   // Show only explicitly configured block keys.
   const keys = (session.canvases[0]?.blockKeys ?? []) as BlockKey[]
   return keys.flatMap((key) =>
-    (BLOCK_LAYER_LABELS[key] ?? []).map(({ suffix, label }) => ({
+    labelsForBlock(session, key).map(({ suffix, label }) => ({
       id:     `${session.id}-${suffix}`,
       label,
       indent: 0,
@@ -108,20 +116,27 @@ function LayerRow({ entry }: { entry: LayerEntry }) {
 
 // ─── Navigation tab content ───────────────────────────────────────────────────
 
+const SCROLL_TO_CANVAS_EVENT = "coursebuilder:scroll-to-canvas"
+
 function NavigationTab({ session }: { session: CourseSession }) {
-  const setActiveCanvas = useCanvasStore((s) => s.setActiveCanvas)
-  const activeCanvasId  = useCanvasStore((s) => s.activeCanvasId)
+  const setActiveCanvas   = useCanvasStore((s) => s.setActiveCanvas)
+  const setViewportCanvas = useCanvasStore((s) => s.setViewportCanvas)
+  const activeCanvasId    = useCanvasStore((s) => s.activeCanvasId)
 
   return (
     <div className="flex-1 overflow-y-auto py-2">
       {session.canvases.map((canvas) => (
         <button
           key={canvas.id}
-          onClick={() => setActiveCanvas(canvas.id)}
+          onClick={() => {
+            setActiveCanvas(canvas.id)
+            setViewportCanvas(canvas.id)
+            window.dispatchEvent(new CustomEvent(SCROLL_TO_CANVAS_EVENT, { detail: { canvasId: canvas.id } }))
+          }}
           className={[
             "w-full flex items-center gap-2 px-3 py-1.5 text-[11px] transition-colors text-left",
             activeCanvasId === canvas.id
-              ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+              ? "bg-[#dbe8f6] text-[#3a6ea0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
               : "text-neutral-600 hover:bg-neutral-100",
           ].join(" ")}
         >
@@ -160,7 +175,7 @@ export function LayersPanel({ session }: LayersPanelProps) {
           className={[
             "flex items-center gap-1 px-3 py-2 text-[11px] font-medium border-b-2 transition-colors",
             activeTab === "layers"
-              ? "border-[#9eb9da] text-[#233f5d]"
+              ? "border-[#9eb9da] text-[#3a6ea0]"
               : "border-transparent text-neutral-400 hover:text-neutral-700",
           ].join(" ")}
         >
@@ -172,7 +187,7 @@ export function LayersPanel({ session }: LayersPanelProps) {
           className={[
             "flex items-center gap-1 px-3 py-2 text-[11px] font-medium border-b-2 transition-colors",
             activeTab === "navigation"
-              ? "border-[#9eb9da] text-[#233f5d]"
+              ? "border-[#9eb9da] text-[#3a6ea0]"
               : "border-transparent text-neutral-400 hover:text-neutral-700",
           ].join(" ")}
         >
@@ -216,4 +231,3 @@ export function LayersPanel({ session }: LayersPanelProps) {
     </aside>
   )
 }
-

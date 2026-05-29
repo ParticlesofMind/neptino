@@ -185,7 +185,7 @@ export function ChatEditor({ content, onChange }: ChatEditorProps) {
           </div>
         </div>
       )}
-      preview={<GenericEditorPreview cardType="chat" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-4xl" />}
+      preview={<GenericEditorPreview cardType="chat" content={content} onTitleChange={(next) => onChange("title", next)} />}
     />
   )
 }

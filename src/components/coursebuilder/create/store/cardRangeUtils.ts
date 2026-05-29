@@ -1,5 +1,9 @@
 import type { CanvasPage } from "../types"
 
+function usesSequentialCardCursor(canvas: CanvasPage): boolean {
+  return !canvas.blockKeys || canvas.blockKeys.length === 0
+}
+
 export function normalizeCanvasCardRanges(
   canvases: CanvasPage[],
   totalCards: number,
@@ -10,15 +14,17 @@ export function normalizeCanvasCardRanges(
     const range = canvas.contentCardRange
     if (!range) return canvas
 
+    const enforceCursor = usesSequentialCardCursor(canvas)
     const rawStart = typeof range.start === "number" ? range.start : cursor
-    const start = Math.max(cursor, Math.min(rawStart, totalCards))
+    const minStart = enforceCursor ? cursor : 0
+    const start = Math.max(minStart, Math.min(rawStart, totalCards))
 
     const hasEnd = typeof range.end === "number"
     const end = hasEnd
       ? Math.max(start, Math.min(range.end as number, totalCards))
       : undefined
 
-    cursor = end ?? start
+    if (enforceCursor) cursor = end ?? start
 
     if (start === range.start && (!hasEnd || end === range.end)) {
       return canvas

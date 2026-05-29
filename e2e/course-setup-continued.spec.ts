@@ -15,7 +15,6 @@ import {
   createAdminClient,
   deleteCourse,
   fetchCourse,
-  fetchTemplatesForCourse,
 } from "./helpers/supabase-admin"
 import { goToSection, waitForDebounce } from "./helpers/course-test-utils"
 
@@ -161,24 +160,28 @@ test.describe.skip("Course Setup Continued", () => {
     expect(vs?.enrollment).toBe(true)
   })
 
-  // ── 13. Templates table integration ────────────────────────────────────────
+  // ── 13. Template settings persistence ──────────────────────────────────────
 
-  test("13. templates section writes rows to the templates table", async () => {
+  test("13. templates section writes to courses.template_settings", async () => {
     const page = sharedPage
 
     await page.goto(`/teacher/coursebuilder?id=${courseId}&view=setup`)
     await goToSection(page, "Templates")
 
-    const addBtn = page.getByRole("button", { name: /add|new template/i }).first()
+    const addBtn = page.getByRole("button", { name: /create template/i }).first()
     if (await addBtn.isVisible()) {
       await addBtn.click()
+      const templateName = `Continued Lesson Template ${Date.now()}`
+      await page.getByPlaceholder("My template").fill(templateName)
+      await page.getByRole("button", { name: "Create", exact: true }).last().click()
       await waitForDebounce(page)
 
-      const rows = await fetchTemplatesForCourse(courseId)
-      expect(rows.length).toBeGreaterThan(0)
-      expect(rows[0].course_id).toBe(courseId)
+      const row = await fetchCourse(courseId)
+      const templateSettings = (row?.template_settings ?? {}) as Record<string, unknown>
+      const templates = (templateSettings.templates ?? []) as Array<Record<string, unknown>>
+      expect(templates.some((template) => template.label === templateName)).toBe(true)
     } else {
-      test.skip(true, "Templates section has no visible Add button — check selector.")
+      test.skip(true, "Templates section has no visible Create Template button — check selector.")
     }
   })
 

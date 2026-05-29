@@ -1,60 +1,24 @@
 "use client"
 
-import "leaflet/dist/leaflet.css"
-import { useEffect, useRef } from "react"
-import {
-  MapContainer,
-  TileLayer,
-  useMap,
-  useMapEvents,
-  CircleMarker,
-  Rectangle,
-} from "react-leaflet"
+import { useMemo } from "react"
 import type { CardRenderProps } from "../CardRegistry"
 import {
   TILE_LAYERS,
   generateDemoPoints,
   generateDemoChoropleth,
+  type DemoCell,
+  type DemoPoint,
   type MapStyleName,
   type OverlayLayer,
+  type TerritoryLayer,
 } from "../../sidebar/editors/map-editor-config"
-
-// ─── Internal map sync components ─────────────────────────────────────────────
-
-function ViewSync({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
-  const map = useMap()
-  const prev = useRef({ lat, lng, zoom })
-  useEffect(() => {
-    const p = prev.current
-    if (p.lat !== lat || p.lng !== lng || p.zoom !== zoom) {
-      map.setView([lat, lng], zoom)
-      prev.current = { lat, lng, zoom }
-    }
-  }, [lat, lng, zoom, map])
-  return null
-}
-
-function MapEventBridge({
-  onMoveEnd,
-}: {
-  onMoveEnd: (lat: number, lng: number, zoom: number) => void
-}) {
-  useMapEvents({
-    moveend: (e) => {
-      const c = e.target.getCenter()
-      onMoveEnd(
-        Number(c.lat.toFixed(4)),
-        Number(c.lng.toFixed(4)),
-        Number(e.target.getZoom().toFixed(2)),
-      )
-    },
-  })
-  return null
-}
+import { LeafletMapView } from "./leaflet-map-view"
+import { useSimulationTime } from "./simulation-time-context"
 
 // ─── MapCardInner ──────────────────────────────────────────────────────────────
 
 export default function MapCardInner({ card }: CardRenderProps) {
+  const simulation = useSimulationTime()
   const { content } = card
   const lat = typeof content.lat === "number" ? content.lat : 20
   const lng = typeof content.lng === "number" ? content.lng : 10
@@ -64,48 +28,52 @@ export default function MapCardInner({ card }: CardRenderProps) {
   const layers: OverlayLayer[] = Array.isArray(content.layers)
     ? (content.layers as OverlayLayer[])
     : []
+  const atlasPoints: DemoPoint[] = Array.isArray(content.points)
+    ? (content.points as DemoPoint[])
+    : []
+  const atlasCells: DemoCell[] = Array.isArray(content.cells)
+    ? (content.cells as DemoCell[])
+    : []
+  const territoryLayers = useMemo<TerritoryLayer[]>(() => (
+    Array.isArray(content.territories)
+      ? (content.territories as TerritoryLayer[])
+      : Array.isArray(content.geojsonLayers)
+        ? (content.geojsonLayers as TerritoryLayer[])
+        : []
+  ), [content.geojsonLayers, content.territories])
 
   const tile = TILE_LAYERS[mapLayer] ?? TILE_LAYERS.Standard
-  const demoPoints = generateDemoPoints(lat, lng)
-  const demoCells = generateDemoChoropleth(lat, lng)
+  const demoPoints = atlasPoints.length > 0 ? atlasPoints : generateDemoPoints(lat, lng)
+  const demoCells = atlasCells.length > 0 ? atlasCells : generateDemoChoropleth(lat, lng)
+  const visibleTerritories = useMemo(() => {
+    if (!simulation) return territoryLayers
+    const timedTerritories = territoryLayers.filter((territory) => (
+      typeof territory.startYear === "number" || typeof territory.endYear === "number"
+    ))
+    if (timedTerritories.length === 0) return territoryLayers
+
+    const visible = timedTerritories.filter((territory) => {
+      const startYear = territory.startYear ?? Number.NEGATIVE_INFINITY
+      const endYear = territory.endYear ?? Number.POSITIVE_INFINITY
+      return simulation.year >= startYear && simulation.year <= endYear
+    })
+
+    return visible.length > 0 ? visible : timedTerritories
+  }, [simulation, territoryLayers])
 
   return (
-    <MapContainer
-      center={[lat, lng]}
+    <LeafletMapView
+      lat={lat}
+      lng={lng}
       zoom={zoom}
+      tileUrl={tile.url}
+      tileAttribution={tile.attribution}
+      layers={layers}
+      points={demoPoints}
+      cells={demoCells}
+      territories={visibleTerritories}
+      fitToTerritories={visibleTerritories.length > 0}
       style={{ height: "100%", width: "100%", minHeight: 200 }}
-      scrollWheelZoom={false}
-    >
-      <TileLayer url={tile.url} attribution={tile.attribution} />
-      <ViewSync lat={lat} lng={lng} zoom={zoom} />
-
-      {/* Overlays (read-only display) */}
-      {layers.includes("Choropleth") &&
-        demoCells.map((cell) => (
-          <Rectangle
-            key={cell.id}
-            bounds={[
-              [cell.bounds[0], cell.bounds[1]],
-              [cell.bounds[2], cell.bounds[3]],
-            ]}
-            pathOptions={{
-              color: "#3b82f6",
-              fillOpacity: cell.score * 0.55,
-              weight: 1,
-              opacity: 0.5,
-            }}
-          />
-        ))}
-
-      {layers.includes("Points") &&
-        demoPoints.map((pt, i) => (
-          <CircleMarker
-            key={i}
-            center={[pt.lat, pt.lng]}
-            radius={i === 0 ? 10 : 7}
-            pathOptions={{ color: "#ef4444", fillOpacity: 0.8, weight: 1.5 }}
-          />
-        ))}
-    </MapContainer>
+    />
   )
 }

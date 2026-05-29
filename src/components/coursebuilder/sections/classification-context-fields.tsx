@@ -24,6 +24,14 @@ interface Props {
   mandatoryTopics: StringListHandle
   applicationContext: string
   setApplicationContext: Dispatch<SetStateAction<string>>
+  suggestedPriorKnowledge?: string
+  suggestedApplicationContext?: string
+  suggestedKeyTerms?: string[]
+  suggestedMandatoryTopics?: string[]
+  onUseSuggestedPriorKnowledge?: () => void
+  onUseSuggestedApplicationContext?: () => void
+  onAddSuggestedKeyTerms?: () => void
+  onAddSuggestedMandatoryTopics?: () => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -35,11 +43,30 @@ export function ClassificationContextFields({
   mandatoryTopics,
   applicationContext,
   setApplicationContext,
+  suggestedPriorKnowledge,
+  suggestedApplicationContext,
+  suggestedKeyTerms = [],
+  suggestedMandatoryTopics = [],
+  onUseSuggestedPriorKnowledge,
+  onUseSuggestedApplicationContext,
+  onAddSuggestedKeyTerms,
+  onAddSuggestedMandatoryTopics,
 }: Props) {
   return (
     <>
       <div>
-        <FieldLabel hint="What students should already know">Prior Knowledge Baseline</FieldLabel>
+        <div className="flex items-center justify-between gap-3">
+          <FieldLabel hint="What students should already know">Prior Knowledge Baseline</FieldLabel>
+          {suggestedPriorKnowledge && onUseSuggestedPriorKnowledge && !priorKnowledge && (
+            <button
+              type="button"
+              onClick={onUseSuggestedPriorKnowledge}
+              className="text-xs font-medium text-primary transition hover:text-primary/80"
+            >
+              Use suggestion
+            </button>
+          )}
+        </div>
         <textarea
           value={priorKnowledge}
           onChange={(e) => setPriorKnowledge(e.target.value.slice(0, 500))}
@@ -51,7 +78,27 @@ export function ClassificationContextFields({
       </div>
 
       <div>
-        <FieldLabel hint="Domain-specific terminology students will encounter">Key Terms / Seed Vocabulary</FieldLabel>
+        <div className="flex items-center justify-between gap-3">
+          <FieldLabel hint="Domain-specific terminology students will encounter">Key Terms / Seed Vocabulary</FieldLabel>
+          {suggestedKeyTerms.length > 0 && onAddSuggestedKeyTerms && (
+            <button
+              type="button"
+              onClick={onAddSuggestedKeyTerms}
+              className="text-xs font-medium text-primary transition hover:text-primary/80"
+            >
+              Add suggestions
+            </button>
+          )}
+        </div>
+        {suggestedKeyTerms.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {suggestedKeyTerms.slice(0, 6).map((term) => (
+              <span key={term} className="rounded-full border border-primary/20 bg-accent px-2 py-0.5 text-[11px] font-medium text-primary">
+                {term}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex flex-wrap gap-1.5 mb-2">
           {keyTerms.items.map((term, i) => (
             <span key={i} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2.5 py-0.5 text-xs text-foreground">
@@ -83,7 +130,27 @@ export function ClassificationContextFields({
       </div>
 
       <div>
-        <FieldLabel hint="Topics required by curriculum standards">Mandatory Topics</FieldLabel>
+        <div className="flex items-center justify-between gap-3">
+          <FieldLabel hint="Topics required by curriculum standards">Mandatory Topics</FieldLabel>
+          {suggestedMandatoryTopics.length > 0 && onAddSuggestedMandatoryTopics && (
+            <button
+              type="button"
+              onClick={onAddSuggestedMandatoryTopics}
+              className="text-xs font-medium text-primary transition hover:text-primary/80"
+            >
+              Add suggestions
+            </button>
+          )}
+        </div>
+        {suggestedMandatoryTopics.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {suggestedMandatoryTopics.slice(0, 5).map((topic) => (
+              <span key={topic} className="rounded-full border border-primary/20 bg-accent px-2 py-0.5 text-[11px] font-medium text-primary">
+                {topic}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="space-y-1.5 mb-2">
           {mandatoryTopics.items.map((t, i) => (
             <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
@@ -115,7 +182,18 @@ export function ClassificationContextFields({
       </div>
 
       <div>
-        <FieldLabel hint="How the subject applies in context">Application Context / Domain Lens</FieldLabel>
+        <div className="flex items-center justify-between gap-3">
+          <FieldLabel hint="How the subject applies in context">Application Context / Domain Lens</FieldLabel>
+          {suggestedApplicationContext && onUseSuggestedApplicationContext && !applicationContext && (
+            <button
+              type="button"
+              onClick={onUseSuggestedApplicationContext}
+              className="text-xs font-medium text-primary transition hover:text-primary/80"
+            >
+              Use suggestion
+            </button>
+          )}
+        </div>
         <textarea
           value={applicationContext}
           onChange={(e) => setApplicationContext(e.target.value.slice(0, 500))}

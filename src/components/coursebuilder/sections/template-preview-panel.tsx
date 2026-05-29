@@ -1,6 +1,7 @@
 "use client"
 
 import type { BlockId, TemplateFieldState } from "./template-fields"
+import { resolveTemplatePartitions } from "@/lib/curriculum/template-partitions"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -168,16 +169,14 @@ function PreviewResources({
 // ─── Content / Assignment block ───────────────────────────────────────────────
 
 // Subtle left-border accent colours to differentiate content slot types
-const SLOT_ACCENTS = {
-  instruction: "border-l-2 border-l-primary/60",
-  practice:    "border-l-2 border-l-accent-foreground/40",
-  feedback:    "border-l-2 border-l-secondary/60",
-}
+const SLOT_ACCENTS = [
+  "border-l-2 border-l-[#3a6ea0]/60",
+  "border-l-2 border-l-[#9eb9da]/80",
+  "border-l-2 border-l-secondary/60",
+  "border-l-2 border-l-[#8b7a46]/60",
+  "border-l-2 border-l-[#4c7a68]/60",
+]
 
-/**
- * Renders topics → objectives → tasks with instruction / practice / feedback
- * sub-fields per task, mirroring the canvas layout exactly.
- */
 function PreviewTaskBlock({
   label,
   fieldState,
@@ -193,10 +192,7 @@ function PreviewTaskBlock({
   objectiveCount: number
   taskCount: number
 }) {
-  const isSplit         = on(fieldState, block, "_split")
-  const showInstruction = on(fieldState, block, "instruction")
-  const showPractice    = on(fieldState, block, "practice")
-  const showFeedback    = on(fieldState, block, "feedback")
+  const partitions = resolveTemplatePartitions(fieldState[block] as Record<string, unknown> | undefined, block)
 
   return (
     <section className="rounded-lg border border-border bg-background">
@@ -217,29 +213,14 @@ function PreviewTaskBlock({
                       Obj. {objIdx + 1} &rsaquo; Task {taskIdx + 1}
                     </p>
                     <div className="flex flex-col gap-1">
-                      {!isSplit ? (
-                        <div className="rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70">
-                          Content
+                      {partitions.map((partition, index) => (
+                        <div
+                          key={partition.id}
+                          className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS[index % SLOT_ACCENTS.length]}`}
+                        >
+                          {partition.label}
                         </div>
-                      ) : (
-                        <>
-                          {showInstruction && (
-                            <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.instruction}`}>
-                              Instruction
-                            </div>
-                          )}
-                          {showPractice && (
-                            <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.practice}`}>
-                              Practice
-                            </div>
-                          )}
-                          {showFeedback && (
-                            <div className={`rounded-r-sm border-y border-r border-border bg-muted/10 px-2.5 py-1.5 text-[10px] text-muted-foreground/70 ${SLOT_ACCENTS.feedback}`}>
-                              Feedback
-                            </div>
-                          )}
-                        </>
-                      )}
+                      ))}
                     </div>
                   </div>
                 ))}

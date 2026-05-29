@@ -1,6 +1,6 @@
 "use client"
 
-import type { BlockRenderProps, SessionId, Topic } from "../types"
+import type { BlockRenderProps, Topic } from "../types"
 import { useCourseStore } from "../store/courseStore"
 
 // ─── Row shape ────────────────────────────────────────────────────────────────
@@ -18,9 +18,20 @@ interface ProgramTableRow {
   time:          string
 }
 
-const TD = "px-2 py-1 text-[11px] text-foreground align-top"
-const TH = "text-left px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-muted/30"
+const TD = "px-2.5 py-1.5 align-top"
+const TOPIC_TD = `${TD} font-sans text-[11px] font-medium leading-snug tracking-normal text-foreground`
+const OBJECTIVE_TD = `${TD} font-sans text-[10px] font-medium leading-snug tracking-normal text-foreground/85`
+const TASK_TD = `${TD} font-sans text-[10px] font-normal leading-snug tracking-normal text-foreground/80`
+const DETAIL_TD = `${TD} text-[10px] leading-snug text-muted-foreground`
+const TH = "bg-muted/20 px-2.5 py-1.5 text-left text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground/75"
 const EMPTY_TOPICS: Topic[] = []
+
+function rowClass(index: number): string {
+  return [
+    "border-b border-border/70 last:border-b-0",
+    index % 2 === 0 ? "bg-background" : "bg-muted/[0.12]",
+  ].join(" ")
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -113,45 +124,45 @@ export function ProgramBlock({ sessionId, canvasId, fieldValues, data, fieldEnab
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-border">
-      <div className="border-b border-border bg-muted/30 px-2 py-1">
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Program</h2>
+    <section className="overflow-hidden rounded-lg border border-border/80 bg-background">
+      <div className="border-b border-border/70 bg-muted/20 px-2.5 py-1">
+        <h2 className="text-[9px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Program</h2>
       </div>
       <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b border-border">
-            {showTopic      && <th className={TH}>Topic</th>}
-            {showObjective  && <th className={TH}>Objective</th>}
-            {showTask       && <th className={TH}>Task</th>}
-            {showMethod     && <th className={TH}>Method</th>}
-            {showSocialForm && <th className={TH}>Social Form</th>}
-            {showTime       && <th className={TH}>Time</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} data-task-row-idx={rowStart + i} className={i % 2 === 0 ? "border-b border-border last:border-b-0" : "border-b border-border last:border-b-0 bg-muted/20"}>
-              {showTopic     && row.isTopicFirst && (
-                <td className={TD} rowSpan={row.topicSpan}>{row.topicLabel}</td>
-              )}
-              {showObjective && row.isObjFirst && (
-                <td className={TD} rowSpan={row.objSpan}>{row.objLabel}</td>
-              )}
-              {showTask      && <td className={TD}>{row.taskLabel}</td>}
-              {showMethod    && row.isTopicFirst && (
-                <td className={TD} rowSpan={row.topicSpan}>{row.method}</td>
-              )}
-              {showSocialForm && row.isTopicFirst && (
-                <td className={TD} rowSpan={row.topicSpan}>{row.socialForm}</td>
-              )}
-              {showTime      && row.isTopicFirst && (
-                <td className={TD} rowSpan={row.topicSpan}>{row.time}</td>
-              )}
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-border/70">
+              {showTopic      && <th className={TH}>Topic</th>}
+              {showObjective  && <th className={TH}>Objective</th>}
+              {showTask       && <th className={TH}>Task</th>}
+              {showMethod     && <th className={TH}>Method</th>}
+              {showSocialForm && <th className={TH}>Social Form</th>}
+              {showTime       && <th className={TH}>Time</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i} data-task-row-idx={rowStart + i} className={rowClass(i)}>
+                {showTopic     && row.isTopicFirst && (
+                  <td className={TOPIC_TD} rowSpan={row.topicSpan}>{row.topicLabel}</td>
+                )}
+                {showObjective && row.isObjFirst && (
+                  <td className={OBJECTIVE_TD} rowSpan={row.objSpan}>{row.objLabel}</td>
+                )}
+                {showTask      && <td className={TASK_TD}>{row.taskLabel}</td>}
+                {showMethod    && row.isTopicFirst && (
+                  <td className={DETAIL_TD} rowSpan={row.topicSpan}>{row.method}</td>
+                )}
+                {showSocialForm && row.isTopicFirst && (
+                  <td className={DETAIL_TD} rowSpan={row.topicSpan}>{row.socialForm}</td>
+                )}
+                {showTime      && row.isTopicFirst && (
+                  <td className={DETAIL_TD} rowSpan={row.topicSpan}>{row.time}</td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </section>
   )

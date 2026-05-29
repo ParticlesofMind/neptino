@@ -47,8 +47,8 @@ export interface CurriculumStructurePanelProps {
   highLoadModelActive: boolean
   isGenerationReady: boolean
   readinessIssues: string[]
-  missing: { essentials: boolean; students: boolean; schedule: boolean; curriculum: boolean }
-  goToSection: (id: "essentials" | "students" | "schedule" | "curriculum") => void
+  missing: Record<string, boolean>
+  goToSection: (id: string) => void
   isGenerating: boolean
   generationCooldownLeft: number
   estimateForAction: (action: GenerationAction) => string
@@ -62,6 +62,13 @@ export interface CurriculumStructurePanelProps {
 
 export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
   const { namingRules, setNamingRules } = props
+  const prerequisiteItems = [
+    { id: "essentials", label: "Essentials" },
+    { id: "classification", label: "Classification" },
+    { id: "schedule", label: "Schedule" },
+    { id: "students", label: "Students" },
+    { id: "pedagogy", label: "Pedagogy" },
+  ]
 
   return (
     <SetupColumn className="space-y-5">
@@ -186,9 +193,40 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
 
       <Divider label="Generation" />
       <p className="-mt-2 text-sm text-muted-foreground">
-        Generation uses your setup and instruction data (essentials, students, schedule,
-        curriculum, plus classification and pedagogy context when available).
+        Curriculum generation starts here, after the setup prerequisites establish identity,
+        subject specificity, pacing, learners, and teaching stance.
       </p>
+      <div className="mt-3 rounded-lg border border-border bg-background/70 p-3">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold text-foreground">Required before generation</p>
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+            props.isGenerationReady
+              ? "border-primary/30 bg-primary/10 text-primary"
+              : "border-amber-600/30 bg-amber-500/10 text-amber-700"
+          }`}>
+            {props.isGenerationReady ? "Ready" : "Incomplete"}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {prerequisiteItems.map((item) => {
+            const complete = !props.missing[item.id]
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => props.goToSection(item.id)}
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                  complete
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-amber-600/30 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15"
+                }`}
+              >
+                {item.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className={`rounded-md border px-2 py-1 text-[11px] font-medium ${
           props.ollamaHealthy === null ? "border-border bg-muted/40 text-muted-foreground"
@@ -225,6 +263,18 @@ export function CurriculumStructurePanel(props: CurriculumStructurePanelProps) {
             )}
             {props.missing.schedule && (
               <button type="button" onClick={() => props.goToSection("schedule")} className={SECONDARY_ACTION_BUTTON_CLASS}>Go to Schedule</button>
+            )}
+            {props.missing.curriculum && (
+              <button type="button" onClick={() => props.goToSection("curriculum")} className={SECONDARY_ACTION_BUTTON_CLASS}>Go to Curriculum</button>
+            )}
+            {props.missing.classification && (
+              <button type="button" onClick={() => props.goToSection("classification")} className={SECONDARY_ACTION_BUTTON_CLASS}>Go to Classification</button>
+            )}
+            {props.missing.resources && (
+              <button type="button" onClick={() => props.goToSection("resources")} className={SECONDARY_ACTION_BUTTON_CLASS}>Go to Resources</button>
+            )}
+            {props.missing.pedagogy && (
+              <button type="button" onClick={() => props.goToSection("pedagogy")} className={SECONDARY_ACTION_BUTTON_CLASS}>Go to Pedagogy</button>
             )}
           </div>
         </div>

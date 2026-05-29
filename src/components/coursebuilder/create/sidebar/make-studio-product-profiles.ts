@@ -34,7 +34,7 @@ export const CHART_PROFILE: StudioProfile = {
 export const DIAGRAM_PROFILE: StudioProfile = {
   mediaType: "Concept Model",
   productType: "Diagram Explanation",
-  defaults: { title: "", diagramType: "flowchart", nodes: 4, edges: 3, layout: "auto" },
+  defaults: { title: "", diagramType: "flowchart", nodes: [], edges: [], layout: "auto" },
   sections: [
     {
       title: "Structure",
@@ -50,8 +50,6 @@ export const DIAGRAM_PROFILE: StudioProfile = {
             { label: "Cycle", value: "cycle" },
           ],
         },
-        { key: "nodes", label: "Nodes", kind: "number", min: 1, max: 30, step: 1 },
-        { key: "edges", label: "Edges", kind: "number", min: 0, max: 60, step: 1 },
       ],
     },
     {
@@ -101,6 +99,20 @@ export const CHAT_PROFILE: StudioProfile = {
     conversationStarters: [] as string[],
     maxTurns: 20,
     difficulty: "intermediate",
+  },
+  sections: [] as StudioSection[],
+}
+
+export const SLIDES_PROFILE: StudioProfile = {
+  mediaType: "Presentation",
+  productType: "Slide Deck",
+  defaults: {
+    title: "",
+    slides: [
+      { title: "Opening", body: "Introduce the topic and orient the audience.", notes: "" },
+      { title: "Evidence", body: "Place a source, map, chart, image, or example here.", notes: "" },
+      { title: "Synthesis", body: "Summarise the key claim or next action.", notes: "" },
+    ],
   },
   sections: [] as StudioSection[],
 }

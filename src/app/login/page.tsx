@@ -2,10 +2,11 @@
 
 import { createClient, getSupabaseClientConfigError } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PublicShell } from '@/components/layout/public-shell'
 import { AuthErrorBanner, AuthInput, AuthSubmitButton } from '@/components/ui/auth-primitives'
+import { resolvePostAuthDestination } from '@/lib/institutions/client'
 
 const EmailIcon = (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2"
@@ -29,8 +30,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [nextPath, setNextPath] = useState<string | null>(null)
   const router = useRouter()
   const configError = getSupabaseClientConfigError()
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const next = new URLSearchParams(window.location.search).get('next')
+      setNextPath(next?.startsWith('/') ? next : null)
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,19 +63,16 @@ export default function LoginPage() {
       return
     }
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', authData.user.id)
-      .single()
-
-    const role = profile?.role ?? 'student'
-    if (role === 'teacher') {
-      router.push('/teacher')
-    } else if (role === 'admin') {
-      router.push('/admin')
-    } else {
-      router.push('/student')
+    try {
+      const destination = await resolvePostAuthDestination({
+        supabase,
+        userId: authData.user.id,
+        nextPath,
+      })
+      router.push(destination)
+    } catch (membershipError) {
+      setError(membershipError instanceof Error ? membershipError.message : 'Unable to resolve your institution access.')
+      setLoading(false)
     }
   }
 
@@ -125,7 +132,7 @@ export default function LoginPage() {
             <div className="px-8 pb-7 text-center">
               <p className="text-sm text-muted-foreground">
                 Don&apos;t have an account?{' '}
-                <Link href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
+                <Link href={nextPath ? `/signup?next=${encodeURIComponent(nextPath)}` : "/signup"} className="font-semibold text-primary hover:text-primary/80 transition-colors duration-150 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary/60">
                   Sign up
                 </Link>
               </p>

@@ -30,7 +30,7 @@ function ToolbarButton({ active, onClick, children }: ToolbarButtonProps) {
   )
 }
 
-export function TextEditorCard({ card, onRemove }: CardRenderProps) {
+export function TextEditorCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const title = typeof card.content["title"] === "string" ? card.content["title"] : "Text editor"
   const placeholder = typeof card.content["placeholder"] === "string"
     ? card.content["placeholder"]
@@ -61,8 +61,10 @@ export function TextEditorCard({ card, onRemove }: CardRenderProps) {
 
   return (
     <div
-      className="group relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
-      style={{ width: "100%", height: card.dimensions.height || 360 }}
+      className={[
+        "group relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm",
+        fillAvailable ? "h-full min-h-[inherit]" : "min-h-[22rem]",
+      ].join(" ")}
     >
       {onRemove && (
         <button
@@ -105,7 +107,7 @@ export function TextEditorCard({ card, onRemove }: CardRenderProps) {
         </div>
       </div>
 
-      <div className="h-[calc(100%-73px)] overflow-auto bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,1))] [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_li]:ml-4 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_p]:mb-3 [&_.ProseMirror_ul]:list-disc">
+      <div className="min-h-0 flex-1 overflow-auto bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,1))] [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_li]:ml-4 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_p]:mb-3 [&_.ProseMirror_ul]:list-disc">
         <EditorContent editor={editor} />
       </div>
     </div>

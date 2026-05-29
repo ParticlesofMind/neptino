@@ -5,13 +5,10 @@ export type IscedDomain = { value: string; label: string; code: string; subjects
 
 export type ClassificationHydratedState = {
   classYear: string
-  framework: string
   domain: string
   subject: string
   topic: string
   subtopic: string
-  prevCourse: string
-  nextCourse: string
   priorKnowledge: string
   keyTerms?: string[]
   mandatoryTopics?: string[]
@@ -28,16 +25,20 @@ export function mapClassificationDataToState(
   const subject = domain?.subjects.find((s) => s.value === classificationData.subject)
   const topic = subject?.topics.find((t) => t.value === classificationData.topic)
   const subtopic = topic?.subtopics.find((st) => st.value === classificationData.subtopic)
+  const domainLabel = typeof classificationData.domain_label === "string" ? classificationData.domain_label : ""
+  const subjectLabel = typeof classificationData.subject_label === "string" ? classificationData.subject_label : ""
+  const topicLabel = typeof classificationData.topic_label === "string" ? classificationData.topic_label : ""
+  const subtopicLabel = typeof classificationData.subtopic_label === "string" ? classificationData.subtopic_label : ""
+  const domainCode = typeof classificationData.domain_code === "string" ? classificationData.domain_code : ""
+  const subjectCode = typeof classificationData.subject_code === "string" ? classificationData.subject_code : ""
+  const topicCode = typeof classificationData.topic_code === "string" ? classificationData.topic_code : ""
 
   return {
     classYear: typeof classificationData.class_year === "string" ? classificationData.class_year : "",
-    framework: typeof classificationData.curricular_framework === "string" ? classificationData.curricular_framework : "",
-    domain: domain ? `${domain.code} — ${domain.label}` : "",
-    subject: subject ? `${subject.code} — ${subject.label}` : "",
-    topic: topic ? `${topic.code} — ${topic.label}` : "",
-    subtopic: subtopic?.label ?? "",
-    prevCourse: typeof classificationData.previous_course === "string" ? classificationData.previous_course : "",
-    nextCourse: typeof classificationData.next_course === "string" ? classificationData.next_course : "",
+    domain: domain ? `${domain.code} — ${domain.label}` : (domainLabel && domainCode ? `${domainCode} — ${domainLabel}` : domainLabel),
+    subject: subject ? `${subject.code} — ${subject.label}` : (subjectLabel && subjectCode ? `${subjectCode} — ${subjectLabel}` : subjectLabel),
+    topic: topic ? `${topic.code} — ${topic.label}` : (topicLabel && topicCode ? `${topicCode} — ${topicLabel}` : topicLabel),
+    subtopic: subtopic?.label ?? subtopicLabel,
     priorKnowledge: typeof classificationData.prior_knowledge === "string" ? classificationData.prior_knowledge : "",
     keyTerms: Array.isArray(classificationData.key_terms)
       ? (classificationData.key_terms.filter((value): value is string => typeof value === "string"))

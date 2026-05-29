@@ -4,20 +4,21 @@ import { ISCED_DOMAINS } from "@/types/atlas"
 import {
   normalizeFilter,
   parsePositiveInt,
+  dedupeAtlasItems,
   uniqueSorted,
   type EncyclopediaItemRow,
   type MediaRow,
   type PanelItemRow,
   type PanelMediaRow,
 } from "@/app/(dashboard)/teacher/atlas/atlas-page-utils"
-import type { CreateAtlasSidebarResponse } from "@/components/coursebuilder/create/sidebar/create-atlas-sidebar-types"
+import type { CreateAtlasSidebarMediaItem, CreateAtlasSidebarResponse } from "@/components/coursebuilder/create/sidebar/create-atlas-sidebar-types"
 
 const PAGE_SIZE = 12
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams
   const queryText = params.get("q")?.trim() ?? ""
-  const selectedCategory = normalizeFilter(params.get("category") ?? "")
+  const selectedCategory = normalizeFilter(params.get("category") ?? "") === "media" ? "media" : "entities"
   const selectedDomain = normalizeFilter(params.get("domain") ?? "")
   const selectedType = normalizeFilter(params.get("type") ?? "")
   const selectedSubtype = normalizeFilter(params.get("subtype") ?? "")
@@ -46,10 +47,94 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  let itemIdsForCategory: string[] | null = null
   if (selectedCategory === "media") {
-    const { data: categoryRows } = await supabase.from("encyclopedia_media").select("item_id")
-    itemIdsForCategory = [...new Set((categoryRows ?? []).map((row) => row.item_id))]
+    let mediaSearchItemIds: string[] = []
+    if (queryText.length > 2) {
+      const { data: matchingItems } = await supabase
+        .from("encyclopedia_items")
+        .select("id")
+        .textSearch("search_vector", queryText, { type: "websearch", config: "english" })
+        .limit(200)
+
+      mediaSearchItemIds = [...new Set((matchingItems ?? []).map((item) => item.id))]
+    }
+
+    const buildMediaQuery = (page: number) => {
+      const from = (page - 1) * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+      let query = supabase
+        .from("encyclopedia_media")
+        .select("id,item_id,media_type,layer,title,description,url", { count: "exact" })
+        .order("layer", { ascending: true })
+        .order("title", { ascending: true })
+        .range(from, to)
+
+      if (queryText.length > 2) {
+        const titleQuery = queryText.replace(/[(),]/g, " ").trim()
+        if (mediaSearchItemIds.length > 0) {
+          query = query.or(`title.ilike.%${titleQuery}%,item_id.in.(${mediaSearchItemIds.join(",")})`)
+        } else {
+          query = query.ilike("title", `%${titleQuery}%`)
+        }
+      }
+      if (selectedLayer) {
+        const layerNumber = Number.parseInt(selectedLayer, 10)
+        if (!Number.isNaN(layerNumber)) query = query.eq("layer", layerNumber)
+      }
+
+      return query
+    }
+
+    let activeMediaPage = requestedPage
+    const { count: mediaCount, data: mediaRows } = await buildMediaQuery(activeMediaPage)
+    let media = (mediaRows ?? []) as MediaRow[]
+    const mediaTotalPages = Math.max(1, Math.ceil((mediaCount ?? 0) / PAGE_SIZE))
+
+    if (media.length === 0 && (mediaCount ?? 0) > 0 && activeMediaPage > mediaTotalPages) {
+      activeMediaPage = mediaTotalPages
+      const retry = await buildMediaQuery(activeMediaPage)
+      media = (retry.data ?? []) as MediaRow[]
+    }
+
+    const mediaItemIds = [...new Set(media.map((resource) => resource.item_id))]
+    const itemById = new Map<string, { id: string; title: string; knowledge_type: string }>()
+    if (mediaItemIds.length > 0) {
+      const { data: mediaItems } = await supabase
+        .from("encyclopedia_items")
+        .select("id,title,knowledge_type")
+        .in("id", mediaItemIds)
+
+      for (const item of mediaItems ?? []) {
+        itemById.set(item.id, item)
+      }
+    }
+
+    const response: CreateAtlasSidebarResponse = {
+      domainOptions: ISCED_DOMAINS,
+      eraOptions,
+      totalCount: mediaCount ?? 0,
+      totalPages: mediaTotalPages,
+      activePage: activeMediaPage,
+      items: [],
+      mediaItems: media.map((resource): CreateAtlasSidebarMediaItem => {
+        const item = itemById.get(resource.item_id)
+        return {
+          id: resource.id,
+          item_id: resource.item_id,
+          itemTitle: item?.title ?? "Atlas entity",
+          itemType: item?.knowledge_type ?? "Entity",
+          media_type: resource.media_type,
+          layer: resource.layer,
+          title: resource.title,
+          description: resource.description,
+          url: resource.url,
+        }
+      }),
+      panelItem: null,
+      panelMediaByType: [],
+    }
+
+    return NextResponse.json(response)
   }
 
   const buildItemsQuery = (page: number) => {
@@ -67,20 +152,19 @@ export async function GET(request: NextRequest) {
     if (selectedSubtype) query = query.eq("sub_type", selectedSubtype)
     if (selectedEra) query = query.eq("era_group", selectedEra)
     if (itemIdsForLayer) query = query.in("id", itemIdsForLayer.length ? itemIdsForLayer : ["__no_items__"])
-    if (itemIdsForCategory) query = query.in("id", itemIdsForCategory.length ? itemIdsForCategory : ["__no_items__"])
 
     return query
   }
 
   let activePage = requestedPage
-  let { count: totalCount, data: itemRows } = await buildItemsQuery(activePage)
-  let items = (itemRows ?? []) as EncyclopediaItemRow[]
+  const { count: totalCount, data: itemRows } = await buildItemsQuery(activePage)
+  let items = dedupeAtlasItems((itemRows ?? []) as EncyclopediaItemRow[])
   const totalPages = Math.max(1, Math.ceil((totalCount ?? 0) / PAGE_SIZE))
 
   if (items.length === 0 && (totalCount ?? 0) > 0 && activePage > totalPages) {
     activePage = totalPages
     const retry = await buildItemsQuery(activePage)
-    items = (retry.data ?? []) as EncyclopediaItemRow[]
+    items = dedupeAtlasItems((retry.data ?? []) as EncyclopediaItemRow[])
   }
 
   const itemIds = items.map((item) => item.id)
@@ -135,6 +219,7 @@ export async function GET(request: NextRequest) {
     totalCount: totalCount ?? 0,
     totalPages,
     activePage,
+    mediaItems: [],
     items: items.map((item) => ({
       id: item.id,
       title: item.title,

@@ -5,6 +5,8 @@ import Image from "next/image"
 import { useState, type ReactNode } from "react"
 import { Menu, X } from "lucide-react"
 import { NavLink } from "@/components/layout/nav-link"
+import { InstitutionSwitcher } from "@/components/layout/institution-switcher"
+import type { InstitutionContext } from "@/lib/institutions/core"
 
 type HeaderItem = {
   href: string
@@ -14,6 +16,10 @@ type HeaderItem = {
 type DashboardShellProps = {
   brandHref: string
   headerItems: HeaderItem[]
+  institutionContext?: {
+    current: InstitutionContext | null
+    all: InstitutionContext[]
+  }
   actions?: ReactNode
   children: ReactNode
 }
@@ -21,6 +27,7 @@ type DashboardShellProps = {
 export function DashboardShell({
   brandHref,
   headerItems,
+  institutionContext,
   actions,
   children,
 }: DashboardShellProps) {
@@ -48,6 +55,9 @@ export function DashboardShell({
           </nav>
 
           <div className="flex items-center justify-self-end gap-2">
+            {institutionContext && (
+              <InstitutionSwitcher current={institutionContext.current} contexts={institutionContext.all} />
+            )}
             {actions}
             {/* Mobile hamburger — only shown when there are nav items */}
             {headerItems.length > 0 && (

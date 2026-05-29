@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { getNarrowForBroad, getDetailedForNarrow } from "@/data/isced-f-2013"
 import { TAXONOMY, CATEGORY_KEYS, layerToCat, type CatKey } from "./atlas-taxonomy"
@@ -51,7 +51,20 @@ export function useAtlasFilterBar({
   const broadWrapRef  = useRef<HTMLDivElement>(null)
   const narrowWrapRef = useRef<HTMLDivElement>(null)
   const detailWrapRef = useRef<HTMLDivElement>(null)
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
 
+  const debouncedSetQ = useCallback((value: string) => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current)
+    }
+    debounceTimer.current = setTimeout(() => {
+      setQ(value)
+    }, 300)
+  }, [])
+
+  // Clear ISCED search whenever panel opens/closes — this is intentional synchronous setState
+  // to keep filter state bounded; we use an effect dependency to ensure it runs whenever openPanel changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setIscedSearch("") }, [openPanel])
 
   useEffect(() => {
@@ -67,7 +80,13 @@ export function useAtlasFilterBar({
   }, [])
 
   useEffect(() => {
-    const close = () => { setOpenPanel(null); setPanelAnchor(null) }
+    const close = (e: Event) => {
+      // Don't close when the scroll is happening inside one of the dropdown panels
+      const target = e.target
+      if (target instanceof Element && target.closest(".afb-mini-panel, .afb-sort-panel")) return
+      setOpenPanel(null)
+      setPanelAnchor(null)
+    }
     window.addEventListener("scroll", close, true)
     return () => window.removeEventListener("scroll", close, true)
   }, [])
@@ -170,7 +189,7 @@ export function useAtlasFilterBar({
   }
 
   return {
-    q, setQ,
+    q, setQ: debouncedSetQ,
     domain, domainNarrow, domainDetail,
     openPanel, setOpenPanel,
     iscedSearch, setIscedSearch,

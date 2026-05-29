@@ -19,7 +19,7 @@ import type {
   Task,
   CanvasPage,
 } from "../types"
-import { getDefaultBlocksForType, type TemplateType } from "@/lib/curriculum/template-blocks"
+import { ALL_TEMPLATE_TYPES, getDefaultBlocksForType, type TemplateDesignConfig, type TemplateType } from "@/lib/curriculum/template-blocks"
 
 // ─── Raw DB shape (subset of CurriculumSessionRow) ────────────────────────────
 
@@ -37,6 +37,7 @@ export interface RawSessionRow {
   objective_names?: string[]
   task_names?: string[]
   schedule_date?: string
+  template_design?: TemplateDesignConfig
 }
 
 export interface RawScheduleEntry {
@@ -60,8 +61,10 @@ export interface CourseMeta {
   topicsPerLesson: number
   objectivesPerTopic: number
   tasksPerObjective: number
+  /** Per-template-id fieldState map; lets a session use the exact saved template selected for it. */
+  fieldStateById?: Record<string, Partial<Record<string, Record<string, unknown>>>>
   /** Per-template-type fieldState map; keyed by template type string (e.g. "lesson"). */
-  fieldStateByType?: Record<string, Partial<Record<string, Record<string, boolean>>>>
+  fieldStateByType?: Record<string, Partial<Record<string, Record<string, unknown>>>>
 }
 
 function objectiveFlatIndex(topicIndex: number, objectiveIndex: number, objectivesPerTopic: number): number {
@@ -93,6 +96,31 @@ function resolveModuleName(index: number, total: number, moduleNames: string[]):
   const perModule = Math.max(1, Math.ceil(total / moduleNames.length))
   const moduleIndex = Math.min(moduleNames.length - 1, Math.floor(index / perModule))
   return moduleNames[moduleIndex] ?? ""
+}
+
+function isTemplateType(value: unknown): value is TemplateType {
+  return typeof value === "string" && (ALL_TEMPLATE_TYPES as readonly string[]).includes(value)
+}
+
+function resolveTemplateType(rawRow: RawSessionRow): TemplateType {
+  return isTemplateType(rawRow.template_type) ? rawRow.template_type : "lesson"
+}
+
+function resolveFieldEnabled(
+  rawRow: RawSessionRow,
+  templateType: TemplateType,
+  meta: CourseMeta,
+): Partial<Record<string, Record<string, unknown>>> | undefined {
+  const templateId = typeof rawRow.template_id === "string" ? rawRow.template_id : null
+  const byId = templateId ? meta.fieldStateById?.[templateId] : undefined
+  if (byId) return byId
+
+  const designSettings = rawRow.template_design?.blockSettings
+  if (designSettings && typeof designSettings === "object") {
+    return designSettings as Partial<Record<string, Record<string, unknown>>>
+  }
+
+  return meta.fieldStateByType?.[templateType]
 }
 
 export function mapRowToSession(
@@ -163,7 +191,7 @@ export function mapRowToSession(
     }
   })
 
-  const templateType = (rawRow.template_type ?? "lesson") as TemplateType
+  const templateType = resolveTemplateType(rawRow)
   const blockKeys = getDefaultBlocksForType(templateType) as BlockKey[]
 
   const canvases: CanvasPage[] = [
@@ -183,7 +211,7 @@ export function mapRowToSession(
     canvases,
     topics,
     templateType,
-    fieldEnabled:    meta.fieldStateByType?.[templateType],
+    fieldEnabled:    resolveFieldEnabled(rawRow, templateType, meta),
     durationMinutes: rawRow.duration_minutes,
     courseTitle:     meta.courseTitle,
     institution:     meta.institution,
@@ -220,7 +248,43 @@ function overlayDroppedCards(derived: Topic[], saved: Topic[]): Topic[] {
   }))
 }
 
-function normaliseNonOverlappingRanges(canvases: CanvasPage[]): CanvasPage[] {
+function countTasks(topics: Topic[]): number {
+  return topics.reduce(
+    (sum, topic) =>
+      sum + topic.objectives.reduce((objectiveSum, objective) => objectiveSum + objective.tasks.length, 0),
+    0,
+  )
+}
+
+function clampTaskRange(
+  range: CanvasPage["contentTaskRange"],
+  totalTasks: number,
+): CanvasPage["contentTaskRange"] {
+  if (!range || totalTasks <= 0) return range
+
+  const start = Math.min(Math.max(0, range.start), totalTasks)
+  const end = typeof range.end === "number"
+    ? Math.min(Math.max(start, range.end), totalTasks)
+    : undefined
+
+  return { start, ...(end !== undefined ? { end } : {}) }
+}
+
+function hasEmptyTaskRange(canvas: CanvasPage, totalTasks: number): boolean {
+  const range = canvas.contentTaskRange
+  if (!range || totalTasks <= 0) return false
+  return range.start >= totalTasks || (range.end !== undefined && range.end <= range.start)
+}
+
+function renumberCanvases(canvases: CanvasPage[]): CanvasPage[] {
+  return canvases.map((canvas, index) => ({
+    ...canvas,
+    id: `${canvas.sessionId}-canvas-${index + 1}` as CanvasId,
+    pageNumber: index + 1,
+  }))
+}
+
+function normaliseNonOverlappingRanges(canvases: CanvasPage[], totalTasks: number): CanvasPage[] {
   // ── Forward pass: ensure range starts are monotonically non-decreasing ──────
   let topicCursor = 0
   let objectiveCursor = 0
@@ -253,13 +317,18 @@ function normaliseNonOverlappingRanges(canvases: CanvasPage[]): CanvasPage[] {
     }
 
     if (next.contentCardRange) {
-      const start = Math.max(cardCursor, next.contentCardRange.start ?? cardCursor)
+      const enforceCardCursor = !next.blockKeys || next.blockKeys.length === 0
+      const start = Math.max(enforceCardCursor ? cardCursor : 0, next.contentCardRange.start ?? cardCursor)
       const end =
         typeof next.contentCardRange.end === "number"
           ? Math.max(start, next.contentCardRange.end)
           : undefined
       next.contentCardRange = { start, ...(end !== undefined ? { end } : {}) }
-      cardCursor = end ?? start
+      if (enforceCardCursor) cardCursor = end ?? start
+    }
+
+    if (next.contentTaskRange) {
+      next.contentTaskRange = clampTaskRange(next.contentTaskRange, totalTasks)
     }
 
     return next
@@ -305,7 +374,8 @@ function normaliseNonOverlappingRanges(canvases: CanvasPage[]): CanvasPage[] {
     }
 
     const nextCardStart = succ.contentCardRange?.start
-    if (nextCardStart !== undefined) {
+    const shouldBackfillCardRange = nextCardStart !== undefined && (!succ.blockKeys || succ.blockKeys.length === 0)
+    if (shouldBackfillCardRange) {
       if (curr.contentCardRange) {
         if (curr.contentCardRange.end === undefined) {
           curr.contentCardRange = { ...curr.contentCardRange, end: nextCardStart }
@@ -316,7 +386,9 @@ function normaliseNonOverlappingRanges(canvases: CanvasPage[]): CanvasPage[] {
     }
   }
 
-  return result
+  const filtered = result.filter((canvas) => !hasEmptyTaskRange(canvas, totalTasks))
+
+  return renumberCanvases(filtered.length > 0 ? filtered : result.slice(0, 1))
 }
 
 import type { LessonRow } from "@/components/coursebuilder/course-queries"
@@ -377,18 +449,16 @@ export function reconcileSavedLesson(
   const normalisedCanvases = anchoredCanvases
     ? anchoredCanvases.map((c) => {
         if (anchoredCanvases.length > 1) return c
-        const {
-          contentTopicRange: _topicRange,
-          contentObjectiveRange: _objectiveRange,
-          contentCardRange: _cardRange,
-          ...rest
-        } = c
+        const rest = { ...c }
+        delete rest.contentTopicRange
+        delete rest.contentObjectiveRange
+        delete rest.contentCardRange
         return rest
       })
     : null
 
   const safeCanvases = normalisedCanvases
-    ? normaliseNonOverlappingRanges(normalisedCanvases)
+    ? normaliseNonOverlappingRanges(normalisedCanvases, countTasks(derived.topics))
     : null
 
   return {

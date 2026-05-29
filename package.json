@@ -2,6 +2,9 @@
   "name": "neptino",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0 <25"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -20,6 +23,7 @@
     "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
+    "@chenglou/pretext": "^0.0.7",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-html": "^6.4.11",
     "@codemirror/lang-javascript": "^6.2.5",
@@ -57,9 +61,11 @@
     "maplibre-gl": "^5.19.0",
     "next": "16.1.6",
     "pdfjs-dist": "^5.4.624",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-easy-crop": "^5.5.6",
+    "react-grid-layout": "^2.2.3",
     "react-leaflet": "^5.0.0",
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.1",

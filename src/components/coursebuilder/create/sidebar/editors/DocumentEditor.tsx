@@ -15,6 +15,8 @@ interface DocumentEditorProps {
   onChange: (key: string, value: unknown) => void
 }
 
+type DocumentType = "pdf" | "slides" | "web"
+
 function parseSections(raw: unknown): DocumentSection[] {
   if (!Array.isArray(raw)) return []
   return raw.filter((s): s is DocumentSection =>
@@ -27,7 +29,10 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
 
   const url = typeof content.url === "string" ? content.url : ""
   const title = typeof content.title === "string" ? content.title : ""
-  const documentType = typeof content.documentType === "string" ? content.documentType : "pdf"
+  const documentType: DocumentType =
+    content.documentType === "pdf" || content.documentType === "slides" || content.documentType === "web"
+      ? content.documentType
+      : "pdf"
   const pages = typeof content.pages === "number" ? content.pages : 0
   const excerpt = typeof content.excerpt === "string" ? content.excerpt : ""
   const sections = parseSections(content.sections)
@@ -50,7 +55,8 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
     onChange("sections", sections.map((s, idx) => idx === i ? { ...s, [field]: value } : s))
   }
 
-  const isPdf = documentType === "pdf" && url
+  const isPdf = documentType === "pdf" && Boolean(url)
+  const previewCardType = documentType === "web" ? "media" : "document"
 
   return (
     <EditorSplitLayout
@@ -66,7 +72,7 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
                   onClick={() => onChange("documentType", t)}
                   className={[
                     "px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors",
-                    documentType === t ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "bg-white text-neutral-500 hover:bg-neutral-50",
+                    documentType === t ? "bg-[#dbe8f6] text-[#3a6ea0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]" : "bg-white text-neutral-500 hover:bg-neutral-50",
                   ].join(" ")}
                 >
                   {t === "pdf" ? "PDF" : t === "slides" ? "Slides" : "Web"}
@@ -139,7 +145,7 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
             </div>
 
             {sections.length === 0 && (
-              <p className="text-[11px] italic text-neutral-400">Add sections to structure the document block.</p>
+              <p className="text-[11px] italic text-neutral-400">Add sections to structure the document card.</p>
             )}
 
             <div className="space-y-3">
@@ -174,7 +180,7 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
         <div className="flex min-h-full items-center justify-center px-6 py-6 md:px-8">
           {!url ? (
             <EditorPreviewFrame
-              cardType={documentType === "web" ? "media" : "document"}
+              cardType={previewCardType}
               title={title}
               onTitleChange={(next) => onChange("title", next)}
               className="w-full max-w-4xl"
@@ -186,7 +192,7 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
             </EditorPreviewFrame>
           ) : isPdf ? (
             <EditorPreviewFrame
-              cardType={documentType === "web" ? "media" : "document"}
+              cardType={previewCardType}
               title={title}
               onTitleChange={(next) => onChange("title", next)}
               className="h-[70vh] w-full max-w-5xl"
@@ -209,7 +215,7 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
             </EditorPreviewFrame>
           ) : (
             <EditorPreviewFrame
-              cardType={documentType === "web" ? "media" : "document"}
+              cardType={previewCardType}
               title={title}
               onTitleChange={(next) => onChange("title", next)}
               className="h-[70vh] w-full max-w-5xl"

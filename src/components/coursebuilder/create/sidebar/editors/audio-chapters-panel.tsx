@@ -43,7 +43,7 @@ export function AudioChaptersPanel({
       <div className="space-y-1.5">
         {chapters.map((chapter, index) => (
           <div key={index} className="flex items-center gap-1.5 rounded-md border border-neutral-100 bg-neutral-50 px-2.5 py-1.5">
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#233f5d] text-[8px] font-bold text-white">
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#3a6ea0] text-[8px] font-bold text-white">
               {index + 1}
             </span>
             <input
@@ -71,7 +71,7 @@ export function AudioChaptersPanel({
               <button
                 type="button"
                 onClick={() => onSeek(chapter.time)}
-                className="ml-1 rounded px-1.5 py-0.5 text-[9px] font-semibold text-[#233f5d] transition-colors hover:bg-[#dbe8f6]"
+                className="ml-1 rounded px-1.5 py-0.5 text-[9px] font-semibold text-[#3a6ea0] transition-colors hover:bg-[#dbe8f6]"
               >
                 Seek
               </button>

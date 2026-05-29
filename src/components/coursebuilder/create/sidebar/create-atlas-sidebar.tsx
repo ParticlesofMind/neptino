@@ -6,6 +6,13 @@ import type { CreateAtlasSidebarResponse } from "./create-atlas-sidebar-types"
 
 type AtlasCategory = "entities" | "media"
 
+function layerLabel(layer: number | null): string {
+  if (layer === 2) return "Media"
+  if (layer === 3) return "Product"
+  if (layer === 4) return "Pattern"
+  return "Atlas"
+}
+
 export function CreateAtlasSidebar() {
   const [page, setPage] = useState(1)
   const [query, setQuery] = useState("")
@@ -57,7 +64,7 @@ export function CreateAtlasSidebar() {
   }, [requestQuery])
 
   return (
-    <aside className="atlas-scope atlas-sans flex h-full w-full min-w-0 flex-col overflow-hidden border-l border-[var(--atlas-border)] bg-[var(--atlas-bg)]">
+    <aside className="atlas-scope atlas-sans flex h-full w-full min-w-0 flex-col overflow-hidden bg-[var(--atlas-bg)]">
       <div className="border-b border-[var(--atlas-border)] bg-[var(--atlas-bg)]/75 px-4 py-3">
         <div className="relative">
           <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--atlas-text-dim)]" />
@@ -106,7 +113,7 @@ export function CreateAtlasSidebar() {
           ? "Loading Atlas entries…"
           : error
             ? "Atlas unavailable"
-            : `${data?.totalCount.toLocaleString() ?? 0} ${category === "media" ? "media entries" : "entity entries"}`}
+            : `${data?.totalCount.toLocaleString() ?? 0} ${category === "media" ? "Atlas cards" : "entity entries"}`}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
@@ -131,14 +138,21 @@ export function CreateAtlasSidebar() {
               </div>
             ))}
 
-            {!loading && data?.items.length === 0 && (
+            {!loading && category === "entities" && data?.items.length === 0 && (
               <div className="rounded-lg border-2 border-dashed border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/20 p-5 text-center">
                 <h3 className="atlas-serif text-base font-light tracking-[0.08em] text-[var(--atlas-text)]">No Atlas Entries</h3>
                 <p className="mt-2 text-sm text-[var(--atlas-text-dim)]">No reference entries are available for this view yet.</p>
               </div>
             )}
 
-            {data?.items.map((item) => (
+            {!loading && category === "media" && data?.mediaItems.length === 0 && (
+              <div className="rounded-lg border-2 border-dashed border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/20 p-5 text-center">
+                <h3 className="atlas-serif text-base font-light tracking-[0.08em] text-[var(--atlas-text)]">No Atlas Cards</h3>
+                <p className="mt-2 text-sm text-[var(--atlas-text-dim)]">No passive reference cards are available for this view yet.</p>
+              </div>
+            )}
+
+            {category === "entities" && data?.items.map((item) => (
               <article
                 key={item.id}
                 className="rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/40 p-4"
@@ -164,6 +178,34 @@ export function CreateAtlasSidebar() {
                   {item.domain && <span className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[10px] text-[var(--atlas-text-dim)]">{item.domain}</span>}
                   {item.era_label && <span className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[10px] text-[var(--atlas-text-dim)]">{item.era_label}</span>}
                   {item.depth && <span className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[10px] text-[var(--atlas-text-dim)]">{item.depth}</span>}
+                </div>
+              </article>
+            ))}
+
+            {category === "media" && data?.mediaItems.map((item) => (
+              <article
+                key={item.id}
+                className="rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-bg-elevated)]/40 p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="atlas-serif text-base font-light tracking-[0.05em] text-[var(--atlas-text)]">{item.title}</h3>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-[var(--atlas-text-dim)]">
+                      {layerLabel(item.layer)} · {item.media_type}
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-[var(--atlas-border)] bg-[var(--atlas-bg)]/60 px-2 py-0.5 text-[10px] text-[var(--atlas-text-dim)]">
+                    {item.itemType}
+                  </span>
+                </div>
+
+                {item.description && (
+                  <p className="mt-3 text-sm text-[var(--atlas-text-dim)]">{item.description}</p>
+                )}
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <span className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[10px] text-[var(--atlas-text-dim)]">{item.itemTitle}</span>
+                  {item.url && <span className="rounded-full border border-[var(--atlas-border)] px-2 py-0.5 text-[10px] text-[var(--atlas-text-dim)]">Source linked</span>}
                 </div>
               </article>
             ))}

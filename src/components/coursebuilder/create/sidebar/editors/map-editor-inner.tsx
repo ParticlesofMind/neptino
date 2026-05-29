@@ -1,16 +1,6 @@
 "use client"
 
-import "leaflet/dist/leaflet.css"
-import { useEffect, useMemo } from "react"
-import {
-  Tooltip,
-  MapContainer,
-  TileLayer,
-  CircleMarker,
-  Rectangle,
-  useMap,
-  useMapEvents,
-} from "react-leaflet"
+import { useMemo } from "react"
 import { Layers, LocateFixed, Map as MapIcon } from "lucide-react"
 import {
   TILE_LAYERS,
@@ -19,59 +9,16 @@ import {
   generateDemoPoints,
   generateDemoChoropleth,
   normalizeOverlayLayers,
+  type DemoCell,
+  type DemoPoint,
   type MapStyleName,
   type OverlayLayer,
+  type TerritoryLayer,
 } from "./map-editor-config"
 import { EditorSplitLayout } from "./editor-split-layout"
 import { EditorPreviewFrame } from "./editor-preview-frame"
 import type { MapEditorProps } from "./types"
-// ── Internal helpers ─────────────────────────────────────────────────────────
-
-/** Syncs external center/zoom state into the Leaflet map instance. */
-function ViewSyncer({
-  lat,
-  lng,
-  zoom,
-}: {
-  lat: number
-  lng: number
-  zoom: number
-}) {
-  const map = useMap()
-
-  useEffect(() => {
-    const center = map.getCenter()
-    const currentZoom = map.getZoom()
-    const needsSync =
-      Math.abs(center.lat - lat) > 0.0001 ||
-      Math.abs(center.lng - lng) > 0.0001 ||
-      Math.abs(currentZoom - zoom) > 0.0001
-
-    if (needsSync) {
-      map.setView([lat, lng], zoom, { animate: false })
-    }
-  }, [lat, lng, map, zoom])
-
-  return null
-}
-
-/** Emits onChange events when the user pans/zooms the map. */
-function MapEventBridge({
-  onChange,
-}: {
-  onChange: (key: string, value: unknown) => void
-}) {
-  useMapEvents({
-    moveend(evt) {
-      const c = evt.target.getCenter()
-      const z = evt.target.getZoom()
-      onChange("lat", Number(c.lat.toFixed(4)))
-      onChange("lng", Number(c.lng.toFixed(4)))
-      onChange("zoom", Number(z.toFixed(2)))
-    },
-  })
-  return null
-}
+import { LeafletMapView } from "../../cards/card-types/leaflet-map-view"
 // ── Choropleth color helper ───────────────────────────────────────────────────
 
 function scoreToColor(score: number): string {
@@ -94,11 +41,24 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
     typeof content.mapLayer === "string" ? content.mapLayer : "Standard"
   ) as MapStyleName
   const layers = useMemo(() => normalizeOverlayLayers(content.layers), [content.layers])
+  const atlasPoints: DemoPoint[] = Array.isArray(content.points)
+    ? (content.points as DemoPoint[])
+    : []
+  const atlasCells: DemoCell[] = Array.isArray(content.cells)
+    ? (content.cells as DemoCell[])
+    : []
+  const territories: TerritoryLayer[] = Array.isArray(content.territories)
+    ? (content.territories as TerritoryLayer[])
+    : Array.isArray(content.geojsonLayers)
+      ? (content.geojsonLayers as TerritoryLayer[])
+      : []
 
   const tile = TILE_LAYERS[mapLayer]
 
   const demoPoints = useMemo(() => generateDemoPoints(lat, lng), [lat, lng])
   const demoCells = useMemo(() => generateDemoChoropleth(lat, lng), [lat, lng])
+  const points = atlasPoints.length > 0 ? atlasPoints : demoPoints
+  const cells = atlasCells.length > 0 ? atlasCells : demoCells
 
   const normalizeViewport = () => {
     onChange("lat", clamp(lat, -85, 85))
@@ -122,17 +82,17 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
 
   return (
     <EditorSplitLayout
-      sidebarWidthClassName="md:w-[26rem] xl:w-[30rem]"
+      sidebarWidthClassName="md:w-[30rem] md:flex-none xl:w-[32rem]"
       preview={(
-        <div className="flex h-full min-h-0 items-center justify-center px-6 py-6 md:px-8">
+        <div className="flex h-full min-h-0 items-center justify-center px-3 py-4 md:px-4">
           <EditorPreviewFrame
             cardType="map"
             title={title}
             onTitleChange={(next) => onChange("title", next)}
-            className="w-full max-w-5xl"
+            className="w-full"
             bodyClassName="overflow-hidden"
           >
-            <div className="border-b border-neutral-100 px-5 py-3">
+            <div className="border-b border-neutral-100 px-4 py-2.5">
               <div className="flex items-center justify-between gap-3 text-[10px] text-neutral-400">
                 <span className="inline-flex items-center gap-1">
                   <MapIcon size={11} /> Leaflet + OpenStreetMap
@@ -142,86 +102,40 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
                 </span>
               </div>
             </div>
-            <div className="h-[420px] overflow-hidden bg-neutral-100">
-              <MapContainer
-                center={[lat, lng]}
+            <div className="h-[340px] overflow-hidden bg-neutral-100">
+              <LeafletMapView
+                lat={lat}
+                lng={lng}
                 zoom={zoom}
+                tileUrl={tile.url}
+                tileAttribution={tile.attribution}
+                layers={layers}
+                points={points}
+                cells={cells}
+                territories={territories}
+                fitToTerritories={territories.length > 0}
+                interactive
+                choroplethColor={scoreToColor}
+                onViewportChange={(nextLat, nextLng, nextZoom) => {
+                  onChange("lat", nextLat)
+                  onChange("lng", nextLng)
+                  onChange("zoom", nextZoom)
+                }}
                 style={{ height: "100%", width: "100%" }}
-                zoomControl={false}
-                scrollWheelZoom={false}
                 attributionControl={false}
-              >
-                <ViewSyncer lat={lat} lng={lng} zoom={zoom} />
-                <MapEventBridge onChange={onChange} />
-                <TileLayer url={tile.url} attribution={tile.attribution} />
-
-                {layers.includes("Choropleth") &&
-                  demoCells.map((cell) => (
-                    <Rectangle
-                      key={cell.id}
-                      bounds={[
-                        [cell.bounds[0], cell.bounds[1]],
-                        [cell.bounds[2], cell.bounds[3]],
-                      ]}
-                      pathOptions={{
-                        color: scoreToColor(cell.score),
-                        fillColor: scoreToColor(cell.score),
-                        fillOpacity: 0.45,
-                        weight: 1,
-                      }}
-                    />
-                  ))}
-
-                {layers.includes("Points") &&
-                  demoPoints.map((pt) => (
-                    <CircleMarker
-                      key={pt.label}
-                      center={[pt.lat, pt.lng]}
-                      radius={6}
-                      pathOptions={{
-                        color: "#1e40af",
-                        fillColor: "#3b82f6",
-                        fillOpacity: 0.8,
-                        weight: 1.5,
-                      }}
-                    >
-                      {layers.includes("Labels") && (
-                        <Tooltip direction="top" offset={[0, -8]} opacity={0.95} permanent>
-                          <span className="text-[10px] font-medium">{pt.label}</span>
-                        </Tooltip>
-                      )}
-                    </CircleMarker>
-                  ))}
-
-                {!layers.includes("Points") && layers.includes("Labels") &&
-                  demoPoints.map((pt) => (
-                    <CircleMarker
-                      key={`${pt.label}-label`}
-                      center={[pt.lat, pt.lng]}
-                      radius={1}
-                      pathOptions={{
-                        opacity: 0,
-                        fillOpacity: 0,
-                        weight: 0,
-                      }}
-                    >
-                      <Tooltip direction="top" offset={[0, -8]} opacity={0.95} permanent>
-                        <span className="text-[10px] font-medium">{pt.label}</span>
-                      </Tooltip>
-                    </CircleMarker>
-                  ))}
-              </MapContainer>
+                zoomControl={false}
+              />
             </div>
           </EditorPreviewFrame>
         </div>
       )}
       sidebar={(
-        <div className="space-y-3 px-4 py-4">
-          <div className="space-y-2 rounded-xl border border-neutral-200 bg-white px-4 py-3">
+        <div className="space-y-2.5 px-3 py-3">
+          <div className="space-y-2 rounded-lg border border-neutral-200 bg-white px-3 py-2.5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
               Quick presets
             </p>
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="grid grid-cols-2 gap-1.5">
               {presets.map((p) => (
                 <button
                   key={p.label}
@@ -231,7 +145,7 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
                     onChange("lng", p.lng)
                     onChange("zoom", p.zoom)
                   }}
-                  className="rounded-md border border-neutral-200 px-2.5 py-1 text-[11px] text-neutral-600 hover:bg-neutral-50"
+                  className="rounded-md border border-neutral-200 px-2 py-1 text-left text-[11px] text-neutral-600 hover:bg-neutral-50"
                 >
                   {p.label}
                 </button>
@@ -239,7 +153,7 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
             </div>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-neutral-200 bg-white px-4 py-3">
+          <div className="space-y-2.5 rounded-lg border border-neutral-200 bg-white px-3 py-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
                 Viewport
@@ -252,7 +166,7 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
                 <LocateFixed size={11} /> Normalize
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <label className="space-y-1">
                 <span className="text-[11px] font-medium text-neutral-600">Latitude</span>
                 <input
@@ -301,20 +215,20 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
             </label>
           </div>
 
-          <div className="space-y-2 rounded-xl border border-neutral-200 bg-white px-4 py-3">
+          <div className="space-y-2 rounded-lg border border-neutral-200 bg-white px-3 py-2.5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
               Map style
             </p>
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="grid max-h-24 grid-cols-2 gap-1.5 overflow-y-auto pr-1">
               {(Object.keys(TILE_LAYERS) as MapStyleName[]).map((styleName) => (
                 <button
                   key={styleName}
                   type="button"
                   onClick={() => onChange("mapLayer", styleName)}
                   className={[
-                    "rounded-md border px-2.5 py-1 text-[11px] transition-colors",
+                    "rounded-md border px-2 py-1 text-left text-[11px] transition-colors",
                     mapLayer === styleName
-                      ? "border-[#9eb9da] bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+                      ? "border-[#9eb9da] bg-[#dbe8f6] text-[#3a6ea0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                       : "border-neutral-200 text-neutral-600 hover:bg-neutral-50",
                   ].join(" ")}
                 >
@@ -324,7 +238,7 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
             </div>
           </div>
 
-          <div className="space-y-2 rounded-xl border border-neutral-200 bg-white px-4 py-3">
+          <div className="space-y-2 rounded-lg border border-neutral-200 bg-white px-3 py-2.5">
             <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-neutral-400">
               <Layers size={11} /> Overlays
             </p>

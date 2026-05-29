@@ -14,6 +14,15 @@ An educational platform for tutors and teachers to create, manage, and deliver c
 
 ## Getting started
 
+### 0. Use Node LTS (recommended)
+
+This project is validated on LTS Node and expects a version in the `>=20.9.0 <25` range.
+
+```bash
+nvm install
+nvm use
+```
+
 ### 1. Install dependencies
 
 ```bash

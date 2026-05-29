@@ -1,6 +1,7 @@
 "use client"
 
-import type { DroppedCard } from "../../types"
+import type { CardRenderProps } from "../CardRegistry"
+import { ResourceCardFrame } from "./ResourceCardFrame"
 import {
   getAspectRatioPadding,
   resolveVideoEmbedUrl,
@@ -8,12 +9,7 @@ import {
   type VideoFitMode,
 } from "../../sidebar/editors/video-utils"
 
-interface VideoCardProps {
-  card: DroppedCard
-  onRemove?: () => void
-}
-
-export function VideoCard({ card, onRemove }: VideoCardProps) {
+export function VideoCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const url = typeof card.content["url"] === "string" ? card.content["url"] : ""
   const title = typeof card.content["title"] === "string" ? card.content["title"] : ""
   const poster = typeof card.content["poster"] === "string" ? card.content["poster"] : ""
@@ -36,16 +32,7 @@ export function VideoCard({ card, onRemove }: VideoCardProps) {
   const ratioPadding = getAspectRatioPadding(aspectRatio)
 
   return (
-    <div className="group relative rounded border border-neutral-200 bg-white shadow-sm overflow-hidden">
-      {onRemove && (
-        <button
-          onClick={onRemove}
-          className="absolute right-1 top-1 z-10 hidden h-5 w-5 items-center justify-center rounded bg-white/80 text-neutral-400 shadow hover:text-neutral-600 group-hover:flex"
-          aria-label="Remove"
-        >
-          &times;
-        </button>
-      )}
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable} bodyClassName="p-0">
       {embedUrl ? (
         <div className="relative" style={{ paddingTop: ratioPadding }}>
           <iframe
@@ -82,11 +69,6 @@ export function VideoCard({ card, onRemove }: VideoCardProps) {
           No video
         </div>
       )}
-      {title && (
-        <div className="px-2 py-1 text-[10px] text-neutral-500 border-t border-neutral-100">
-          {title}
-        </div>
-      )}
-    </div>
+    </ResourceCardFrame>
   )
 }

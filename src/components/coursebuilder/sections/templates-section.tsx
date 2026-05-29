@@ -6,8 +6,6 @@ import {
   SetupPanels,
   useSteadyLoading,
   updateCourseById,
-  upsertTemplateRecord,
-  updateTemplateData,
   useCourseRowLoader,
 } from "@/components/coursebuilder"
 import {
@@ -17,7 +15,14 @@ import {
   type BlockId,
   type TemplateFieldState,
 } from "./template-fields"
-import { getDefaultBlocksForType } from "@/lib/curriculum/template-blocks"
+import { getDefaultBlocksForType, type TemplateDesignConfig } from "@/lib/curriculum/template-blocks"
+import { getBuiltInTemplateId, isBuiltInTemplateId } from "@/lib/curriculum/template-source-of-truth"
+import {
+  CUSTOM_PARTITION_PRESET_ID,
+  createNextCustomPartition,
+  createPartitionState,
+  resolveTemplatePartitions,
+} from "@/lib/curriculum/template-partitions"
 import { TemplateConfigPanel } from "./template-config-panel"
 import { TemplateHeaderActions } from "./template-header-actions"
 import { TemplatePreviewPanel } from "./template-preview-panel"
@@ -28,6 +33,7 @@ export type { BlockId, TemplateFieldState } from "./template-fields"
 
 interface TemplateSettingsShape {
   active_template_type?: SetupTemplateType
+  active_template_id?: string
   templates?: Array<{
     id: string
     type: SetupTemplateType
@@ -35,8 +41,11 @@ interface TemplateSettingsShape {
     description?: string
     blocks: BlockId[]
     fieldState?: TemplateFieldState
+    builtIn?: boolean
   }>
 }
+
+type SavedTemplateDefinition = NonNullable<TemplateSettingsShape["templates"]>[number]
 
 interface CurriculumShape {
   session_rows?: Array<Record<string, unknown>>
@@ -44,12 +53,44 @@ interface CurriculumShape {
 
 export type SetupTemplateType = "lesson" | "certificate" | "quiz" | "assessment" | "exam"
 
+const BUILT_IN_TEMPLATE_LABELS: Record<SetupTemplateType, string> = {
+  lesson: "General Purpose Lesson",
+  certificate: "General Purpose Certificate",
+  quiz: "General Purpose Quiz",
+  assessment: "General Purpose Assessment",
+  exam: "General Purpose Exam",
+}
+
+const BUILT_IN_TEMPLATE_DESCRIPTIONS: Record<SetupTemplateType, string> = {
+  lesson: "Default Neptino lesson structure with program, resources, content, assignment, and footer blocks.",
+  certificate: "Default completion certificate with branding-ready header and footer.",
+  quiz: "Default quiz structure for knowledge checks, resources, scoring, and review.",
+  assessment: "Default assessment structure for criteria, evidence, scoring, and feedback.",
+  exam: "Default exam structure for summative evaluation and weighted scoring.",
+}
+
+function createBuiltInTemplateDefinition(type: SetupTemplateType): SavedTemplateDefinition {
+  return {
+    id: getBuiltInTemplateId(type),
+    type,
+    label: BUILT_IN_TEMPLATE_LABELS[type],
+    description: BUILT_IN_TEMPLATE_DESCRIPTIONS[type],
+    blocks: [...getDefaultBlocksForType(type)],
+    fieldState: createDefaultTemplateFieldState(type),
+    builtIn: true,
+  }
+}
+
+const BUILT_IN_TEMPLATE_DEFINITIONS: SavedTemplateDefinition[] = TEMPLATE_TYPES.map((type) =>
+  createBuiltInTemplateDefinition(type as SetupTemplateType),
+)
+
 function createTemplateDefinition(
   type: SetupTemplateType,
   label: string,
   description?: string,
   fieldState?: TemplateFieldState,
-): NonNullable<TemplateSettingsShape["templates"]>[number] {
+): SavedTemplateDefinition {
   return {
     id: crypto.randomUUID(),
     type,
@@ -60,14 +101,46 @@ function createTemplateDefinition(
   }
 }
 
-function applyTemplateToSessionRows(curriculum: CurriculumShape, templateType: SetupTemplateType): CurriculumShape {
+function createTemplateDesign(template: SavedTemplateDefinition): TemplateDesignConfig {
+  return {
+    enabledBlocks: template.blocks,
+    blockSettings: template.fieldState as TemplateDesignConfig["blockSettings"],
+  }
+}
+
+function applyTemplateToSessionRows(curriculum: CurriculumShape, template: SavedTemplateDefinition): CurriculumShape {
   const sessionRows = Array.isArray(curriculum.session_rows) ? curriculum.session_rows : []
+  const templateDesign = createTemplateDesign(template)
   return {
     ...curriculum,
     session_rows: sessionRows.map((row) => ({
       ...row,
-      template_type: templateType,
+      template_id: template.id,
+      template_type: template.type,
+      template_design: templateDesign,
     })),
+  }
+}
+
+function updateMatchingTemplateSessionRows(curriculum: CurriculumShape, template: SavedTemplateDefinition): CurriculumShape {
+  const sessionRows = Array.isArray(curriculum.session_rows) ? curriculum.session_rows : []
+  if (sessionRows.length === 0) return curriculum
+
+  const templateDesign = createTemplateDesign(template)
+  return {
+    ...curriculum,
+    session_rows: sessionRows.map((row) => {
+      const rowTemplateId = typeof row.template_id === "string" ? row.template_id : null
+      const rowTemplateType = typeof row.template_type === "string" ? row.template_type : null
+      const matchesTemplate = rowTemplateId === template.id || (!rowTemplateId && rowTemplateType === template.type)
+      if (!matchesTemplate) return row
+      return {
+        ...row,
+        template_id: template.id,
+        template_type: template.type,
+        template_design: templateDesign,
+      }
+    }),
   }
 }
 
@@ -96,6 +169,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   // using refs avoids the effect re-running when templateSettings changes
   // due to the save itself.
   const templateSettingsRef = useRef<TemplateSettingsShape>({})
+  const curriculumRef = useRef<CurriculumShape>({})
   const activeTemplateIdRef = useRef<string | null>(null)
   const courseIdRef = useRef<string | null>(courseId)
   const fieldStateInteractedRef = useRef(false)
@@ -104,6 +178,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   // Keep refs in sync with latest values
   useEffect(() => { activeTemplateIdRef.current = activeTemplateId }, [activeTemplateId])
   useEffect(() => { courseIdRef.current = courseId }, [courseId])
+  useEffect(() => { curriculumRef.current = curriculum }, [curriculum])
 
   const { loading, hasData } = useCourseRowLoader<{ template_settings: Record<string, unknown> | null; curriculum_data: Record<string, unknown> | null }>({
     courseId,
@@ -113,17 +188,20 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       const loadedCurriculum = (row.curriculum_data as CurriculumShape | null) ?? {}
       setTemplateSettings(loadedSettings)
       setCurriculum(loadedCurriculum)
-      // Restore fieldState and activeTemplateId from the active (or first)
-      // saved template so config panel and preview are in sync.
-      if (Array.isArray(loadedSettings.templates) && loadedSettings.templates.length > 0) {
-        const activeType = loadedSettings.active_template_type ?? "lesson"
-        const activeTemplate =
-          loadedSettings.templates.find((t) => t.type === activeType) ??
-          loadedSettings.templates[0]
-        if (activeTemplate) {
-          if (activeTemplate.fieldState) setFieldState(activeTemplate.fieldState)
-          setActiveTemplateId(activeTemplate.id)
-        }
+      curriculumRef.current = loadedCurriculum
+      const customTemplates = Array.isArray(loadedSettings.templates) ? loadedSettings.templates : []
+      const availableTemplates = [...BUILT_IN_TEMPLATE_DEFINITIONS, ...customTemplates]
+      const activeType = loadedSettings.active_template_type ?? "lesson"
+      const activeTemplate =
+        availableTemplates.find((t) => t.id === loadedSettings.active_template_id) ??
+        availableTemplates.find((t) => t.type === activeType) ??
+        availableTemplates[0]
+      if (activeTemplate) {
+        skipFieldStateResetRef.current = true
+        if (activeTemplate.fieldState) setFieldState(activeTemplate.fieldState)
+        setActiveTemplateId(activeTemplate.id)
+        setSelectedTemplateType(activeTemplate.type)
+        setSelectedLoadTemplateId(activeTemplate.id)
       }
       templateSettingsRef.current = loadedSettings
     },
@@ -134,13 +212,14 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     minVisibleMs: 220,
   })
 
-  const hasLessonTemplate = useMemo(
-    () => Array.isArray(templateSettings.templates) && templateSettings.templates.some((t) => t.type === "lesson"),
-    [templateSettings.templates],
-  )
-  const savedTemplates = useMemo(
+  const customTemplates = useMemo(
     () => (Array.isArray(templateSettings.templates) ? templateSettings.templates : []),
     [templateSettings.templates],
+  )
+
+  const savedTemplates = useMemo(
+    () => [...BUILT_IN_TEMPLATE_DEFINITIONS, ...customTemplates],
+    [customTemplates],
   )
 
   const selectedBlocks = getDefaultBlocksForType(selectedTemplateType)
@@ -159,6 +238,78 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     }))
   }, [])
 
+  const handleApplyPartitionPreset = useCallback((block: BlockId, presetId: string) => {
+    fieldStateInteractedRef.current = true
+    setFieldState((prev) => {
+      const current = prev[block] as Record<string, unknown> | undefined
+      const currentPartitions = resolveTemplatePartitions(current, block)
+      const partitionState = createPartitionState(
+        block,
+        presetId,
+        presetId === CUSTOM_PARTITION_PRESET_ID ? currentPartitions : undefined,
+      )
+
+      return {
+        ...prev,
+        [block]: {
+          ...(prev[block] ?? {}),
+          ...partitionState,
+        },
+      }
+    })
+  }, [])
+
+  const handleRenamePartition = useCallback((block: BlockId, partitionId: string, label: string) => {
+    fieldStateInteractedRef.current = true
+    setFieldState((prev) => {
+      const current = prev[block] as Record<string, unknown> | undefined
+      const partitions = resolveTemplatePartitions(current, block).map((partition) =>
+        partition.id === partitionId ? { ...partition, label } : partition,
+      )
+
+      return {
+        ...prev,
+        [block]: {
+          ...(prev[block] ?? {}),
+          ...createPartitionState(block, CUSTOM_PARTITION_PRESET_ID, partitions),
+        },
+      }
+    })
+  }, [])
+
+  const handleAddPartition = useCallback((block: BlockId) => {
+    fieldStateInteractedRef.current = true
+    setFieldState((prev) => {
+      const current = prev[block] as Record<string, unknown> | undefined
+      const partitions = resolveTemplatePartitions(current, block)
+      const nextPartitions = [...partitions, createNextCustomPartition(partitions)]
+
+      return {
+        ...prev,
+        [block]: {
+          ...(prev[block] ?? {}),
+          ...createPartitionState(block, CUSTOM_PARTITION_PRESET_ID, nextPartitions),
+        },
+      }
+    })
+  }, [])
+
+  const handleRemovePartition = useCallback((block: BlockId, partitionId: string) => {
+    fieldStateInteractedRef.current = true
+    setFieldState((prev) => {
+      const current = prev[block] as Record<string, unknown> | undefined
+      const partitions = resolveTemplatePartitions(current, block).filter((partition) => partition.id !== partitionId)
+
+      return {
+        ...prev,
+        [block]: {
+          ...(prev[block] ?? {}),
+          ...createPartitionState(block, CUSTOM_PARTITION_PRESET_ID, partitions),
+        },
+      }
+    })
+  }, [])
+
   const saveTemplateSettings = useCallback(async (nextSettings: TemplateSettingsShape, nextCurriculum?: CurriculumShape) => {
     if (!courseId) return
     setSaving(true)
@@ -175,7 +326,10 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     }
     setTemplateSettings(nextSettings)
     templateSettingsRef.current = nextSettings
-    if (nextCurriculum) setCurriculum(nextCurriculum)
+    if (nextCurriculum) {
+      setCurriculum(nextCurriculum)
+      curriculumRef.current = nextCurriculum
+    }
     setMessage("Template updated.")
   }, [courseId])
 
@@ -195,9 +349,8 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   }, [selectedTemplateType])
 
   // Debounced auto-save: whenever the user toggles a field checkbox and there
-  // is already a saved template (activeTemplateId), push the update to both
-  // courses.template_settings and the templates table without requiring a
-  // separate "Save" action.
+  // is already a saved template (activeTemplateId), push the update to
+  // courses.template_settings without requiring a separate "Save" action.
   useEffect(() => {
     if (!fieldStateInteractedRef.current) return
     const aid = activeTemplateIdRef.current
@@ -208,33 +361,43 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
 
     fieldStateSaveTimerRef.current = setTimeout(async () => {
       const currentSettings = templateSettingsRef.current
-      const updatedTemplates = (currentSettings.templates ?? []).map((t) =>
-        t.id === aid ? { ...t, fieldState } : t,
+      let updatedActiveTemplate: SavedTemplateDefinition | null = null
+      if (isBuiltInTemplateId(aid)) return
+
+      const updatedTemplates = (currentSettings.templates ?? []).map((t) => {
+        if (t.id !== aid) return t
+        updatedActiveTemplate = { ...t, fieldState }
+        return updatedActiveTemplate
+      })
+      const nextCurriculum = updatedActiveTemplate
+        ? updateMatchingTemplateSessionRows(curriculumRef.current, updatedActiveTemplate)
+        : undefined
+      const shouldPersistCurriculum = Boolean(
+        nextCurriculum &&
+        nextCurriculum !== curriculumRef.current &&
+        Array.isArray(nextCurriculum.session_rows),
       )
-      const nextSettings: TemplateSettingsShape = { ...currentSettings, templates: updatedTemplates }
+      const nextSettings: TemplateSettingsShape = {
+        ...currentSettings,
+        active_template_id: aid,
+        templates: updatedTemplates,
+      }
 
       // courses.template_settings
       const { error: courseError } = await updateCourseById(cid, {
         template_settings: nextSettings,
+        ...(shouldPersistCurriculum ? { curriculum_data: nextCurriculum } : {}),
         updated_at: new Date().toISOString(),
       })
       if (!courseError) {
         setTemplateSettings(nextSettings)
         templateSettingsRef.current = nextSettings
-      }
-
-      // templates table
-      const templateRecord = updatedTemplates.find((t) => t.id === aid)
-      if (templateRecord) {
-        const { error: templateSyncError } = await updateTemplateData(aid, {
-          fieldState,
-          blocks: templateRecord.blocks,
-        })
-        if (templateSyncError) {
-          const syncErrorDetail = templateSyncError?.message || JSON.stringify(templateSyncError) || "Unknown error"
-          console.error("Template library sync failed while updating template data:", syncErrorDetail)
+        if (shouldPersistCurriculum && nextCurriculum) {
+          setCurriculum(nextCurriculum)
+          curriculumRef.current = nextCurriculum
         }
       }
+
     }, 800)
 
     return () => {
@@ -248,39 +411,32 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       return
     }
     if (!courseId) return
-    const existingTemplates = Array.isArray(templateSettings.templates) ? templateSettings.templates : []
+    const existingTemplates = customTemplates
+    const initialFieldState = createType === selectedTemplateType
+      ? fieldState
+      : createDefaultTemplateFieldState(createType)
     const newTemplate = createTemplateDefinition(
       createType,
       createName.trim(),
       createDescription.trim() || undefined,
-      fieldState,
+      initialFieldState,
     )
     const nextSettings: TemplateSettingsShape = {
       ...templateSettings,
+      active_template_type: newTemplate.type,
+      active_template_id: newTemplate.id,
       templates: [...existingTemplates, newTemplate],
     }
-    // 1. Save to courses.template_settings
-    await saveTemplateSettings(nextSettings)
-    // 2. Save to templates table
-    const { error: templateError } = await upsertTemplateRecord({
-      templateId:   newTemplate.id,
-      courseId,
-      name:         newTemplate.label,
-      description:  newTemplate.description,
-      type:         newTemplate.type,
-      templateData: { fieldState, blocks: newTemplate.blocks },
-    })
-    if (templateError) {
-      const errorMessage = templateError?.message || JSON.stringify(templateError) || "Unknown error"
-      console.error("Template library write failed:", templateError)
-      setMessage(`Template saved locally but failed to write to template library: ${errorMessage}`)
-    }
+    const nextCurriculum = applyTemplateToSessionRows(curriculum, newTemplate)
+    await saveTemplateSettings(nextSettings, nextCurriculum)
+    skipFieldStateResetRef.current = true
+    setFieldState(initialFieldState)
     setActiveTemplateId(newTemplate.id)
     fieldStateInteractedRef.current = false
     setSelectedTemplateType(createType)
     setSelectedLoadTemplateId(newTemplate.id)
     setShowCreatePopup(false)
-  }, [courseId, createDescription, createName, createType, fieldState, saveTemplateSettings, templateSettings])
+  }, [courseId, createDescription, createName, createType, customTemplates, curriculum, fieldState, saveTemplateSettings, selectedTemplateType, templateSettings])
 
   const handleLoadTemplate = useCallback(async () => {
     const targetTemplate = savedTemplates.find((template) => template.id === selectedLoadTemplateId)
@@ -290,19 +446,22 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     }
     // Restore the saved template's field configuration into the config panel
     if (targetTemplate.fieldState) {
+      skipFieldStateResetRef.current = true
       setFieldState(targetTemplate.fieldState)
     }
     setActiveTemplateId(targetTemplate.id)
+    setSelectedTemplateType(targetTemplate.type)
     fieldStateInteractedRef.current = false
     const nextSettings: TemplateSettingsShape = {
       ...templateSettings,
       active_template_type: targetTemplate.type,
-      templates: savedTemplates,
+      active_template_id: targetTemplate.id,
+      templates: customTemplates,
     }
-    const nextCurriculum = applyTemplateToSessionRows(curriculum, targetTemplate.type)
+    const nextCurriculum = applyTemplateToSessionRows(curriculum, targetTemplate)
     await saveTemplateSettings(nextSettings, nextCurriculum)
     setShowLoadPopup(false)
-  }, [curriculum, saveTemplateSettings, savedTemplates, selectedLoadTemplateId, templateSettings])
+  }, [customTemplates, curriculum, saveTemplateSettings, savedTemplates, selectedLoadTemplateId, templateSettings])
 
   const openCreatePopup = useCallback(() => {
     setShowLoadPopup(false)
@@ -323,7 +482,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setShowLoadPopup((prev) => !prev)
   }, [savedTemplates])
 
-  const handleActivateTemplate = useCallback((templateId: string) => {
+  const handleActivateTemplate = useCallback(async (templateId: string) => {
     const targetTemplate = savedTemplates.find((t) => t.id === templateId)
     if (!targetTemplate) return
     // Guard must be set BEFORE setSelectedTemplateType so the effect that
@@ -335,28 +494,52 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setActiveTemplateId(templateId)
     setSelectedTemplateType(targetTemplate.type)
     fieldStateInteractedRef.current = false
-    setMessage("Template loaded.")
-  }, [savedTemplates])
-
-  const handleDeleteTemplate = useCallback(async (templateId: string) => {
     const nextSettings: TemplateSettingsShape = {
       ...templateSettings,
-      templates: savedTemplates.filter((t) => t.id !== templateId),
+      active_template_type: targetTemplate.type,
+      active_template_id: targetTemplate.id,
+      templates: customTemplates,
+    }
+    const nextCurriculum = applyTemplateToSessionRows(curriculum, targetTemplate)
+    await saveTemplateSettings(nextSettings, nextCurriculum)
+    setMessage("Template applied.")
+  }, [customTemplates, curriculum, saveTemplateSettings, savedTemplates, templateSettings])
+
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
+    if (isBuiltInTemplateId(templateId)) {
+      setMessage("Built-in Neptino templates cannot be removed.")
+      return
+    }
+
+    const remainingTemplates = customTemplates.filter((t) => t.id !== templateId)
+    const availableAfterDelete = [...BUILT_IN_TEMPLATE_DEFINITIONS, ...remainingTemplates]
+    const nextActiveTemplate = activeTemplateId === templateId
+      ? availableAfterDelete[0]
+      : availableAfterDelete.find((t) => t.id === activeTemplateId)
+    const nextSettings: TemplateSettingsShape = {
+      ...templateSettings,
+      active_template_type: nextActiveTemplate?.type ?? templateSettings.active_template_type,
+      active_template_id: nextActiveTemplate?.id,
+      templates: remainingTemplates,
     }
     if (activeTemplateId === templateId) {
-      setActiveTemplateId(null)
+      setActiveTemplateId(nextActiveTemplate?.id ?? null)
+      if (nextActiveTemplate) {
+        setSelectedTemplateType(nextActiveTemplate.type)
+        if (nextActiveTemplate.fieldState) setFieldState(nextActiveTemplate.fieldState)
+      }
     }
     await saveTemplateSettings(nextSettings)
-  }, [activeTemplateId, saveTemplateSettings, savedTemplates, templateSettings])
+  }, [activeTemplateId, customTemplates, saveTemplateSettings, templateSettings])
 
   return (
     <SetupSection
       title="Templates"
-      description="Create and configure reusable templates applied to course sessions."
+      description="Use Neptino's built-in defaults for every template type, or create reusable overrides."
       headerActions={(
         <TemplateHeaderActions
           canCreate={Boolean(courseId) && !saving}
-          canLoad={Boolean(courseId) && !saving && hasLessonTemplate && savedTemplates.length > 0}
+          canLoad={Boolean(courseId) && !saving && savedTemplates.length > 0}
           showCreatePopup={showCreatePopup}
           showLoadPopup={showLoadPopup}
           templateTypes={TEMPLATE_TYPES as SetupTemplateType[]}
@@ -414,6 +597,9 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                     <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Active template</span>
                     <span className="text-xs font-medium text-foreground">{activeTpl.label}</span>
                     <span className="rounded border border-border bg-background/70 px-1.5 py-0.5 text-[10px] text-muted-foreground capitalize">{activeTpl.type}</span>
+                    {activeTpl.builtIn && (
+                      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">built-in</span>
+                    )}
                   </div>
                 ) : null
               })()}
@@ -425,8 +611,17 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                   fieldDefs={BLOCK_FIELDS}
                   fieldState={fieldState}
                   onToggleOptional={handleToggleOptional}
+                  onApplyPartitionPreset={handleApplyPartitionPreset}
+                  onRenamePartition={handleRenamePartition}
+                  onAddPartition={handleAddPartition}
+                  onRemovePartition={handleRemovePartition}
                 />
                 {message && <p className="mt-3 text-xs text-muted-foreground">{message}</p>}
+                {activeTemplateId && isBuiltInTemplateId(activeTemplateId) && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Built-in templates are always available and cannot be deleted. Create a template to save custom field changes.
+                  </p>
+                )}
                 {!courseId && <p className="mt-2 text-xs text-muted-foreground">Create a course first to save templates.</p>}
               </div>
             </div>

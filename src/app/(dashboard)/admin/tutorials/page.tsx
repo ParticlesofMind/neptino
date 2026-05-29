@@ -1,8 +1,8 @@
-import { BookOpen, GraduationCap, ShieldCheck } from "lucide-react"
+import { BookOpen, GraduationCap, ShieldCheck, type LucideIcon } from "lucide-react"
 
 const guides: Array<{
   category: string
-  icon: React.ElementType
+  icon: LucideIcon
   iconColor: string
   articles: Array<{ title: string; updated: string }>
 }> = [
@@ -40,8 +40,6 @@ const guides: Array<{
     ],
   },
 ]
-
-import React from "react"
 
 export default function AdminTutorialsPage() {
   return (

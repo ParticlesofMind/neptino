@@ -2,7 +2,23 @@ import { normalizeCanvasCardRanges } from "./cardRangeUtils"
 import { mapSession } from "./course-store-helpers"
 import type { CourseState, CourseStoreSet } from "./course-store-types"
 import { fullPageBlockKeys } from "../layout/layoutEngine"
-import type { BlockKey, CanvasId, CanvasPage } from "../types"
+import type { CanvasId, CanvasPage, SessionId } from "../types"
+
+function makeStableCanvasId(sessionId: SessionId, pageNumber: number): CanvasId {
+  return `${sessionId}-canvas-${pageNumber}` as CanvasId
+}
+
+function stabilizeSessionCanvases(
+  sessionId: SessionId,
+  canvases: CanvasPage[],
+): CanvasPage[] {
+  return canvases.map((canvas, index) => ({
+    ...canvas,
+    id: makeStableCanvasId(sessionId, index + 1),
+    sessionId,
+    pageNumber: index + 1,
+  }))
+}
 
 export function createCanvasActions(set: CourseStoreSet): Pick<
   CourseState,
@@ -11,6 +27,7 @@ export function createCanvasActions(set: CourseStoreSet): Pick<
   | "setCanvasObjectiveRange"
   | "setCanvasTaskRange"
   | "setCanvasCardRange"
+  | "setCanvasLayoutSlotRange"
   | "setCanvasMeasuredHeight"
   | "syncPageAssignments"
 > {
@@ -29,11 +46,10 @@ export function createCanvasActions(set: CourseStoreSet): Pick<
     appendCanvasPage: (sessionId, contentTopicStart, options) =>
       set((state) => ({
         sessions: mapSession(state.sessions, sessionId, (session) => {
-          const nextPage = session.canvases.length + 1
           const newCanvas: CanvasPage = {
-            id: crypto.randomUUID() as CanvasId,
+            id: makeStableCanvasId(sessionId, session.canvases.length + 1),
             sessionId,
-            pageNumber: nextPage,
+            pageNumber: session.canvases.length + 1,
             ...(options?.blockKeys !== undefined ? { blockKeys: options.blockKeys } : {}),
             ...(contentTopicStart !== undefined
               ? {
@@ -67,9 +83,30 @@ export function createCanvasActions(set: CourseStoreSet): Pick<
                   },
                 }
               : {}),
+            ...(options?.layoutSlotRange !== undefined
+              ? { contentLayoutSlotRange: options.layoutSlotRange }
+              : {}),
           }
 
-          return { ...session, canvases: [...session.canvases, newCanvas] }
+          const totalCards = session.topics
+            .flatMap((topic) => topic.objectives)
+            .flatMap((objective) => objective.tasks)
+            .reduce((sum, task) => sum + task.droppedCards.length, 0)
+
+          const insertAfterIndex = options?.afterCanvasId
+            ? session.canvases.findIndex((canvas) => canvas.id === options.afterCanvasId)
+            : -1
+          const insertIndex = insertAfterIndex >= 0 ? insertAfterIndex + 1 : session.canvases.length
+          const nextCanvases = [...session.canvases]
+          nextCanvases.splice(insertIndex, 0, newCanvas)
+
+          return {
+            ...session,
+            canvases: normalizeCanvasCardRanges(
+              stabilizeSessionCanvases(sessionId, nextCanvases),
+              totalCards,
+            ),
+          }
         }),
       })),
 
@@ -85,6 +122,9 @@ export function createCanvasActions(set: CourseStoreSet): Pick<
     setCanvasCardRange: (canvasId, range) =>
       mapCanvases(canvasId, (canvas) => ({ ...canvas, contentCardRange: range })),
 
+    setCanvasLayoutSlotRange: (canvasId, range) =>
+      mapCanvases(canvasId, (canvas) => ({ ...canvas, contentLayoutSlotRange: range })),
+
     setCanvasMeasuredHeight: (canvasId, heightPx) =>
       mapCanvases(canvasId, (canvas) => ({ ...canvas, measuredContentHeightPx: heightPx })),
 
@@ -92,9 +132,8 @@ export function createCanvasActions(set: CourseStoreSet): Pick<
       set((state) => ({
         sessions: mapSession(state.sessions, sessionId, (session) => {
           const next = assignments.map((assignment, index) => {
-            const existingId = session.canvases[index]?.id ?? (crypto.randomUUID() as CanvasId)
             const page: CanvasPage = {
-              id: existingId,
+              id: makeStableCanvasId(sessionId, index + 1),
               sessionId,
               pageNumber: index + 1,
               blockKeys: fullPageBlockKeys(assignment, session),
@@ -102,13 +141,20 @@ export function createCanvasActions(set: CourseStoreSet): Pick<
               ...(assignment.objectiveRange ? { contentObjectiveRange: assignment.objectiveRange } : {}),
               ...(assignment.taskRange ? { contentTaskRange: assignment.taskRange } : {}),
               ...(assignment.cardRange ? { contentCardRange: assignment.cardRange } : {}),
+              ...(assignment.layoutSlotRange ? { contentLayoutSlotRange: assignment.layoutSlotRange } : {}),
             }
             return page
           })
 
           return {
             ...session,
-            canvases: normalizeCanvasCardRanges(next, session.topics.flatMap((topic) => topic.objectives).flatMap((objective) => objective.tasks).reduce((sum, task) => sum + task.droppedCards.length, 0)),
+            canvases: normalizeCanvasCardRanges(
+              stabilizeSessionCanvases(sessionId, next),
+              session.topics
+                .flatMap((topic) => topic.objectives)
+                .flatMap((objective) => objective.tasks)
+                .reduce((sum, task) => sum + task.droppedCards.length, 0),
+            ),
           }
         }),
       })),

@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { Send, Users, GraduationCap, BookOpen } from "lucide-react"
+import { Send, Users, GraduationCap, BookOpen, type LucideIcon } from "lucide-react"
 
 type Audience = "all" | "teachers" | "students"
 
@@ -10,13 +10,13 @@ const broadcasts = [
   { id: "3", subject: "Semester start reminder", audience: "students" as Audience, sent: "2 weeks ago", recipients: 1032 },
 ]
 
-const audienceStyle: Record<Audience, { label: string; color: string; Icon: React.ElementType }> = {
+const audienceStyle: Record<Audience, { label: string; color: string; Icon: LucideIcon }> = {
   all: { label: "Everyone", color: "#6b8fc4", Icon: Users },
   teachers: { label: "Teachers", color: "#a89450", Icon: BookOpen },
   students: { label: "Students", color: "#5c9970", Icon: GraduationCap },
 }
 
-import React from "react"
+const audienceOrder: Audience[] = ["all", "teachers", "students"]
 
 export default function AdminMessagesPage() {
   const [audience, setAudience] = useState<Audience>("all")
@@ -34,7 +34,8 @@ export default function AdminMessagesPage() {
           <div className="flex items-center gap-3 border-b border-border px-5 py-4">
             <span className="shrink-0 text-sm text-muted-foreground">To:</span>
             <div className="flex gap-1">
-              {(Object.entries(audienceStyle) as [Audience, typeof audienceStyle[Audience]][]).map(([key, val]) => {
+              {audienceOrder.map((key) => {
+                const val = audienceStyle[key]
                 const AudIcon = val.Icon
                 return (
                   <button

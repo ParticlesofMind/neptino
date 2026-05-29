@@ -9,6 +9,7 @@ import { json } from "@codemirror/lang-json"
 import { markdown } from "@codemirror/lang-markdown"
 import type { Extension } from "@codemirror/state"
 import type { CardRenderProps } from "../CardRegistry"
+import { PretextText } from "../../text/PretextText"
 
 type CodeLanguage = "javascript" | "typescript" | "html" | "css" | "json" | "markdown"
 
@@ -30,7 +31,7 @@ function resolveExtension(language: CodeLanguage): Extension {
   }
 }
 
-export function CodeEditorCard({ card, onRemove }: CardRenderProps) {
+export function CodeEditorCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const title = typeof card.content["title"] === "string" ? card.content["title"] : "Code editor"
   const prompt = typeof card.content["prompt"] === "string" ? card.content["prompt"] : ""
   const initialLanguage = typeof card.content["language"] === "string"
@@ -47,8 +48,10 @@ export function CodeEditorCard({ card, onRemove }: CardRenderProps) {
 
   return (
     <div
-      className="group relative overflow-hidden rounded-xl border border-neutral-200 bg-[#0b1220] shadow-sm"
-      style={{ width: "100%", height: card.dimensions.height || 380 }}
+      className={[
+        "group relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-[#0b1220] shadow-sm",
+        fillAvailable ? "h-full min-h-[inherit]" : "min-h-[24rem]",
+      ].join(" ")}
     >
       {onRemove && (
         <button
@@ -86,12 +89,18 @@ export function CodeEditorCard({ card, onRemove }: CardRenderProps) {
       </div>
 
       {prompt && (
-        <div className="border-b border-white/10 bg-[#0f1728] px-4 py-2 text-[11px] text-slate-400">
-          {prompt}
+        <div className="border-b border-white/10 bg-[#0f1728] px-4 py-2">
+          <PretextText
+            text={prompt}
+            className="text-[11px] text-slate-400"
+            fontSizePx={11}
+            lineHeightPx={17}
+            maxLines={4}
+          />
         </div>
       )}
 
-      <div className="h-[calc(100%-95px)] overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <CodeMirror
           value={code}
           height="100%"

@@ -7,7 +7,16 @@ import { useMakeLibraryStore } from "@/components/coursebuilder/create/store/mak
 import type { CourseSession, CourseId, SessionId } from "@/components/coursebuilder/create/types"
 
 function clickCardType(label: string) {
-  const option = screen.getAllByText(label)[0]?.closest("button")
+  let option = screen.queryAllByText(label)
+    .map((element) => element.closest("button"))
+    .find((button) => button?.dataset.testid?.startsWith("make-card-type"))
+  if (!option) {
+    const backButton = screen.queryByRole("button", { name: "Cards" })
+    if (backButton) fireEvent.click(backButton)
+    option = screen.queryAllByText(label)
+      .map((element) => element.closest("button"))
+      .find((button) => button?.dataset.testid?.startsWith("make-card-type"))
+  }
   if (!option) throw new Error(`Card type button not found: ${label}`)
   fireEvent.click(option)
 }
@@ -60,15 +69,15 @@ describe("MakePanel integration", () => {
     expect(screen.getByText("320ms")).toBeInTheDocument()
   })
 
-  it("only enables add block after title and content are provided", () => {
+  it("only enables add card after title and content are provided", () => {
     render(<MakePanel />)
 
     clickCardType("Dataset")
 
-    const addButton = screen.getByRole("button", { name: "Add block" })
+    const addButton = screen.getByRole("button", { name: "Add card" })
     expect(addButton).toBeDisabled()
 
-    fireEvent.change(screen.getByLabelText("Block name"), { target: { value: "Population data" } })
+    fireEvent.change(screen.getAllByRole("textbox")[0], { target: { value: "Population data" } })
     expect(addButton).toBeDisabled()
 
     fireEvent.change(screen.getByPlaceholderText("https://... or database.table_name"), {
@@ -78,7 +87,74 @@ describe("MakePanel integration", () => {
     expect(addButton).toBeEnabled()
   })
 
-  it("shows saved blocks grouped by project with counts and collapsible sections", () => {
+  it("filters assessment cards by template context", () => {
+    const sessions: CourseSession[] = [
+      {
+        id: "session-1" as SessionId,
+        courseId: "course-1" as CourseId,
+        order: 0,
+        title: "Lesson 1",
+        canvases: [],
+        topics: [],
+        templateType: "lesson",
+      },
+    ]
+
+    useCourseStore.setState({ sessions, activeSessionId: "session-1" as SessionId })
+    render(<MakePanel />)
+
+    expect(screen.queryByTestId("make-card-type-interactive")).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("Template"), { target: { value: "assessment" } })
+    fireEvent.click(screen.getByRole("button", { name: "Compositions" }))
+
+    expect(screen.queryByTestId("make-card-type-interactive")).not.toBeInTheDocument()
+    expect(screen.getByTestId("make-composition-preset-practice-check")).toBeInTheDocument()
+  })
+
+  it("lets custom composition templates be added without manually naming them first", () => {
+    render(<MakePanel />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Compositions" }))
+    fireEvent.click(screen.getByTestId("make-card-type-layout-split"))
+
+    expect(screen.getByDisplayValue("Split composition")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Add card" })).toBeEnabled()
+  })
+
+  it("opens prebuilt compositions as populated layout cards", () => {
+    render(<MakePanel />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Compositions" }))
+    fireEvent.click(screen.getByTestId("make-composition-preset-cartographic-simulation"))
+
+    expect(screen.queryByText("Existing composition")).not.toBeInTheDocument()
+    expect(screen.queryByText("Requirement")).not.toBeInTheDocument()
+    expect(screen.getAllByText("Cartographic simulation").length).toBeGreaterThan(0)
+    expect(screen.getByText("Map legend")).toBeInTheDocument()
+    expect(screen.getByText("Scenario map")).toBeInTheDocument()
+    expect(screen.getByText("Change over time")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Add card" })).toBeEnabled()
+  })
+
+  it("injects Atlas entity data into a prebuilt cartographic composition", () => {
+    render(<MakePanel />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Compositions" }))
+    fireEvent.click(screen.getByTestId("make-composition-preset-cartographic-simulation"))
+    fireEvent.change(screen.getByPlaceholderText("Search Atlas entities..."), { target: { value: "Ottoman" } })
+    const injectionOption = screen.getByText("Atlas example: Wikidata + historical gazetteer candidate").closest("button")
+    if (!injectionOption) throw new Error("Ottoman Empire injection option not found")
+    fireEvent.click(injectionOption)
+
+    expect(screen.getByText(/Subject:/)).toBeInTheDocument()
+    expect(screen.getByText("Ottoman expansion phases")).toBeInTheDocument()
+    expect(screen.getByText("Ottoman Empire territorial simulation")).toBeInTheDocument()
+    expect(screen.getByText("Ottoman imperial timeline")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Add card" })).toBeEnabled()
+  })
+
+  it("shows saved cards grouped by project with counts and collapsible sections", () => {
     const sessions: CourseSession[] = [
       {
         id: "session-1" as SessionId,
@@ -126,7 +202,7 @@ describe("MakePanel integration", () => {
 
     render(<MakePanel />)
 
-    fireEvent.click(screen.getByRole("button", { name: "Library" }))
+    fireEvent.click(screen.getByRole("button", { name: "Saved" }))
 
     const biologyGroup = screen.getByRole("button", { name: /Biology 101/i })
     const physicsGroup = screen.getByRole("button", { name: /Physics Lab/i })

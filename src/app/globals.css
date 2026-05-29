@@ -57,7 +57,7 @@
 
   /* Accent */
   --accent: #f5f9ff;
-  --accent-foreground: #1f5fb3;
+  --accent-foreground: #3a6ea0;
 
   /* Destructive */
   --destructive: #ef4444;
@@ -84,7 +84,7 @@
   --muted: #262626;
   --muted-foreground: #a3a3a3;
 
-  --accent: #134080;
+  --accent: #3a6ea0;
   --accent-foreground: #ffffff;
 
   --destructive: #991b1b;
@@ -133,6 +133,60 @@ body {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.canvas-print-document {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 0;
+  }
+
+  body:has(.canvas-print-document) {
+    background: #ffffff !important;
+  }
+
+  body:has(.canvas-print-document) * {
+    visibility: hidden !important;
+  }
+
+  body:has(.canvas-print-document) .canvas-print-document,
+  body:has(.canvas-print-document) .canvas-print-document * {
+    visibility: visible !important;
+  }
+
+  body:has(.canvas-print-document) .canvas-print-document {
+    display: block !important;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: var(--canvas-print-page-width);
+    background: #ffffff !important;
+  }
+
+  body:has(.canvas-print-document) .canvas-screen-viewport {
+    display: none !important;
+  }
+
+  .canvas-print-page-shell {
+    width: var(--canvas-print-page-width);
+    height: var(--canvas-print-page-height);
+    overflow: hidden;
+    break-after: page;
+    page-break-after: always;
+    background: #ffffff;
+  }
+
+  .canvas-print-page-shell:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .canvas-print-page-shell [data-canvas-page-region],
+  .canvas-print-page-shell [data-canvas-page-surface] {
+    box-shadow: none !important;
+  }
 }
 
 /* ═══ Keyframes ═══ */

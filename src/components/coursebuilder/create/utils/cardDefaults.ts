@@ -6,78 +6,17 @@
  */
 
 import type { CardType } from "../types"
+import { getPreferredCardDimensions } from "../cards/cardLayoutPolicies"
+import type { CardDimensions } from "../cards/cardSizing"
 
 // ─── Default dimensions ───────────────────────────────────────────────────────
-
-export interface CardDimensions {
-  width: number
-  height: number
-}
 
 /**
  * Returns optimal default dimensions for a given card type.
  * These sizes are chosen to balance visual clarity with canvas space efficiency.
  */
 export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
-  const dimensionMap: Record<CardType, CardDimensions> = {
-    // ── Media cards ──
-    text:       { width: 420, height: 320 },
-    image:      { width: 400, height: 300 },
-    audio:      { width: 420, height: 180 },
-    video:      { width: 480, height: 270 },
-    animation:  { width: 480, height: 270 },
-    dataset:    { width: 480, height: 200 },
-    embed:      { width: 520, height: 320 },
-    flashcards: { width: 520, height: 340 },
-    "code-snippet": { width: 560, height: 300 },
-    "model-3d": { width: 520, height: 280 },
-    map:        { width: 480, height: 360 },
-    chart:      { width: 480, height: 320 },
-    diagram:    { width: 480, height: 320 },
-    media:      { width: 460, height: 240 },
-    document:   { width: 420, height: 560 },
-    table:      { width: 520, height: 360 },
-
-    // ── Interactive cards ──
-    "rich-sim":   { width: 520, height: 320 },
-    "village-3d": { width: 560, height: 360 },
-    interactive:  { width: 480, height: 280 },
-    form:         { width: 500, height: 320 },
-    "voice-recorder": { width: 420, height: 220 },
-    sorter:       { width: 520, height: 320 },
-    games:        { width: 560, height: 360 },
-    chat:         { width: 420, height: 320 },
-    "text-editor": { width: 520, height: 360 },
-    "code-editor": { width: 560, height: 380 },
-    whiteboard:   { width: 640, height: 420 },
-    timeline:     { width: 420, height: 480 },
-    legend:       { width: 240, height: 320 },
-
-    // ── Layout cards ──
-    "layout-split":     { width: 642, height: 310 },
-    "layout-stack":     { width: 642, height: 420 },
-    "layout-feature":   { width: 642, height: 400 },
-    "layout-sidebar":   { width: 642, height: 310 },
-    "layout-quad":      { width: 642, height: 510 },
-    "layout-mosaic":    { width: 642, height: 630 },
-    "layout-triptych":  { width: 780, height: 310 },
-    "layout-trirow":    { width: 642, height: 540 },
-    "layout-banner":    { width: 642, height: 440 },
-    "layout-broadside": { width: 780, height: 440 },
-    "layout-tower":     { width: 700, height: 540 },
-    "layout-pinboard":  { width: 642, height: 560 },
-    "layout-annotated": { width: 700, height: 510 },
-    "layout-sixgrid":   { width: 780, height: 510 },
-    "layout-comparison": { width: 700, height: 360 },
-    "layout-stepped": { width: 680, height: 520 },
-    "layout-hero": { width: 780, height: 420 },
-    "layout-dialogue": { width: 700, height: 340 },
-    "layout-gallery": { width: 780, height: 520 },
-    "layout-spotlight": { width: 760, height: 520 },
-    "layout-flipcard": { width: 700, height: 420 },
-  }
-
-  return dimensionMap[cardType] ?? { width: 420, height: 220 }
+  return getPreferredCardDimensions(cardType)
 }
 
 // ─── Sample content ───────────────────────────────────────────────────────────
@@ -207,9 +146,19 @@ export function getSampleCardContent(
     case "diagram":
       return {
         title,
-        diagramType: "flowchart",
-        nodes: 7,
-        edges: 7,
+        diagramType: "cycle",
+        nodes: [
+          { id: "a", label: "Question", x: 80, y: 80, shape: "rect" },
+          { id: "b", label: "Evidence", x: 270, y: 30, shape: "rect" },
+          { id: "c", label: "Pattern", x: 460, y: 80, shape: "rect" },
+          { id: "d", label: "Conclusion", x: 270, y: 190, shape: "oval" },
+        ],
+        edges: [
+          { from: "a", to: "b" },
+          { from: "b", to: "c" },
+          { from: "c", to: "d" },
+          { from: "d", to: "a" },
+        ],
         layout: "auto",
       }
 
@@ -227,6 +176,50 @@ export function getSampleCardContent(
         rows: 10,
         columns: 5,
         format: "HTML",
+      }
+
+    case "source-excerpt":
+      return {
+        title,
+        excerpt: "Students should examine this passage as evidence, then connect it to the claim or question under discussion.",
+        context: "Add source context, authorship, audience, purpose, and relevant uncertainty.",
+        locator: "Page, paragraph, timestamp, map sheet, or archive reference",
+        citationTitle: "Source title",
+        sourceUrl: "",
+      }
+
+    case "citation":
+      return {
+        title,
+        creator: "Author or institution",
+        year: "2026",
+        sourceUrl: "",
+        sourceType: "web",
+        license: "Review required",
+        attribution: "",
+      }
+
+    case "bibliography":
+      return {
+        title,
+        style: "short",
+        entries: [
+          { title: "Primary source record", creator: "Institution", year: "2026", url: "", license: "Review required" },
+          { title: "Supporting source", creator: "Author", year: "2026", url: "", license: "Review required" },
+        ],
+        notes: "Add the strongest classroom-ready sources first.",
+      }
+
+    case "gis-layer":
+      return {
+        title,
+        layerType: "boundary",
+        geometryType: "GeoJSON",
+        featureCount: 1,
+        dateRange: "Review required",
+        geometryPrecision: "Unknown",
+        sourceUrl: "",
+        warnings: ["Geometry requires source review before classroom use."],
       }
 
     case "rich-sim":
@@ -333,8 +326,18 @@ export function getSampleCardContent(
     case "whiteboard":
       return {
         title,
-        boardKey: "whiteboard-sample",
+        boardKey: "",
         prompt: "Sketch a concept map, diagram a process, or collect quick visual notes.",
+      }
+
+    case "slides":
+      return {
+        title,
+        slides: [
+          { title: "Opening", body: "Introduce the topic and orient the audience.", notes: "Set context before showing evidence." },
+          { title: "Evidence", body: "Place a source, map, chart, image, or example here.", notes: "Ask students what they notice." },
+          { title: "Synthesis", body: "Summarise the key claim or next action.", notes: "Close with a short check for understanding." },
+        ],
       }
 
     case "timeline":
@@ -380,7 +383,8 @@ export function getSampleCardContent(
     case "layout-gallery":
     case "layout-spotlight":
     case "layout-flipcard":
-      return { slots: {} }
+    case "layout-resizable-grid":
+      return { title, slots: {} }
 
     default:
       return { title }

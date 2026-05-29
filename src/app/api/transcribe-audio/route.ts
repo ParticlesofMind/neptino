@@ -47,13 +47,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "A valid audioUrl is required." }, { status: 400 })
   }
 
-  const audioResponse = await fetch(audioUrl, {
-    cache: "no-store",
-    signal: AbortSignal.timeout(20_000),
-  }).catch((error: unknown) => error)
-
-  if (audioResponse instanceof Error) {
-    return buildUpstreamError("Unable to fetch audio source", audioResponse.message)
+  let audioResponse: Response
+  try {
+    audioResponse = await fetch(audioUrl, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(20_000),
+    })
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : "Unknown fetch error"
+    return buildUpstreamError("Unable to fetch audio source", detail)
   }
 
   if (!audioResponse.ok) {
@@ -68,23 +70,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Audio file is too large to transcribe in-app." }, { status: 413 })
   }
 
-  const inferenceResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_AUDIO_TRANSCRIBE_MODEL}`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${HF_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      inputs: audioBytes.toString("base64"),
-      parameters: {
-        return_timestamps: true,
+  let inferenceResponse: Response
+  try {
+    inferenceResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_AUDIO_TRANSCRIBE_MODEL}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${HF_TOKEN}`,
+        "Content-Type": "application/json",
       },
-    }),
-    signal: AbortSignal.timeout(90_000),
-  }).catch((error: unknown) => error)
-
-  if (inferenceResponse instanceof Error) {
-    return buildUpstreamError("Hugging Face transcription failed", inferenceResponse.message)
+      body: JSON.stringify({
+        inputs: audioBytes.toString("base64"),
+        parameters: {
+          return_timestamps: true,
+        },
+      }),
+      signal: AbortSignal.timeout(90_000),
+    })
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : "Unknown fetch error"
+    return buildUpstreamError("Hugging Face transcription failed", detail)
   }
 
   const rawBody = await inferenceResponse.text()

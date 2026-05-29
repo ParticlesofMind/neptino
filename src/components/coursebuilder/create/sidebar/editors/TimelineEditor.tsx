@@ -127,7 +127,7 @@ export function TimelineEditor({ content, onChange }: TimelineEditorProps) {
           </div>
         </div>
       )}
-      preview={<GenericEditorPreview cardType="timeline" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-4xl" />}
+      preview={<GenericEditorPreview cardType="timeline" content={content} onTitleChange={(next) => onChange("title", next)} />}
     />
   )
 }

@@ -132,7 +132,7 @@ export function TextEditor({ content, onChange }: TextEditorProps) {
       `Tone: ${writingTone}.`,
       `Target length: ${targetLength}.`,
       readingLevel ? `Reading level: ${readingLevel}.` : "",
-      title ? `Block title: ${title}.` : "",
+      title ? `Card title: ${title}.` : "",
       "Return only the body copy with clear paragraphing. No markdown fences. No prefatory notes.",
     ].filter(Boolean).join("\n")
 

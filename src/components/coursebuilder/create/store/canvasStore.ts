@@ -2,7 +2,7 @@
  * Canvas Store — ephemeral UI state
  *
  * Intentionally NOT persisted. All values reset when the editor is closed.
- * Contains: zoom, pan, active tool, selection, active canvas.
+ * Contains: zoom, pan, active tool, selection, active canvas, visible canvas.
  */
 
 import { create } from "zustand"
@@ -36,6 +36,7 @@ interface CanvasState {
   panOffset: { x: number; y: number }
   activeTool: BuildTool | AnimateTool
   activeCanvasId: CanvasId | null
+  viewportCanvasId: CanvasId | null
   selectedIds: string[]
   /** IDs of canvas pages whose content is currently overflowing */
   overflowingCanvasIds: Set<CanvasId>
@@ -73,6 +74,7 @@ interface CanvasState {
 
   setActiveTool:  (tool: BuildTool | AnimateTool) => void
   setActiveCanvas: (id: CanvasId | null) => void
+  setViewportCanvas: (id: CanvasId | null) => void
   selectId:       (id: string, additive?: boolean) => void
   clearSelection: () => void
 
@@ -93,6 +95,7 @@ export const useCanvasStore = create<CanvasState>()((set) => ({
   panOffset: { x: 0, y: 0 },
   activeTool: "selection",
   activeCanvasId: null,
+  viewportCanvasId: null,
   selectedIds: [],
   overflowingCanvasIds: new Set(),
   mediaDragActive: false,
@@ -126,7 +129,11 @@ export const useCanvasStore = create<CanvasState>()((set) => ({
 
   setActiveTool: (tool) => set({ activeTool: tool }),
 
-  setActiveCanvas: (id) => set({ activeCanvasId: id }),
+  setActiveCanvas: (id) =>
+    set((s) => (s.activeCanvasId === id ? s : { activeCanvasId: id })),
+
+  setViewportCanvas: (id) =>
+    set((s) => (s.viewportCanvasId === id ? s : { viewportCanvasId: id })),
 
   selectId: (id, additive = false) =>
     set((s) => ({
@@ -146,7 +153,11 @@ export const useCanvasStore = create<CanvasState>()((set) => ({
         })
       }
       const next = new Set(s.overflowingCanvasIds)
-      overflowing ? next.add(id) : next.delete(id)
+      if (overflowing) {
+        next.add(id)
+      } else {
+        next.delete(id)
+      }
       return { overflowingCanvasIds: next }
     }),
 

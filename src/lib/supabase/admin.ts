@@ -1,0 +1,20 @@
+import { createClient } from "@supabase/supabase-js"
+
+const MISSING_ADMIN_ENV_ERROR =
+  "Supabase admin access is not configured. Set SUPABASE_SERVICE_ROLE_KEY on the server."
+
+export function createAdminClient() {
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error(MISSING_ADMIN_ENV_ERROR)
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}

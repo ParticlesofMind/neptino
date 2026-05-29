@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" role="img" aria-labelledby="title desc">
+  <title id="title">Romeo and Juliet source material</title>
+  <desc id="desc">A quarto, balcony, and annotation marks for comparing source text and film adaptation.</desc>
+  <rect width="960" height="640" fill="#f7f8fb"/>
+  <rect x="112" y="86" width="736" height="468" rx="28" fill="#ffffff" stroke="#c9d4e2" stroke-width="4"/>
+  <path d="M226 168h224c42 0 76 34 76 76v250H302c-42 0-76-34-76-76Z" fill="#f8f0dc" stroke="#a89450" stroke-width="5"/>
+  <path d="M526 244c0-42 34-76 76-76h132v326H526Z" fill="#fffaf0" stroke="#a89450" stroke-width="5"/>
+  <path d="M280 248h160M280 292h164M280 336h146M280 380h158" stroke="#7a6010" stroke-width="9" stroke-linecap="round"/>
+  <path d="M574 250h108M574 294h114M574 338h102M574 382h124" stroke="#7a6010" stroke-width="9" stroke-linecap="round"/>
+  <path d="M594 464c34-58 88-58 122 0" fill="none" stroke="#3a6ea0" stroke-width="12" stroke-linecap="round"/>
+  <rect x="615" y="360" width="82" height="40" rx="5" fill="#dbe8f6" stroke="#3a6ea0" stroke-width="4"/>
+  <path d="M136 494l120-120M820 156l-116 116" stroke="#b87070" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="146" cy="484" r="18" fill="#f0d8d8" stroke="#b87070" stroke-width="5"/>
+  <circle cx="810" cy="166" r="18" fill="#f0d8d8" stroke="#b87070" stroke-width="5"/>
+  <text x="480" y="122" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="700" fill="#27313f">From Source Text To Screen Scene</text>
+  <text x="480" y="526" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#5b6572">prologue, balcony, adaptation, compression, dramatic irony</text>
+</svg>

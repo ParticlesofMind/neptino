@@ -40,20 +40,34 @@ export function useLayoutEngine({
   // Derive a stable content key from all session fields that influence layout,
   // including dropped cards and their dimensions.
   const contentKey = useMemo(() => {
+    type Dropped = CourseSession["topics"][number]["objectives"][number]["tasks"][number]["droppedCards"][number]
+    const serializeCard = (c: Dropped): unknown => {
+      const slots = (c.content.slots ?? {}) as Record<string, Dropped[]>
+      return {
+        blockKey: c.blockKey ?? "",
+        areaKind: c.areaKind,
+        cardType: c.cardType,
+        h: c.dimensions?.height ?? 0,
+        w: c.dimensions?.width ?? 0,
+        order: c.order,
+        title: typeof c.content.title === "string" ? c.content.title : "",
+        text: typeof c.content.text === "string" ? c.content.text : "",
+        slots: Object.fromEntries(
+          Object.entries(slots).map(([slotIndex, cards]) => [
+            slotIndex,
+            cards.map(serializeCard),
+          ]),
+        ),
+      }
+    }
+
     const topicStructure = session.topics.map((t) => ({
       label: t.label,
       objectives: t.objectives.map((o) => ({
         label: o.label,
         tasks: o.tasks.map((k) => ({
           label: k.label,
-          cards: k.droppedCards.map((c) => ({
-            blockKey: c.blockKey ?? "",
-            areaKind: c.areaKind,
-            cardType: c.cardType,
-            h: c.dimensions?.height ?? 0,
-            w: c.dimensions?.width ?? 0,
-            order: c.order,
-          })),
+          cards: k.droppedCards.map(serializeCard),
         })),
       })),
     }))

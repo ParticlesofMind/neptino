@@ -2,7 +2,7 @@
 // No JSX — safe to import from non-React contexts.
 import type { GenerationAction } from "@/lib/curriculum/ai-generation-service"
 import type { CurriculumCompetency } from "@/lib/curriculum/competency-types"
-import type { TemplateType } from "@/lib/curriculum/template-blocks"
+import type { TemplateDesignConfig, TemplateType } from "@/lib/curriculum/template-blocks"
 import {
   calculateSessionDuration,
   getContentLoadConfig,
@@ -32,7 +32,9 @@ export interface CurriculumSessionRow {
   objective_names?: string[]
   task_names?: string[]
   competencies?: CurriculumCompetency[]
+  template_id?: string
   template_type?: TemplateType
+  template_design?: TemplateDesignConfig
 }
 
 export type PreviewMode = "modules" | "sessions" | "topics" | "objectives" | "tasks" | "all"
@@ -150,7 +152,9 @@ export function extractExistingSessionRows(curriculumData: Record<string, unknow
           taskCount,
         ),
         competencies: (r.competencies as CurriculumCompetency[]) || undefined,
+        template_id: (r.template_id as string) || undefined,
         template_type: (r.template_type as TemplateType) || "lesson",
+        template_design: (r.template_design as TemplateDesignConfig) || undefined,
       }
     })
   }
@@ -228,7 +232,9 @@ export function syncSessionRowsToSchedule(
         taskCount,
       ),
       competencies: base?.competencies,
+      template_id: base?.template_id,
       template_type: base?.template_type ?? "lesson",
+      template_design: base?.template_design,
     }
   })
 }

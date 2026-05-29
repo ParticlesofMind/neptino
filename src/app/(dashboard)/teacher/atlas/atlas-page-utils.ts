@@ -375,16 +375,21 @@ export async function getWikidataCardData(wikidataId: string, expectedTitle: str
     const description = entities?.[wikidataId]?.descriptions?.en?.value ?? null
     let longDescription: string | null = null
 
-    if (enwikiTitle) {
-      const summaryResponse = await fetch(
-        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(enwikiTitle)}`,
-        { next: { revalidate: 60 * 60 * 24 } },
-      )
-      if (summaryResponse.ok) {
-        const summaryPayload = (await summaryResponse.json()) as { extract?: string }
-        if (typeof summaryPayload.extract === "string" && summaryPayload.extract.trim()) {
-          longDescription = summaryPayload.extract.trim()
+    if (enwikiTitle && typeof enwikiTitle === "string") {
+      try {
+        const summaryResponse = await fetch(
+          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(enwikiTitle)}`,
+          { next: { revalidate: 60 * 60 * 24 } },
+        )
+        if (summaryResponse.ok) {
+          const summaryPayload = (await summaryResponse.json()) as { extract?: unknown }
+          if (typeof summaryPayload.extract === "string" && summaryPayload.extract.trim()) {
+            longDescription = summaryPayload.extract.trim()
+          }
         }
+      } catch {
+        // Silently discard Wikipedia errors — we still return the Wikidata description
+        // longDescription remains null
       }
     }
 

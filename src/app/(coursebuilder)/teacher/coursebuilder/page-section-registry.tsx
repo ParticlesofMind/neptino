@@ -19,9 +19,6 @@ import {
   MessageSquare,
   Layers,
   Monitor,
-  Palette,
-  Smile,
-  Bell,
   Database,
   Settings,
 } from "lucide-react"
@@ -33,7 +30,7 @@ export const VIEW_SEQUENCE: View[] = ["setup", "create", "preview", "launch"]
 
 export const VIEW_LABELS: Record<View, string> = {
   setup:   "Setup",
-  create:  "Create",
+  create:  "Canvas",
   preview: "Preview",
   launch:  "Launch",
 }
@@ -72,24 +69,29 @@ export function hasText(value: unknown): boolean {
 export function getSections(): SectionGroup[] {
   return [
     {
-      heading: "SETUP",
+      heading: "REQUIRED",
       items: [
         { id: "essentials", label: "Essentials", icon: FileText },
-        { id: "students", label: "Students", icon: Users },
+        { id: "classification", label: "Classification", icon: AlignJustify },
         { id: "schedule", label: "Schedule", icon: Calendar },
         { id: "curriculum", label: "Curriculum", icon: BookMarked },
       ],
     },
     {
-      heading: "INSTRUCTION",
+      heading: "OPTIONAL",
       items: [
-        { id: "classification", label: "Classification", icon: AlignJustify },
+        { id: "students", label: "Students", icon: Users },
         { id: "pedagogy", label: "Pedagogy", icon: BookOpen },
         { id: "templates", label: "Templates", icon: LayoutTemplate },
+        { id: "resources", label: "Resources", icon: BookOpen },
+        { id: "page-setup", label: "Page Setup", icon: Layers },
+        { id: "llm", label: "AI Model", icon: Brain },
+        { id: "context", label: "Context", icon: Braces },
+        { id: "interface", label: "Interface", icon: Monitor },
       ],
     },
     {
-      heading: "PUBLISHING",
+      heading: "PUBLISH",
       items: [
         { id: "visibility", label: "Course Visibility", icon: Eye },
         { id: "marketplace", label: "Marketplace", icon: Store },
@@ -99,22 +101,9 @@ export function getSections(): SectionGroup[] {
       ],
     },
     {
-      heading: "ENGINE",
+      heading: "ADVANCED",
       items: [
-        { id: "page-setup", label: "Page Setup", icon: Layers },
-        { id: "interface", label: "Interface", icon: Monitor },
-        { id: "themes", label: "Themes", icon: Palette },
-        { id: "accessibility", label: "Accessibility", icon: Smile },
-      ],
-    },
-    {
-      heading: "SETTINGS",
-      items: [
-        { id: "llm", label: "AI Model", icon: Brain },
-        { id: "context", label: "Context", icon: Braces },
-        { id: "notifications", label: "Notifications", icon: Bell },
         { id: "data-management", label: "Data Management", icon: Database },
-        { id: "resources", label: "Resources", icon: BookOpen },
         { id: "advanced", label: "Advanced Settings", icon: Settings },
       ],
     },
@@ -122,7 +111,7 @@ export function getSections(): SectionGroup[] {
 }
 
 export function getSetupSectionIds() {
-  return getSections().find((group) => group.heading === "SETUP")?.items.map((item) => item.id) ?? []
+  return getSections().find((group) => group.heading === "REQUIRED")?.items.map((item) => item.id) ?? []
 }
 
 export const ALL_SECTION_IDS = getSections().flatMap((group) => group.items.map((item) => item.id))

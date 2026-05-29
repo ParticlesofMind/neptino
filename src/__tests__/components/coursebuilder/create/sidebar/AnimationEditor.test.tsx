@@ -40,7 +40,11 @@ describe("AnimationEditor", () => {
       expect(screen.getByTestId("lottie-player")).toBeInTheDocument()
     })
     expect(lottiePlayerSpy).toHaveBeenCalled()
-    expect(lottiePlayerSpy.mock.calls.at(-1)?.[0]).toMatchObject({ speed: 1.5 })
+    expect(lottiePlayerSpy.mock.calls.at(-1)?.[0]).toMatchObject({
+      animationData: { v: "5.7.0" },
+      loop: true,
+      autoplay: true,
+    })
   })
 
   it("does not fetch lottie JSON for non-lottie formats", () => {

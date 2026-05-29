@@ -34,6 +34,9 @@ Passive, raw-material cards. No student response required.
 | Animation   | `animation`  | —                  | Lottie / GIF / SVG; not a distinct Atlas type  |
 | 3D Model    | `model-3d`   | 3D Model           | WebGL viewer (React Three Fiber)               |
 | Document    | `document`   | —                  | PDF / slide deck / article embed               |
+| Source excerpt | `source-excerpt` | Text / Document | Citable passage with locator and review state |
+| Citation | `citation` | — | Single reusable source reference |
+| Bibliography | `bibliography` | — | Reusable source list for a lesson or pack |
 
 > **Atlas gap:** Animation and Document are builder conveniences not listed in
 > `MediaType`. They may warrant addition to Atlas Layer 2 in a future schema update.
@@ -51,6 +54,8 @@ Products that organise data visually. Delivered passively.
 | Diagram    | `diagram`  | Diagram             | SVG node-edge builder; flowchart / concept map     |
 | Table      | `table`    | —                   | Inline spreadsheet editor; sortable rows           |
 | Dataset    | `dataset`  | —                   | Metadata reference; row/col counts; format tag     |
+| Legend     | `legend`   | —                   | Visual key for maps, charts, diagrams, simulations |
+| GIS layer  | `gis-layer`| Map / Dataset       | Source-backed geometry or map layer metadata       |
 
 > **Atlas gap:** Chart, Table, and Dataset have no direct `ProductType` equivalent.
 > Timeline (a `ProductType`) has no card yet — candidate for addition.

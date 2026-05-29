@@ -12,7 +12,7 @@
  */
 
 import type { ComponentType } from "react"
-import type { BlockKey, BlockRenderProps, CanvasId, SessionId } from "../types"
+import type { BlockKey, BlockRenderProps, CanvasId, CanvasRenderMode, PageDimensions, SessionId } from "../types"
 
 import { HeaderBlock }    from "../blocks/Header"
 import { FooterBlock }    from "../blocks/Footer"
@@ -24,6 +24,7 @@ import { ProjectBlock }   from "../blocks/Project"
 // ─── Registry ────────────────────────────────────────────────────────────────
 
 export type BlockRegistry = Record<BlockKey, ComponentType<BlockRenderProps>>
+const FILLABLE_BODY_BLOCKS: ReadonlySet<BlockKey> = new Set(["content", "assignment", "scoring"])
 
 export const BLOCK_REGISTRY: BlockRegistry = {
   header:     HeaderBlock,
@@ -41,6 +42,7 @@ export const BLOCK_REGISTRY: BlockRegistry = {
 interface BlockRendererProps {
   sessionId:    SessionId
   canvasId?:    CanvasId
+  pageDimensions?: PageDimensions
   fieldValues:  Record<string, string>
   data?:        Record<string, Record<string, unknown>>
   /** Which body blocks to render on this page, ordered. Resolved from the session template type. Renders empty when unset — no hardcoded default. */
@@ -49,7 +51,9 @@ interface BlockRendererProps {
    * Per-block field visibility flags sourced from the active template's fieldState.
    * Forwarded verbatim to each block component via BlockRenderProps.fieldEnabled.
    */
-  fieldEnabled?: Partial<Record<string, Record<string, boolean>>>
+  fieldEnabled?: Partial<Record<string, Record<string, unknown>>>
+  /** Canvas render mode; preview disables edit-only affordances. */
+  renderMode?: CanvasRenderMode
   /** Override the registry (useful for testing). */
   registry?:    Partial<BlockRegistry>
 }
@@ -59,10 +63,12 @@ interface BlockRendererProps {
 export function BlockRenderer({
   sessionId,
   canvasId,
+  pageDimensions,
   fieldValues,
   data = {},
   blockKeys,
   fieldEnabled,
+  renderMode = "editor",
   registry,
 }: BlockRendererProps) {
   const resolvedRegistry: BlockRegistry = { ...BLOCK_REGISTRY, ...registry }
@@ -72,19 +78,29 @@ export function BlockRenderer({
   const keys = rawKeys.filter((key, idx) => rawKeys.indexOf(key) === idx)
 
   return (
-    <div className="flex flex-col w-full gap-2 px-1 py-2">
+    <div className="flex h-full min-h-full w-full flex-col gap-2">
       {keys.map((key) => {
         const BlockComponent = resolvedRegistry[key]
         if (!BlockComponent) return null
+        const shouldFillBody = keys.length === 1 && FILLABLE_BODY_BLOCKS.has(key)
         const props: BlockRenderProps = {
           sessionId,
           canvasId,
+          pageDimensions,
           blockKey: key,
           fieldValues,
           data:        data[key],
           fieldEnabled,
+          renderMode,
         }
-        return <BlockComponent key={key} {...props} />
+        return (
+          <div
+            key={key}
+            className={shouldFillBody ? "min-h-0 flex-1 [&>section]:h-full [&>section]:min-h-full" : undefined}
+          >
+            <BlockComponent {...props} />
+          </div>
+        )
       })}
     </div>
   )

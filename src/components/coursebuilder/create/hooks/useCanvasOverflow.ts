@@ -25,7 +25,7 @@
  */
 
 import { useEffect, useRef, useCallback } from "react"
-import type { BlockKey, CanvasId, CourseSession, SessionId, TaskId } from "../types"
+import type { BlockKey, CanvasId, CourseSession, SessionId } from "../types"
 import { useCanvasStore } from "../store/canvasStore"
 import { useCourseStore } from "../store/courseStore"
 import { writeMeasurement, deleteMeasurement } from "../canvas/debugMeasurements"
@@ -35,6 +35,7 @@ const CHECK_DEBOUNCE_MS = 120
 const SPLIT_GUARD_MS = 600
 const NON_CONTINUATION_BLOCKS: ReadonlySet<BlockKey> = new Set(["header", "footer", "program", "resources", "project"])
 const CONTINUATION_CONTENT_BLOCKS: ReadonlySet<BlockKey> = new Set(["content", "assignment", "scoring"])
+const TASK_ROW_SPLIT_FIXED_BLOCKS: ReadonlySet<BlockKey> = new Set(["program", "resources"])
 
 function deriveContinuationBlockKeys(session: CourseSession, canvasId: CanvasId): BlockKey[] | undefined {
   const currentCanvas = session.canvases.find((canvas) => canvas.id === canvasId)
@@ -72,6 +73,57 @@ function offsetTopRelativeTo(el: HTMLElement, ancestor: HTMLElement): number {
   return top
 }
 
+function rectRelativeTo(el: HTMLElement, ancestor: HTMLElement): { top: number; bottom: number; left: number } {
+  const ancestorRect = ancestor.getBoundingClientRect()
+  const elRect = el.getBoundingClientRect()
+  const scaleY = ancestor.clientHeight > 0 && ancestorRect.height > 0
+    ? ancestorRect.height / ancestor.clientHeight
+    : 1
+  const scaleX = ancestor.clientWidth > 0 && ancestorRect.width > 0
+    ? ancestorRect.width / ancestor.clientWidth
+    : scaleY
+
+  if (elRect.height > 0 && ancestorRect.height > 0) {
+    return {
+      top: (elRect.top - ancestorRect.top) / scaleY,
+      bottom: (elRect.bottom - ancestorRect.top) / scaleY,
+      left: (elRect.left - ancestorRect.left) / scaleX,
+    }
+  }
+
+  const top = offsetTopRelativeTo(el, ancestor)
+  return {
+    top,
+    bottom: top + el.offsetHeight,
+    left: el.offsetLeft,
+  }
+}
+
+export function measureCanvasContentHeight(
+  body: HTMLElement,
+  content: HTMLElement,
+): number {
+  const markerEls = Array.from(
+    content.querySelectorAll<HTMLElement>(
+      [
+        "[data-topic-idx]",
+        "[data-objective-idx]",
+        "[data-task-idx]",
+        "[data-task-row-idx]",
+        "[data-card-idx]",
+        "[data-layout-slot-frame]",
+      ].join(","),
+    ),
+  )
+
+  const markerBottom = markerEls.reduce((max, el) => {
+    const { bottom } = rectRelativeTo(el, body)
+    return Number.isFinite(bottom) ? Math.max(max, bottom) : max
+  }, 0)
+
+  return markerEls.length > 0 ? Math.ceil(markerBottom) : content.scrollHeight
+}
+
 /**
  * Scan ``content`` for card elements and return the first index (0-based)
  * where starting a new page would make the remaining cards fit within
@@ -94,7 +146,7 @@ export function findCardSplitPoint(
   for (let i = cardEls.length - 1; i >= 0; i--) {
     const el = cardEls[i]
     if (!el) continue
-    const elBottom = offsetTopRelativeTo(el, body) + el.offsetHeight
+    const elBottom = rectRelativeTo(el, body).bottom
     if (elBottom <= available) {
       return Number(el.dataset.cardIdx) + 1
     }
@@ -103,8 +155,7 @@ export function findCardSplitPoint(
   // Fallback: if no card fully fits, split at the first overflowing card.
   // This implements a strict "move overflowing row/card to next page" rule.
   const firstOverflow = cardEls.find((el) => {
-    const top = offsetTopRelativeTo(el, body)
-    const bottom = top + el.offsetHeight
+    const { bottom } = rectRelativeTo(el, body)
     return bottom > available
   })
 
@@ -116,9 +167,137 @@ export function findCardSplitPoint(
   // the card itself is effectively too tall for a single page and splitting at
   // index 0 would recurse into empty leading pages.
   if (splitAt === 0) {
-    const firstTop = offsetTopRelativeTo(firstOverflow, body)
+    const firstTop = rectRelativeTo(firstOverflow, body).top
     if (firstTop < 80) return null
   }
+
+  return splitAt
+}
+
+export function findLayoutSlotSplitPoint(
+  body: HTMLElement,
+  content: HTMLElement,
+  available: number,
+): { cardId: string; cardIdx: number; splitAt: number; slotCount: number } | null {
+  const cardEls = Array.from(
+    content.querySelectorAll<HTMLElement>("[data-card-idx][data-card-id]"),
+  ).sort((a, b) => Number(a.dataset.cardIdx) - Number(b.dataset.cardIdx))
+
+  const overflowingCard = cardEls.find((el) => {
+    const { bottom } = rectRelativeTo(el, body)
+    return bottom > available
+  })
+
+  if (!overflowingCard) return null
+
+  const cardId = overflowingCard.dataset.cardId
+  const cardIdx = Number(overflowingCard.dataset.cardIdx)
+  if (!cardId || !Number.isFinite(cardIdx)) return null
+
+  const slotByIdx = new Map<number, { slotIdx: number; top: number; bottom: number; left: number }>()
+  Array.from(
+    overflowingCard.querySelectorAll<HTMLElement>("[data-layout-slot-frame][data-layout-slot-idx]"),
+  ).forEach((el) => {
+    const slotIdx = Number(el.dataset.layoutSlotIdx)
+    const { top, bottom, left } = rectRelativeTo(el, body)
+    if (!Number.isFinite(slotIdx) || !Number.isFinite(top) || !Number.isFinite(bottom)) return
+
+    const existing = slotByIdx.get(slotIdx)
+    slotByIdx.set(slotIdx, {
+      slotIdx,
+      top: existing ? Math.min(existing.top, top) : top,
+      bottom: existing ? Math.max(existing.bottom, bottom) : bottom,
+      left: existing ? Math.min(existing.left, left) : left,
+    })
+  })
+
+  const slotEls = Array.from(slotByIdx.values())
+    .sort((a, b) => (a.top === b.top ? a.left - b.left : a.top - b.top))
+
+  if (slotEls.length < 2) return null
+
+  let splitAt: number | null = null
+  let fittingSlotCount = 0
+  for (let index = 0; index < slotEls.length; index += 1) {
+    const slot = slotEls[index]
+    if (!slot || slot.bottom > available) break
+    splitAt = slot.slotIdx + 1
+    fittingSlotCount = index + 1
+  }
+
+  if (splitAt === null || fittingSlotCount >= slotEls.length) return null
+
+  return { cardId, cardIdx, splitAt, slotCount: slotEls.length }
+}
+
+/**
+ * Scan ``content`` for fixed-block row elements and return the first index
+ * (0-based) where splitting after that row leaves the leading content inside
+ * ``available`` height in ``body``.
+ */
+export function findTaskRowSplitPoint(
+  body: HTMLElement,
+  content: HTMLElement,
+  available: number,
+  currentRangeStart: number,
+  currentRangeEnd: number | undefined,
+): number | null {
+  const rowEls = Array.from(content.querySelectorAll<HTMLElement>("[data-task-row-idx]"))
+    .map((el) => {
+      const idx = Number(el.dataset.taskRowIdx)
+      return Number.isFinite(idx) ? { el, idx } : null
+    })
+    .filter((entry): entry is { el: HTMLElement; idx: number } => Boolean(entry))
+    .map(({ el, idx }) => ({
+      el,
+      idx,
+      top: offsetTopRelativeTo(el, body),
+      bottom: offsetTopRelativeTo(el, body) + el.offsetHeight,
+    }))
+    .filter(({ idx, top, bottom }) => {
+      if (idx < currentRangeStart) return false
+      if (currentRangeEnd !== undefined && idx >= currentRangeEnd) return false
+      if (!Number.isFinite(top) || !Number.isFinite(bottom)) return false
+      return true
+    })
+    .sort((a, b) => (a.top === b.top ? a.idx - b.idx : a.top - b.top))
+
+  if (rowEls.length < 1) return null
+
+  for (let i = rowEls.length - 1; i >= 0; i--) {
+    const row = rowEls[i]
+    if (!row) continue
+    if (row.bottom > available) continue
+
+    const splitAt = row.idx + 1
+    if (splitAt > currentRangeStart && !(currentRangeEnd !== undefined && splitAt >= currentRangeEnd)) {
+      return splitAt
+    }
+  }
+
+  const firstOverflow = rowEls.find((row) => {
+    if (row.bottom <= available) return false
+    if (row.idx <= currentRangeStart) return false
+    if (currentRangeEnd !== undefined && row.idx >= currentRangeEnd) return false
+    return true
+  })
+
+  if (!firstOverflow) return null
+
+  let splitAt = firstOverflow.idx
+
+  if (splitAt <= currentRangeStart) {
+    const nextRowIdx = currentRangeStart + 1
+
+    if (currentRangeEnd !== undefined && nextRowIdx >= currentRangeEnd) return null
+
+    const hasNextRow = rowEls.some((row) => row.idx > currentRangeStart)
+    if (!hasNextRow) return null
+
+    splitAt = nextRowIdx
+  }
+
+  if (currentRangeEnd !== undefined && splitAt >= currentRangeEnd) return null
 
   return splitAt
 }
@@ -142,14 +321,12 @@ export function useCanvasOverflow({
   enabled = true,
 }: UseCanvasOverflowOptions) {
   const markCanvasOverflow      = useCanvasStore((s) => s.markCanvasOverflow)
-  const setEditorNotice         = useCanvasStore((s) => s.setEditorNotice)
   const overflowingIds          = useCanvasStore((s) => s.overflowingCanvasIds)
   const setCanvasTopicRange     = useCourseStore((s) => s.setCanvasTopicRange)
   const setCanvasObjectiveRange = useCourseStore((s) => s.setCanvasObjectiveRange)
   const setCanvasTaskRange      = useCourseStore((s) => s.setCanvasTaskRange)
   const setCanvasCardRange      = useCourseStore((s) => s.setCanvasCardRange)
   const appendCanvasPage        = useCourseStore((s) => s.appendCanvasPage)
-  const removeDroppedCard       = useCourseStore((s) => s.removeDroppedCard)
 
   // Read the current contentTopicRange for this canvas from the store snapshot.
   // We read via getState() inside the callback (not a selector) to always get
@@ -186,20 +363,22 @@ export function useCanvasOverflow({
   const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Prevent re-entrant splits while continuation page updates are committed.
   const splitGuard   = useRef(false)
+  const checkRef     = useRef<(() => void) | null>(null)
 
   const check = useCallback(() => {
     const body    = bodyRef.current
     const content = contentRef.current
     if (!body || !content || !enabled) return
 
-    const overflow = content.scrollHeight - body.clientHeight > 2
+    const measuredContentHeight = measureCanvasContentHeight(body, content)
+    const overflow = measuredContentHeight - body.clientHeight > 2
     markCanvasOverflow(canvasId, overflow)
 
     // Write live measurements to debug registry (dev only)
     writeMeasurement({
       canvasId,
       sessionId,
-      contentH:   content.scrollHeight,
+      contentH:   measuredContentHeight,
       bodyH:      body.clientHeight,
       overflow,
       splitGuard: splitGuard.current,
@@ -230,6 +409,14 @@ export function useCanvasOverflow({
     // helper that attempts to split the current canvas and return `true` if
     // a split was dispatched (in which case the check can return early).
     const trySplit = (): boolean => {
+      const releaseSplitGuard = () => {
+        setTimeout(() => {
+          splitGuard.current = false
+          if (timerRef.current) clearTimeout(timerRef.current)
+          timerRef.current = setTimeout(() => checkRef.current?.(), CHECK_DEBOUNCE_MS)
+        }, SPLIT_GUARD_MS)
+      }
+
       // a) topic-level split
       if (topicEls.length >= 2) {
         for (let i = topicEls.length - 1; i >= 0; i--) {
@@ -255,10 +442,11 @@ export function useCanvasOverflow({
                 setCanvasTopicRange(canvasId, { start: currentStart, end: splitAt })
                 if (!continuationAlreadyExists) {
                   appendCanvasPage(sessionId, splitAt, {
+                    afterCanvasId: canvasId,
                     blockKeys: continuationBlockKeys,
                   })
                 }
-                setTimeout(() => { splitGuard.current = false }, SPLIT_GUARD_MS)
+                releaseSplitGuard()
                 return true
               }
             }
@@ -300,6 +488,7 @@ export function useCanvasOverflow({
                 setCanvasTaskRange(canvasId, { start: currentTaskStart, end: splitAtTaskIdx })
                 if (!continuationTaskExists) {
                   appendCanvasPage(sessionId, currentTopicStart, {
+                    afterCanvasId: canvasId,
                     topicEnd: currentTopicEnd,
                     objectiveStart: currentObjStart,
                     objectiveEnd: currentObjEnd,
@@ -308,7 +497,7 @@ export function useCanvasOverflow({
                     blockKeys: continuationBlockKeys,
                   })
                 }
-                setTimeout(() => { splitGuard.current = false }, SPLIT_GUARD_MS)
+                releaseSplitGuard()
                 return true
               }
             }
@@ -317,7 +506,62 @@ export function useCanvasOverflow({
         }
       }
 
-      // c) objective-level split
+      // c) row-level split for fixed tables (Program / Resources)
+      const currentTaskStart = getTaskRangeStart()
+      const canvasSnap = useCourseStore.getState().sessions
+        .find((s) => s.id === sessionId)
+        ?.canvases
+        .find((c) => c.id === canvasId)
+      const splitAtTaskRowIdx = findTaskRowSplitPoint(
+        body,
+        content,
+        available,
+        currentTaskStart,
+        canvasSnap?.contentTaskRange?.end,
+      )
+      if (splitAtTaskRowIdx !== null) {
+        if (splitAtTaskRowIdx > currentTaskStart) {
+          const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
+          if (!sessionSnap || !canvasSnap) return false
+          const currentPageBlockKeys = canvasSnap?.blockKeys ?? []
+          const continuationBlockKeys = currentPageBlockKeys.filter((key) => TASK_ROW_SPLIT_FIXED_BLOCKS.has(key))
+          const currentTaskEnd = canvasSnap?.contentTaskRange?.end
+          const currentTopicStart = canvasSnap?.contentTopicRange?.start ?? 0
+          const currentTopicEnd = canvasSnap?.contentTopicRange?.end
+          const currentObjStart = canvasSnap?.contentObjectiveRange?.start ?? 0
+          const currentObjEnd = canvasSnap?.contentObjectiveRange?.end
+
+          const sameMaybeNumber = (a: number | undefined, b: number | undefined): boolean => a === b
+          const continuationTaskExists = sessionSnap.canvases.some(
+            (c) =>
+              c.id !== canvasId &&
+              c.contentTaskRange?.start === splitAtTaskRowIdx &&
+              (c.contentTopicRange?.start ?? 0) === currentTopicStart &&
+              sameMaybeNumber(c.contentTopicRange?.end, currentTopicEnd) &&
+              (c.contentObjectiveRange?.start ?? 0) === currentObjStart &&
+              sameMaybeNumber(c.contentObjectiveRange?.end, currentObjEnd) &&
+              sameMaybeNumber(c.contentTaskRange?.end, currentTaskEnd),
+          )
+
+          if (!continuationTaskExists) {
+            splitGuard.current = true
+            setCanvasTaskRange(canvasId, { start: currentTaskStart, end: splitAtTaskRowIdx })
+            appendCanvasPage(sessionId, currentTopicStart, {
+              afterCanvasId: canvasId,
+              topicEnd: currentTopicEnd,
+              objectiveStart: currentObjStart,
+              objectiveEnd: currentObjEnd,
+              taskStart: splitAtTaskRowIdx,
+              taskEnd: currentTaskEnd,
+              blockKeys: continuationBlockKeys.length > 0 ? continuationBlockKeys : deriveContinuationBlockKeys(sessionSnap, canvasId),
+            })
+            releaseSplitGuard()
+            return true
+          }
+        }
+      }
+
+      // d) objective-level split
       const objEls = Array.from(
         content.querySelectorAll<HTMLElement>("[data-objective-idx]"),
       ).sort((a, b) => Number(a.dataset.objectiveIdx) - Number(b.dataset.objectiveIdx))
@@ -347,12 +591,13 @@ export function useCanvasOverflow({
                 setCanvasObjectiveRange(canvasId, { start: currentObjStart, end: splitAtObjIdx })
                 if (!continuationObjExists) {
                   appendCanvasPage(sessionId, currentTopicStart, {
+                    afterCanvasId: canvasId,
                     topicEnd: currentTopicEnd,
                     objectiveStart: splitAtObjIdx,
                     blockKeys: continuationBlockKeys,
                   })
                 }
-                setTimeout(() => { splitGuard.current = false }, SPLIT_GUARD_MS)
+                releaseSplitGuard()
                 return true
               }
             }
@@ -361,11 +606,15 @@ export function useCanvasOverflow({
         }
       }
 
-      // d) card-level split (always allowed)
+      // Composition cards stay atomic. If one does not fit, its declared size
+      // needs correction; splitting internal slots makes products disappear
+      // from the page where teachers expect to see the whole composition.
+
+      // e) card-level split (always allowed)
       const splitAtCardIdx = findCardSplitPoint(body, content, available)
       if (splitAtCardIdx !== null) {
         const currentCardStart = getCardRangeStart()
-        if (splitAtCardIdx >= currentCardStart) {
+        if (splitAtCardIdx > currentCardStart) {
           const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
           if (!sessionSnap) return false
           const canvasSnap  = sessionSnap?.canvases.find((c) => c.id === canvasId)
@@ -377,6 +626,8 @@ export function useCanvasOverflow({
           const currentObjEnd = canvasSnap?.contentObjectiveRange?.end
           const currentTaskStart = canvasSnap?.contentTaskRange?.start ?? 0
           const currentTaskEnd = canvasSnap?.contentTaskRange?.end
+
+          if (currentCardEnd !== undefined && splitAtCardIdx >= currentCardEnd) return false
 
           const sameMaybeNumber = (a: number | undefined, b: number | undefined): boolean => a === b
 
@@ -397,6 +648,7 @@ export function useCanvasOverflow({
             setCanvasCardRange(canvasId, { start: currentCardStart, end: splitAtCardIdx })
             if (!continuationCardExists) {
               appendCanvasPage(sessionId, currentTopicStart, {
+                afterCanvasId: canvasId,
                 topicEnd: currentTopicEnd,
                 objectiveStart: currentObjStart,
                 objectiveEnd: currentObjEnd,
@@ -407,7 +659,7 @@ export function useCanvasOverflow({
                 blockKeys: continuationBlockKeys,
               })
             }
-            setTimeout(() => { splitGuard.current = false }, SPLIT_GUARD_MS)
+            releaseSplitGuard()
             return true
           }
         }
@@ -416,33 +668,11 @@ export function useCanvasOverflow({
       return false
     }
 
-    // trySplit() covers structural split levels: topic (≥2 on page), objective,
-    // and card.  For single-topic overflow, objective and
+    // trySplit() covers structural split levels: topic (≥2 on page), row,
+    // objective, and card.  For single-topic overflow, objective and
     // card splits already give finer granularity; a naked topic-boundary split
     // on one topic would only create an empty continuation page.
-    const didSplit = trySplit()
-    if (!didSplit) {
-      // Strict enforcement fallback: if the page is still overflowing and no
-      // structural split boundary can be applied, reject the first overflowing
-      // card so body height cannot remain exceeded.
-      const overflowingCard = Array.from(
-        content.querySelectorAll<HTMLElement>("[data-card-idx][data-card-id]"),
-      )
-        .sort((a, b) => Number(a.dataset.cardIdx) - Number(b.dataset.cardIdx))
-        .find((el) => {
-          const bottom = offsetTopRelativeTo(el, body) + el.offsetHeight
-          return bottom > available
-        })
-
-      const cardId = overflowingCard?.dataset.cardId
-      const taskId = overflowingCard?.closest<HTMLElement>("[data-task-id]")?.dataset.taskId
-      if (cardId && taskId) {
-        splitGuard.current = true
-        removeDroppedCard(sessionId, taskId as TaskId, cardId)
-        setEditorNotice("Block could not fit between header and footer and was removed.")
-        setTimeout(() => { splitGuard.current = false }, SPLIT_GUARD_MS)
-      }
-    }
+    trySplit()
   }, [
     bodyRef,
     contentRef,
@@ -450,13 +680,11 @@ export function useCanvasOverflow({
     canvasId,
     sessionId,
     markCanvasOverflow,
-    setEditorNotice,
     setCanvasTopicRange,
     setCanvasObjectiveRange,
     setCanvasTaskRange,
     setCanvasCardRange,
     appendCanvasPage,
-    removeDroppedCard,
     getTopicRangeStart,
     getObjectiveRangeStart,
     getTaskRangeStart,
@@ -464,8 +692,14 @@ export function useCanvasOverflow({
   ])
 
   useEffect(() => {
+    checkRef.current = check
+  }, [check])
+
+  useEffect(() => {
     const content = contentRef.current
     if (!content) return
+
+    const observedElements = new WeakSet<Element>()
 
     const schedule = () => {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -477,8 +711,38 @@ export function useCanvasOverflow({
     const observer = new ResizeObserver(schedule)
     observer.observe(content)
 
+    const observeSplitCandidates = () => {
+      const candidates = content.querySelectorAll<HTMLElement>(
+        "[data-topic-idx], [data-objective-idx], [data-task-idx], [data-task-row-idx], [data-card-idx]",
+      )
+      candidates.forEach((candidate) => {
+        if (observedElements.has(candidate)) return
+        observedElements.add(candidate)
+        observer.observe(candidate)
+      })
+    }
+
+    observeSplitCandidates()
+
+    const mutationObserver = new MutationObserver(() => {
+      observeSplitCandidates()
+      schedule()
+    })
+    mutationObserver.observe(content, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["class", "style", "data-card-idx", "data-task-row-idx"],
+    })
+
+    const settleTimers = [350, 900, 1800, 3200, 5200].map((delay) =>
+      setTimeout(schedule, delay),
+    )
+
     return () => {
+      mutationObserver.disconnect()
       observer.disconnect()
+      settleTimers.forEach((timer) => clearTimeout(timer))
       if (timerRef.current) clearTimeout(timerRef.current)
       markCanvasOverflow(canvasId, false)
       deleteMeasurement(canvasId)
@@ -487,4 +751,3 @@ export function useCanvasOverflow({
 
   return overflowingIds.has(canvasId)
 }
-

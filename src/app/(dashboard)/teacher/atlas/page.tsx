@@ -6,6 +6,7 @@ import { AtlasMediaCard } from "./atlas-media-card"
 import { AtlasLargeCard } from "./atlas-large-card"
 import { AtlasSmallCard } from "./atlas-small-card"
 import { AtlasPagination } from "./atlas-pagination"
+import { AtlasRetrievalPanel } from "./atlas-retrieval-panel"
 import type { SearchParams } from "./atlas-page-utils"
 import { formatMetadataValue, capitalize, buildQueryString, buildTimelineEventsWithFallback, uniqueNonEmptyStrings } from "./atlas-page-utils"
 
@@ -31,23 +32,37 @@ export default async function TeacherAtlasPage({
           selectedEra={d.selectedEra} eraOptions={d.eraOptions} selectedOrder={d.selectedOrder}
         />
 
+        <AtlasRetrievalPanel
+          overview={d.overview}
+          sourceStatuses={d.sourceStatuses}
+          initialQuery={d.queryText}
+        />
+
         {/* Status bar */}
         <div className="rounded-lg border border-[var(--atlas-border)]/50 bg-[var(--atlas-bg-elevated)]/20 px-3 py-2 backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-3 text-xs text-[var(--atlas-text-dim)]">
+          <div className="flex flex-col gap-2 text-xs text-[var(--atlas-text-dim)] sm:flex-row sm:items-center sm:justify-between">
             <span>Showing {d.rangeStart.toLocaleString()}–{d.rangeEnd.toLocaleString()} of {d.totalCount.toLocaleString()} · Page {d.activePage} / {d.totalPages}</span>
-            <div className="flex items-center gap-1 rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] p-1">
-              {(["small", "large"] as const).map(view => (
-                <Link
-                  key={view}
-                  href={`/teacher/atlas?${buildQueryString(d.params, { display: view, page: String(d.activePage) })}`}
-                  className={d.displayMode === view
-                    ? "rounded-md bg-[var(--primary)]/10 px-3 py-1 text-xs font-medium text-[var(--primary)]"
-                    : "rounded-md px-3 py-1 text-xs text-[var(--atlas-text-dim)] hover:bg-[var(--atlas-bg-elevated)]/50"
-                  }
-                >
-                  {view.charAt(0).toUpperCase() + view.slice(1)}
-                </Link>
-              ))}
+            <div className="flex items-center gap-2">
+              <Link
+                href="/teacher/atlas/repository"
+                className="rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] px-3 py-1 text-xs font-medium text-[var(--atlas-text-dim)] hover:text-[var(--atlas-text)]"
+              >
+                Repository
+              </Link>
+              <div className="flex items-center gap-1 rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] p-1">
+                {(["small", "large"] as const).map(view => (
+                  <Link
+                    key={view}
+                    href={`/teacher/atlas?${buildQueryString(d.params, { display: view, page: String(d.activePage) })}`}
+                    className={d.displayMode === view
+                      ? "rounded-md bg-[var(--primary)]/10 px-3 py-1 text-xs font-medium text-[var(--primary)]"
+                      : "rounded-md px-3 py-1 text-xs text-[var(--atlas-text-dim)] hover:bg-[var(--atlas-bg-elevated)]/50"
+                    }
+                  >
+                    {view.charAt(0).toUpperCase() + view.slice(1)}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -117,5 +132,3 @@ export default async function TeacherAtlasPage({
     </div>
   )
 }
-
-

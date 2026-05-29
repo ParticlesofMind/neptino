@@ -1,6 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { useContext } from "react"
+import { EditorSurfaceContext } from "./editor-surface-context"
 
 interface EditorSplitLayoutProps {
   sidebar: ReactNode
@@ -22,38 +24,46 @@ export function EditorSplitLayout({
   sidebarDescription,
   previewTitle,
   previewDescription,
-  sidebarWidthClassName = "md:min-w-[28rem] md:flex-1 xl:min-w-[32rem]",
+  sidebarWidthClassName = "md:w-[29rem] md:flex-none xl:w-[31rem]",
   previewClassName = "bg-[#f5f7fb]",
   sidebarContentClassName,
   previewContentClassName,
 }: EditorSplitLayoutProps) {
-  return (
-    <div className="make-editor-split-layout flex h-full min-h-0 flex-col overflow-hidden bg-white md:flex-row">
-      <div className={["make-editor-split-sidebar w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:flex-1 md:border-b-0 md:border-r md:border-neutral-200", sidebarWidthClassName].join(" ")}>
-        {(sidebarTitle || sidebarDescription) && (
-          <div className="border-b border-neutral-100 px-5 py-4">
-            {sidebarTitle && <p className="text-[13px] font-semibold text-neutral-900">{sidebarTitle}</p>}
-            {sidebarDescription && <p className="mt-1 text-[10px] text-neutral-500">{sidebarDescription}</p>}
-          </div>
-        )}
-        <div className={["min-h-0 h-full overflow-y-auto", sidebarContentClassName].filter(Boolean).join(" ")}>
-          {sidebar}
-        </div>
-      </div>
+  const surface = useContext(EditorSurfaceContext)
+  const showSidebar = surface !== "preview"
+  const showPreview = surface !== "controls"
 
-      <div className={["min-h-0 min-w-0 w-full md:w-[min(44rem,40vw)] md:max-w-[44rem] md:flex-none", previewClassName].join(" ")}>
-        <div className="flex h-full min-h-0 flex-col">
-          {(previewTitle || previewDescription) && (
-            <div className="shrink-0 border-b border-neutral-200 bg-white/80 px-5 py-4 backdrop-blur-sm">
-              {previewTitle && <p className="text-[13px] font-semibold text-neutral-900">{previewTitle}</p>}
-              {previewDescription && <p className="mt-1 text-[10px] text-neutral-500">{previewDescription}</p>}
+  return (
+    <div className="make-editor-split-layout flex h-full min-h-0 w-full flex-col overflow-hidden bg-white md:flex-row">
+      {showSidebar && (
+        <div className={["make-editor-split-sidebar flex w-full shrink-0 flex-col border-b border-neutral-100 md:min-h-0 md:border-b-0 md:border-r md:border-neutral-200", surface === "controls" ? "md:w-full md:flex-1" : sidebarWidthClassName].join(" ")}>
+          {(sidebarTitle || sidebarDescription) && (
+            <div className="shrink-0 border-b border-neutral-100 px-4 py-3">
+              {sidebarTitle && <p className="text-[13px] font-semibold text-neutral-900">{sidebarTitle}</p>}
+              {sidebarDescription && <p className="mt-1 text-[10px] text-neutral-500">{sidebarDescription}</p>}
             </div>
           )}
-          <div className={["min-h-0 flex-1", previewContentClassName].filter(Boolean).join(" ")}>
-            {preview}
+          <div className={["min-h-0 flex-1 overflow-y-auto bg-white", sidebarContentClassName].filter(Boolean).join(" ")}>
+            {sidebar}
           </div>
         </div>
-      </div>
+      )}
+
+      {showPreview && (
+        <div className={["min-h-0 min-w-0 w-full md:flex-1", previewClassName].join(" ")}>
+          <div className="flex h-full min-h-0 flex-col">
+            {(previewTitle || previewDescription) && (
+              <div className="shrink-0 border-b border-neutral-200 bg-white/80 px-5 py-4 backdrop-blur-sm">
+                {previewTitle && <p className="text-[13px] font-semibold text-neutral-900">{previewTitle}</p>}
+                {previewDescription && <p className="mt-1 text-[10px] text-neutral-500">{previewDescription}</p>}
+              </div>
+            )}
+            <div className={["min-h-0 flex-1", previewContentClassName].filter(Boolean).join(" ")}>
+              {preview}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

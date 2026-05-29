@@ -5,13 +5,17 @@ import Hls from "hls.js"
 import { Plus } from "lucide-react"
 import { MakeMotionToolbar } from "../make-motion-toolbar"
 import {
+  StudioActionButton,
+  StudioFieldGrid,
   StudioSection,
   StudioUrlInput,
   StudioInput,
   StudioNumberInput,
+  StudioOptionsPanel,
   StudioSelect,
   StudioToggle,
 } from "./studio-primitives"
+import { EditorSplitLayout } from "./editor-split-layout"
 import { ChapterEditRow, ChapterTimeline, ProviderBadge } from "./video-editor-primitives"
 import { VideoEditorPreview } from "./video-editor-preview"
 import {
@@ -99,8 +103,17 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
       return () => { hls.destroy(); hlsRef.current = null }
     }
 
+    const handleNativeReady = () => setStreamStatus("native")
+    const handleNativeError = () => setStreamStatus("error")
+
+    video.addEventListener("loadedmetadata", handleNativeReady)
+    video.addEventListener("error", handleNativeError)
     video.src = url
-    setStreamStatus(isHlsStream ? "error" : "native")
+
+    return () => {
+      video.removeEventListener("loadedmetadata", handleNativeReady)
+      video.removeEventListener("error", handleNativeError)
+    }
   }, [url, provider, isHlsStream])
 
   useEffect(() => {
@@ -127,10 +140,16 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
   const selectedChapter = selectedChapterIdx !== null ? chapters[selectedChapterIdx] ?? null : null
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white md:flex-row">
-      <div className="make-editor-split-sidebar w-full shrink-0 border-b border-neutral-100 md:min-h-0 md:min-w-[32rem] md:flex-1 md:border-b-0 md:border-r md:border-neutral-200 xl:min-w-[35rem]">
-        <div className="min-h-0 h-full overflow-y-auto">
-          <StudioSection label="Source" className="pt-4">
+    <EditorSplitLayout
+      sidebarWidthClassName="md:w-[32rem] md:flex-none xl:w-[35rem]"
+      previewClassName="bg-[#f5f7fb]"
+      sidebar={(
+        <StudioOptionsPanel>
+          <StudioSection
+            label="Source"
+            description="Add the video source and the title students will see."
+            priority="primary"
+          >
             <StudioUrlInput
               value={url}
               placeholder="YouTube, Vimeo, or .mp4 / .m3u8 URL"
@@ -146,7 +165,7 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
           </StudioSection>
 
           <StudioSection label="Display">
-            <div className="grid grid-cols-2 gap-3">
+            <StudioFieldGrid>
               <StudioSelect label="Aspect ratio" value={aspectRatio} onChange={(e) => onChange("aspectRatio", e.target.value)}>
                 <option value="16:9">16:9</option>
                 <option value="4:3">4:3</option>
@@ -157,28 +176,25 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
                 <option value="contain">Contain</option>
                 <option value="cover">Cover</option>
               </StudioSelect>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            </StudioFieldGrid>
+            <StudioFieldGrid>
               <StudioToggle label="Show controls" checked={showControls} onChange={(v) => onChange("showControls", v)} />
               <StudioToggle label="Muted by default" checked={muted} onChange={(v) => onChange("muted", v)} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            </StudioFieldGrid>
+            <StudioFieldGrid>
               <StudioToggle label="Autoplay" checked={autoplay} onChange={(v) => onChange("autoplay", v)} />
               <StudioToggle label="Loop playback" checked={loop} onChange={(v) => onChange("loop", v)} />
-            </div>
+            </StudioFieldGrid>
           </StudioSection>
 
           <StudioSection
             label="Chapters"
             action={
-              <button
-                type="button"
+              <StudioActionButton
                 onClick={addChapter}
-                className="flex items-center gap-1 rounded-md border border-neutral-200 px-2 py-1 text-[10px] font-semibold text-neutral-600 transition-all hover:border-neutral-300 hover:bg-neutral-50 focus:outline-none focus:ring-[3px] focus:ring-primary/15"
-              >
-                <Plus size={10} />
-                Add chapter
-              </button>
+                icon={<Plus size={10} />}
+                label="Add chapter"
+              />
             }
           >
             <ChapterTimeline
@@ -220,19 +236,21 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
           </StudioSection>
 
           <StudioSection>
-            <StudioInput
-              label="Poster / thumbnail URL"
-              value={poster}
-              placeholder="https://example.com/poster.jpg"
-              onChange={(e) => onChange("poster", e.target.value)}
-            />
-            <StudioInput
-              label="Captions URL"
-              value={captionsUrl}
-              placeholder="https://example.com/captions.vtt"
-              hint="SRT or WebVTT file URL"
-              onChange={(e) => onChange("captionsUrl", e.target.value)}
-            />
+            <StudioFieldGrid>
+              <StudioInput
+                label="Poster URL"
+                value={poster}
+                placeholder="https://example.com/poster.jpg"
+                onChange={(e) => onChange("poster", e.target.value)}
+              />
+              <StudioInput
+                label="Captions URL"
+                value={captionsUrl}
+                placeholder="https://example.com/captions.vtt"
+                hint="SRT or WebVTT file URL"
+                onChange={(e) => onChange("captionsUrl", e.target.value)}
+              />
+            </StudioFieldGrid>
           </StudioSection>
 
           <StudioSection noBorder>
@@ -248,30 +266,31 @@ export function VideoEditor({ content, onChange }: VideoEditorProps) {
           <div className="border-t border-neutral-200">
             <MakeMotionToolbar content={content} onChange={onChange} compact />
           </div>
-        </div>
-      </div>
-
-      <VideoEditorPreview
-        url={url}
-        title={title}
-        ytId={ytId}
-        vimeoId={vimeoId}
-        provider={provider}
-        startAtSeconds={startAtSeconds}
-        autoplay={autoplay}
-        muted={muted}
-        loop={loop}
-        showControls={showControls}
-        poster={poster}
-        captionsUrl={captionsUrl}
-        isHlsStream={isHlsStream}
-        streamStatus={streamStatus}
-        fitMode={fitMode}
-        previewAspectRatioClass={previewAspectRatioClass}
-        videoRef={videoRef}
-        onTitleChange={(next) => onChange("title", next)}
-        onDurationChange={(event) => setDuration(event.currentTarget.duration)}
-      />
-    </div>
+        </StudioOptionsPanel>
+      )}
+      preview={(
+        <VideoEditorPreview
+          url={url}
+          title={title}
+          ytId={ytId}
+          vimeoId={vimeoId}
+          provider={provider}
+          startAtSeconds={startAtSeconds}
+          autoplay={autoplay}
+          muted={muted}
+          loop={loop}
+          showControls={showControls}
+          poster={poster}
+          captionsUrl={captionsUrl}
+          isHlsStream={isHlsStream}
+          streamStatus={streamStatus}
+          fitMode={fitMode}
+          previewAspectRatioClass={previewAspectRatioClass}
+          videoRef={videoRef}
+          onTitleChange={(next) => onChange("title", next)}
+          onDurationChange={(event) => setDuration(event.currentTarget.duration)}
+        />
+      )}
+    />
   )
 }

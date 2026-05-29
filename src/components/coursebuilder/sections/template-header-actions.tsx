@@ -8,12 +8,18 @@ import {
   HelpCircle,
 } from "lucide-react"
 import {
-  PRIMARY_ACTION_BUTTON_CLASS,
   SECONDARY_ACTION_BUTTON_CLASS,
 } from "@/components/coursebuilder"
 import type { SetupTemplateType } from "./templates-section"
 
 // ─── Per-type metadata ────────────────────────────────────────────────────────
+
+const TEMPLATE_BLUE_ACTION_BUTTON_CLASS =
+  "inline-flex items-center gap-2 rounded-md border border-[#9eb9da] bg-[#dbe8f6] px-4 py-2 text-sm font-medium text-[#3a6ea0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-sm transition hover:bg-[#cedef0] focus:outline-none focus:ring-2 focus:ring-[#dbe8f6] disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-foreground/60"
+
+const TEMPLATE_BLUE_ACTIVE_CARD_CLASS = "border-[#9eb9da] bg-[#dbe8f6] shadow-sm"
+const TEMPLATE_BLUE_HOVER_CARD_CLASS = "border-border bg-background hover:border-[#9eb9da] hover:bg-[#dbe8f6]/45"
+const TEMPLATE_BLUE_TEXT_CLASS = "text-[#3a6ea0]"
 
 const TYPE_META: Record<
   SetupTemplateType,
@@ -26,7 +32,7 @@ const TYPE_META: Record<
   lesson: {
     Icon: BookOpen,
     label: "Lesson",
-    description: "Structured teaching session with program, resources, and content blocks.",
+    description: "Teaching session with a program, resources, and configurable learning divisions such as instruction, practice, and feedback.",
   },
   certificate: {
     Icon: Award,
@@ -36,12 +42,12 @@ const TYPE_META: Record<
   quiz: {
     Icon: HelpCircle,
     label: "Quiz",
-    description: "Short knowledge check with scored questions and feedback.",
+    description: "Knowledge check with resources, scored criteria, pass mark, and feedback-oriented review.",
   },
   assessment: {
     Icon: ClipboardCheck,
     label: "Assessment",
-    description: "Formal evaluation with scoring criteria and weighting.",
+    description: "Evaluation template for evidence of learning, criteria, weighting, and feedback.",
   },
   exam: {
     Icon: GraduationCap,
@@ -55,6 +61,7 @@ interface SavedTemplate {
   type: SetupTemplateType
   label: string
   description?: string
+  builtIn?: boolean
 }
 
 export function TemplateHeaderActions({
@@ -113,7 +120,7 @@ export function TemplateHeaderActions({
           type="button"
           onClick={onOpenCreate}
           disabled={!canCreate}
-          className={PRIMARY_ACTION_BUTTON_CLASS}
+          className={TEMPLATE_BLUE_ACTION_BUTTON_CLASS}
         >
           Create Template
         </button>
@@ -157,20 +164,20 @@ export function TemplateHeaderActions({
                         className={[
                           "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-center transition focus:outline-none focus:ring-2 focus:ring-ring/50",
                           isSelected
-                            ? "border-foreground bg-accent shadow-sm"
-                            : "border-border bg-background hover:border-foreground/30 hover:bg-accent/30",
+                            ? TEMPLATE_BLUE_ACTIVE_CARD_CLASS
+                            : TEMPLATE_BLUE_HOVER_CARD_CLASS,
                         ].join(" ")}
                       >
                         <meta.Icon
                           className={[
                             "h-5 w-5",
-                            isSelected ? "text-foreground" : "text-muted-foreground",
+                            isSelected ? TEMPLATE_BLUE_TEXT_CLASS : "text-muted-foreground",
                           ].join(" ")}
                         />
                         <span
                           className={[
                             "text-[11px] font-medium leading-tight",
-                            isSelected ? "text-foreground" : "text-muted-foreground",
+                            isSelected ? TEMPLATE_BLUE_TEXT_CLASS : "text-muted-foreground",
                           ].join(" ")}
                         >
                           {meta.label}
@@ -240,7 +247,7 @@ export function TemplateHeaderActions({
             {/* Header */}
             <div className="border-b border-border px-5 py-4">
               <p className="text-sm font-semibold text-foreground">Load template</p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">Select a saved template to apply to this course.</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Select a built-in or saved template to apply to this course.</p>
             </div>
 
             <div className="max-h-72 overflow-y-auto p-3 space-y-1.5">
@@ -255,18 +262,18 @@ export function TemplateHeaderActions({
                     className={[
                       "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition",
                       isSelected
-                        ? "border-foreground bg-accent"
-                        : "border-border bg-background hover:border-foreground/30 hover:bg-accent/20",
+                        ? TEMPLATE_BLUE_ACTIVE_CARD_CLASS
+                        : TEMPLATE_BLUE_HOVER_CARD_CLASS,
                     ].join(" ")}
                   >
                     {/* Type icon */}
                     <div
                       className={[
                         "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
-                        isSelected ? "border-foreground/40 bg-background" : "border-border bg-background",
+                        isSelected ? "border-[#9eb9da] bg-background" : "border-border bg-background",
                       ].join(" ")}
                     >
-                      <meta.Icon className={["h-4 w-4", isSelected ? "text-foreground" : "text-muted-foreground"].join(" ")} />
+                      <meta.Icon className={["h-4 w-4", isSelected ? TEMPLATE_BLUE_TEXT_CLASS : "text-muted-foreground"].join(" ")} />
                     </div>
 
                     {/* Label + meta */}
@@ -277,8 +284,13 @@ export function TemplateHeaderActions({
                           {meta.label}
                         </span>
                         {isActive && (
-                          <span className="shrink-0 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                          <span className="shrink-0 rounded border border-[#9eb9da] bg-[#dbe8f6] px-1.5 py-0.5 text-[10px] font-medium text-[#3a6ea0]">
                             active
+                          </span>
+                        )}
+                        {template.builtIn && (
+                          <span className="shrink-0 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                            built-in
                           </span>
                         )}
                       </div>
@@ -293,18 +305,20 @@ export function TemplateHeaderActions({
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); onActivateTemplate(template.id) }}
-                          className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-foreground transition hover:border-primary/40 hover:text-primary"
+                          className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-foreground transition hover:border-[#9eb9da] hover:bg-[#dbe8f6]/45 hover:text-[#3a6ea0]"
                         >
-                          Edit
+                          Apply
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onDeleteTemplate(template.id) }}
-                        className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
-                      >
-                        Remove
-                      </button>
+                      {!template.builtIn && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onDeleteTemplate(template.id) }}
+                          className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

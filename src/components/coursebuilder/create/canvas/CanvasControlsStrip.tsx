@@ -6,8 +6,7 @@ import {
   ZoomOut,
   RotateCcw,
   Hand,
-  Grid3X3,
-  Layers2,
+  MousePointer2,
 } from "lucide-react"
 import { useCanvasStore } from "../store/canvasStore"
 
@@ -20,13 +19,16 @@ export function CanvasControlsStrip() {
   const resetView = useCanvasStore((s) => s.resetView)
   const activeTool     = useCanvasStore((s) => s.activeTool)
   const setActiveTool  = useCanvasStore((s) => s.setActiveTool)
+  const grabActive = activeTool === "pan"
+  const selectTool = () => setActiveTool("selection")
+  const toggleGrabTool = () => setActiveTool(grabActive ? "selection" : "pan")
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1 w-14 shrink-0 bg-white rounded-xl shadow-sm py-3 overflow-y-auto">
+    <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-1 overflow-y-auto rounded-lg bg-white py-2">
       {/* Zoom % */}
       <button
         onClick={() => setZoom(100)}
-        title="Reset zoom to 100%"
+        title="Reset zoom to 100% (Cmd/Ctrl + 0)"
         className="text-[10px] font-medium text-neutral-600 hover:text-neutral-900 leading-tight"
       >
         {zoomLevel}%
@@ -34,50 +36,49 @@ export function CanvasControlsStrip() {
 
       <div className="w-6 h-px bg-neutral-200 my-1" />
 
-      <ControlBtn label="100" title="Reset zoom to 100%" onClick={() => setZoom(100)}>
+      <ControlBtn title="Reset zoom to 100% (Cmd/Ctrl + 0)" onClick={() => setZoom(100)}>
         <Focus size={13} strokeWidth={1.5} />
       </ControlBtn>
 
-      <ControlBtn label="In" title="Zoom in (+10%)" onClick={() => stepZoom(10)}>
+      <ControlBtn title="Zoom in (Cmd/Ctrl + +)" onClick={() => stepZoom(10)}>
         <ZoomIn size={13} strokeWidth={1.5} />
       </ControlBtn>
 
-      <ControlBtn label="Out" title="Zoom out (−10%)" onClick={() => stepZoom(-10)}>
+      <ControlBtn title="Zoom out (Cmd/Ctrl + -)" onClick={() => stepZoom(-10)}>
         <ZoomOut size={13} strokeWidth={1.5} />
       </ControlBtn>
 
-      <ControlBtn label="Reset" title="Reset view" onClick={resetView}>
+      <ControlBtn title="Reset view (Cmd/Ctrl + 0)" onClick={resetView}>
         <RotateCcw size={13} strokeWidth={1.5} />
       </ControlBtn>
 
+      <div className="w-6 h-px bg-neutral-200 my-1" />
+
       <ControlBtn
-        label="Grab"
-        title="Grab / pan tool"
-        active={activeTool === "pan"}
-        onClick={() => setActiveTool("pan")}
+        title="Select tool (V or Esc)"
+        active={activeTool === "selection"}
+        onClick={selectTool}
+      >
+        <MousePointer2 size={13} strokeWidth={1.5} />
+      </ControlBtn>
+
+      <ControlBtn
+        title="Grab / pan tool (H toggles)"
+        active={grabActive}
+        onClick={toggleGrabTool}
       >
         <Hand size={13} strokeWidth={1.5} />
-      </ControlBtn>
-
-      <ControlBtn label="Grid" title="Toggle grid">
-        <Grid3X3 size={13} strokeWidth={1.5} />
-      </ControlBtn>
-
-      <ControlBtn label="No." title="Non-destructive overlap mode">
-        <Layers2 size={13} strokeWidth={1.5} />
       </ControlBtn>
     </div>
   )
 }
 
 function ControlBtn({
-  label,
   title,
   active,
   onClick,
   children,
 }: {
-  label:    string
   title?:   string
   active?:  boolean
   onClick?: () => void
@@ -88,14 +89,13 @@ function ControlBtn({
       title={title}
       onClick={onClick}
       className={[
-        "flex flex-col items-center gap-0.5 w-10 py-1.5 rounded transition-colors",
+        "flex h-8 w-8 items-center justify-center rounded transition-colors",
         active
-          ? "bg-[#dbe8f6] text-[#233f5d] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+          ? "bg-neutral-100 text-neutral-800"
           : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700",
       ].join(" ")}
     >
       {children}
-      <span className="text-[7px] leading-none">{label}</span>
     </button>
   )
 }

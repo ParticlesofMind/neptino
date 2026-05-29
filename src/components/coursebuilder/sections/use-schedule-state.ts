@@ -1,8 +1,7 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { useCourseRowLoader } from "@/components/coursebuilder"
+import { updateCourseById, useCourseRowLoader } from "@/components/coursebuilder"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import {
   JS_DAY_TO_LABEL,
@@ -54,32 +53,28 @@ export function useScheduleState(courseId: string | null) {
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    const supabase = createClient()
-    const { error } = await supabase
-      .from("courses")
-      .update({
-        schedule_settings: {
-          schedule_mode: scheduleMode,
-          active_days: activeDays,
-          generated_entries: generatedEntries,
-          start_date: startDate,
-          end_date: endDate,
-          target_sessions: targetSessions,
-          sessions_per_day: sessionsPerDay,
-          repeat_unit: repeatUnit,
-          repeat_every: repeatEvery,
-          repeat_cycles: repeatCycles,
-          start_time: startTime,
-          end_time: endTime,
-          breaks,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", courseId)
+    const { error } = await updateCourseById(courseId, {
+      schedule_settings: {
+        schedule_mode: scheduleMode,
+        active_days: activeDays,
+        generated_entries: generatedEntries,
+        start_date: startDate,
+        end_date: endDate,
+        target_sessions: targetSessions,
+        sessions_per_day: sessionsPerDay,
+        repeat_unit: repeatUnit,
+        repeat_every: repeatEvery,
+        repeat_cycles: repeatCycles,
+        start_time: startTime,
+        end_time: endTime,
+        breaks,
+      },
+      updated_at: new Date().toISOString(),
+    })
     if (error) return
   }, [courseId, scheduleMode, activeDays, generatedEntries, startDate, endDate, targetSessions, sessionsPerDay, repeatUnit, repeatEvery, repeatCycles, startTime, endTime, breaks])
 
-  useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
+  useDebouncedChangeSave(handleSave, 800, Boolean(courseId && hasData))
 
   const toggle = (day: string) =>
     setActiveDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]))

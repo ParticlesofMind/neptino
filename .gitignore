@@ -13,6 +13,7 @@
 
 # testing
 /coverage
+/test-results/
 
 # next.js
 /.next/
@@ -37,6 +38,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.playwright-cli/
+output/
+tmp-*.cjs
+tmp-*.mjs
+repro-*.cjs
+.tmp-*.cjs
+e2e/.tmp-*.spec.ts
 
 # env files (can opt-in for committing if needed)
 .env*

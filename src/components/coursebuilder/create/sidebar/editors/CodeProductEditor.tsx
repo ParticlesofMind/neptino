@@ -9,8 +9,13 @@ import {
 import { EditorSplitLayout } from "./editor-split-layout"
 import { GenericEditorPreview } from "./generic-editor-preview"
 import type { EditorProps } from "./types"
+import type { CardType } from "../../types"
 
-export function CodeProductEditor({ content, onChange }: EditorProps) {
+type CodeProductEditorProps = EditorProps & {
+  cardType?: CardType
+}
+
+export function CodeProductEditor({ cardType = "code-editor", content, onChange }: CodeProductEditorProps) {
   const title = typeof content.title === "string" ? content.title : ""
   const language = typeof content.language === "string" ? content.language : "javascript"
   const code = typeof content.code === "string" ? content.code : ""
@@ -60,7 +65,7 @@ export function CodeProductEditor({ content, onChange }: EditorProps) {
           </StudioSection>
         </div>
       )}
-      preview={<GenericEditorPreview cardType="code-editor" content={content} onTitleChange={(next) => onChange("title", next)} maxWidthClassName="max-w-4xl" />}
+      preview={<GenericEditorPreview cardType={cardType} content={content} onTitleChange={(next) => onChange("title", next)} />}
     />
   )
 }

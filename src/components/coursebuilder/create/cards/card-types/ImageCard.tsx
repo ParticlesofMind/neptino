@@ -1,20 +1,19 @@
 "use client"
 
 import type React from "react"
-import type { DroppedCard } from "../../types"
-
-interface ImageCardProps {
-  card: DroppedCard
-  onRemove?: () => void
-}
+import type { CardRenderProps } from "../CardRegistry"
+import { ResourceCardFrame } from "./ResourceCardFrame"
+import { PretextText } from "../../text/PretextText"
 
 type FitMode = "contain" | "cover" | "fill"
 type Preset  = "none" | "grayscale" | "sepia" | "invert"
 
-export function ImageCard({ card, onRemove }: ImageCardProps) {
+export function ImageCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const url         = (card.content["url"]         as string)  || ""
   const alt         = (card.content["alt"]         as string)  || ""
   const title       = (card.content["title"]       as string)  || ""
+  const caption     = (card.content["caption"]     as string)  || ""
+  const attribution = (card.content["attribution"] as string)  || ""
   const fitMode     = ((card.content["fitMode"]     as FitMode) || "contain")
   const flipH       = (card.content["flipH"]        as boolean) || false
   const flipV       = (card.content["flipV"]        as boolean) || false
@@ -49,23 +48,40 @@ export function ImageCard({ card, onRemove }: ImageCardProps) {
     filter: filterStr,
     transform: transformParts.length ? transformParts.join(" ") : undefined,
     opacity: opacity / 100,
-    maxHeight: card.dimensions.height || 200,
+    maxHeight: fillAvailable ? undefined : card.dimensions.height || 200,
   }
 
   return (
-    <div className="group relative rounded border border-neutral-200 bg-white shadow-sm overflow-hidden">
-      {onRemove && (
-        <button
-          onClick={onRemove}
-          className="absolute right-1 top-1 z-10 hidden h-5 w-5 items-center justify-center rounded bg-white/80 text-neutral-400 shadow hover:text-neutral-600 group-hover:flex"
-          aria-label="Remove"
-        >
-          &times;
-        </button>
-      )}
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable} bodyClassName="p-0">
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={alt || title || "Image"} className="block" style={imgStyle} />
+        <div className={["relative overflow-hidden", fillAvailable ? "h-full min-h-0" : ""].join(" ")}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt={alt || title || "Image"} className="block" style={imgStyle} />
+          {(caption || attribution) && (
+            <div className="absolute inset-x-0 bottom-0 border-t border-white/40 bg-white/95 px-3 py-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+              {caption && (
+                <PretextText
+                  text={caption}
+                  className="text-[11px] leading-relaxed text-neutral-700"
+                  tone="caption"
+                  fontSizePx={11}
+                  lineHeightPx={16}
+                  maxLines={3}
+                />
+              )}
+              {attribution && (
+                <PretextText
+                  text={attribution}
+                  className="mt-0.5 text-[10px] italic text-neutral-500"
+                  fontSizePx={10}
+                  lineHeightPx={14}
+                  maxLines={2}
+                  italic
+                />
+              )}
+            </div>
+          )}
+        </div>
       ) : (
         <div
           className="flex items-center justify-center bg-neutral-100 text-neutral-400 text-xs italic"
@@ -74,11 +90,6 @@ export function ImageCard({ card, onRemove }: ImageCardProps) {
           No image
         </div>
       )}
-      {title && (
-        <div className="px-2 py-1 text-[10px] text-neutral-500 border-t border-neutral-100">
-          {title}
-        </div>
-      )}
-    </div>
+    </ResourceCardFrame>
   )
 }

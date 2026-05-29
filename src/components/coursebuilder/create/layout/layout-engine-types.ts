@@ -6,4 +6,5 @@ export interface PageAssignment {
   objectiveRange?: { start: number; end?: number }
   taskRange?: { start: number; end?: number }
   cardRange?: { start: number; end?: number }
+  layoutSlotRange?: { cardId: string; start: number; end?: number }
 }

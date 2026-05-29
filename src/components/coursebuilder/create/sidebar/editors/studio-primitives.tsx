@@ -1,7 +1,9 @@
 export {
   SectionLabel,
+  StudioFieldGrid,
   StudioInput,
   StudioNumberInput,
+  StudioOptionsPanel,
   StudioSection,
   StudioSelect,
   StudioSlider,

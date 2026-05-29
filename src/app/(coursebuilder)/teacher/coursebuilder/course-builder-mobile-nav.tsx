@@ -18,7 +18,7 @@ export function CourseBuilderMobileNav({
   const setupSectionIds = getSetupSectionIds()
 
   return (
-    <div className="no-scrollbar flex shrink-0 items-center gap-0.5 overflow-x-auto border-t border-border bg-muted/5 px-1.5 py-1.5 md:hidden">
+    <div className="no-scrollbar flex h-14 shrink-0 items-center gap-1 overflow-x-auto border-t border-border bg-background px-2 py-1.5 md:hidden">
       {sections.flatMap((group) => group.items).map(({ id, label, icon: Icon }) => {
         const isSetupItem = setupSectionIds.includes(id)
         const isCompleted = Boolean(completedSetupSections[id])
@@ -32,21 +32,21 @@ export function CourseBuilderMobileNav({
             disabled={isLocked}
             aria-disabled={isLocked}
             title={label}
-            className={`relative flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg px-2.5 py-2 text-[10px] font-medium whitespace-nowrap transition-all duration-200 border ${
+            className={`relative flex h-10 min-w-10 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md px-2.5 font-sans text-[10px] font-medium whitespace-nowrap transition-colors duration-150 ${
               isLocked
-                ? "cursor-not-allowed border-border bg-muted/30 text-muted-foreground/70"
+                ? "cursor-not-allowed text-muted-foreground/60"
                 :
               isActive
-                ? "border-primary/30 bg-primary/10 text-primary"
-                : "border-border bg-background hover:border-primary/40 hover:bg-muted/30"
+                ? "bg-muted text-foreground"
+                : "hover:bg-muted/50"
             }`}
           >
-            <Icon className={`h-4 w-4 transition-colors ${
-              isActive && !isLocked ? "text-primary" : "text-muted-foreground"
+            <Icon className={`h-3.5 w-3.5 transition-colors ${
+              isActive && !isLocked ? "text-foreground" : "text-muted-foreground"
             }`} />
             <span className="hidden sm:block">{label}</span>
             {isSetupItem && isCompleted && (
-              <Check className="absolute right-1 top-1 h-3 w-3 text-primary" />
+              <Check className="absolute right-1 top-1 h-3 w-3 text-muted-foreground" />
             )}
           </button>
         )

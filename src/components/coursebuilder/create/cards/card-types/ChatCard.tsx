@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Bot, Loader2, RefreshCw, Send } from "lucide-react"
 import type { CardRenderProps } from "../CardRegistry"
 import { AVAILABLE_MODELS, DEFAULT_MODEL } from "@/lib/ollama/models"
+import { PretextText } from "../../text/PretextText"
 
 interface ChatMessage {
   role: "assistant" | "user"
@@ -25,7 +26,7 @@ function buildSystemPrompt(card: CardRenderProps["card"]): string {
   ].filter(Boolean).join("\n")
 }
 
-export function ChatCard({ card, onRemove }: CardRenderProps) {
+export function ChatCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const title = typeof card.content["title"] === "string" ? card.content["title"] : "Chat with character"
   const persona = typeof card.content["aiPersona"] === "string" ? card.content["aiPersona"] : "AI Tutor"
   const openingMessage = typeof card.content["openingMessage"] === "string"
@@ -84,8 +85,10 @@ export function ChatCard({ card, onRemove }: CardRenderProps) {
 
   return (
     <div
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
-      style={{ width: "100%", height: card.dimensions.height || 320 }}
+      className={[
+        "group relative flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm",
+        fillAvailable ? "h-full min-h-[inherit]" : "",
+      ].join(" ")}
     >
       {onRemove && (
         <button
@@ -130,7 +133,7 @@ export function ChatCard({ card, onRemove }: CardRenderProps) {
         </div>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-auto bg-[linear-gradient(180deg,#fbfdff_0%,#f8fafc_100%)] px-4 py-3">
+      <div className="min-h-0 flex-1 space-y-3 overflow-auto bg-[linear-gradient(180deg,#fbfdff_0%,#f8fafc_100%)] px-4 py-3">
         {messages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}
@@ -143,11 +146,21 @@ export function ChatCard({ card, onRemove }: CardRenderProps) {
             )}
             <div
               className={message.role === "assistant"
-                ? "max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 text-[12px] leading-5 text-neutral-700 shadow-sm"
-                : "max-w-[85%] rounded-2xl rounded-tr-sm bg-neutral-900 px-3 py-2 text-[12px] leading-5 text-white"
+                ? "max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 shadow-sm"
+                : "max-w-[85%] rounded-2xl rounded-tr-sm bg-neutral-900 px-3 py-2"
               }
             >
-              {message.content}
+              <PretextText
+                text={message.content}
+                className={message.role === "assistant"
+                  ? "text-[12px] leading-5 text-neutral-700"
+                  : "text-[12px] leading-5 text-white"
+                }
+                tone={message.role === "assistant" ? "soft" : "plain"}
+                fontSizePx={12}
+                lineHeightPx={20}
+                maxLines={fillAvailable ? undefined : 12}
+              />
             </div>
           </div>
         ))}
@@ -169,7 +182,14 @@ export function ChatCard({ card, onRemove }: CardRenderProps) {
                 onClick={() => void sendMessage(starter)}
                 className="block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-left text-[11px] text-neutral-600 shadow-sm hover:border-neutral-300 hover:bg-neutral-50"
               >
-                {starter}
+                <PretextText
+                  text={starter}
+                  className="text-[11px] text-neutral-600"
+                  fontSizePx={11}
+                  lineHeightPx={16}
+                  maxLines={2}
+                  preserveWhitespace={false}
+                />
               </button>
             ))}
           </div>

@@ -29,9 +29,22 @@ import {
   useSteadyLoading,
 } from "@/components/coursebuilder"
 import type { CourseCreatedData, CourseEssentials } from "@/components/coursebuilder/builder-types"
+import { createClient } from "@/lib/supabase/client"
+import { loadMembershipContexts } from "@/lib/institutions/client"
+import { resolveActiveInstitutionContext } from "@/lib/institutions/core"
 
 type EssentialsSettingsRow = {
   generation_settings: Record<string, unknown> | null
+}
+
+type ProgramOption = {
+  id: string
+  name: string
+}
+
+type ProgramPlacementRow = {
+  id: string
+  program_id: string
 }
 
 const CROP_ASPECT_OPTIONS = [
@@ -43,7 +56,7 @@ const CROP_ASPECT_OPTIONS = [
 
 type CropAspectValue = (typeof CROP_ASPECT_OPTIONS)[number]["value"]
 
-function buildEssentialsSnapshot(data: CourseEssentials, imageUrl: string | null) {
+function buildEssentialsSnapshot(data: CourseEssentials, imageUrl: string | null, programId: string) {
   return JSON.stringify({
     title: data.title.trim(),
     subtitle: data.subtitle.trim() || null,
@@ -52,9 +65,20 @@ function buildEssentialsSnapshot(data: CourseEssentials, imageUrl: string | null
     courseType: data.courseType,
     teacherId: data.teacherId,
     teacherName: data.teacherName,
+    institutionId: data.institutionId,
     institution: data.institution,
     imageUrl,
+    programId,
   })
+}
+
+function readCookie(name: string): string | null {
+  const prefix = `${name}=`
+  const found = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix))
+  return found ? decodeURIComponent(found.slice(prefix.length)) : null
 }
 
 async function makeCroppedImageFile(src: string, croppedAreaPixels: Area, fileName: string): Promise<File> {
@@ -154,6 +178,7 @@ export function EssentialsSection({
     courseType: initialData?.courseType ?? "",
     teacherId: initialData?.teacherId ?? "",
     teacherName: initialData?.teacherName ?? "",
+    institutionId: initialData?.institutionId ?? null,
     institution: initialData?.institution ?? "Independent",
     imageName: initialData?.imageName ?? null,
   })
@@ -162,6 +187,7 @@ export function EssentialsSection({
   const [isManualSaving, setIsManualSaving] = useState(false)
   const [showManualSaving, setShowManualSaving] = useState(false)
   const [createdCourseId, setCreatedCourseId] = useState<string | null>(null)
+  const [persistedImageUrl, setPersistedImageUrl] = useState<string | null>(initialData?.imageUrl ?? null)
   const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null)
   const [cropModalOpen, setCropModalOpen] = useState(false)
   const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null)
@@ -175,21 +201,33 @@ export function EssentialsSection({
   const imageRef = useRef<HTMLInputElement>(null)
   const imageFileRef = useRef<File | null>(null)
   const [teacherOptions, setTeacherOptions] = useState<Array<{ id: string; name: string }>>([])
-  const [institutionOptions, setInstitutionOptions] = useState<string[]>(["Independent"])
+  const [institutionOptions, setInstitutionOptions] = useState<Array<{ id: string | null; name: string }>>([
+    { id: null, name: "Independent" },
+  ])
+  const [programOptions, setProgramOptions] = useState<ProgramOption[]>([])
+  const [selectedProgramId, setSelectedProgramId] = useState("")
+  const [initialProgramId, setInitialProgramId] = useState("")
   const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
 
   const set = <K extends keyof CourseEssentials>(k: K, v: CourseEssentials[K]) =>
     setData((prev) => ({ ...prev, [k]: v }))
 
-  const initialImageUrl = initialData?.imageUrl ?? null
-  const previewImageUrl = imageObjectUrl ?? initialData?.imageUrl ?? null
+  const previewImageUrl = imageObjectUrl ?? persistedImageUrl
+  const selectedProgramName = programOptions.find((program) => program.id === selectedProgramId)?.name ?? ""
+  const dataRef = useRef(data)
+  const previewImageUrlRef = useRef(previewImageUrl)
 
   const currentSnapshot = useMemo(
-    () => buildEssentialsSnapshot(data, previewImageUrl),
-    [data, previewImageUrl],
+    () => buildEssentialsSnapshot(data, previewImageUrl, selectedProgramId),
+    [data, previewImageUrl, selectedProgramId],
   )
   const hasPendingImageUpload = Boolean(imageFileRef.current)
   const hasUnsavedChanges = hasPendingImageUpload || currentSnapshot !== lastPersistedSnapshot
+
+  useEffect(() => {
+    dataRef.current = data
+    previewImageUrlRef.current = previewImageUrl
+  }, [data, previewImageUrl])
 
   useEffect(() => {
     return () => {
@@ -205,7 +243,20 @@ export function EssentialsSection({
 
       const me = { id: user.id, name: getAuthUserDisplayName(user) }
       const metadataInstitution = getAuthUserInstitution(user)
-      const options = Array.from(new Set(["Independent", metadataInstitution, initialData?.institution ?? ""].filter(Boolean)))
+      const supabase = createClient()
+      const membershipContexts = await loadMembershipContexts(supabase, user.id).catch(() => [])
+      const activeContext = resolveActiveInstitutionContext(membershipContexts, readCookie("active_institution_id"))
+      const membershipOptions = membershipContexts.map((context) => ({
+        id: context.institutionId,
+        name: context.institutionName,
+      }))
+      const fallbackOptions = [{ id: null, name: metadataInstitution || initialData?.institution || "Independent" }]
+      const options = membershipOptions.length > 0 ? membershipOptions : fallbackOptions
+      const selected = initialData?.institutionId
+        ? options.find((option) => option.id === initialData.institutionId) ?? null
+        : activeContext
+          ? options.find((option) => option.id === activeContext.institutionId) ?? null
+          : options[0]
 
       setTeacherOptions([me])
       setInstitutionOptions(options)
@@ -213,10 +264,50 @@ export function EssentialsSection({
         ...prev,
         teacherId: prev.teacherId || me.id,
         teacherName: prev.teacherName || me.name,
-        institution: prev.institution || metadataInstitution || "Independent",
+        institutionId: prev.institutionId || selected?.id || null,
+        institution: prev.institution || selected?.name || metadataInstitution || "Independent",
       }))
     })()
-  }, [initialData?.institution])
+  }, [initialData?.institution, initialData?.institutionId])
+
+  useEffect(() => {
+    void (async () => {
+      if (!data.institutionId) {
+        setProgramOptions([])
+        setSelectedProgramId("")
+        setInitialProgramId("")
+        return
+      }
+
+      const supabase = createClient()
+      const { data: programs } = await supabase
+        .from("programs")
+        .select("id, name")
+        .eq("institution_id", data.institutionId)
+        .order("name", { ascending: true })
+
+      setProgramOptions((programs as ProgramOption[] | null) ?? [])
+
+      const activeCourseId = courseId ?? createdCourseId
+      if (!activeCourseId) {
+        setSelectedProgramId("")
+        setInitialProgramId("")
+        return
+      }
+
+      const { data: placementRows } = await supabase
+        .from("program_courses")
+        .select("id, program_id")
+        .eq("course_id", activeCourseId)
+        .limit(1)
+
+      const placement = ((placementRows as ProgramPlacementRow[] | null) ?? [])[0]
+      const programId = placement?.program_id ?? ""
+      setSelectedProgramId(programId)
+      setInitialProgramId(programId)
+      setLastPersistedSnapshot(buildEssentialsSnapshot(dataRef.current, previewImageUrlRef.current, programId))
+    })()
+  }, [courseId, createdCourseId, data.institutionId])
 
   const { loading, hasData } = useCourseRowLoader<EssentialsSettingsRow>({
     courseId: courseId ?? null,
@@ -242,11 +333,57 @@ export function EssentialsSection({
   })
 
   useEffect(() => {
-    setLastPersistedSnapshot(buildEssentialsSnapshot(data, previewImageUrl))
+    setLastPersistedSnapshot(buildEssentialsSnapshot(data, previewImageUrl, selectedProgramId))
+    setPersistedImageUrl(initialData?.imageUrl ?? null)
+    imageFileRef.current = null
+    if (imageObjectUrl) {
+      URL.revokeObjectURL(imageObjectUrl)
+      setImageObjectUrl(null)
+    }
     // Intentionally baseline on incoming/loaded course identity.
     // Subsequent edits will diverge currentSnapshot and enable saving.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, initialData])
+
+  const syncProgramPlacement = useCallback(async (activeCourseId: string, programId: string) => {
+    const supabase = createClient()
+
+    if (initialProgramId === programId) return
+
+    const { error: deleteError } = await supabase
+      .from("program_courses")
+      .delete()
+      .eq("course_id", activeCourseId)
+
+    if (deleteError) throw new Error(deleteError.message)
+
+    if (!programId) {
+      setInitialProgramId("")
+      return
+    }
+
+    const { data: lastRows, error: lastRowsError } = await supabase
+      .from("program_courses")
+      .select("sequence_index")
+      .eq("program_id", programId)
+      .order("sequence_index", { ascending: false })
+      .limit(1)
+
+    if (lastRowsError) throw new Error(lastRowsError.message)
+
+    const lastSequence = Number(((lastRows as Array<{ sequence_index: number }> | null) ?? [])[0]?.sequence_index ?? 0)
+    const { error: insertError } = await supabase
+      .from("program_courses")
+      .insert({
+        program_id: programId,
+        course_id: activeCourseId,
+        sequence_index: lastSequence + 1,
+        required: true,
+      })
+
+    if (insertError) throw new Error(insertError.message)
+    setInitialProgramId(programId)
+  }, [initialProgramId])
 
   const persistEssentials = useCallback(async (options?: { allowCreate?: boolean }) => {
     setError(null)
@@ -274,12 +411,9 @@ export function EssentialsSection({
         return
       }
 
-      let imageUrl: string | null = initialImageUrl
+      let imageUrl: string | null = persistedImageUrl
       if (imageFileRef.current) {
-        const uploadedImageUrl = await uploadCourseImage(imageFileRef.current, user.id)
-        if (uploadedImageUrl) {
-          imageUrl = uploadedImageUrl
-        }
+        imageUrl = await uploadCourseImage(imageFileRef.current, user.id)
       }
 
       const payload: Record<string, unknown> = {
@@ -289,6 +423,7 @@ export function EssentialsSection({
         course_language: data.language,
         course_type: data.courseType,
         teacher_id: data.teacherId,
+        institution_id: data.institutionId,
         institution: data.institution,
         course_image: imageUrl,
       }
@@ -308,10 +443,16 @@ export function EssentialsSection({
           markError()
           return
         }
+        await syncProgramPlacement(activeCourseId, selectedProgramId)
         generationSettingsRef.current = payload.generation_settings as Record<string, unknown>
         onCourseCreated(activeCourseId, { ...data, title: data.title.trim(), imageUrl })
         imageFileRef.current = null
-        setLastPersistedSnapshot(buildEssentialsSnapshot(data, imageUrl))
+        setPersistedImageUrl(imageUrl)
+        if (imageObjectUrl) {
+          URL.revokeObjectURL(imageObjectUrl)
+          setImageObjectUrl(null)
+        }
+        setLastPersistedSnapshot(buildEssentialsSnapshot(data, imageUrl, selectedProgramId))
       } else {
         if (!allowCreate) {
           markEmpty()
@@ -331,17 +472,24 @@ export function EssentialsSection({
           return
         }
         setCreatedCourseId(course.id)
+        await syncProgramPlacement(course.id, selectedProgramId)
         generationSettingsRef.current = generationSettingsPayload
         onCourseCreated(course.id, { ...data, title: data.title.trim(), imageUrl })
         imageFileRef.current = null
-        setLastPersistedSnapshot(buildEssentialsSnapshot(data, imageUrl))
+        setPersistedImageUrl(imageUrl)
+        if (imageObjectUrl) {
+          URL.revokeObjectURL(imageObjectUrl)
+          setImageObjectUrl(null)
+        }
+        setLastPersistedSnapshot(buildEssentialsSnapshot(data, imageUrl, selectedProgramId))
       }
 
       markSaved()
-    } catch {
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Failed to save course essentials.")
       markError()
     }
-  }, [data, courseId, createdCourseId, initialImageUrl, onCourseCreated, markEmpty, markError, markSaved, markSaving])
+  }, [data, courseId, createdCourseId, persistedImageUrl, imageObjectUrl, onCourseCreated, markEmpty, markError, markSaved, markSaving, selectedProgramId, syncProgramPlacement])
 
   useDebouncedChangeSave(() => {
     if (!(courseId ?? createdCourseId)) return
@@ -500,14 +648,34 @@ export function EssentialsSection({
               <FieldLabel>Institution</FieldLabel>
               <SelectInput
                 value={data.institution}
-                onChange={(e) => set("institution", e.target.value)}
+                onChange={(e) => {
+                  const selected = institutionOptions.find((option) => option.name === e.target.value)
+                  set("institution", e.target.value)
+                  set("institutionId", selected?.id ?? null)
+                }}
               >
                 <option value="">Select institution...</option>
                 {institutionOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
+                  <option key={option.id ?? option.name} value={option.name}>{option.name}</option>
                 ))}
               </SelectInput>
             </div>
+          </div>
+          <div>
+            <FieldLabel hint="optional">Add to Program</FieldLabel>
+            <SelectInput
+              value={selectedProgramId}
+              onChange={(e) => setSelectedProgramId(e.target.value)}
+              disabled={!data.institutionId || programOptions.length === 0}
+            >
+              <option value="">Standalone course</option>
+              {programOptions.map((program) => (
+                <option key={program.id} value={program.id}>{program.name}</option>
+              ))}
+            </SelectInput>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Programs are optional. You can also attach this course from Program Setup.
+            </p>
           </div>
           <div>
             <FieldLabel>Course Image</FieldLabel>
@@ -593,12 +761,13 @@ export function EssentialsSection({
               <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
                 {data.description || <span className="italic">No description yet.</span>}
               </p>
-              {(data.language || data.courseType || data.teacherName || data.institution) && (
+              {(data.language || data.courseType || data.teacherName || data.institution || selectedProgramName) && (
                 <div className="flex flex-wrap gap-2 pt-1.5">
                   {data.language && <CoursePreviewChip>{data.language}</CoursePreviewChip>}
                   {data.courseType && <CoursePreviewChip>{data.courseType}</CoursePreviewChip>}
                   {data.teacherName && <CoursePreviewChip>{data.teacherName}</CoursePreviewChip>}
                   {data.institution && <CoursePreviewChip>{data.institution}</CoursePreviewChip>}
+                  {selectedProgramName && <CoursePreviewChip>{selectedProgramName}</CoursePreviewChip>}
                 </div>
               )}
             </div>

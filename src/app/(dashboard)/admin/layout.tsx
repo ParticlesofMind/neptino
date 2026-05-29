@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { SignOutButton } from "@/components/auth/sign-out-button"
 import { DashboardShell } from "@/components/layout/dashboard-shell"
+import { resolveServerInstitutionContext } from "@/lib/institutions/server"
 
 export default async function AdminLayout({
   children,
@@ -15,6 +16,8 @@ export default async function AdminLayout({
     redirect("/login")
   }
 
+  const institutionContext = await resolveServerInstitutionContext(supabase, user.id)
+
   return (
     <DashboardShell
       brandHref="/admin"
@@ -25,6 +28,7 @@ export default async function AdminLayout({
         { href: "/admin/tutorials", label: "Tutorials" },
         { href: "/admin/messages", label: "Messages" },
       ]}
+      institutionContext={institutionContext}
       actions={<SignOutButton />}
     >
         {children}

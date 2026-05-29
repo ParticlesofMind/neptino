@@ -149,7 +149,7 @@ function DiagramEditorInner({ content, onChange }: DiagramEditorProps) {
 
   return (
     <EditorSplitLayout
-      sidebarWidthClassName="md:w-[26rem] xl:w-[30rem]"
+      sidebarWidthClassName="md:w-[30rem] md:flex-none xl:w-[32rem]"
       sidebar={(
         <div className="flex h-full flex-col overflow-auto bg-white">
           <div className="space-y-3 border-b border-neutral-100 px-4 py-4">
