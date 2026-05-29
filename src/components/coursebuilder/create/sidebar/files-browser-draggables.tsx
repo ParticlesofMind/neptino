@@ -8,6 +8,7 @@ import type { DragSourceData } from "../hooks/useCardDrop"
 import type { StudioCard } from "../store/makeLibraryStore"
 import type { CardId } from "../types"
 import { getSampleCardContent } from "../utils/cardDefaults"
+import { withDefaultSourceProvenance } from "@/lib/atlas/source-provenance"
 import {
   CARD_TYPE_COLORS,
   type LibraryItem,
@@ -59,7 +60,7 @@ export function DraggableUserCard({ card, onRemove }: { card: StudioCard; onRemo
       <button
         type="button"
         onClick={onRemove}
-        title="Remove block"
+        title="Remove card"
         className="absolute right-1.5 top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-neutral-200 text-neutral-500 hover:bg-destructive/10 hover:text-destructive group-hover:flex transition-colors"
       >
         <X size={10} />
@@ -74,7 +75,7 @@ export function DraggableItem({ item }: { item: LibraryItem }) {
     cardId: item.id,
     cardType: item.cardType,
     title: item.title,
-    content: getSampleCardContent(item.cardType, item.title),
+    content: withDefaultSourceProvenance(item.content ?? getSampleCardContent(item.cardType, item.title)),
   }
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -85,7 +86,6 @@ export function DraggableItem({ item }: { item: LibraryItem }) {
   const meta = CARD_TYPE_META[item.cardType]
   const colors = CARD_TYPE_COLORS[item.cardType]
   const Icon = TYPE_ICONS[item.cardType] ?? meta.icon
-  const typeLabel = TYPE_LABEL[item.cardType] ?? meta.label
 
   return (
     <div
@@ -104,7 +104,12 @@ export function DraggableItem({ item }: { item: LibraryItem }) {
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-medium text-foreground leading-tight line-clamp-2">{item.title}</p>
-        <p className="mt-0.5 text-[9px] uppercase tracking-wide font-semibold text-muted-foreground/70">{typeLabel}</p>
+        <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-muted-foreground/70">{item.description}</p>
+        {item.layoutLabel && (
+          <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60">
+            {item.layoutLabel} layout
+          </p>
+        )}
       </div>
     </div>
   )

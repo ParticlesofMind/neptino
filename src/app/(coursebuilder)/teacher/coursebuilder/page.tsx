@@ -9,7 +9,7 @@ import { SectionContent, PreviewView, LaunchView } from "./page-section-content"
 import { CourseBuilderTopBar } from "./course-builder-top-bar"
 import { CourseBuilderSidebarNav } from "./course-builder-sidebar-nav"
 import { CourseBuilderMobileNav } from "./course-builder-mobile-nav"
-import { getSetupSectionIds, type SectionId } from "./page-section-registry"
+import { ALL_SECTION_IDS, type SectionId } from "./page-section-registry"
 import { CURRICULUM_LOADER_SELECT } from "@/components/coursebuilder/sections/use-curriculum-loader"
 
 const VIEW_SURFACE_CLASS = "flex flex-1 min-h-0 overflow-hidden bg-background"
@@ -30,7 +30,13 @@ const SECTION_SELECTS: Record<string, string[]> = {
   integrations: ["integration_settings"],
   communication: ["communication_settings"],
   "page-setup": ["generation_settings"],
+  interface: ["course_layout"],
+  llm: ["generation_settings"],
+  context: [
+    "id, updated_at, course_name, course_description, course_language, course_type, institution_id, institution, teacher_id, generation_settings, classification_data, students_overview, schedule_settings, curriculum_data, course_layout, template_settings, visibility_settings, pricing_settings, marketplace_settings, integration_settings, communication_settings",
+  ],
   resources: ["generation_settings"],
+  "data-management": ["generation_settings,curriculum_data,template_settings"],
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -82,19 +88,17 @@ function CourseBuilderPageInner() {
   useEffect(() => {
     if (!courseId || view !== "setup") return
 
-    const setupSections = getSetupSectionIds()
+    const setupSections = ALL_SECTION_IDS
     const currentIdx = setupSections.indexOf(activeSection)
     const nextSectionId = currentIdx >= 0 ? setupSections[currentIdx + 1] : null
     const targets = [activeSection, nextSectionId].filter(Boolean) as string[]
 
-    // Warm all setup-section row queries once per course to remove first-hop loading flashes.
+    // Warm the immediately useful setup rows with the narrow select each section needs.
     if (prefetchedCourseIdRef.current !== courseId) {
       prefetchedCourseIdRef.current = courseId
-      for (const sectionId of setupSections) {
-        const selects = SECTION_SELECTS[sectionId] ?? []
-        for (const select of selects) {
-          void prefetchCourseRow(queryClient, courseId, select)
-        }
+      const selects = SECTION_SELECTS[activeSection] ?? []
+      for (const select of selects) {
+        void prefetchCourseRow(queryClient, courseId, select)
       }
     }
 

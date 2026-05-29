@@ -11,6 +11,7 @@ export interface CourseEssentials {
   courseType:  string
   teacherId:   string
   teacherName: string
+  institutionId: string | null
   institution: string
   imageName:   string | null
 }

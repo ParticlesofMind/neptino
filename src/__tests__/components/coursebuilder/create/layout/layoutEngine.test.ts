@@ -19,6 +19,7 @@ import type {
   CanvasId,
   CourseId,
   DroppedCardId,
+  BlockKey,
 } from "@/components/coursebuilder/create/types"
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -477,7 +478,7 @@ describe("computePageAssignments — topic splitting", () => {
       areaKind: "instruction",
       blockKey: "content",
       position: { x: 0, y: 0 },
-      dimensions: { width: 520, height: 120 },
+      dimensions: { width: 520, height: 360 },
       content: {
         slots: {
           0: [{
@@ -523,12 +524,14 @@ describe("computePageAssignments — topic splitting", () => {
     const topic = makeTopic("mixed-topic", "Mixed Topic", 1, 1)
     const task = topic.objectives[0]!.tasks[0]!
 
-    task.droppedCards = [
+    const scopedCards: Array<{ blockKey: BlockKey; order: number; suffix: string }> = [
       { blockKey: "assignment", order: 0, suffix: "assignment-a" },
       { blockKey: "content", order: 1, suffix: "content-a" },
       { blockKey: "assignment", order: 2, suffix: "assignment-b" },
       { blockKey: "content", order: 3, suffix: "content-b" },
-    ].map(({ blockKey, order, suffix }) => ({
+    ]
+
+    task.droppedCards = scopedCards.map(({ blockKey, order, suffix }) => ({
       id: `${task.id}-${suffix}` as DroppedCardId,
       cardId: `${task.id}-base-${suffix}` as CardId,
       cardType: "text-editor",

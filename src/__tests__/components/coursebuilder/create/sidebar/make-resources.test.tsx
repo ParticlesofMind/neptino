@@ -9,7 +9,7 @@ import type { CardType } from "@/components/coursebuilder/create/types"
 import { DEFAULT_POLY_PIZZA_MODEL } from "@/lib/poly-pizza-models"
 
 const RESOURCE_TYPES = CARD_SPECS
-  .filter((spec) => spec.group === "resources")
+  .filter((spec) => spec.group === "materials")
   .map((spec) => spec.cardType)
 
 const NETWORKED_PREVIEW_TYPES = new Set<CardType>([
@@ -103,14 +103,48 @@ const VALID_RESOURCE_CONTENT: Partial<Record<CardType, Record<string, unknown>>>
     pages: 12,
     excerpt: "Every body persists in its state of rest or uniform motion unless acted on by a force.",
   },
+  table: {
+    title: "Evidence matrix",
+    columns: ["Claim", "Evidence", "Source"],
+    rows: [["Boundary changed", "Map record", "Archive"]],
+  },
+  "source-excerpt": {
+    title: "Source passage",
+    excerpt: "This passage is used as evidence and carries citation metadata.",
+    context: "A short classroom-ready source context.",
+    locator: "p. 12",
+  },
+  citation: {
+    title: "Archive item",
+    creator: "Archive",
+    year: "2026",
+    sourceUrl: "https://example.com/source",
+    license: "CC0",
+  },
+  bibliography: {
+    title: "Source set",
+    entries: [{ title: "Archive item", creator: "Archive", year: "2026", url: "https://example.com/source", license: "CC0" }],
+  },
+  "gis-layer": {
+    title: "Boundary layer",
+    layerType: "boundary",
+    geometryType: "GeoJSON",
+    featureCount: 1,
+    dateRange: "1845",
+    geometryPrecision: "generalized polygon",
+  },
   timeline: {
     title: "History of the Internet",
     events: [{ date: "1969", label: "ARPANET", description: "The first packet-switched network nodes connect." }],
   },
+  legend: {
+    title: "Layer key",
+    items: [{ color: "#2563eb", label: "Boundary", description: "Political boundary" }],
+  },
 }
 
-describe("Make resources", () => {
-  it("keeps a dedicated profile for every resource card type", () => {
+describe("Make materials", () => {
+  it("keeps a dedicated profile for every material card type", () => {
     expect(RESOURCE_TYPES).toEqual([
       "text",
       "image",
@@ -126,7 +160,13 @@ describe("Make resources", () => {
       "chart",
       "diagram",
       "document",
+      "table",
+      "source-excerpt",
+      "citation",
+      "bibliography",
+      "gis-layer",
       "timeline",
+      "legend",
     ])
 
     for (const cardType of RESOURCE_TYPES) {
@@ -136,7 +176,7 @@ describe("Make resources", () => {
     }
   })
 
-  it("can create every resource from title plus meaningful content", () => {
+  it("can create every material from title plus meaningful content", () => {
     for (const cardType of RESOURCE_TYPES) {
       const content = VALID_RESOURCE_CONTENT[cardType]
       expect(content, cardType).toBeDefined()
@@ -144,7 +184,7 @@ describe("Make resources", () => {
     }
   })
 
-  it("renders concrete previews for every resource type", () => {
+  it("renders concrete previews for every material type", () => {
     for (const cardType of RESOURCE_TYPES) {
       const content = VALID_RESOURCE_CONTENT[cardType]
       const previewContent = cardType === "timeline"

@@ -7,6 +7,34 @@ export interface NormalizedTemplateConfig {
   name: string
   type: TemplateType
   fieldEnabled?: Partial<Record<string, Record<string, unknown>>>
+  builtIn?: boolean
+}
+
+export const BUILT_IN_TEMPLATE_ID_PREFIX = "neptino-default"
+
+const TEMPLATE_LABELS: Record<TemplateType, string> = {
+  lesson: "General Purpose Lesson",
+  certificate: "General Purpose Certificate",
+  quiz: "General Purpose Quiz",
+  assessment: "General Purpose Assessment",
+  exam: "General Purpose Exam",
+}
+
+export function getBuiltInTemplateId(type: TemplateType): string {
+  return `${BUILT_IN_TEMPLATE_ID_PREFIX}-${type}`
+}
+
+export function isBuiltInTemplateId(id: unknown): boolean {
+  return typeof id === "string" && id.startsWith(`${BUILT_IN_TEMPLATE_ID_PREFIX}-`)
+}
+
+export function createBuiltInTemplateConfigs(): NormalizedTemplateConfig[] {
+  return ALL_TEMPLATE_TYPES.map((type) => ({
+    id: getBuiltInTemplateId(type),
+    name: TEMPLATE_LABELS[type],
+    type,
+    builtIn: true,
+  }))
 }
 
 function isTemplateType(value: unknown): value is TemplateType {

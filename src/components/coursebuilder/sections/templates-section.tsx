@@ -16,6 +16,7 @@ import {
   type TemplateFieldState,
 } from "./template-fields"
 import { getDefaultBlocksForType, type TemplateDesignConfig } from "@/lib/curriculum/template-blocks"
+import { getBuiltInTemplateId, isBuiltInTemplateId } from "@/lib/curriculum/template-source-of-truth"
 import {
   CUSTOM_PARTITION_PRESET_ID,
   createNextCustomPartition,
@@ -40,6 +41,7 @@ interface TemplateSettingsShape {
     description?: string
     blocks: BlockId[]
     fieldState?: TemplateFieldState
+    builtIn?: boolean
   }>
 }
 
@@ -50,6 +52,38 @@ interface CurriculumShape {
 }
 
 export type SetupTemplateType = "lesson" | "certificate" | "quiz" | "assessment" | "exam"
+
+const BUILT_IN_TEMPLATE_LABELS: Record<SetupTemplateType, string> = {
+  lesson: "General Purpose Lesson",
+  certificate: "General Purpose Certificate",
+  quiz: "General Purpose Quiz",
+  assessment: "General Purpose Assessment",
+  exam: "General Purpose Exam",
+}
+
+const BUILT_IN_TEMPLATE_DESCRIPTIONS: Record<SetupTemplateType, string> = {
+  lesson: "Default Neptino lesson structure with program, resources, content, assignment, and footer blocks.",
+  certificate: "Default completion certificate with branding-ready header and footer.",
+  quiz: "Default quiz structure for knowledge checks, resources, scoring, and review.",
+  assessment: "Default assessment structure for criteria, evidence, scoring, and feedback.",
+  exam: "Default exam structure for summative evaluation and weighted scoring.",
+}
+
+function createBuiltInTemplateDefinition(type: SetupTemplateType): SavedTemplateDefinition {
+  return {
+    id: getBuiltInTemplateId(type),
+    type,
+    label: BUILT_IN_TEMPLATE_LABELS[type],
+    description: BUILT_IN_TEMPLATE_DESCRIPTIONS[type],
+    blocks: [...getDefaultBlocksForType(type)],
+    fieldState: createDefaultTemplateFieldState(type),
+    builtIn: true,
+  }
+}
+
+const BUILT_IN_TEMPLATE_DEFINITIONS: SavedTemplateDefinition[] = TEMPLATE_TYPES.map((type) =>
+  createBuiltInTemplateDefinition(type as SetupTemplateType),
+)
 
 function createTemplateDefinition(
   type: SetupTemplateType,
@@ -155,21 +189,19 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       setTemplateSettings(loadedSettings)
       setCurriculum(loadedCurriculum)
       curriculumRef.current = loadedCurriculum
-      // Restore fieldState and activeTemplateId from the active (or first)
-      // saved template so config panel and preview are in sync.
-      if (Array.isArray(loadedSettings.templates) && loadedSettings.templates.length > 0) {
-        const activeType = loadedSettings.active_template_type ?? "lesson"
-        const activeTemplate =
-          loadedSettings.templates.find((t) => t.id === loadedSettings.active_template_id) ??
-          loadedSettings.templates.find((t) => t.type === activeType) ??
-          loadedSettings.templates[0]
-        if (activeTemplate) {
-          skipFieldStateResetRef.current = true
-          if (activeTemplate.fieldState) setFieldState(activeTemplate.fieldState)
-          setActiveTemplateId(activeTemplate.id)
-          setSelectedTemplateType(activeTemplate.type)
-          setSelectedLoadTemplateId(activeTemplate.id)
-        }
+      const customTemplates = Array.isArray(loadedSettings.templates) ? loadedSettings.templates : []
+      const availableTemplates = [...BUILT_IN_TEMPLATE_DEFINITIONS, ...customTemplates]
+      const activeType = loadedSettings.active_template_type ?? "lesson"
+      const activeTemplate =
+        availableTemplates.find((t) => t.id === loadedSettings.active_template_id) ??
+        availableTemplates.find((t) => t.type === activeType) ??
+        availableTemplates[0]
+      if (activeTemplate) {
+        skipFieldStateResetRef.current = true
+        if (activeTemplate.fieldState) setFieldState(activeTemplate.fieldState)
+        setActiveTemplateId(activeTemplate.id)
+        setSelectedTemplateType(activeTemplate.type)
+        setSelectedLoadTemplateId(activeTemplate.id)
       }
       templateSettingsRef.current = loadedSettings
     },
@@ -180,9 +212,14 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     minVisibleMs: 220,
   })
 
-  const savedTemplates = useMemo(
+  const customTemplates = useMemo(
     () => (Array.isArray(templateSettings.templates) ? templateSettings.templates : []),
     [templateSettings.templates],
+  )
+
+  const savedTemplates = useMemo(
+    () => [...BUILT_IN_TEMPLATE_DEFINITIONS, ...customTemplates],
+    [customTemplates],
   )
 
   const selectedBlocks = getDefaultBlocksForType(selectedTemplateType)
@@ -325,6 +362,8 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     fieldStateSaveTimerRef.current = setTimeout(async () => {
       const currentSettings = templateSettingsRef.current
       let updatedActiveTemplate: SavedTemplateDefinition | null = null
+      if (isBuiltInTemplateId(aid)) return
+
       const updatedTemplates = (currentSettings.templates ?? []).map((t) => {
         if (t.id !== aid) return t
         updatedActiveTemplate = { ...t, fieldState }
@@ -372,7 +411,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       return
     }
     if (!courseId) return
-    const existingTemplates = Array.isArray(templateSettings.templates) ? templateSettings.templates : []
+    const existingTemplates = customTemplates
     const initialFieldState = createType === selectedTemplateType
       ? fieldState
       : createDefaultTemplateFieldState(createType)
@@ -397,7 +436,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setSelectedTemplateType(createType)
     setSelectedLoadTemplateId(newTemplate.id)
     setShowCreatePopup(false)
-  }, [courseId, createDescription, createName, createType, curriculum, fieldState, saveTemplateSettings, selectedTemplateType, templateSettings])
+  }, [courseId, createDescription, createName, createType, customTemplates, curriculum, fieldState, saveTemplateSettings, selectedTemplateType, templateSettings])
 
   const handleLoadTemplate = useCallback(async () => {
     const targetTemplate = savedTemplates.find((template) => template.id === selectedLoadTemplateId)
@@ -417,12 +456,12 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       ...templateSettings,
       active_template_type: targetTemplate.type,
       active_template_id: targetTemplate.id,
-      templates: savedTemplates,
+      templates: customTemplates,
     }
     const nextCurriculum = applyTemplateToSessionRows(curriculum, targetTemplate)
     await saveTemplateSettings(nextSettings, nextCurriculum)
     setShowLoadPopup(false)
-  }, [curriculum, saveTemplateSettings, savedTemplates, selectedLoadTemplateId, templateSettings])
+  }, [customTemplates, curriculum, saveTemplateSettings, savedTemplates, selectedLoadTemplateId, templateSettings])
 
   const openCreatePopup = useCallback(() => {
     setShowLoadPopup(false)
@@ -459,18 +498,24 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       ...templateSettings,
       active_template_type: targetTemplate.type,
       active_template_id: targetTemplate.id,
-      templates: savedTemplates,
+      templates: customTemplates,
     }
     const nextCurriculum = applyTemplateToSessionRows(curriculum, targetTemplate)
     await saveTemplateSettings(nextSettings, nextCurriculum)
     setMessage("Template applied.")
-  }, [curriculum, saveTemplateSettings, savedTemplates, templateSettings])
+  }, [customTemplates, curriculum, saveTemplateSettings, savedTemplates, templateSettings])
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
-    const remainingTemplates = savedTemplates.filter((t) => t.id !== templateId)
+    if (isBuiltInTemplateId(templateId)) {
+      setMessage("Built-in Neptino templates cannot be removed.")
+      return
+    }
+
+    const remainingTemplates = customTemplates.filter((t) => t.id !== templateId)
+    const availableAfterDelete = [...BUILT_IN_TEMPLATE_DEFINITIONS, ...remainingTemplates]
     const nextActiveTemplate = activeTemplateId === templateId
-      ? remainingTemplates[0]
-      : remainingTemplates.find((t) => t.id === activeTemplateId)
+      ? availableAfterDelete[0]
+      : availableAfterDelete.find((t) => t.id === activeTemplateId)
     const nextSettings: TemplateSettingsShape = {
       ...templateSettings,
       active_template_type: nextActiveTemplate?.type ?? templateSettings.active_template_type,
@@ -485,12 +530,12 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       }
     }
     await saveTemplateSettings(nextSettings)
-  }, [activeTemplateId, saveTemplateSettings, savedTemplates, templateSettings])
+  }, [activeTemplateId, customTemplates, saveTemplateSettings, templateSettings])
 
   return (
     <SetupSection
       title="Templates"
-      description="Create and configure reusable templates applied to course sessions."
+      description="Use Neptino's built-in defaults for every template type, or create reusable overrides."
       headerActions={(
         <TemplateHeaderActions
           canCreate={Boolean(courseId) && !saving}
@@ -552,6 +597,9 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                     <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Active template</span>
                     <span className="text-xs font-medium text-foreground">{activeTpl.label}</span>
                     <span className="rounded border border-border bg-background/70 px-1.5 py-0.5 text-[10px] text-muted-foreground capitalize">{activeTpl.type}</span>
+                    {activeTpl.builtIn && (
+                      <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">built-in</span>
+                    )}
                   </div>
                 ) : null
               })()}
@@ -569,6 +617,11 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                   onRemovePartition={handleRemovePartition}
                 />
                 {message && <p className="mt-3 text-xs text-muted-foreground">{message}</p>}
+                {activeTemplateId && isBuiltInTemplateId(activeTemplateId) && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Built-in templates are always available and cannot be deleted. Create a template to save custom field changes.
+                  </p>
+                )}
                 {!courseId && <p className="mt-2 text-xs text-muted-foreground">Create a course first to save templates.</p>}
               </div>
             </div>

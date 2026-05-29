@@ -14,10 +14,13 @@ import { FormEditor } from "./FormEditor"
 import { GamesEditor } from "./GamesEditor"
 import { ImageEditor } from "./ImageEditor"
 import { InteractiveEditor } from "./InteractiveEditor"
+import { LegendEditor } from "./LegendEditor"
 import { MapEditor } from "./MapEditor"
 import { Model3DEditor } from "./Model3DEditor"
 import { RichSimEditor } from "./RichSimEditor"
 import { SorterEditor } from "./SorterEditor"
+import { SourcePrimitiveEditor } from "./SourcePrimitiveEditor"
+import { SlidesEditor } from "./SlidesEditor"
 import { TableEditor } from "./TableEditor"
 import { TextEditor } from "./TextEditor"
 import { TextProductEditor } from "./TextProductEditor"
@@ -49,6 +52,10 @@ const EDITOR_RENDERERS: Partial<Record<CardType, EditorRenderer>> = {
   diagram: ({ content, onChange }) => <DiagramEditor content={content} onChange={onChange} />,
   map: ({ content, onChange }) => <MapEditor content={content} onChange={onChange} />,
   table: ({ content, onChange }) => <TableEditor content={content} onChange={onChange} />,
+  "source-excerpt": ({ cardType, content, onChange }) => <SourcePrimitiveEditor cardType={cardType} content={content} onChange={onChange} />,
+  citation: ({ cardType, content, onChange }) => <SourcePrimitiveEditor cardType={cardType} content={content} onChange={onChange} />,
+  bibliography: ({ cardType, content, onChange }) => <SourcePrimitiveEditor cardType={cardType} content={content} onChange={onChange} />,
+  "gis-layer": ({ cardType, content, onChange }) => <SourcePrimitiveEditor cardType={cardType} content={content} onChange={onChange} />,
   document: ({ content, onChange }) => <DocumentEditor content={content} onChange={onChange} />,
   media: ({ content, onChange }) => <DocumentEditor content={content} onChange={onChange} />,
   interactive: ({ content, onChange }) => <InteractiveEditor content={content} onChange={onChange} />,
@@ -63,7 +70,9 @@ const EDITOR_RENDERERS: Partial<Record<CardType, EditorRenderer>> = {
   "text-editor": ({ content, onChange }) => <TextProductEditor content={content} onChange={onChange} />,
   "code-editor": ({ cardType, content, onChange }) => <CodeProductEditor cardType={cardType} content={content} onChange={onChange} />,
   whiteboard: ({ content, onChange }) => <WhiteboardEditor content={content} onChange={onChange} />,
+  slides: ({ content, onChange }) => <SlidesEditor content={content} onChange={onChange} />,
   timeline: ({ content, onChange }) => <TimelineEditor content={content} onChange={onChange} />,
+  legend: ({ content, onChange }) => <LegendEditor content={content} onChange={onChange} />,
   "layout-split": ({ cardType, content, onChange }) => <LayoutTemplateEditor cardType={cardType} content={content} onChange={onChange} />,
   "layout-stack": ({ cardType, content, onChange }) => <LayoutTemplateEditor cardType={cardType} content={content} onChange={onChange} />,
   "layout-feature": ({ cardType, content, onChange }) => <LayoutTemplateEditor cardType={cardType} content={content} onChange={onChange} />,

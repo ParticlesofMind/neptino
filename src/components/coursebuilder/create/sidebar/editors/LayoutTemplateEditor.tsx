@@ -1,6 +1,6 @@
 "use client"
 
-import { useDndMonitor, useDraggable, useDroppable } from "@dnd-kit/core"
+import { DndContext, useDndMonitor, useDraggable, useDroppable } from "@dnd-kit/core"
 import { X } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
 
@@ -15,6 +15,8 @@ interface LayoutTemplateEditorProps {
   content: Record<string, unknown>
   onChange: (key: string, value: unknown) => void
 }
+
+type LayoutEditorSlotDraftEntry = CardType | { cardType: CardType; title?: string }
 
 interface LayoutEditorDragData {
   type: "layout-editor-item"
@@ -34,6 +36,35 @@ function slotAcceptsText(slot: SlotSpec): string {
   if (!slot.accepts.length) return "Any"
   if (slot.accepts.length > 6) return "Any"
   return slot.accepts.map((type) => CARD_TYPE_META[type].label).join(" / ")
+}
+
+function readSlotDraftCardType(entry: LayoutEditorSlotDraftEntry): CardType {
+  return typeof entry === "string" ? entry : entry.cardType
+}
+
+function readSlotDraftFromContent(content: Record<string, unknown>): Record<string, LayoutEditorSlotDraftEntry[]> {
+  const rawDraft = content.slotDraft
+  if (rawDraft && typeof rawDraft === "object") {
+    return rawDraft as Record<string, LayoutEditorSlotDraftEntry[]>
+  }
+
+  const rawSlots = content.slots
+  if (!rawSlots || typeof rawSlots !== "object") return {}
+
+  return Object.fromEntries(
+    Object.entries(rawSlots as Record<string, unknown>).map(([slotKey, entries]) => [
+      slotKey,
+      Array.isArray(entries)
+        ? entries.flatMap((entry): LayoutEditorSlotDraftEntry[] => {
+          if (!entry || typeof entry !== "object") return []
+          const card = entry as { cardType?: unknown; content?: Record<string, unknown> }
+          if (typeof card.cardType !== "string") return []
+          const title = typeof card.content?.title === "string" ? card.content.title : undefined
+          return [{ cardType: card.cardType as CardType, title }]
+        })
+        : [],
+    ]),
+  )
 }
 
 function isDropAllowed(slot: SlotSpec, droppedType: CardType): boolean {
@@ -81,7 +112,7 @@ function SlotDropzone({
   layoutCardType: CardType
   slot: SlotSpec
   slotKey: string
-  items: CardType[]
+  items: LayoutEditorSlotDraftEntry[]
   onRemove: (slotKey: string, index: number) => void
 }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -115,9 +146,11 @@ function SlotDropzone({
         </div>
       ) : (
         <div className="space-y-1">
-          {items.map((itemType, index) => {
+          {items.map((item, index) => {
+            const itemType = readSlotDraftCardType(item)
             const meta = CARD_TYPE_META[itemType]
-            const previewContent = getSampleCardContent(itemType, meta.label)
+            const itemTitle = typeof item === "string" ? meta.label : item.title ?? meta.label
+            const previewContent = getSampleCardContent(itemType, itemTitle)
             return (
               <div
                 key={`${slotKey}:${itemType}:${index}`}
@@ -128,7 +161,7 @@ function SlotDropzone({
                     <span className="flex h-4 w-4 items-center justify-center rounded border border-neutral-200 bg-neutral-50">
                       <meta.icon size={10} className="shrink-0 text-neutral-600" />
                     </span>
-                    <span className="truncate text-[10px] text-neutral-700">{meta.label}</span>
+                    <span className="truncate text-[10px] text-neutral-700">{itemTitle}</span>
                   </div>
                   <button
                     type="button"
@@ -151,21 +184,18 @@ function SlotDropzone({
   )
 }
 
-export function LayoutTemplateEditor({ cardType, content, onChange }: LayoutTemplateEditorProps) {
+function LayoutTemplateEditorContent({ cardType, content, onChange }: LayoutTemplateEditorProps) {
   const kind = isLayoutCardType(cardType) ? extractLayoutKind(cardType) : "split"
   const def = LAYOUT_DEFS[kind]
   const [message, setMessage] = useState<string>("")
 
   const slotDraft = useMemo(() => {
-    const raw = content.slotDraft
-    if (!raw || typeof raw !== "object") return {} as Record<string, CardType[]>
-    return raw as Record<string, CardType[]>
-  }, [content.slotDraft])
+    return readSlotDraftFromContent(content)
+  }, [content])
 
   const paletteTypes = useMemo(() => {
     return (Object.keys(CARD_TYPE_META) as CardType[])
       .filter((type) => !type.startsWith("layout-"))
-      .filter((type) => type !== "legend" && type !== "table")
   }, [])
 
   const removeFromSlot = useCallback((slotKey: string, index: number) => {
@@ -260,5 +290,13 @@ export function LayoutTemplateEditor({ cardType, content, onChange }: LayoutTemp
         </section>
       </div>
     </div>
+  )
+}
+
+export function LayoutTemplateEditor(props: LayoutTemplateEditorProps) {
+  return (
+    <DndContext>
+      <LayoutTemplateEditorContent {...props} />
+    </DndContext>
   )
 }

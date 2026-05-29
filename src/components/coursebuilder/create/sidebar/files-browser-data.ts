@@ -12,7 +12,6 @@ import {
   FileCode2,
   Film,
   ClipboardList,
-  FolderOpen,
   Gamepad2,
   Grid3X3,
   Grid3x2,
@@ -34,6 +33,7 @@ import {
   PanelLeftOpen,
   PenTool,
   PlayCircle,
+  Presentation,
   Rows2,
   Rows3,
   Sparkles,
@@ -41,93 +41,74 @@ import {
 } from "lucide-react"
 
 import type { CardId, CardType } from "../types"
+import {
+  buildCompositionPresetContent,
+  COMPOSITION_PRESETS,
+} from "./composition-presets"
+import { CARD_SPECS, GROUPS, SUBGROUPS, type CardGroup, type CardSubgroup } from "./make-panel-data"
 
 export interface Category {
-  id: string
+  id: CardGroup
   label: string
   Icon: ComponentType<{ size?: number; strokeWidth?: number }>
-  types: CardType[] | "all"
+  types: CardType[]
 }
 
 export interface LibraryItem {
   id: CardId
   cardType: CardType
   title: string
+  description: string
+  group: CardGroup
+  subgroup: CardSubgroup
+  content?: Record<string, unknown>
+  layoutLabel?: string
+}
+
+export interface PurposeFilter {
+  id: "all" | CardSubgroup
+  label: string
+  description: string
 }
 
 export const CATEGORIES: Category[] = [
-  { id: "all", label: "All", Icon: FolderOpen, types: "all" },
   {
-    id: "resources",
-    label: "Resources",
+    id: "materials",
+    label: "Materials",
     Icon: Layers,
-    types: ["text", "image", "audio", "video", "animation", "model-3d", "document", "map", "chart", "diagram", "dataset", "embed", "flashcards", "code-snippet", "timeline"],
+    types: CARD_SPECS.filter((spec) => spec.group === "materials").map((spec) => spec.cardType),
   },
   {
-    id: "activities",
-    label: "Activities",
+    id: "compositions",
+    label: "Compositions",
     Icon: Sparkles,
-    types: ["chat", "text-editor", "code-editor", "whiteboard", "interactive", "form", "voice-recorder", "sorter"],
-  },
-  {
-    id: "experiences",
-    label: "Experiences",
-    Icon: Gamepad2,
-    types: ["rich-sim", "village-3d", "games"],
+    types: CARD_SPECS.filter((spec) => spec.group === "compositions").map((spec) => spec.cardType),
   },
 ]
 
-export const LIBRARY_ITEMS: LibraryItem[] = [
-  { id: "lib-text-1" as CardId, cardType: "text", title: "Marie Curie: A Life of Discovery" },
-  { id: "lib-text-2" as CardId, cardType: "text", title: "Leonardo da Vinci: Renaissance Genius" },
-  { id: "lib-text-3" as CardId, cardType: "text", title: "The French Revolution: Causes and Effects" },
-  { id: "lib-text-4" as CardId, cardType: "text", title: "Natural Selection Explained" },
-  { id: "lib-img-1" as CardId, cardType: "image", title: "Renaissance Art Collection" },
-  { id: "lib-img-2" as CardId, cardType: "image", title: "Cell Division Diagram" },
-  { id: "lib-img-3" as CardId, cardType: "image", title: "Ottoman Empire Territory Map (1683)" },
-  { id: "lib-audio-1" as CardId, cardType: "audio", title: "Shakespeare in Conversation" },
-  { id: "lib-audio-2" as CardId, cardType: "audio", title: "Lecture: Cell Division" },
-  { id: "lib-vid-1" as CardId, cardType: "video", title: "The French Revolution Explained" },
-  { id: "lib-vid-2" as CardId, cardType: "video", title: "Evolution: Darwin's Theory" },
-  { id: "lib-vid-3" as CardId, cardType: "video", title: "Apollo 11 Launch Footage" },
-  { id: "lib-anim-1" as CardId, cardType: "animation", title: "Mitosis — Cell Division" },
-  { id: "lib-anim-2" as CardId, cardType: "animation", title: "Plate Tectonics Over 250 Million Years" },
-  { id: "lib-3d-1" as CardId, cardType: "model-3d", title: "Airplane — Poly Pizza" },
-  { id: "lib-3d-2" as CardId, cardType: "model-3d", title: "Cottage — Poly Pizza" },
-  { id: "lib-3d-3" as CardId, cardType: "model-3d", title: "Rocks — Poly Pizza" },
-  { id: "lib-doc-1" as CardId, cardType: "document", title: "Newton's Principia Mathematica (excerpt)" },
-  { id: "lib-doc-2" as CardId, cardType: "document", title: "Declaration of Independence (1776)" },
-  { id: "lib-doc-3" as CardId, cardType: "document", title: "Darwin's On the Origin of Species" },
-  { id: "lib-map-1" as CardId, cardType: "map", title: "World Population Density" },
-  { id: "lib-map-2" as CardId, cardType: "map", title: "Ottoman Empire at Peak Extent" },
-  { id: "lib-map-3" as CardId, cardType: "map", title: "Amazon Rainforest Coverage" },
-  { id: "lib-chart-1" as CardId, cardType: "chart", title: "Global Temperature Anomaly 1880–2020" },
-  { id: "lib-chart-2" as CardId, cardType: "chart", title: "CO₂ Emissions by Country (2023)" },
-  { id: "lib-chart-3" as CardId, cardType: "chart", title: "Human Population Growth 1800–2100" },
-  { id: "lib-diag-1" as CardId, cardType: "diagram", title: "Krebs Cycle" },
-  { id: "lib-diag-2" as CardId, cardType: "diagram", title: "French Revolution — Cause & Effect" },
-  { id: "lib-diag-3" as CardId, cardType: "diagram", title: "OSI Network Model" },
-  { id: "lib-table-1" as CardId, cardType: "table", title: "Climate Data 1850–2024" },
-  { id: "lib-table-2" as CardId, cardType: "table", title: "Periodic Table — First 20 Elements" },
-  { id: "lib-table-3" as CardId, cardType: "table", title: "WW2 Casualties by Country" },
-  { id: "lib-ds-1" as CardId, cardType: "dataset", title: "Amazon Rainforest Species Dataset" },
-  { id: "lib-ds-2" as CardId, cardType: "dataset", title: "NASA Exoplanet Archive (CSV)" },
-  { id: "lib-chat-product-1" as CardId, cardType: "chat", title: "Chat with Darwin" },
-  { id: "lib-chat-product-2" as CardId, cardType: "chat", title: "Ada Lovelace Coding Mentor" },
-  { id: "lib-text-editor-1" as CardId, cardType: "text-editor", title: "Writing studio" },
-  { id: "lib-code-editor-1" as CardId, cardType: "code-editor", title: "Code lab" },
-  { id: "lib-whiteboard-1" as CardId, cardType: "whiteboard", title: "Systems whiteboard" },
-  { id: "lib-sim-1" as CardId, cardType: "rich-sim", title: "Photosynthesis Process Simulation" },
-  { id: "lib-sim-2" as CardId, cardType: "rich-sim", title: "Newton's Cradle — Momentum Lab" },
-  { id: "lib-sim-3" as CardId, cardType: "rich-sim", title: "Wave Interference Simulator" },
-  { id: "lib-quiz-1" as CardId, cardType: "interactive", title: "French Revolution Knowledge Quiz" },
-  { id: "lib-quiz-2" as CardId, cardType: "interactive", title: "Marie Curie: Life and Discoveries Quiz" },
-  { id: "lib-quiz-3" as CardId, cardType: "interactive", title: "Photosynthesis Equation Quiz" },
-  { id: "lib-quiz-4" as CardId, cardType: "interactive", title: "Relativity: True or False" },
-  { id: "lib-game-1" as CardId, cardType: "games", title: "Cell Biology Vocabulary Match" },
-  { id: "lib-game-2" as CardId, cardType: "games", title: "Apollo 11 Mission Sequence" },
-  { id: "lib-game-3" as CardId, cardType: "games", title: "Periodic Elements Memory Game" },
-]
+export const PURPOSE_FILTERS: Record<CardGroup, PurposeFilter[]> = Object.fromEntries(
+  GROUPS.map((group) => [
+    group.id,
+    [
+      { id: "all", label: "All purposes", description: `All ${group.label.toLowerCase()}` },
+      ...SUBGROUPS[group.id],
+    ],
+  ]),
+) as Record<CardGroup, PurposeFilter[]>
+
+export const LIBRARY_ITEMS: LibraryItem[] = COMPOSITION_PRESETS.map((preset) => {
+  const layout = preset.layouts.find((option) => option.cardType === preset.defaultLayout) ?? preset.layouts[0]
+  return {
+    id: `composition-preset-${preset.id}` as CardId,
+    cardType: layout.cardType,
+    title: preset.title,
+    description: preset.description,
+    group: "compositions",
+    subgroup: preset.purpose,
+    content: buildCompositionPresetContent(preset, layout.cardType),
+    layoutLabel: layout.label,
+  }
+})
 
 export const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = {
   text: { bg: "bg-primary/10", text: "text-primary" },
@@ -146,6 +127,10 @@ export const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = 
   media: { bg: "bg-[#5c9970]/10", text: "text-[#5c9970]" },
   document: { bg: "bg-muted", text: "text-muted-foreground" },
   table: { bg: "bg-[#b87c5c]/10", text: "text-[#b87c5c]" },
+  "source-excerpt": { bg: "bg-primary/10", text: "text-primary" },
+  citation: { bg: "bg-muted", text: "text-muted-foreground" },
+  bibliography: { bg: "bg-[#a89450]/10", text: "text-[#a89450]" },
+  "gis-layer": { bg: "bg-[#5c9970]/10", text: "text-[#5c9970]" },
   "rich-sim": { bg: "bg-[#a89450]/10", text: "text-[#a89450]" },
   "village-3d": { bg: "bg-[#a89450]/10", text: "text-[#a89450]" },
   interactive: { bg: "bg-[#5c9970]/10", text: "text-[#5c9970]" },
@@ -157,6 +142,7 @@ export const CARD_TYPE_COLORS: Record<CardType, { bg: string; text: string }> = 
   "text-editor": { bg: "bg-primary/10", text: "text-primary" },
   "code-editor": { bg: "bg-muted", text: "text-foreground/70" },
   whiteboard: { bg: "bg-[#5c9970]/10", text: "text-[#5c9970]" },
+  slides: { bg: "bg-[#a89450]/10", text: "text-[#a89450]" },
   timeline: { bg: "bg-primary/10", text: "text-primary" },
   legend: { bg: "bg-[#5c9970]/10", text: "text-[#5c9970]" },
   "layout-split": { bg: "bg-muted", text: "text-muted-foreground" },
@@ -187,7 +173,9 @@ export const TYPE_LABEL: Partial<Record<CardType, string>> = {
   embed: "Embed",
   flashcards: "Flashcard Set",
   "code-snippet": "Code Snippet",
-  "rich-sim": "Simulation",
+  "source-excerpt": "Source Excerpt",
+  "gis-layer": "GIS Layer",
+  "rich-sim": "Embedded Simulator",
   "village-3d": "3D Scene",
   interactive: "Assessment",
   form: "Form",
@@ -197,6 +185,7 @@ export const TYPE_LABEL: Partial<Record<CardType, string>> = {
   "text-editor": "Writing Pad",
   "code-editor": "Code Editor",
   whiteboard: "Whiteboard",
+  slides: "Slides",
   "layout-split": "Split",
   "layout-stack": "Stack",
   "layout-feature": "Feature",
@@ -236,6 +225,10 @@ export const TYPE_ICONS: Partial<Record<CardType, ComponentType<{ size?: number;
   chart: LineChart,
   diagram: Network,
   table: Table2,
+  "source-excerpt": FileText,
+  citation: FileText,
+  bibliography: ClipboardList,
+  "gis-layer": Layers,
   dataset: Database,
   "rich-sim": Sparkles,
   interactive: HelpCircle,
@@ -247,6 +240,7 @@ export const TYPE_ICONS: Partial<Record<CardType, ComponentType<{ size?: number;
   "text-editor": FileText,
   "code-editor": Code2,
   whiteboard: PenTool,
+  slides: Presentation,
   "layout-split": Columns2,
   "layout-stack": Rows2,
   "layout-feature": Layout,

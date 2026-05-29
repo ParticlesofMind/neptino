@@ -34,6 +34,10 @@ export type CardType =
   | "media"
   | "document"
   | "table" // legacy standalone type; new create flow prefers dataset views
+  | "source-excerpt"
+  | "citation"
+  | "bibliography"
+  | "gis-layer"
   | "rich-sim"    // interactive simulation — canvas-backed
   | "village-3d"  // 3D exploration card — canvas-backed
   | "interactive" // assessment / interactive — canvas-backed
@@ -45,6 +49,7 @@ export type CardType =
   | "text-editor" // embedded writing workspace product
   | "code-editor" // embedded code workspace product
   | "whiteboard"  // embedded whiteboard product
+  | "slides"      // presentation deck composition
   | "timeline"    // chronological event timeline
   | "legend"      // legacy standalone legend; now treated as map/chart config
   | "layout-split"      // two equal columns

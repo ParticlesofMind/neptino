@@ -15,6 +15,7 @@
 
 import { useDraggable } from "@dnd-kit/core"
 import { GripVertical, X } from "lucide-react"
+import type { CSSProperties } from "react"
 import type { CanvasRenderMode, DroppedCard } from "../types"
 import { DEFAULT_CARD_REGISTRY, resolveCardRenderer } from "./CardRegistry"
 import type { CardRenderProps } from "./CardRegistry"
@@ -75,6 +76,8 @@ export function CardRenderer({
     cardType:            card.cardType,
     title:               typeof card.content["title"] === "string" ? card.content["title"] : undefined,
     content:             card.content,
+    position:            card.position,
+    dimensions:          card.dimensions,
     droppedCardId:       card.id,
     sourceTaskId:        card.taskId,
     sourceOrder:         card.order,
@@ -99,6 +102,12 @@ export function CardRenderer({
   const selectionRing = mode === "editor" && isSelected
     ? "ring-2 ring-primary ring-offset-1 rounded"
     : undefined
+  const cardStyle: CSSProperties | undefined = fillAvailable
+    ? undefined
+    : {
+        width: card.dimensions.width > 0 ? `min(100%, ${Math.round(card.dimensions.width)}px)` : undefined,
+        minHeight: card.dimensions.height > 0 ? Math.round(card.dimensions.height) : undefined,
+      }
 
   let content: React.ReactElement
   if (Component) {
@@ -117,6 +126,7 @@ export function CardRenderer({
         selectionRing,
         isDragging ? "opacity-40" : undefined,
       ].filter(Boolean).join(" ")}
+      style={cardStyle}
       onClick={handleClick}
     >
       {showEditorControls && (
@@ -143,8 +153,8 @@ export function CardRenderer({
           {onRemove && (
             <button
               type="button"
-              aria-label="Remove block"
-              title="Remove block"
+              aria-label="Remove card"
+              title="Remove card"
               onClick={(event) => {
                 event.stopPropagation()
                 onRemove()
@@ -169,10 +179,18 @@ export function CardRenderer({
 // Reuses the gallery-quality preview for types not yet backed by a dedicated
 // canvas renderer (audio, document, table, etc.) so curate stays aligned.
 
-function GenericDomCard({ card, onRemove }: CardRenderProps) {
+function GenericDomCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove}>
-      <CardTypePreview cardType={card.cardType} content={card.content} hideTitle />
+    <ResourceCardFrame
+      card={card}
+      onRemove={onRemove}
+      fillAvailable={fillAvailable}
+      className={fillAvailable ? "flex h-full min-h-[inherit] flex-col" : undefined}
+      bodyClassName={fillAvailable ? "min-h-0 flex-1 p-2.5" : "p-2.5"}
+    >
+      <div className={fillAvailable ? "h-full min-h-0" : undefined}>
+        <CardTypePreview cardType={card.cardType} content={card.content} hideTitle />
+      </div>
     </ResourceCardFrame>
   )
 }

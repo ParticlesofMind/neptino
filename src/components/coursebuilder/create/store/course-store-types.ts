@@ -10,6 +10,11 @@ import type {
 } from "../types"
 import type { PageAssignment } from "../layout/layoutEngine"
 
+export type DroppedCardUpdate = Partial<Pick<
+  DroppedCard,
+  "areaKind" | "blockKey" | "content" | "dimensions" | "order" | "position"
+>>
+
 export interface CourseState {
   sessions: CourseSession[]
   activeSessionId: SessionId | null
@@ -26,6 +31,12 @@ export interface CourseState {
     canvasId?: CanvasId | null,
   ) => void
   removeDroppedCard: (sessionId: SessionId, taskId: TaskId, cardId: string) => void
+  updateDroppedCard: (
+    sessionId: SessionId,
+    taskId: TaskId,
+    cardId: string,
+    patch: DroppedCardUpdate,
+  ) => void
 
   addCardToLayoutSlot: (
     sessionId: SessionId,

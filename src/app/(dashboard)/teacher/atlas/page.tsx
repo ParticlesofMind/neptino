@@ -6,6 +6,7 @@ import { AtlasMediaCard } from "./atlas-media-card"
 import { AtlasLargeCard } from "./atlas-large-card"
 import { AtlasSmallCard } from "./atlas-small-card"
 import { AtlasPagination } from "./atlas-pagination"
+import { AtlasRetrievalPanel } from "./atlas-retrieval-panel"
 import type { SearchParams } from "./atlas-page-utils"
 import { formatMetadataValue, capitalize, buildQueryString, buildTimelineEventsWithFallback, uniqueNonEmptyStrings } from "./atlas-page-utils"
 
@@ -29,6 +30,12 @@ export default async function TeacherAtlasPage({
           selectedType={d.selectedType} selectedSubtype={d.selectedSubtype} selectedLayer={d.selectedLayer}
           selectedMediaType={d.selectedMediaType} displayMode={d.displayMode}
           selectedEra={d.selectedEra} eraOptions={d.eraOptions} selectedOrder={d.selectedOrder}
+        />
+
+        <AtlasRetrievalPanel
+          overview={d.overview}
+          sourceStatuses={d.sourceStatuses}
+          initialQuery={d.queryText}
         />
 
         {/* Status bar */}

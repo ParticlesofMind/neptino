@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PublicShell } from '@/components/layout/public-shell'
 import { AuthErrorBanner, AuthInput, AuthSubmitButton } from '@/components/ui/auth-primitives'
+import { resolvePostAuthDestination } from '@/lib/institutions/client'
 
 const EmailIcon = (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2"
@@ -62,21 +63,16 @@ export default function LoginPage() {
       return
     }
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', authData.user.id)
-      .single()
-
-    const role = profile?.role ?? 'student'
-    if (nextPath) {
-      router.push(nextPath)
-    } else if (role === 'teacher') {
-      router.push('/teacher')
-    } else if (role === 'admin') {
-      router.push('/admin')
-    } else {
-      router.push('/student')
+    try {
+      const destination = await resolvePostAuthDestination({
+        supabase,
+        userId: authData.user.id,
+        nextPath,
+      })
+      router.push(destination)
+    } catch (membershipError) {
+      setError(membershipError instanceof Error ? membershipError.message : 'Unable to resolve your institution access.')
+      setLoading(false)
     }
   }
 

@@ -24,6 +24,8 @@ type AtlasClient = SupabaseClient
 
 export type AtlasImportRequest = {
   query: string
+  sourceId?: string | null
+  externalId?: string | null
   limit?: number
   includeAssets?: boolean
   promote?: boolean
@@ -41,15 +43,21 @@ export type AtlasImportResult = {
 }
 
 async function createImportJob(client: AtlasClient, request: AtlasImportRequest): Promise<string> {
+  const sourceId = normalizeImportSourceId(request.sourceId)
+  const importQuery = request.externalId
+    ? `${sourceId}:${request.externalId.trim().toUpperCase()}`
+    : request.query
+
   const { data, error } = await client
     .from("atlas_import_jobs")
     .insert({
-      source_id: "wikidata",
+      source_id: sourceId,
       job_kind: "import",
-      query: request.query,
+      query: importQuery,
       status: "running",
       started_at: new Date().toISOString(),
       metadata: {
+        external_id: request.externalId ?? null,
         include_assets: request.includeAssets ?? true,
         promote: request.promote ?? false,
         assemble_pack: request.assemblePack ?? false,
@@ -95,12 +103,43 @@ async function finishImportJob(
   }
 }
 
+export function normalizeWikidataExternalId(value: string): string | null {
+  const normalized = value.trim().toUpperCase()
+  return /^Q\d+$/.test(normalized) ? normalized : null
+}
+
+export function normalizeImportSourceId(value: string | null | undefined): string {
+  const normalized = value?.trim().toLowerCase()
+  return normalized || "wikidata"
+}
+
+export function resolveWikidataImportIds(request: Pick<AtlasImportRequest, "sourceId" | "externalId">): string[] | null {
+  const sourceId = normalizeImportSourceId(request.sourceId)
+  if (!request.externalId) {
+    return null
+  }
+  if (sourceId !== "wikidata") {
+    throw new Error(`Exact import is not implemented for ${sourceId}.`)
+  }
+
+  const wikidataId = normalizeWikidataExternalId(request.externalId)
+  if (!wikidataId) {
+    throw new Error("Wikidata exact import requires an externalId like Q12560.")
+  }
+  return [wikidataId]
+}
+
 export async function importWikidataAtlasQuery(
   client: AtlasClient,
   request: AtlasImportRequest,
 ): Promise<AtlasImportResult> {
   const query = request.query.trim()
-  if (query.length < 2) {
+  const sourceId = normalizeImportSourceId(request.sourceId)
+  if (sourceId !== "wikidata") {
+    throw new Error(`Import is not implemented for ${sourceId}.`)
+  }
+  const exactIds = resolveWikidataImportIds(request)
+  if (!exactIds && query.length < 2) {
     throw new Error("Import query must contain at least 2 characters.")
   }
 
@@ -119,8 +158,9 @@ export async function importWikidataAtlasQuery(
   }
 
   try {
-    const searchResults = await searchWikidataEntities(query, limit)
-    const qids = searchResults.map(wikidataEntityIdFromSearchItem).filter((value): value is string => Boolean(value))
+    const qids = exactIds ?? (
+      await searchWikidataEntities(query, limit)
+    ).map(wikidataEntityIdFromSearchItem).filter((value): value is string => Boolean(value))
     result.recordsSeen = qids.length
 
     for (const qid of qids) {

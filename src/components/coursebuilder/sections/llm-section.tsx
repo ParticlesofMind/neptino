@@ -1,47 +1,42 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { SetupSection } from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { createClient } from "@/lib/supabase/client"
+import {
+  SetupSection,
+  updateCourseById,
+  useCourseRowLoader,
+  useDebouncedChangeSave,
+} from "@/components/coursebuilder"
 import { AVAILABLE_MODELS, DEFAULT_MODEL, checkOllamaHealth, getModelInfo } from "@/lib/ollama/models"
 import { AlertCircle } from "lucide-react"
 
 export function LLMSection({ courseId }: { courseId: string | null }) {
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL)
   const [ollamaHealthy, setOllamaHealthy] = useState<boolean>(true)
-  const [checking, setChecking] = useState(true)
+  const [checkingHealth, setCheckingHealth] = useState(true)
   const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
 
-  // Check Ollama health and load saved model preference
+  const { loading: loadingSettings, hasData } = useCourseRowLoader<{ generation_settings: Record<string, unknown> | null }>({
+    courseId,
+    select: "generation_settings",
+    onLoaded: (row) => {
+      const settings = row.generation_settings ?? {}
+      generationSettingsRef.current = settings
+      const savedModel = (settings.selected_llm_model as string) ?? DEFAULT_MODEL
+      setSelectedModel(savedModel)
+    },
+  })
+
   useEffect(() => {
     const init = async () => {
-      setChecking(true)
+      setCheckingHealth(true)
       const healthy = await checkOllamaHealth()
       setOllamaHealthy(healthy)
-
-      // Load saved model preference
-      if (courseId) {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from("courses")
-          .select("generation_settings")
-          .eq("id", courseId)
-          .single()
-
-        if (!error && data?.generation_settings) {
-          const settings = data.generation_settings as Record<string, unknown>
-          generationSettingsRef.current = settings
-          const savedModel = (settings.selected_llm_model as string) ?? DEFAULT_MODEL
-          setSelectedModel(savedModel)
-        }
-      }
-
-      setChecking(false)
+      setCheckingHealth(false)
     }
 
-    init()
-  }, [courseId])
+    void init()
+  }, [])
 
   const handleSaveModel = useCallback(async () => {
     if (!courseId) {
@@ -49,17 +44,16 @@ export function LLMSection({ courseId }: { courseId: string | null }) {
     }
 
     try {
-      const supabase = createClient()
       const existingSettings = generationSettingsRef.current ?? {}
       const nextSettings = {
         ...existingSettings,
         selected_llm_model: selectedModel,
       }
 
-      const { error } = await supabase
-        .from("courses")
-        .update({ generation_settings: nextSettings, updated_at: new Date().toISOString() })
-        .eq("id", courseId)
+      const { error } = await updateCourseById(courseId, {
+        generation_settings: nextSettings,
+        updated_at: new Date().toISOString(),
+      })
 
       if (error) {
         console.error("Failed to save LLM selection:", error)
@@ -71,9 +65,10 @@ export function LLMSection({ courseId }: { courseId: string | null }) {
     }
   }, [courseId, selectedModel])
 
-  useDebouncedChangeSave(handleSaveModel, 800, Boolean(courseId))
+  useDebouncedChangeSave(handleSaveModel, 800, Boolean(courseId && hasData))
 
   const selectedModelInfo = getModelInfo(selectedModel)
+  const checking = checkingHealth || loadingSettings
 
   return (
     <SetupSection

@@ -17,12 +17,20 @@ const TimelineCardInner = dynamic(
   },
 )
 
-export function TimelineCard({ card, onRemove }: CardRenderProps) {
+export function TimelineCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const bodyHeight = Math.max(160, (card.dimensions.height || 220) - 58)
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove} bodyClassName="p-0">
-      <div style={{ width: "100%", height: bodyHeight }}>
+    <ResourceCardFrame
+      card={card}
+      onRemove={onRemove}
+      className={fillAvailable ? "flex h-full min-h-[inherit] flex-col" : undefined}
+      bodyClassName={fillAvailable ? "min-h-0 flex-1 p-0" : "p-0"}
+    >
+      <div
+        className={fillAvailable ? "h-full min-h-[inherit]" : undefined}
+        style={fillAvailable ? { width: "100%" } : { width: "100%", height: bodyHeight }}
+      >
         <TimelineCardInner content={card.content} />
       </div>
     </ResourceCardFrame>

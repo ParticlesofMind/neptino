@@ -1,18 +1,13 @@
 "use client"
 
 import type React from "react"
-import type { DroppedCard } from "../../types"
+import type { CardRenderProps } from "../CardRegistry"
 import { ResourceCardFrame } from "./ResourceCardFrame"
-
-interface ImageCardProps {
-  card: DroppedCard
-  onRemove?: () => void
-}
 
 type FitMode = "contain" | "cover" | "fill"
 type Preset  = "none" | "grayscale" | "sepia" | "invert"
 
-export function ImageCard({ card, onRemove }: ImageCardProps) {
+export function ImageCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const url         = (card.content["url"]         as string)  || ""
   const alt         = (card.content["alt"]         as string)  || ""
   const title       = (card.content["title"]       as string)  || ""
@@ -50,11 +45,11 @@ export function ImageCard({ card, onRemove }: ImageCardProps) {
     filter: filterStr,
     transform: transformParts.length ? transformParts.join(" ") : undefined,
     opacity: opacity / 100,
-    maxHeight: card.dimensions.height || 200,
+    maxHeight: fillAvailable ? undefined : card.dimensions.height || 200,
   }
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove} bodyClassName="p-0">
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable} bodyClassName="p-0">
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={alt || title || "Image"} className="block" style={imgStyle} />

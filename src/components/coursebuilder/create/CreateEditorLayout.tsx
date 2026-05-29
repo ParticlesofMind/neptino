@@ -5,9 +5,8 @@
  *
  * Top-level editor shell. Controls the active editing mode:
  *
- *   Curate — compose the lesson canvas (file browser + canvas + layers + toolbar)
- *   Make   — create new cards from scratch (card-type gallery)
- *   Fix    — review and repair cards (coming soon)
+ *   Canvas    — compose the lesson canvas (cards + canvas + Atlas)
+ *   Add Card — create new cards from scratch (card-type gallery)
  *
  * Props
  *   courseId  — UUID string or null (Zustand store handles the null case gracefully)
@@ -24,7 +23,6 @@ import {
   useSensors,
 } from "@dnd-kit/core"
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core"
-import { PanelLeft, PanelRight, Wrench } from "lucide-react"
 import { useIsMobile } from "@/components/coursebuilder/create/hooks/useIsMobile"
 
 import { MakePanel }         from "@/components/coursebuilder/create/sidebar/MakePanel"
@@ -52,7 +50,12 @@ import { useCreateModeStore }  from "./store/createModeStore"
 import { CanvasDebugPanel }    from "./canvas/CanvasDebugPanel"
 import { EditorNoticeBanner }  from "./notifications/EditorNoticeBanner"
 
-const PANEL_FIXED_WIDTH = 360
+const CARDS_PANEL_DEFAULT_WIDTH = 420
+const CARDS_PANEL_MIN_WIDTH = 300
+const CARDS_PANEL_MAX_WIDTH = 560
+const ATLAS_PANEL_DEFAULT_WIDTH = 360
+const ATLAS_PANEL_MIN_WIDTH = 300
+const ATLAS_PANEL_MAX_WIDTH = 520
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -73,20 +76,6 @@ import { ModeBar } from "./ModeBar"
 
 // (the previous ModeBar implementation was moved to ModeBar.tsx)
 
-// ─── Fix placeholder ──────────────────────────────────────────────────────────
-
-function FixView() {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-background p-6 text-muted-foreground">
-      <Wrench size={24} strokeWidth={1.5} />
-      <p className="text-sm font-medium text-foreground">Fix mode</p>
-      <p className="max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
-        Review and repair blocks on the canvas. Coming soon.
-      </p>
-    </div>
-  )
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function CreateEditorLayout({ courseId, className, showModeBar = true }: CreateEditorLayoutProps) {
@@ -95,13 +84,14 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
 
   const isMobile = useIsMobile()
 
-  const [cardsPanelWidth, setCardsPanelWidth] = useState(PANEL_FIXED_WIDTH)
+  const [cardsPanelWidth, setCardsPanelWidth] = useState(CARDS_PANEL_DEFAULT_WIDTH)
   const cardsPanelWidthRef = useRef(cardsPanelWidth)
 
-  const [atlasWidth, setAtlasWidth] = useState(PANEL_FIXED_WIDTH)
+  const [atlasWidth, setAtlasWidth] = useState(ATLAS_PANEL_DEFAULT_WIDTH)
   const atlasWidthRef = useRef(atlasWidth)
 
   const [viewportWidth, setViewportWidth] = useState(0)
+  const [showCanvasDebug, setShowCanvasDebug] = useState(false)
 
   useEffect(() => { cardsPanelWidthRef.current = cardsPanelWidth }, [cardsPanelWidth])
   useEffect(() => { atlasWidthRef.current = atlasWidth }, [atlasWidth])
@@ -114,40 +104,44 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
     return () => window.removeEventListener("resize", sync)
   }, [])
 
-  // Collapse both panels when switching to mobile; restore on desktop
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return
+    const frame = window.requestAnimationFrame(() => {
+      setShowCanvasDebug(new URLSearchParams(window.location.search).get("debugCanvas") === "1")
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+
+  // Collapse both panels on mobile. On desktop, keep Cards and Atlas available by default.
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (isMobile) {
         setCardsPanelWidth(0)
         setAtlasWidth(0)
       } else {
-        setCardsPanelWidth(PANEL_FIXED_WIDTH)
-        setAtlasWidth(PANEL_FIXED_WIDTH)
+        setCardsPanelWidth(CARDS_PANEL_DEFAULT_WIDTH)
+        setAtlasWidth(ATLAS_PANEL_DEFAULT_WIDTH)
       }
     })
 
     return () => window.cancelAnimationFrame(frame)
   }, [isMobile])
 
-  // Mobile tap-toggle (exclusive)
-  const toggleCards = useCallback(() => {
-    setCardsPanelWidth((prev) => {
-      if (prev === 0) { setAtlasWidth(0); return viewportWidth }
-      return 0
-    })
-  }, [viewportWidth])
-
-  const toggleAtlas = useCallback(() => {
-    setAtlasWidth((prev) => {
-      if (prev === 0) { setCardsPanelWidth(0); return viewportWidth }
-      return 0
-    })
-  }, [viewportWidth])
-
   const handleCloseMobilePanel = useCallback(() => {
     setCardsPanelWidth(0)
     setAtlasWidth(0)
   }, [])
+
+  const openCardsPanel = useCallback(() => {
+    setCardsPanelWidth(isMobile ? viewportWidth : CARDS_PANEL_DEFAULT_WIDTH)
+    if (isMobile) setAtlasWidth(0)
+  }, [isMobile, viewportWidth])
+
+  const openAtlasPanel = useCallback(() => {
+    setAtlasWidth(isMobile ? viewportWidth : ATLAS_PANEL_DEFAULT_WIDTH)
+    if (isMobile) setCardsPanelWidth(0)
+  }, [isMobile, viewportWidth])
 
   // Desktop drag handles — live preview while dragging, snap to fixed/closed on release
   const handleCardsResizeStart = useCallback((e: React.MouseEvent) => {
@@ -155,11 +149,13 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
     const startX = e.clientX
     const startWidth = cardsPanelWidthRef.current
     const onMove = (ev: MouseEvent) => {
-      setCardsPanelWidth(Math.max(0, Math.min(PANEL_FIXED_WIDTH, startWidth + ev.clientX - startX)))
+      setCardsPanelWidth(Math.max(0, Math.min(CARDS_PANEL_MAX_WIDTH, startWidth + ev.clientX - startX)))
     }
     const onUp = (ev: MouseEvent) => {
       const final = startWidth + ev.clientX - startX
-      setCardsPanelWidth(final > PANEL_FIXED_WIDTH / 2 ? PANEL_FIXED_WIDTH : 0)
+      setCardsPanelWidth(final >= CARDS_PANEL_MIN_WIDTH / 2
+        ? Math.max(CARDS_PANEL_MIN_WIDTH, Math.min(CARDS_PANEL_MAX_WIDTH, final))
+        : 0)
       document.removeEventListener("mousemove", onMove)
       document.removeEventListener("mouseup", onUp)
     }
@@ -172,11 +168,13 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
     const startX = e.clientX
     const startWidth = atlasWidthRef.current
     const onMove = (ev: MouseEvent) => {
-      setAtlasWidth(Math.max(0, Math.min(PANEL_FIXED_WIDTH, startWidth - (ev.clientX - startX))))
+      setAtlasWidth(Math.max(0, Math.min(ATLAS_PANEL_MAX_WIDTH, startWidth - (ev.clientX - startX))))
     }
     const onUp = (ev: MouseEvent) => {
       const final = startWidth - (ev.clientX - startX)
-      setAtlasWidth(final > PANEL_FIXED_WIDTH / 2 ? PANEL_FIXED_WIDTH : 0)
+      setAtlasWidth(final >= ATLAS_PANEL_MIN_WIDTH / 2
+        ? Math.max(ATLAS_PANEL_MIN_WIDTH, Math.min(ATLAS_PANEL_MAX_WIDTH, final))
+        : 0)
       document.removeEventListener("mousemove", onMove)
       document.removeEventListener("mouseup", onUp)
     }
@@ -255,35 +253,6 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
         {/* Top mode bar */}
         {showModeBar !== false && <ModeBar />}
 
-        {/* Mobile panel toggle bar — curate mode only, hidden above md */}
-        {mode === "curate" && (
-          <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border bg-background px-3 md:hidden">
-            <span className="flex-1 font-sans text-[11px] font-medium text-muted-foreground">Canvas</span>
-            <button
-              onClick={toggleCards}
-              title="Files browser"
-              className={`rounded-md border p-1.5 transition-colors ${
-                cardsPanelWidth > 0
-                  ? "border-primary/25 bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-              }`}
-            >
-              <PanelLeft size={15} strokeWidth={1.75} />
-            </button>
-            <button
-              onClick={toggleAtlas}
-              title="Atlas"
-              className={`rounded-md border p-1.5 transition-colors ${
-                atlasWidth > 0
-                  ? "border-primary/25 bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-              }`}
-            >
-              <PanelRight size={15} strokeWidth={1.75} />
-            </button>
-          </div>
-        )}
-
         {/* Mode bodies */}
         {mode === "curate" && (
           <div className="relative flex flex-1 min-h-0 overflow-hidden">
@@ -311,11 +280,12 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
               atlasWidth={atlasWidth}
               onResizeFilesStart={handleCardsResizeStart}
               onResizeAtlasStart={handleAtlasResizeStart}
+              onOpenFiles={openCardsPanel}
+              onOpenAtlas={openAtlasPanel}
               rightAttachedSlot={<PageNavStrip sessions={sessions} />}
               isMobile={isMobile}
               onCloseMobilePanel={handleCloseMobilePanel}
             />
-
 
           </div>
         )}
@@ -328,11 +298,6 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
           </div>
         )}
 
-        {mode === "fix" && (
-          <div className="flex flex-1 min-h-0">
-            <FixView />
-          </div>
-        )}
       </div>
 
       {/* Drag overlay — rendered on top of everything during a drag */}
@@ -340,8 +305,8 @@ export function CreateEditorLayout({ courseId, className, showModeBar = true }: 
         {activeDragData && <DragOverlayCard data={activeDragData} />}
       </DragOverlay>
 
-      {/* Dev debug panel — floating overlay, visible only in development */}
-      {process.env.NODE_ENV === "development" && <CanvasDebugPanel />}
+      {/* Dev debug panel — opt-in with ?debugCanvas=1. */}
+      {showCanvasDebug && <CanvasDebugPanel />}
     </DndContext>
   )
 }

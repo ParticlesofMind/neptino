@@ -6,7 +6,7 @@
  * Matches the original coursebuilder design:
  *   - "Layers" / "Navigation" tab row
  *   - Session meta header (module · session title · dropped asset count)
- *   - Block-level layer rows with drag-handle, eye toggle, protect icon
+ *   - Card-level layer rows with drag-handle, eye toggle, protect icon
  */
 
 import { useState } from "react"
@@ -15,7 +15,7 @@ import type { CourseSession, BlockKey } from "../types"
 import { useCanvasStore }         from "../store/canvasStore"
 import { resolveTemplatePartitions } from "@/lib/curriculum/template-partitions"
 
-// ─── Block → layer label map ──────────────────────────────────────────────────
+// ─── Block key to layer label map ─────────────────────────────────────────────
 
 interface LayerEntry {
   id:     string
@@ -26,7 +26,7 @@ interface LayerEntry {
 const BLOCK_LAYER_LABELS: Partial<Record<BlockKey, Array<{ suffix: string; label: string }>>> = {
   header:     [{ suffix: "header",      label: "Session Meta"     }],
   program:    [{ suffix: "program",     label: "Program"          }],
-  resources:  [{ suffix: "resources",   label: "Resources"        }],
+  resources:  [{ suffix: "resources",   label: "Materials"        }],
   scoring:    [{ suffix: "scoring",     label: "Scoring"          }],
   project:    [{ suffix: "project",     label: "Project"          }],
   footer:     [{ suffix: "footer",      label: "Footer Meta"      }],

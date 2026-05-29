@@ -1,14 +1,9 @@
 "use client"
 
-import type { DroppedCard } from "../../types"
+import type { CardRenderProps } from "../CardRegistry"
 import { ResourceCardFrame } from "./ResourceCardFrame"
 
-interface TextCardProps {
-  card: DroppedCard
-  onRemove?: () => void
-}
-
-export function TextCard({ card, onRemove }: TextCardProps) {
+export function TextCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const html = typeof card.content["text"] === "string" ? card.content["text"] : ""
   const text = html
     .replace(/<[^>]+>/g, " ")
@@ -18,7 +13,7 @@ export function TextCard({ card, onRemove }: TextCardProps) {
     .trim()
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove}>
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <p className="whitespace-pre-wrap text-xs leading-relaxed text-neutral-600">
         {text || <span className="italic text-neutral-400">Empty text card</span>}
       </p>

@@ -11,6 +11,8 @@ interface CurateOverlayPanelsProps {
   atlasWidth: number
   onResizeFilesStart: (event: React.MouseEvent) => void
   onResizeAtlasStart: (event: React.MouseEvent) => void
+  onOpenFiles: () => void
+  onOpenAtlas: () => void
   rightAttachedSlot?: React.ReactNode
   /** When true, show a close button inside each visible panel */
   isMobile?: boolean
@@ -18,7 +20,7 @@ interface CurateOverlayPanelsProps {
 }
 
 export function getCurateOverlayInset(width: number): number {
-  return width + HANDLE_INSET
+  return width > 0 ? width + HANDLE_INSET : 0
 }
 
 export function CurateOverlayPanels({
@@ -26,10 +28,15 @@ export function CurateOverlayPanels({
   atlasWidth,
   onResizeFilesStart,
   onResizeAtlasStart,
+  onOpenFiles,
+  onOpenAtlas,
   rightAttachedSlot,
   isMobile,
   onCloseMobilePanel,
 }: CurateOverlayPanelsProps) {
+  const filesCollapsed = filesWidth === 0
+  const atlasCollapsed = atlasWidth === 0
+
   return (
     <>
       <div className="absolute inset-y-0 left-0 z-20 flex">
@@ -40,11 +47,11 @@ export function CurateOverlayPanels({
         >
           {isMobile && filesWidth > 0 && (
             <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 px-3 py-2">
-              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Files</span>
+              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Cards</span>
               <button
                 onClick={onCloseMobilePanel}
                 className="p-1 rounded text-neutral-400 hover:text-neutral-700 transition-colors"
-                aria-label="Close files panel"
+                aria-label="Close cards panel"
               >
                 <X size={14} />
               </button>
@@ -57,19 +64,32 @@ export function CurateOverlayPanels({
         <div
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize blocks panel"
+          aria-label="Resize cards panel"
           data-testid="resize-files-panel-handle"
-          className="group relative -mx-1 hidden w-3 cursor-col-resize md:block"
+          title={filesCollapsed ? "Drag or click to open cards" : "Resize cards panel"}
+          className={[
+            "group relative z-30 cursor-col-resize",
+            filesCollapsed ? "w-4" : "-mx-1 w-3",
+          ].join(" ")}
           onMouseDown={onResizeFilesStart}
+          onClick={() => {
+            if (filesCollapsed) onOpenFiles()
+          }}
         >
-          <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
+          <div className={[
+            "pointer-events-none absolute left-1/2 top-1/2 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:ring-neutral-500/60",
+            filesCollapsed ? "w-3 shadow-sm" : "w-2 group-hover:w-2.5",
+          ].join(" ")} />
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-6 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-neutral-300/90 transition-colors group-hover:bg-neutral-600/80" />
         </div>
       </div>
 
       <div className="absolute inset-y-0 right-0 z-20 flex">
         {rightAttachedSlot ? (
-          <div className="pointer-events-none absolute inset-y-0 right-full flex items-center pr-2 z-30">
+          <div
+            data-testid="canvas-page-nav-rail"
+            className="pointer-events-none absolute inset-y-0 right-full flex items-center pr-2 z-30"
+          >
             <div className="pointer-events-auto">{rightAttachedSlot}</div>
           </div>
         ) : null}
@@ -80,10 +100,20 @@ export function CurateOverlayPanels({
           aria-orientation="vertical"
           aria-label="Resize Atlas panel"
           data-testid="resize-atlas-panel-handle"
-          className="group relative -mx-1 hidden w-3 cursor-col-resize md:block"
+          title={atlasCollapsed ? "Drag or click to open Atlas" : "Resize Atlas panel"}
+          className={[
+            "group relative z-30 cursor-col-resize",
+            atlasCollapsed ? "w-4" : "-mx-1 w-3",
+          ].join(" ")}
           onMouseDown={onResizeAtlasStart}
+          onClick={() => {
+            if (atlasCollapsed) onOpenAtlas()
+          }}
         >
-          <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:w-2.5 group-hover:ring-neutral-500/60" />
+          <div className={[
+            "pointer-events-none absolute left-1/2 top-1/2 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-1 ring-neutral-300/70 transition-all group-hover:ring-neutral-500/60",
+            atlasCollapsed ? "w-3 shadow-sm" : "w-2 group-hover:w-2.5",
+          ].join(" ")} />
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-6 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-neutral-300/90 transition-colors group-hover:bg-neutral-600/80" />
         </div>
 

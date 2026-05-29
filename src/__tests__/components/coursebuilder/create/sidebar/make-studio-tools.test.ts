@@ -38,6 +38,11 @@ describe("make studio profiles", () => {
       cameraPreset: "front",
       annotations: [],
     })
+    expect(getStudioDefaults("layout-split")).toMatchObject({
+      title: "Split composition",
+      slots: {},
+      slotDraft: {},
+    })
   })
 
   it("normalizes map layers from CSV into array", () => {
@@ -54,5 +59,21 @@ describe("make studio profiles", () => {
     })
 
     expect(content.layers).toEqual(["Labels", "Points"])
+  })
+
+  it("turns layout editor slot drafts into canvas-renderable slots", () => {
+    const content = buildStudioCardContent("layout-split", {
+      title: "Compare causes",
+      slotDraft: {
+        0: ["text"],
+        1: ["image"],
+      },
+    })
+
+    expect(content.slotDraft).toBeUndefined()
+    expect(content.slots).toMatchObject({
+      0: [expect.objectContaining({ cardType: "text", areaKind: "instruction" })],
+      1: [expect.objectContaining({ cardType: "image", areaKind: "instruction" })],
+    })
   })
 })

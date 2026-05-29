@@ -55,6 +55,7 @@ export function useCourseRowLoader<T>({
     queryKey: courseId ? makeCourseRowQueryKey(courseId, select) : ["coursebuilder", "course-row", "disabled", select],
     queryFn: () => fetchCourseRow<T>(courseId as string, select),
     enabled: Boolean(enabled && courseId),
+    refetchOnWindowFocus: false,
   })
 
   useLayoutEffect(() => {

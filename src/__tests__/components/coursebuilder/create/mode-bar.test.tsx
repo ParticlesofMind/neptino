@@ -8,28 +8,22 @@ describe("ModeBar", () => {
     useCreateModeStore.setState({ mode: "curate" })
   })
 
-  it("renders three buttons and highlights the active one", () => {
+  it("renders the available create modes and highlights the active one", () => {
     render(<ModeBar />)
-    const curate = screen.getByRole("button", { name: /curate/i })
-    const make = screen.getByRole("button", { name: /make/i })
-    const fix = screen.getByRole("button", { name: /fix/i })
+    const canvas = screen.getByRole("button", { name: /canvas/i })
+    const addCard = screen.getByRole("button", { name: /add card/i })
 
-    expect(curate).toHaveClass("rounded-md")
-    expect(curate).toHaveClass("border")
-    expect(curate).toHaveClass("border-primary/25")
-    expect(curate).toHaveClass("bg-primary/10")
-    expect(make).toHaveClass("border-transparent")
-    expect(fix).toHaveClass("border-transparent")
+    expect(canvas).toHaveClass("rounded-md")
+    expect(canvas).toHaveClass("bg-muted")
+    expect(canvas).toHaveClass("text-foreground")
+    expect(addCard).toHaveClass("text-muted-foreground")
+    expect(screen.queryByRole("button", { name: /fix/i })).toBeNull()
   })
 
   it("updates the store when a different mode is clicked", () => {
     render(<ModeBar />)
-    const make = screen.getByRole("button", { name: /make/i })
+    const make = screen.getByRole("button", { name: /add card/i })
     fireEvent.click(make)
     expect(useCreateModeStore.getState().mode).toBe("make")
-
-    const fix = screen.getByRole("button", { name: /fix/i })
-    fireEvent.click(fix)
-    expect(useCreateModeStore.getState().mode).toBe("fix")
   })
 })

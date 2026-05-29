@@ -606,7 +606,7 @@ test.describe("Coursebuilder create stress", () => {
   })
 
   test("seeds an existing course and stresses the create view", async ({ page }) => {
-    test.setTimeout(120_000)
+    test.setTimeout(180_000)
     fs.mkdirSync(OUTPUT_DIR, { recursive: true })
 
     const target = await resolveTargetCourse()
@@ -638,7 +638,7 @@ test.describe("Coursebuilder create stress", () => {
     await signInAsTeacher(page)
 
     const navigationStartedAt = Date.now()
-    await page.goto(`/teacher/coursebuilder?id=${target.id}&view=create`, {
+    await page.goto(`/teacher/coursebuilder?id=${target.id}&view=create&debugCanvas=1`, {
       waitUntil: "domcontentloaded",
     })
 
@@ -664,17 +664,18 @@ test.describe("Coursebuilder create stress", () => {
     await dragHorizontal(page, "resize-files-panel-handle", 160)
     await dragHorizontal(page, "resize-atlas-panel-handle", -160)
 
-    const zoomInButton = page.locator('button[title="Zoom in (+10%)"]')
-    const zoomOutButton = page.locator('button[title="Zoom out (−10%)"]')
-    await zoomInButton.click()
-    await zoomInButton.click()
-    await zoomOutButton.click()
+    await page.keyboard.press("Control+=")
+    await page.keyboard.press("Control+=")
+    await page.keyboard.press("Control+-")
 
     await page.waitForTimeout(2_500)
 
     const summaryAfterHeavy = await captureSettledSummaryFromClipboard(page)
     const statsAfterHeavy = await fetchPersistedStats(target.id)
     const domOverflowAfterHeavy = await captureDomOverflowSummary(page)
+    await page.evaluate(() => window.dispatchEvent(new Event("beforeprint")))
+    const printPageCount = await page.getByTestId("canvas-print-page").count()
+    await page.evaluate(() => window.dispatchEvent(new Event("afterprint")))
 
     await page.screenshot({
       path: path.join(OUTPUT_DIR, "coursebuilder-create-stress-heavy.png"),
@@ -707,6 +708,7 @@ test.describe("Coursebuilder create stress", () => {
         statsBeforeBrowser,
         statsAfterHeavy,
         domOverflowAfterHeavy,
+        printPageCount,
       },
       debugSummaryBeforeHeavy: summaryBeforeHeavy,
       debugSummaryAfterHeavy: summaryAfterHeavy,
@@ -724,5 +726,6 @@ test.describe("Coursebuilder create stress", () => {
 
     expect(statsAfterHeavy.cards).toBeGreaterThanOrEqual(EXPECTED_TOTAL_AFTER_HEAVY)
     expect(domOverflowAfterHeavy.overflowCount).toBe(0)
+    expect(printPageCount).toBe(statsAfterHeavy.canvases)
   })
 })

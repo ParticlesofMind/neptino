@@ -17,14 +17,16 @@
  * TanStack Virtual renders only the 2-3 visible rows at any time.
  */
 
-import { useRef, useMemo, useEffect, useLayoutEffect, useCallback, useState } from "react"
+import { useRef, useMemo, useEffect, useLayoutEffect, useCallback, useState, type CSSProperties } from "react"
+import { flushSync } from "react-dom"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import type { CanvasRenderMode, CourseSession, CanvasPage, CanvasId, PageDimensions } from "../types"
+import type { CanvasRenderMode, CourseSession, CanvasPage, CanvasId, PageDimensions, SessionId } from "../types"
 import { DEFAULT_PAGE_DIMENSIONS } from "../types"
 import { CanvasPage as CanvasPageView } from "./CanvasPage"
 import { useCanvasStore }    from "../store/canvasStore"
 import { CanvasControlsStrip } from "./CanvasControlsStrip"
 import { useLayoutEngine } from "../hooks/useLayoutEngine"
+import { useCourseStore } from "../store/courseStore"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -39,12 +41,49 @@ const COMPACT_PAGE_H_PADDING = 16
 // panel edges.
 const FIT_EXTRA_RESERVE = 64
 const OVERLAY_STRIP_WIDTH = 56
+const PRINT_CSS_PX_PER_IN = 96
+const PRINT_PAGE_CANDIDATES = [
+  { size: "a4", orientation: "portrait", widthMm: 210, heightMm: 297 },
+  { size: "a4", orientation: "landscape", widthMm: 297, heightMm: 210 },
+  { size: "us-letter", orientation: "portrait", widthMm: 215.9, heightMm: 279.4 },
+  { size: "us-letter", orientation: "landscape", widthMm: 279.4, heightMm: 215.9 },
+] as const
+type PrintPageCandidate = (typeof PRINT_PAGE_CANDIDATES)[number]
 const SCROLL_TO_CANVAS_EVENT = "coursebuilder:scroll-to-canvas"
 // Render enough extra rows so continuation canvas pages (created dynamically by
 // useCanvasOverflow splits) are mounted and measured before the user scrolls to
 // them.  Each session may need several overflow splits to converge, so keeping
 // a buffer of 5 extra rows ensures cascading splits happen without manual scrolling.
 const OVERSCAN = 5
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return Boolean(target.closest("input, textarea, select, [contenteditable='true']"))
+}
+
+function resolvePrintPageSize(dims: PageDimensions): { widthMm: number; heightMm: number } {
+  const ratio = dims.heightPx / Math.max(1, dims.widthPx)
+  let closest: PrintPageCandidate = PRINT_PAGE_CANDIDATES[0]
+  let closestScore = Number.POSITIVE_INFINITY
+
+  for (const candidate of PRINT_PAGE_CANDIDATES) {
+    const candidateRatio = candidate.heightMm / candidate.widthMm
+    const score = Math.abs(candidateRatio - ratio)
+    if (score < closestScore) {
+      closest = candidate
+      closestScore = score
+    }
+  }
+
+  return {
+    widthMm: closest.widthMm,
+    heightMm: closest.heightMm,
+  }
+}
+
+function printCssPxForMm(mm: number): number {
+  return (mm / 25.4) * PRINT_CSS_PX_PER_IN
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -139,6 +178,70 @@ function SessionLayoutSyncer({
   return null
 }
 
+function CanvasPrintDocument({
+  sessions,
+  dims,
+  bodyData,
+}: {
+  sessions: CourseSession[]
+  dims: PageDimensions
+  bodyData: Record<string, Record<string, unknown>>
+}) {
+  const printPageSize = resolvePrintPageSize(dims)
+  const printScale = printCssPxForMm(printPageSize.widthMm) / dims.widthPx
+  const style = {
+    "--canvas-print-page-width": `${printPageSize.widthMm}mm`,
+    "--canvas-print-page-height": `${printPageSize.heightMm}mm`,
+  } as CSSProperties
+
+  let virtualIndex = 0
+  const printPages = sessions.flatMap((session) => {
+    const seenCanvasIds = new Set<string>()
+    const uniqueCanvases = session.canvases.filter((page) => {
+      if (seenCanvasIds.has(page.id)) return false
+      seenCanvasIds.add(page.id)
+      return true
+    })
+    const total = uniqueCanvases.length
+
+    return uniqueCanvases.map((page, pageIndex) => ({
+      page,
+      session,
+      fieldValues: makeFieldValues(session, pageIndex, total),
+      virtualIndex: virtualIndex++,
+    }))
+  })
+
+  return (
+    <div
+      className="canvas-print-document"
+      data-testid="canvas-print-document"
+      style={style}
+      aria-label="Printable canvas pages"
+    >
+      {printPages.map(({ page, session, fieldValues, virtualIndex: pageVirtualIndex }) => (
+        <div
+          key={`print:${page.id}`}
+          className="canvas-print-page-shell"
+          data-testid="canvas-print-page"
+        >
+          <CanvasPageView
+            page={page}
+            session={session}
+            dims={dims}
+            scale={printScale}
+            fieldValues={fieldValues}
+            bodyData={bodyData}
+            virtualIndex={pageVirtualIndex}
+            disableOverflow
+            renderMode="preview"
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Virtualizer ──────────────────────────────────────────────────────────────
 
 export function CanvasVirtualizer({
@@ -152,21 +255,32 @@ export function CanvasVirtualizer({
 }: CanvasVirtualizerProps) {
   const scrollParentRef = useRef<HTMLDivElement>(null)
   const zoomLevel       = useCanvasStore((s) => s.zoomLevel)
+  const setZoom         = useCanvasStore((s) => s.setZoom)
+  const stepZoom        = useCanvasStore((s) => s.stepZoom)
+  const resetView       = useCanvasStore((s) => s.resetView)
   const debugMountAllCanvases = useCanvasStore((s) => s.debugMountAllCanvases)
   const panOffset       = useCanvasStore((s) => s.panOffset)
+  const activeCanvasId  = useCanvasStore((s) => s.activeCanvasId)
+  const viewportCanvasId = useCanvasStore((s) => s.viewportCanvasId)
   const panOffsetRef    = useRef(panOffset)
+  const zoomLevelRef    = useRef(zoomLevel)
   panOffsetRef.current  = panOffset
+  zoomLevelRef.current  = zoomLevel
   const activeTool      = useCanvasStore((s) => s.activeTool)
+  const setActiveTool   = useCanvasStore((s) => s.setActiveTool)
   const setPan          = useCanvasStore((s) => s.setPan)
   const setFitScale     = useCanvasStore((s) => s.setFitScale)
+  const setActiveCanvas = useCanvasStore((s) => s.setActiveCanvas)
   const setViewportCanvas = useCanvasStore((s) => s.setViewportCanvas)
+  const setActiveSession = useCourseStore((s) => s.setActiveSession)
 
   const clearSelection = useCanvasStore((s) => s.clearSelection)
 
   // Pan interaction tracking refs (no re-renders)
   const [isPanning, setIsPanning] = useState(false)
   const [viewportWidth, setViewportWidth] = useState(0)
-  const panStartRef   = useRef({ clientX: 0, panX: 0 })
+  const [printRenderActive, setPrintRenderActive] = useState(false)
+  const panStartRef   = useRef({ clientX: 0, clientY: 0, panX: 0, panY: 0 })
   const suppressScrollSyncRef = useRef(false)
   const isPanTool     = activeTool === "pan"
 
@@ -201,27 +315,62 @@ export function CanvasVirtualizer({
     setFitScale(fitScale)
   }, [fitScale, setFitScale])
 
+  useEffect(() => {
+    const preparePrint = () => {
+      flushSync(() => setPrintRenderActive(true))
+    }
+    const finishPrint = () => setPrintRenderActive(false)
+    const printMedia = window.matchMedia?.("print")
+    const handlePrintMediaChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        preparePrint()
+      } else {
+        finishPrint()
+      }
+    }
+
+    window.addEventListener("beforeprint", preparePrint)
+    window.addEventListener("afterprint", finishPrint)
+    printMedia?.addEventListener("change", handlePrintMediaChange)
+
+    return () => {
+      window.removeEventListener("beforeprint", preparePrint)
+      window.removeEventListener("afterprint", finishPrint)
+      printMedia?.removeEventListener("change", handlePrintMediaChange)
+    }
+  }, [])
+
   const effectiveScale     = fitScale * (zoomLevel / 100)
   const canvasDisplayWidth = Math.ceil(dims.widthPx * effectiveScale)
+  const workspaceWidth = useMemo(
+    () => Math.max(1, viewportWidth - leftWorkspaceInset - rightWorkspaceInset),
+    [leftWorkspaceInset, rightWorkspaceInset, viewportWidth],
+  )
 
-  // Content must be wide enough to allow horizontal scrolling when zoomed in past the
-  // available workspace.  Panels are pure overlays — they don't affect content width
-  // or the canvas center position.
+  // Content must be wide enough to allow horizontal scrolling when zoomed in past
+  // the unobstructed workspace between overlay panels and page-navigation rails.
   const contentWidth = useMemo(
     () => Math.max(
       viewportWidth,
-      pageHorizontalPadding * 2 + canvasDisplayWidth,
+      leftWorkspaceInset + rightWorkspaceInset + pageHorizontalPadding * 2 + canvasDisplayWidth,
     ),
-    [canvasDisplayWidth, pageHorizontalPadding, viewportWidth],
+    [canvasDisplayWidth, leftWorkspaceInset, pageHorizontalPadding, rightWorkspaceInset, viewportWidth],
   )
 
-  // Center the page in the full viewport.  Panels are absolutely-positioned overlays
-  // so they never shift the canvas — the page is always at 50% of the scroll viewport.
-  // scrollLeft = (contentWidth - viewportWidth) / 2 keeps the canvas pinned at center
-  // even when zoomed in (contentWidth > viewportWidth).
+  // Center the page inside the visible workspace lane, not the full browser
+  // viewport. This keeps the page away from side panels and navigation rails.
   const pageLeftInContent = useMemo(
-    () => Math.round((contentWidth - canvasDisplayWidth) / 2),
-    [canvasDisplayWidth, contentWidth],
+    () => {
+      const innerWorkspaceWidth = Math.max(1, workspaceWidth - pageHorizontalPadding * 2)
+      if (canvasDisplayWidth <= innerWorkspaceWidth) {
+        return Math.round(
+          leftWorkspaceInset + pageHorizontalPadding + (innerWorkspaceWidth - canvasDisplayWidth) / 2,
+        )
+      }
+
+      return Math.round(leftWorkspaceInset + pageHorizontalPadding)
+    },
+    [canvasDisplayWidth, leftWorkspaceInset, pageHorizontalPadding, workspaceWidth],
   )
 
   const clampPanXToBounds = useCallback((candidatePanX: number, viewportClientWidth: number) => {
@@ -229,13 +378,24 @@ export function CanvasVirtualizer({
     return Math.min(Math.max(0, candidatePanX), maxPanX)
   }, [contentWidth])
 
-  // The centred scroll offset is half the total overflow.
+  const clampPanYToBounds = useCallback((candidatePanY: number, el: HTMLDivElement) => {
+    const maxPanY = Math.max(0, el.scrollHeight - el.clientHeight)
+    return Math.min(Math.max(0, candidatePanY), maxPanY)
+  }, [])
+
+  const workspaceCenterInViewport = useCallback((viewportClientWidth: number) => {
+    const width = Math.max(1, viewportClientWidth - leftWorkspaceInset - rightWorkspaceInset)
+    return leftWorkspaceInset + width / 2
+  }, [leftWorkspaceInset, rightWorkspaceInset])
+
+  // Keep the rendered page center aligned to the unobstructed workspace center.
   const computeCenteredPanX = useCallback((viewportClientWidth: number) => {
-    return clampPanXToBounds(Math.round((contentWidth - viewportClientWidth) / 2), viewportClientWidth)
-  }, [clampPanXToBounds, contentWidth])
+    const targetCenter = workspaceCenterInViewport(viewportClientWidth)
+    const pageCenter = pageLeftInContent + canvasDisplayWidth / 2
+    return clampPanXToBounds(Math.round(pageCenter - targetCenter), viewportClientWidth)
+  }, [canvasDisplayWidth, clampPanXToBounds, pageLeftInContent, workspaceCenterInViewport])
 
   // Safety-net: measure the real rendered page center and correct any residual offset.
-  // Target is always the viewport center (panels are overlays, not layout contributors).
   const computeCenteredPanXMeasured = useCallback((el: HTMLDivElement) => {
     const formulaPanX = computeCenteredPanX(el.clientWidth)
     const firstVisiblePage = el.querySelector<HTMLElement>('[role="region"][aria-label^="Page"]')
@@ -243,14 +403,14 @@ export function CanvasVirtualizer({
 
     const viewportRect = el.getBoundingClientRect()
     const pageRect = firstVisiblePage.getBoundingClientRect()
-    const targetCenterInViewport = el.clientWidth / 2
+    const targetCenterInViewport = workspaceCenterInViewport(el.clientWidth)
     const actualCenterInViewport = pageRect.left - viewportRect.left + pageRect.width / 2
     const deltaPx = actualCenterInViewport - targetCenterInViewport
 
     if (Math.abs(deltaPx) < 0.5) return formulaPanX
 
     return clampPanXToBounds(Math.round(el.scrollLeft + deltaPx), el.clientWidth)
-  }, [clampPanXToBounds, computeCenteredPanX])
+  }, [clampPanXToBounds, computeCenteredPanX, workspaceCenterInViewport])
 
   const overlayMaxLeft = useMemo(
     () => Math.max(leftOverlayInset, Math.max(0, viewportWidth - rightOverlayInset - OVERLAY_STRIP_WIDTH)),
@@ -311,8 +471,8 @@ export function CanvasVirtualizer({
       suppressScrollSyncRef.current = true
       el.scrollLeft = centeredPanX
     }
-    if (panOffsetRef.current.x !== centeredPanX) {
-      setPan({ x: centeredPanX, y: 0 })
+    if (panOffsetRef.current.x !== centeredPanX || panOffsetRef.current.y !== el.scrollTop) {
+      setPan({ x: centeredPanX, y: el.scrollTop })
     }
   }, [computeCenteredPanXMeasured, isPanning, setPan, viewportWidth])
 
@@ -373,6 +533,7 @@ export function CanvasVirtualizer({
     if (!el) return
 
     let nearestCanvasId: CanvasId | null = null
+    let nearestSessionId: SessionId | null = null
     let nearestDistance = Number.POSITIVE_INFINITY
     const viewportCenter = el.scrollTop + el.clientHeight / 2
 
@@ -385,11 +546,13 @@ export function CanvasVirtualizer({
       if (distance < nearestDistance) {
         nearestDistance = distance
         nearestCanvasId = row.page.id
+        nearestSessionId = row.session.id as SessionId
       }
     }
 
     setViewportCanvas(nearestCanvasId)
-  }, [allRows, setViewportCanvas, virtualRows])
+    if (nearestSessionId) setActiveSession(nearestSessionId)
+  }, [allRows, setActiveSession, setViewportCanvas, virtualRows])
 
   const handlePanPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -399,7 +562,9 @@ export function CanvasVirtualizer({
       setIsPanning(true)
       panStartRef.current = {
         clientX: e.clientX,
+        clientY: e.clientY,
         panX: el.scrollLeft,
+        panY: el.scrollTop,
       }
       el.setPointerCapture(e.pointerId)
       e.preventDefault()
@@ -414,14 +579,17 @@ export function CanvasVirtualizer({
       if (!el) return
 
       const nextPanXUnclamped = panStartRef.current.panX + (panStartRef.current.clientX - e.clientX)
+      const nextPanYUnclamped = panStartRef.current.panY + (panStartRef.current.clientY - e.clientY)
       const nextPanX = clampPanXToBounds(nextPanXUnclamped, el.clientWidth)
+      const nextPanY = clampPanYToBounds(nextPanYUnclamped, el)
 
       suppressScrollSyncRef.current = true
       el.scrollLeft = nextPanX
-      setPan({ x: nextPanX, y: 0 })
+      el.scrollTop = nextPanY
+      setPan({ x: nextPanX, y: nextPanY })
       e.preventDefault()
     },
-    [clampPanXToBounds, isPanTool, isPanning, setPan],
+    [clampPanXToBounds, clampPanYToBounds, isPanTool, isPanning, setPan],
   )
 
   const handlePanPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -434,9 +602,13 @@ export function CanvasVirtualizer({
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget
-    const nextPanX = e.currentTarget.scrollLeft
+    const nextPanX = el.scrollLeft
+    const nextPanY = el.scrollTop
     if (suppressScrollSyncRef.current) {
       suppressScrollSyncRef.current = false
+      if (panOffset.x !== nextPanX || panOffset.y !== nextPanY) {
+        setPan({ x: nextPanX, y: nextPanY })
+      }
       return
     }
 
@@ -444,22 +616,46 @@ export function CanvasVirtualizer({
       const centeredPanX = computeCenteredPanXMeasured(el)
       suppressScrollSyncRef.current = true
       el.scrollLeft = centeredPanX
-      if (panOffset.x !== centeredPanX) {
-        setPan({ x: centeredPanX, y: 0 })
+      if (panOffset.x !== centeredPanX || panOffset.y !== nextPanY) {
+        setPan({ x: centeredPanX, y: nextPanY })
       }
       return
     }
 
     const clampedPanX = clampPanXToBounds(nextPanX, el.clientWidth)
+    const clampedPanY = clampPanYToBounds(nextPanY, el)
     if (clampedPanX !== nextPanX) {
       suppressScrollSyncRef.current = true
       el.scrollLeft = clampedPanX
     }
-
-    if (panOffset.x !== clampedPanX) {
-      setPan({ x: clampedPanX, y: 0 })
+    if (clampedPanY !== nextPanY) {
+      suppressScrollSyncRef.current = true
+      el.scrollTop = clampedPanY
     }
-  }, [clampPanXToBounds, computeCenteredPanXMeasured, isPanTool, panOffset.x, setPan])
+
+    if (panOffset.x !== clampedPanX || panOffset.y !== clampedPanY) {
+      setPan({ x: clampedPanX, y: clampedPanY })
+    }
+  }, [clampPanXToBounds, clampPanYToBounds, computeCenteredPanXMeasured, isPanTool, panOffset.x, panOffset.y, setPan])
+
+  useEffect(() => {
+    const el = scrollParentRef.current
+    if (!el) return
+
+    const handleWheel = (event: WheelEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return
+      if (isEditableTarget(event.target)) return
+
+      event.preventDefault()
+      const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 4 : 0.08
+      const nextZoom = zoomLevelRef.current - event.deltaY * unit
+      zoomLevelRef.current = nextZoom
+      setZoom(nextZoom)
+    }
+
+    el.addEventListener("wheel", handleWheel, { passive: false, capture: true })
+    return () => el.removeEventListener("wheel", handleWheel, { capture: true })
+  }, [setZoom])
 
   // Build a canvas-id → virtual row index map so the nav strip can trigger
   // scroll-to without needing direct access to the virtualizer.
@@ -471,6 +667,11 @@ export function CanvasVirtualizer({
     return map
   }, [allRows])
 
+  const canvasRows = useMemo(
+    () => allRows.filter((row): row is Extract<VirtualRow, { kind: "canvas" }> => row.kind === "canvas"),
+    [allRows],
+  )
+
   const scrollToCanvasId = useCallback(
     (canvasId: string) => {
       const rowIdx = canvasIdToRowIndex.get(canvasId)
@@ -480,6 +681,94 @@ export function CanvasVirtualizer({
     },
     [canvasIdToRowIndex, virtualizer],
   )
+
+  const goToCanvasIndex = useCallback((index: number) => {
+    const row = canvasRows[Math.max(0, Math.min(canvasRows.length - 1, index))]
+    if (!row) return
+
+    setActiveCanvas(row.page.id)
+    setViewportCanvas(row.page.id)
+    setActiveSession(row.session.id as SessionId)
+    scrollToCanvasId(row.page.id)
+  }, [canvasRows, scrollToCanvasId, setActiveCanvas, setActiveSession, setViewportCanvas])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return
+
+      const hasCommandModifier = event.metaKey || event.ctrlKey
+      const key = event.key.toLowerCase()
+
+      if (!hasCommandModifier) {
+        if (key === "h") {
+          event.preventDefault()
+          setActiveTool(activeTool === "pan" ? "selection" : "pan")
+          return
+        }
+
+        if (key === "v") {
+          event.preventDefault()
+          setActiveTool("selection")
+          return
+        }
+
+        if (key === "escape") {
+          event.preventDefault()
+          setActiveTool("selection")
+          clearSelection()
+        }
+
+        return
+      }
+
+      const currentCanvasId = viewportCanvasId ?? activeCanvasId
+      const currentIndex = Math.max(0, canvasRows.findIndex((row) => row.page.id === currentCanvasId))
+
+      if (event.key === "=" || event.key === "+") {
+        event.preventDefault()
+        stepZoom(10)
+        return
+      }
+
+      if (event.key === "-") {
+        event.preventDefault()
+        stepZoom(-10)
+        return
+      }
+
+      if (event.key === "0") {
+        event.preventDefault()
+        resetView()
+        return
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault()
+        goToCanvasIndex(currentIndex + 1)
+        return
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault()
+        goToCanvasIndex(currentIndex - 1)
+        return
+      }
+
+      if (event.key === "End") {
+        event.preventDefault()
+        goToCanvasIndex(canvasRows.length - 1)
+        return
+      }
+
+      if (event.key === "Home") {
+        event.preventDefault()
+        goToCanvasIndex(0)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [activeCanvasId, activeTool, canvasRows, clearSelection, goToCanvasIndex, resetView, setActiveTool, stepZoom, viewportCanvasId])
 
   useEffect(() => {
     const handleScrollRequest = (event: Event) => {
@@ -492,14 +781,14 @@ export function CanvasVirtualizer({
   }, [scrollToCanvasId])
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="canvas-virtualizer-root flex flex-col flex-1 overflow-hidden">
       {/* One layout syncer per session — runs useLayoutEngine for each session */}
       {sessions.map((session) => (
         <SessionLayoutSyncer key={session.id} session={session} dims={dims} />
       ))}
 
       {/* Canvas area: full-width scroll viewport with overlay controls */}
-      <div className="relative flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden bg-neutral-200">
+      <div className="canvas-screen-viewport relative flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden bg-neutral-200">
         {/* Vertically scrollable pages; horizontal movement can be done via
           grab-tool panning (panOffset.x) and native horizontal scroll (hidden). */}
         <div
@@ -621,6 +910,9 @@ export function CanvasVirtualizer({
         </div>
 
       </div>
+      {printRenderActive && (
+        <CanvasPrintDocument sessions={sessions} dims={dims} bodyData={bodyData} />
+      )}
     </div>
   )
 }

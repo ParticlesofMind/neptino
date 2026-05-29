@@ -1,6 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { useContext } from "react"
+import { EditorSurfaceContext } from "./editor-surface-context"
 
 interface EditorSplitLayoutProps {
   sidebar: ReactNode
@@ -27,33 +29,41 @@ export function EditorSplitLayout({
   sidebarContentClassName,
   previewContentClassName,
 }: EditorSplitLayoutProps) {
+  const surface = useContext(EditorSurfaceContext)
+  const showSidebar = surface !== "preview"
+  const showPreview = surface !== "controls"
+
   return (
     <div className="make-editor-split-layout flex h-full min-h-0 w-full flex-col overflow-hidden bg-white md:flex-row">
-      <div className={["make-editor-split-sidebar flex w-full shrink-0 flex-col border-b border-neutral-100 md:min-h-0 md:border-b-0 md:border-r md:border-neutral-200", sidebarWidthClassName].join(" ")}>
-        {(sidebarTitle || sidebarDescription) && (
-          <div className="shrink-0 border-b border-neutral-100 px-4 py-3">
-            {sidebarTitle && <p className="text-[13px] font-semibold text-neutral-900">{sidebarTitle}</p>}
-            {sidebarDescription && <p className="mt-1 text-[10px] text-neutral-500">{sidebarDescription}</p>}
-          </div>
-        )}
-        <div className={["min-h-0 flex-1 overflow-y-auto bg-white", sidebarContentClassName].filter(Boolean).join(" ")}>
-          {sidebar}
-        </div>
-      </div>
-
-      <div className={["min-h-0 min-w-0 w-full md:flex-1", previewClassName].join(" ")}>
-        <div className="flex h-full min-h-0 flex-col">
-          {(previewTitle || previewDescription) && (
-            <div className="shrink-0 border-b border-neutral-200 bg-white/80 px-5 py-4 backdrop-blur-sm">
-              {previewTitle && <p className="text-[13px] font-semibold text-neutral-900">{previewTitle}</p>}
-              {previewDescription && <p className="mt-1 text-[10px] text-neutral-500">{previewDescription}</p>}
+      {showSidebar && (
+        <div className={["make-editor-split-sidebar flex w-full shrink-0 flex-col border-b border-neutral-100 md:min-h-0 md:border-b-0 md:border-r md:border-neutral-200", surface === "controls" ? "md:w-full md:flex-1" : sidebarWidthClassName].join(" ")}>
+          {(sidebarTitle || sidebarDescription) && (
+            <div className="shrink-0 border-b border-neutral-100 px-4 py-3">
+              {sidebarTitle && <p className="text-[13px] font-semibold text-neutral-900">{sidebarTitle}</p>}
+              {sidebarDescription && <p className="mt-1 text-[10px] text-neutral-500">{sidebarDescription}</p>}
             </div>
           )}
-          <div className={["min-h-0 flex-1", previewContentClassName].filter(Boolean).join(" ")}>
-            {preview}
+          <div className={["min-h-0 flex-1 overflow-y-auto bg-white", sidebarContentClassName].filter(Boolean).join(" ")}>
+            {sidebar}
           </div>
         </div>
-      </div>
+      )}
+
+      {showPreview && (
+        <div className={["min-h-0 min-w-0 w-full md:flex-1", previewClassName].join(" ")}>
+          <div className="flex h-full min-h-0 flex-col">
+            {(previewTitle || previewDescription) && (
+              <div className="shrink-0 border-b border-neutral-200 bg-white/80 px-5 py-4 backdrop-blur-sm">
+                {previewTitle && <p className="text-[13px] font-semibold text-neutral-900">{previewTitle}</p>}
+                {previewDescription && <p className="mt-1 text-[10px] text-neutral-500">{previewDescription}</p>}
+              </div>
+            )}
+            <div className={["min-h-0 flex-1", previewContentClassName].filter(Boolean).join(" ")}>
+              {preview}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -92,11 +92,8 @@ export const TABLE_ROW_HEIGHT = TABLE_ROW
 
 // ─── Text-wrapping row height estimation ──────────────────────────────────────
 
-/**
- * Usable inner canvas width in CSS pixels.
- * A4 page (794px) minus left (76px) and right (76px) margins.
- */
-const CANVAS_INNER_WIDTH_PX = 642
+const CANVAS_INNER_WIDTH_PX =
+  DEFAULT_PAGE_DIMENSIONS.widthPx - DEFAULT_PAGE_DIMENSIONS.margins.left - DEFAULT_PAGE_DIMENSIONS.margins.right
 
 /**
  * Average character width at text-[11px] in a typical sans-serif font.
@@ -217,6 +214,9 @@ function stripHtml(value: string): string {
 }
 
 function estimateTextCardHeight(card: DroppedCard): number {
+  const declaredHeight = readDeclaredHeight(card)
+  if (declaredHeight !== null) return declaredHeight
+
   const rawText = typeof card.content.text === "string" ? card.content.text : ""
   const title = typeof card.content.title === "string" ? card.content.title : ""
   const text = stripHtml(rawText)
@@ -224,6 +224,12 @@ function estimateTextCardHeight(card: DroppedCard): number {
   const textLines = Math.max(1, Math.ceil(text.length / charsPerLine))
   const titleHeight = title ? 18 : 0
   return Math.max(44, 18 + titleHeight + textLines * 18)
+}
+
+function readDeclaredHeight(card: DroppedCard, min = 44, max = 1200): number | null {
+  const raw = typeof card.dimensions?.height === "number" ? card.dimensions.height : 0
+  if (!Number.isFinite(raw) || raw <= 0) return null
+  return Math.max(min, Math.min(max, Math.round(raw)))
 }
 
 function stackedCardsHeight(cards: DroppedCard[]): number {
@@ -298,7 +304,10 @@ function estimateLayoutCardHeight(card: DroppedCard): number {
     }
   })()
 
-  return contentHeight + 2
+  const estimatedHeight = contentHeight + 2
+  if (kind === "resizable-grid") return estimatedHeight
+
+  return Math.max(estimatedHeight, readDeclaredHeight(card) ?? 0)
 }
 
 export function estimateDroppedCardHeight(card: DroppedCard): number {
@@ -310,10 +319,10 @@ export function estimateDroppedCardHeight(card: DroppedCard): number {
     return estimateTextCardHeight(card)
   }
 
-  const raw = typeof card.dimensions?.height === "number" ? card.dimensions.height : 0
+  const raw = readDeclaredHeight(card)
 
   if (card.cardType === "chat") {
-    return Math.max(DEFAULT_FIELD_FILL_CARD_HEIGHT, raw || DEFAULT_FIELD_FILL_CARD_HEIGHT)
+    return Math.max(DEFAULT_FIELD_FILL_CARD_HEIGHT, raw ?? DEFAULT_FIELD_FILL_CARD_HEIGHT)
   }
 
   // These canvas products render at (or very close to) their declared height.
@@ -327,37 +336,29 @@ export function estimateDroppedCardHeight(card: DroppedCard): number {
     card.cardType === "village-3d" ||
     card.cardType === "interactive"
   ) {
-    return Math.max(160, Math.min(520, raw || 160))
+    return raw ?? 160
   }
 
   // Media-backed cards occupy substantially more of their declared height than
   // lightweight DOM previews. Bias conservative here so pagination errs on the
   // side of an extra continuation page rather than persistent footer overflow.
   if (card.cardType === "video") {
-    return Math.max(180, Math.min(360, raw > 0 ? raw : 270))
+    return raw ?? 270
   }
 
   if (card.cardType === "image") {
-    return Math.max(160, Math.min(340, raw > 0 ? Math.round(raw * 0.9) : 240))
+    return raw ?? 240
   }
 
   if (card.cardType === "audio") {
-    return Math.max(120, Math.min(220, raw > 0 ? Math.round(raw * 0.85) : 160))
+    return raw ?? 160
   }
 
   if (card.cardType === "model-3d") {
-    return Math.max(180, Math.min(320, raw > 0 ? Math.round(raw * 0.9) : 260))
+    return raw ?? 260
   }
 
-  const base = raw > 0 ? raw : 120
-
-  // Rich cards reserve most of their declared height; generic DOM cards use
-  // less vertical space than their source dimensions suggest.
-  const ratio = card.cardType === "games"
-    ? 0.7
-    : 0.35
-
-  return Math.max(44, Math.min(420, Math.round(base * ratio) + 20))
+  return raw ?? DROPPED_CARD_HEIGHT
 }
 
 function areaHeight(emptyAreaH: number, cards: DroppedCard[] = []): number {

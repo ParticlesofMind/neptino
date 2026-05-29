@@ -14,6 +14,7 @@ type CourseJoinRow = {
   course_name: string
   course_description: string | null
   teacher_id: string | null
+  institution_id: string | null
   visibility_settings: Record<string, unknown> | null
 }
 
@@ -46,7 +47,7 @@ export default function JoinCoursePage({ params }: { params: Promise<{ courseId:
 
   const signupHref = useMemo(() => {
     if (!courseId) return "/signup"
-    return `/signup?next=${encodeURIComponent(safeNextPath(courseId))}`
+    return `/signup?intent=join_course&next=${encodeURIComponent(safeNextPath(courseId))}`
   }, [courseId])
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function JoinCoursePage({ params }: { params: Promise<{ courseId:
       const supabase = createClient()
       const { data: courseRow, error: courseError } = await supabase
         .from("courses")
-        .select("id, course_name, course_description, teacher_id, visibility_settings")
+        .select("id, course_name, course_description, teacher_id, institution_id, visibility_settings")
         .eq("id", courseId)
         .maybeSingle()
 
@@ -117,6 +118,29 @@ export default function JoinCoursePage({ params }: { params: Promise<{ courseId:
       const displayName = [firstName, lastName].filter(Boolean).join(" ") || email || "Student"
       const joinedAt = new Date().toISOString()
       const joinedVia = new URLSearchParams(window.location.search).get("source") || "link"
+
+      if (loadedCourse.institution_id) {
+        const { error: membershipError } = await supabase
+          .from("institution_memberships")
+          .upsert(
+            {
+              institution_id: loadedCourse.institution_id,
+              user_id: authData.user.id,
+              role: "student",
+              status: "active",
+              joined_at: joinedAt,
+            },
+            { onConflict: "institution_id,user_id,role" },
+          )
+
+        if (cancelled) return
+
+        if (membershipError) {
+          setStatus("error")
+          setMessage(membershipError.message)
+          return
+        }
+      }
 
       const { error: enrollmentError } = await supabase
         .from("enrollments")
@@ -201,7 +225,7 @@ export default function JoinCoursePage({ params }: { params: Promise<{ courseId:
           ) : status === "signed-out" ? (
             <div className="space-y-4">
               <p className="rounded-lg border border-border bg-muted/20 px-4 py-4 text-sm leading-relaxed text-foreground">
-                Sign in or create a student account to join this course.
+                Sign in or create an account to join this course.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Link href={loginHref} className={buttonVariants({ variant: "primary", size: "md" })}>

@@ -1,7 +1,9 @@
 // Leaflet-based map editor configuration.
 // Replaces the former maplibre-gl StyleSpecification approach.
 
-export type OverlayLayer = "Labels" | "Choropleth" | "Points"
+import type { Feature, FeatureCollection, Geometry } from "geojson"
+
+export type OverlayLayer = "Labels" | "Choropleth" | "Points" | "Territories"
 export type MapStyleName = "Standard" | "Topographic" | "Dark"
 
 export interface TileLayerConfig {
@@ -24,7 +26,7 @@ export const TILE_LAYERS: Record<MapStyleName, TileLayerConfig> = {
   },
 }
 
-export const OVERLAY_LAYERS: OverlayLayer[] = ["Labels", "Choropleth", "Points"]
+export const OVERLAY_LAYERS: OverlayLayer[] = ["Labels", "Choropleth", "Points", "Territories"]
 
 const OVERLAY_ALIASES: Record<string, OverlayLayer> = {
   label: "Labels",
@@ -36,6 +38,12 @@ const OVERLAY_ALIASES: Record<string, OverlayLayer> = {
   points: "Points",
   marker: "Points",
   markers: "Points",
+  territory: "Territories",
+  territories: "Territories",
+  boundary: "Territories",
+  boundaries: "Territories",
+  polygon: "Territories",
+  polygons: "Territories",
 }
 
 export function normalizeOverlayLayer(value: string): OverlayLayer | null {
@@ -86,6 +94,28 @@ export interface DemoCell {
   score: number
 }
 
+export type TerritoryGeoJson =
+  | Geometry
+  | Feature<Geometry, Record<string, unknown>>
+  | FeatureCollection<Geometry, Record<string, unknown>>
+
+export interface TerritoryLayer {
+  id: string
+  label: string
+  color: string
+  geojson: TerritoryGeoJson
+  fillOpacity?: number
+  opacity?: number
+  weight?: number
+  dateRange?: string
+  startYear?: number
+  endYear?: number
+  confidence?: number
+  certainty?: "source-backed" | "review-needed" | "schematic"
+  source?: string
+  sourceUrl?: string
+}
+
 export function generateDemoChoropleth(lat: number, lng: number): DemoCell[] {
   const size = 0.22
   const cells = [
@@ -105,4 +135,3 @@ export function generateDemoChoropleth(lat: number, lng: number): DemoCell[] {
     score: c.score,
   }))
 }
-

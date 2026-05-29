@@ -5,6 +5,8 @@ import { useDroppable } from "@dnd-kit/core"
 import type { BlockRenderProps, CanvasId, DroppedCard, TaskAreaKind, TaskId } from "../types"
 import { useCourseStore } from "../store/courseStore"
 import type { DropTargetData } from "../hooks/useCardDrop"
+import { CardRenderer } from "../cards/CardRenderer"
+import { isPageCompositionCard } from "../cards/pageComposition"
 import { TaskAreaDropZone } from "./content-task-area-drop-zone"
 import {
   DEFAULT_TASK_SUFFIX,
@@ -98,6 +100,12 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
     return new Map(flattenedCards.map((card, idx) => [String(card.id), idx]))
   }, [flattenedCards])
 
+  const activeLayoutSlotRange = useMemo(() => {
+    if (!contentLayoutSlotRange) return undefined
+    const targetCard = flattenedCards.find((card) => String(card.id) === contentLayoutSlotRange.cardId)
+    return targetCard?.content.allowLayoutSlotPagination === true ? contentLayoutSlotRange : undefined
+  }, [contentLayoutSlotRange, flattenedCards])
+
   function isCardVisible(cardId: string): boolean {
     const idx = cardIndexById.get(String(cardId))
     if (idx === undefined) return false
@@ -105,7 +113,7 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
   }
 
   function applyLayoutSlotRange(card: DroppedCard): DroppedCard {
-    if (!contentLayoutSlotRange || String(card.id) !== contentLayoutSlotRange.cardId) {
+    if (!activeLayoutSlotRange || String(card.id) !== activeLayoutSlotRange.cardId) {
       return card
     }
 
@@ -113,10 +121,37 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
       ...card,
       content: {
         ...card.content,
-        __layoutSlotRange: contentLayoutSlotRange,
+        __layoutSlotRange: activeLayoutSlotRange,
       },
     }
   }
+
+  const visibleCardsForBlock = useMemo(() => {
+    return flattenedCards
+      .filter((card) => {
+        const idx = cardIndexById.get(String(card.id))
+        if (idx === undefined) return false
+        if (idx < cardStart || (cardEnd !== undefined && idx >= cardEnd)) return false
+        return !card.blockKey || card.blockKey === resolvedBlockKey
+      })
+      .map((card) => {
+        if (!activeLayoutSlotRange || String(card.id) !== activeLayoutSlotRange.cardId) {
+          return card
+        }
+
+        return {
+          ...card,
+          content: {
+            ...card.content,
+            __layoutSlotRange: activeLayoutSlotRange,
+          },
+        }
+      })
+  }, [activeLayoutSlotRange, cardEnd, cardIndexById, cardStart, flattenedCards, resolvedBlockKey])
+
+  const pageCompositionCard = visibleCardsForBlock.length === 1 && isPageCompositionCard(visibleCardsForBlock[0])
+    ? visibleCardsForBlock[0]
+    : null
 
   const visibleTopics = topics.slice(topicStart, topicEnd)
   const partitions = resolveTemplatePartitions(fieldEnabled?.[resolvedBlockKey], resolvedBlockKey)
@@ -158,8 +193,8 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
     objStart > 0 ||
     taskStart > 0 ||
     hasEarlierCardForThisBlock ||
-    contentLayoutSlotRange !== undefined
-  const isCardSliceContinuation = contentCardRange !== undefined || contentLayoutSlotRange !== undefined
+    activeLayoutSlotRange !== undefined
+  const isCardSliceContinuation = contentCardRange !== undefined || activeLayoutSlotRange !== undefined
   const noTopicsAtAll  = topics.length === 0
 
   function objectiveHasVisibleTask(tasksCount: number, flatTaskStart: number): boolean {
@@ -196,6 +231,34 @@ export function ContentBlock({ sessionId, canvasId, blockKey, fieldEnabled, rend
   })
 
   if (!hasVisibleSlice) return null
+
+  if (pageCompositionCard) {
+    const cardIdx = cardIndexById.get(String(pageCompositionCard.id))
+
+    return (
+      <section
+        ref={setCatchAllRef}
+        className="relative flex h-full min-h-0 flex-col"
+      >
+        <div
+          className="h-full min-h-0 w-full"
+          data-testid="page-composition-card"
+          data-page-composition="true"
+          data-card-id={pageCompositionCard.id}
+          {...(cardIdx !== undefined ? { "data-card-idx": cardIdx } : {})}
+        >
+          <CardRenderer
+            card={pageCompositionCard}
+            mode={renderMode}
+            className="h-full min-h-0 w-full [&>div]:h-full [&>div]:min-h-0"
+            fillAvailable
+            dragSourceBlockKey={blockKey}
+            onRemove={isEditor ? () => removeDroppedCard(sessionId, pageCompositionCard.taskId, pageCompositionCard.id) : undefined}
+          />
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section

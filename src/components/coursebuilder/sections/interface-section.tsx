@@ -1,9 +1,15 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { SetupColumn, SetupSection, SaveStatusBar } from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
+import { useState, useCallback, useRef } from "react"
+import {
+  SetupColumn,
+  SetupSection,
+  SaveStatusBar,
+  updateCourseById,
+  useCourseRowLoader,
+  useCourseSectionSave,
+  useDebouncedChangeSave,
+} from "@/components/coursebuilder"
 
 // ─── Local types / defaults (formerly in template-source-of-truth) ────────────
 
@@ -21,71 +27,45 @@ function normalizeUiSettings(layout: Record<string, unknown>): { visualDensity: 
 export function InterfaceSection({ courseId }: { courseId: string | null }) {
   const [visualDensity, setVisualDensity] = useState<VisualDensity>(DEFAULT_VISUAL_DENSITY)
   const [bodyBlockGap, setBodyBlockGap] = useState(DEFAULT_BODY_BLOCK_GAP)
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const courseLayoutRef = useRef<Record<string, unknown> | null>(null)
+  const { saveStatus, lastSavedAt, markEmpty, runWithSaveState } = useCourseSectionSave()
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("course_layout")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data?.course_layout) {
-          const settings = normalizeUiSettings(data.course_layout)
-          setVisualDensity(settings.visualDensity)
-          setBodyBlockGap(settings.bodyBlockGap)
-        }
-      })
-  }, [courseId])
+  const { hasData } = useCourseRowLoader<{ course_layout: Record<string, unknown> | null }>({
+    courseId,
+    select: "course_layout",
+    onLoaded: (row) => {
+      const layout = row.course_layout ?? {}
+      courseLayoutRef.current = layout
+      const settings = normalizeUiSettings(layout)
+      setVisualDensity(settings.visualDensity)
+      setBodyBlockGap(settings.bodyBlockGap)
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) {
-      setSaveStatus("empty")
+      markEmpty()
       return
     }
 
-    setSaveStatus("saving")
-    const supabase = createClient()
-    const { error } = await supabase
-      .from("courses")
-      .select("course_layout")
-      .eq("id", courseId)
-      .single()
-      .then(async ({ data: currentData, error: fetchError }) => {
-        if (fetchError || !currentData?.course_layout) {
-          return { error: true }
-        }
-
-        const currentLayout =
-          typeof currentData.course_layout === "object" && currentData.course_layout !== null
-            ? (currentData.course_layout as Record<string, unknown>)
-            : {}
-
-        return await supabase
-          .from("courses")
-          .update({
-            course_layout: {
-              ...currentLayout,
-              visualDensity,
-              bodyBlockGap,
-            },
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", courseId)
-      })
-
-    if (error) {
-      setSaveStatus("error")
-    } else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
+    const nextLayout = {
+      ...(courseLayoutRef.current ?? {}),
+      visualDensity,
+      bodyBlockGap,
     }
-  }, [courseId, visualDensity, bodyBlockGap])
 
-  useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
+    await runWithSaveState(async () => {
+      const { error } = await updateCourseById(courseId, {
+        course_layout: nextLayout,
+        updated_at: new Date().toISOString(),
+      })
+      if (error) return false
+      courseLayoutRef.current = nextLayout
+      return true
+    })
+  }, [bodyBlockGap, courseId, markEmpty, runWithSaveState, visualDensity])
+
+  useDebouncedChangeSave(handleSave, 800, Boolean(courseId && hasData))
 
   return (
     <SetupSection title="Interface" description="Configure visual density and spacing for course canvas pages.">

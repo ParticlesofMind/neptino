@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react"
 import { X } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { CARD_TYPE_META } from "../card-type-registry"
 import type { DroppedCard } from "../../types"
 
@@ -12,6 +13,7 @@ interface ResourceCardFrameProps {
   className?: string
   bodyClassName?: string
   maxWidthClassName?: string
+  fillAvailable?: boolean
 }
 
 export function ResourceCardFrame({
@@ -21,21 +23,34 @@ export function ResourceCardFrame({
   className,
   bodyClassName = "p-2.5",
   maxWidthClassName,
+  fillAvailable = false,
 }: ResourceCardFrameProps) {
   const meta = CARD_TYPE_META[card.cardType]
   const resolvedMaxWidth = maxWidthClassName ?? "max-w-none"
   const title = typeof card.content["title"] === "string" && card.content["title"].trim()
     ? card.content["title"].trim()
     : meta.label
+  const declaredHeight = Number(card.dimensions.height)
+  const minHeight = !fillAvailable && Number.isFinite(declaredHeight) && declaredHeight > 0
+    ? Math.round(declaredHeight)
+    : undefined
 
   return (
-    <div className={["group relative w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm", resolvedMaxWidth, className].filter(Boolean).join(" ")}>
+    <div
+      className={cn(
+        "group relative flex w-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm",
+        fillAvailable && "h-full min-h-0",
+        resolvedMaxWidth,
+        className,
+      )}
+      style={{ minHeight }}
+    >
       {onRemove && (
         <button
           type="button"
           onClick={onRemove}
           className="absolute right-1.5 top-1.5 z-10 hidden h-6 w-6 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-destructive/10 hover:text-destructive group-hover:flex focus:flex focus:outline-none focus:ring-[3px] focus:ring-primary/15"
-          aria-label="Remove block"
+          aria-label="Remove card"
         >
           <X size={12} />
         </button>
@@ -49,7 +64,7 @@ export function ResourceCardFrame({
           <p className="text-[9px] uppercase tracking-normal text-neutral-400">{meta.label}</p>
         </div>
       </div>
-      <div className={bodyClassName}>
+      <div className={cn("min-h-0 flex-1", bodyClassName)}>
         {children}
       </div>
     </div>

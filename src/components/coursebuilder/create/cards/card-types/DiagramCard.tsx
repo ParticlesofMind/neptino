@@ -39,7 +39,7 @@ const ShapeNode = memo(function ShapeNode({ data, selected }: NodeProps<Node<Dia
 
 const nodeTypes = { shapeNode: ShapeNode }
 
-export function DiagramCard({ card, onRemove }: CardRenderProps) {
+export function DiagramCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const diagramType = typeof card.content.diagramType === "string" ? card.content.diagramType : "flowchart"
   const nodes = useMemo(() => parseNodes(card.content.nodes), [card.content.nodes])
   const edges = useMemo(() => parseEdges(card.content.edges), [card.content.edges])
@@ -49,6 +49,7 @@ export function DiagramCard({ card, onRemove }: CardRenderProps) {
     <ResourceCardFrame
       card={card}
       onRemove={onRemove}
+      fillAvailable={fillAvailable}
       bodyClassName="p-0"
     >
       <div className="border-b border-neutral-100 bg-neutral-50/70 px-3 py-2">

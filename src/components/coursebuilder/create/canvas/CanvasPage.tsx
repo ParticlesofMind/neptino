@@ -151,14 +151,12 @@ export function CanvasPage({
   const bodyRef    = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const zoomLevel      = useCanvasStore((s) => s.zoomLevel)
-  const activeCanvasId = useCanvasStore((s) => s.activeCanvasId)
   const setActiveCanvas = useCanvasStore((s) => s.setActiveCanvas)
 
   // Use the pre-computed scale from the virtualizer when available; fall back
   // to store zoomLevel for standalone usage (tests, storybook, etc.).
   const scale = scaleProp ?? (zoomLevel / 100)
 
-  const isActive = activeCanvasId === page.id
   const bodyDropTaskId = findFirstVisibleTaskId(session, page)
   const removeDroppedCard = useCourseStore((s) => s.removeDroppedCard)
   const isEditor = renderMode === "editor"
@@ -206,6 +204,7 @@ export function CanvasPage({
     // any margin compensation hacks (wrapper-div pattern, per PDF spec).
     <div
       role="region"
+      data-canvas-page-region
       aria-label={`Page ${virtualIndex + 1}`}
       onClick={() => setActiveCanvas(page.id)}
       style={{
@@ -215,6 +214,7 @@ export function CanvasPage({
     >
     {/* Inner canvas: canonical dimensions, visually scaled */}
     <div
+      data-canvas-page-surface
       style={{
         width:            dims.widthPx,
         height:           dims.heightPx,
@@ -226,8 +226,7 @@ export function CanvasPage({
       }}
       className={[
         "bg-white shadow-md select-none",
-        "ring-1",
-        isActive ? "ring-primary/50" : "ring-neutral-200",
+        "ring-1 ring-neutral-200",
       ]
         .filter(Boolean)
         .join(" ")}

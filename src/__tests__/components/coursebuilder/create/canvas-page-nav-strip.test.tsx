@@ -7,6 +7,8 @@ function makeSessions(): CourseSession[] {
   return [
     {
       id: "session-1",
+      title: "Session 1",
+      order: 1,
       canvases: [
         { id: "canvas-1" },
         { id: "canvas-2" },
@@ -43,6 +45,7 @@ describe("PageNavStrip", () => {
       render(<PageNavStrip sessions={makeSessions()} />)
 
       expect(screen.getByText("3")).toBeInTheDocument()
+      expect(screen.queryByText("S1")).toBeNull()
 
       fireEvent.click(screen.getByTitle("Next page"))
 

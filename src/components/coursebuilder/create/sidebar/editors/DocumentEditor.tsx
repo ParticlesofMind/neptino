@@ -145,7 +145,7 @@ export function DocumentEditor({ content, onChange }: DocumentEditorProps) {
             </div>
 
             {sections.length === 0 && (
-              <p className="text-[11px] italic text-neutral-400">Add sections to structure the document block.</p>
+              <p className="text-[11px] italic text-neutral-400">Add sections to structure the document card.</p>
             )}
 
             <div className="space-y-3">

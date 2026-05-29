@@ -217,8 +217,9 @@ The existing tables can either be migrated into these names later or treated as 
 3. Resolve current taxonomy drift: Animation, Document, Code snippet, Embed, Chart, Table, Dataset, Timeline, Exercise, Assessment.
 4. Add pedagogical role and student action as first-class metadata on cards/tasks.
 5. Add source/provenance metadata before large-scale ingestion.
-6. Build Atlas packs as the main reusable unit.
-7. Let course creation start from packs, not blank cards.
+6. Capture teacher feedback against source records and generated products.
+7. Build Atlas packs as the main reusable unit.
+8. Let course creation start from packs, not blank cards.
 
 ## Immediate Decisions Needed
 

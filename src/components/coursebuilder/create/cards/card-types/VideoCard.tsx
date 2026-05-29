@@ -1,6 +1,6 @@
 "use client"
 
-import type { DroppedCard } from "../../types"
+import type { CardRenderProps } from "../CardRegistry"
 import { ResourceCardFrame } from "./ResourceCardFrame"
 import {
   getAspectRatioPadding,
@@ -9,12 +9,7 @@ import {
   type VideoFitMode,
 } from "../../sidebar/editors/video-utils"
 
-interface VideoCardProps {
-  card: DroppedCard
-  onRemove?: () => void
-}
-
-export function VideoCard({ card, onRemove }: VideoCardProps) {
+export function VideoCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const url = typeof card.content["url"] === "string" ? card.content["url"] : ""
   const title = typeof card.content["title"] === "string" ? card.content["title"] : ""
   const poster = typeof card.content["poster"] === "string" ? card.content["poster"] : ""
@@ -37,7 +32,7 @@ export function VideoCard({ card, onRemove }: VideoCardProps) {
   const ratioPadding = getAspectRatioPadding(aspectRatio)
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove} bodyClassName="p-0">
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable} bodyClassName="p-0">
       {embedUrl ? (
         <div className="relative" style={{ paddingTop: ratioPadding }}>
           <iframe

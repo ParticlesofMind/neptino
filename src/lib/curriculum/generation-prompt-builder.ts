@@ -42,10 +42,9 @@ ${context.curriculum.sessionRows.map((s) => {
     ? `
 ### Classification
 - Class Year: ${context.classification.classYear || "Not specified"}
-- Curricular Framework: ${context.classification.framework || "Not specified"}
 - Domain: ${context.classification.domain || "Not specified"}
 - Subject: ${context.classification.subject || "Not specified"}
-- Topic: ${context.classification.topic || "Not specified"}${context.classification.subtopic ? `\n- Subtopic: ${context.classification.subtopic}` : ""}${context.classification.previousCourse ? `\n- Previous Course: ${context.classification.previousCourse}` : ""}${context.classification.nextCourse ? `\n- Next Course: ${context.classification.nextCourse}` : ""}
+- Topic: ${context.classification.topic || "Not specified"}${context.classification.subtopic ? `\n- Subtopic: ${context.classification.subtopic}` : ""}
 `
     : ""
 

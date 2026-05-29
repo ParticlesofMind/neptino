@@ -28,6 +28,7 @@ import type {
 } from "../types"
 import { useCourseStore } from "../store/courseStore"
 import { getDefaultCardDimensions } from "../utils/cardDefaults"
+import { withDefaultSourceProvenance } from "@/lib/atlas/source-provenance"
 
 // ─── Data shapes ──────────────────────────────────────────────────────────────
 
@@ -37,6 +38,8 @@ export interface DragSourceData {
   cardType:  CardType
   title?:    string
   content?:  Record<string, unknown>
+  position?: { x: number; y: number }
+  dimensions?: { width: number; height: number }
   /**
    * Set when re-dragging a card that is already placed on the canvas.
    * Used by useCardDrop to remove the card from its original location
@@ -442,8 +445,8 @@ export function useCardDrop() {
             taskId:     overData.taskId,
             areaKind:   "instruction",
             position:   { x: 0, y: 0 },
-            dimensions: getDefaultCardDimensions(source.cardType),
-            content:    source.content ?? { title: source.title ?? "" },
+            dimensions: source.dimensions ?? getDefaultCardDimensions(source.cardType),
+            content:    withDefaultSourceProvenance(source.content ?? { title: source.title ?? "" }),
             order:      Date.now(),
           },
         )
@@ -513,8 +516,8 @@ export function useCardDrop() {
         areaKind:   target.areaKind,
         blockKey:   target.blockKey,
         position:   dropPosition,
-        dimensions: getDefaultCardDimensions(source.cardType),
-        content:    source.content ?? { title: source.title ?? "" },
+        dimensions: source.dimensions ?? getDefaultCardDimensions(source.cardType),
+        content:    withDefaultSourceProvenance(source.content ?? { title: source.title ?? "" }),
         order:      dropOrder,
       }, targetCanvasId)
     },

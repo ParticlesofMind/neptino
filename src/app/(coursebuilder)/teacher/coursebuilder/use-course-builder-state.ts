@@ -4,20 +4,13 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import { computePageConfig } from "@/lib/page-config"
 import type { CanvasPageConfig } from "@/lib/page-config"
+import { evaluateCourseSetupReadiness } from "@/lib/curriculum/setup-readiness"
 import { getCurrentAuthUser, selectCourseById } from "@/components/coursebuilder"
 import type { View, CourseCreatedData } from "@/components/coursebuilder/builder-types"
 import {
   type SectionId,
-  isView, hasText, isSectionId,
+  isView,
 } from "./page-section-registry"
-
-function getBuilderStorageKeys(courseId: string | null) {
-  const id = courseId ?? "new"
-  return {
-    view: `coursebuilder:last-view:${id}`,
-    section: `coursebuilder:last-section:${id}`,
-  }
-}
 
 export function useCourseBuilderState() {
   const searchParams = useSearchParams()
@@ -42,45 +35,15 @@ export function useCourseBuilderState() {
   const [completedSetupSections, setCompletedSetupSections] = useState<Record<string, boolean>>({})
   const completionFetchRef = useRef<{ courseId: string | null; at: number }>({ courseId: null, at: 0 })
 
-  const storageKeys = getBuilderStorageKeys(courseId ?? resolvedUrlCourseId)
-
   const hydrateSectionCompletion = useCallback((raw: Record<string, unknown>) => {
-    const students = (raw.students_overview as Record<string, unknown> | null) ?? {}
-    const schedule = (raw.schedule_settings as Record<string, unknown> | null) ?? {}
-    const curriculum = (raw.curriculum_data as Record<string, unknown> | null) ?? {}
-
-    const generatedEntries = Array.isArray(schedule.generated_entries) ? schedule.generated_entries : []
-    const sessionRows = Array.isArray(curriculum.session_rows) ? curriculum.session_rows : []
-    const studentsTotal = typeof students.total === "number"
-      ? students.total
-      : (Array.isArray(students.students) ? students.students.length : 0)
-
-    const essentialsDone = hasText(raw.course_name) && hasText(raw.course_description) && hasText(raw.course_language) && hasText(raw.course_type)
-    const studentsDone = studentsTotal > 0
-    const scheduleDone = generatedEntries.length > 0
-    const curriculumDone = sessionRows.length > 0
-
-    setCompletedSetupSections({
-      essentials: essentialsDone,
-      students: studentsDone,
-      schedule: scheduleDone,
-      curriculum: curriculumDone,
-    })
+    const report = evaluateCourseSetupReadiness(raw)
+    setCompletedSetupSections(
+      report.sections.reduce<Record<string, boolean>>((acc, section) => {
+        acc[section.id] = section.complete
+        return acc
+      }, {}),
+    )
   }, [])
-
-  useEffect(() => {
-    const initialKeys = getBuilderStorageKeys(resolvedUrlCourseId)
-    const frame = window.requestAnimationFrame(() => {
-      if (!isView(urlView)) {
-        const storedView = window.localStorage.getItem(initialKeys.view)
-        if (isView(storedView)) setView(storedView)
-      }
-      const storedSection = window.localStorage.getItem(initialKeys.section)
-      if (isSectionId(storedSection)) setActiveSection(storedSection)
-    })
-
-    return () => window.cancelAnimationFrame(frame)
-  }, [urlView, resolvedUrlCourseId])
 
   useEffect(() => {
     if (!urlCourseId) return
@@ -88,7 +51,7 @@ export function useCourseBuilderState() {
       setAccessError(null)
       const { data, error } = await selectCourseById<Record<string, unknown>>(
         urlCourseId,
-        "id, course_name, course_subtitle, course_description, course_language, course_type, course_image, teacher_id, institution, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout",
+        "id, course_name, course_subtitle, course_description, course_language, course_type, course_image, teacher_id, institution_id, institution, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout, visibility_settings, pricing_settings, marketplace_settings, integration_settings, communication_settings",
       )
       if (!error && data) {
         const ownerId = typeof data.teacher_id === "string" ? data.teacher_id : null
@@ -109,6 +72,7 @@ export function useCourseBuilderState() {
           courseType: (data.course_type as string) ?? "",
           teacherId: (typeof data.teacher_id === "string" ? data.teacher_id : (typeof gs?.teacher_id === "string" ? gs.teacher_id : "")) ?? "",
           teacherName: (typeof gs?.teacher_name === "string" ? gs.teacher_name : "") ?? "",
+          institutionId: (typeof data.institution_id === "string" ? data.institution_id : null),
           institution: (data.institution as string) ?? "Independent",
           imageName: null,
           imageUrl: (data.course_image as string | null) ?? null,
@@ -146,16 +110,12 @@ export function useCourseBuilderState() {
     completionFetchRef.current = { courseId, at: now }
     void selectCourseById<Record<string, unknown>>(
       courseId,
-      "course_name, course_description, course_language, course_type, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout",
+      "course_name, course_description, course_language, course_type, teacher_id, institution_id, institution, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout, visibility_settings, pricing_settings, marketplace_settings, integration_settings, communication_settings",
     ).then(({ data, error }) => {
       if (error || !data) return
       hydrateSectionCompletion(data)
     })
   }, [courseId, hydrateSectionCompletion])
-
-  useEffect(() => {
-    window.localStorage.setItem(storageKeys.view, view)
-  }, [storageKeys.view, view])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -166,10 +126,6 @@ export function useCourseBuilderState() {
     const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash}`
     window.history.replaceState(window.history.state, "", nextUrl)
   }, [view])
-
-  useEffect(() => {
-    window.localStorage.setItem(storageKeys.section, activeSection)
-  }, [storageKeys.section, activeSection])
 
   useEffect(() => {
     const handler = (event: Event) => {

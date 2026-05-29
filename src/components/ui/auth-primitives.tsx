@@ -68,16 +68,18 @@ export function AuthSelect({
 export function AuthSubmitButton({
   loading,
   loadingLabel,
+  disabled = false,
   children,
 }: {
   loading: boolean
   loadingLabel: string
+  disabled?: boolean
   children: ReactNode
 }) {
   return (
     <button
       type="submit"
-      disabled={loading}
+      disabled={loading || disabled}
       className="mt-1 w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       {loading ? loadingLabel : children}

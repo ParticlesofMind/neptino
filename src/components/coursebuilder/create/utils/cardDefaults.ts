@@ -6,13 +6,14 @@
  */
 
 import type { CardType } from "../types"
+import {
+  CANVAS_COMPOSITION_CONTENT_WIDTH_PX,
+  STANDARD_COMPOSITION_DIMENSIONS,
+  TALL_COMPOSITION_DIMENSIONS,
+  type CardDimensions,
+} from "../cards/cardSizing"
 
 // ─── Default dimensions ───────────────────────────────────────────────────────
-
-export interface CardDimensions {
-  width: number
-  height: number
-}
 
 /**
  * Returns optimal default dimensions for a given card type.
@@ -31,12 +32,16 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     flashcards: { width: 520, height: 340 },
     "code-snippet": { width: 560, height: 300 },
     "model-3d": { width: 520, height: 280 },
-    map:        { width: 480, height: 360 },
+    map:        { width: CANVAS_COMPOSITION_CONTENT_WIDTH_PX, height: 380 },
     chart:      { width: 480, height: 320 },
     diagram:    { width: 480, height: 320 },
     media:      { width: 460, height: 240 },
     document:   { width: 420, height: 560 },
     table:      { width: 520, height: 360 },
+    "source-excerpt": { width: 440, height: 300 },
+    citation:    { width: 380, height: 220 },
+    bibliography: { width: 460, height: 320 },
+    "gis-layer": { width: 420, height: 260 },
 
     // ── Interactive cards ──
     "rich-sim":   { width: 520, height: 320 },
@@ -50,35 +55,37 @@ export function getDefaultCardDimensions(cardType: CardType): CardDimensions {
     "text-editor": { width: 520, height: 360 },
     "code-editor": { width: 560, height: 380 },
     whiteboard:   { width: 640, height: 420 },
-    timeline:     { width: 420, height: 480 },
+    slides:       { width: 720, height: 430 },
+    timeline:     { width: CANVAS_COMPOSITION_CONTENT_WIDTH_PX, height: 180 },
     legend:       { width: 240, height: 320 },
 
     // ── Layout cards ──
-    "layout-split":     { width: 642, height: 310 },
-    "layout-stack":     { width: 642, height: 420 },
-    "layout-feature":   { width: 642, height: 400 },
-    "layout-sidebar":   { width: 642, height: 310 },
-    "layout-quad":      { width: 642, height: 510 },
-    "layout-mosaic":    { width: 642, height: 630 },
-    "layout-triptych":  { width: 780, height: 310 },
-    "layout-trirow":    { width: 642, height: 540 },
-    "layout-banner":    { width: 642, height: 440 },
-    "layout-broadside": { width: 780, height: 440 },
-    "layout-tower":     { width: 700, height: 540 },
-    "layout-pinboard":  { width: 642, height: 560 },
-    "layout-annotated": { width: 700, height: 510 },
-    "layout-sixgrid":   { width: 780, height: 510 },
-    "layout-comparison": { width: 700, height: 360 },
-    "layout-stepped": { width: 680, height: 520 },
-    "layout-hero": { width: 780, height: 420 },
-    "layout-dialogue": { width: 700, height: 340 },
-    "layout-gallery": { width: 780, height: 520 },
-    "layout-spotlight": { width: 760, height: 520 },
-    "layout-flipcard": { width: 700, height: 420 },
-    "layout-resizable-grid": { width: 780, height: 460 },
+    "layout-split":     STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-stack":     STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-feature":   STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-sidebar":   STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-quad":      STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-mosaic":    TALL_COMPOSITION_DIMENSIONS,
+    "layout-triptych":  STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-trirow":    STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-banner":    STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-broadside": STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-tower":     STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-pinboard":  STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-annotated": TALL_COMPOSITION_DIMENSIONS,
+    "layout-sixgrid":   TALL_COMPOSITION_DIMENSIONS,
+    "layout-comparison": STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-stepped": STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-hero": STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-dialogue": STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-gallery": TALL_COMPOSITION_DIMENSIONS,
+    "layout-spotlight": TALL_COMPOSITION_DIMENSIONS,
+    "layout-flipcard": STANDARD_COMPOSITION_DIMENSIONS,
+    "layout-resizable-grid": STANDARD_COMPOSITION_DIMENSIONS,
   }
 
-  return dimensionMap[cardType] ?? { width: 420, height: 220 }
+  const dimensions = dimensionMap[cardType]
+  return dimensions ? { ...dimensions } : { width: 420, height: 220 }
 }
 
 // ─── Sample content ───────────────────────────────────────────────────────────
@@ -240,6 +247,50 @@ export function getSampleCardContent(
         format: "HTML",
       }
 
+    case "source-excerpt":
+      return {
+        title,
+        excerpt: "Students should examine this passage as evidence, then connect it to the claim or question under discussion.",
+        context: "Add source context, authorship, audience, purpose, and relevant uncertainty.",
+        locator: "Page, paragraph, timestamp, map sheet, or archive reference",
+        citationTitle: "Source title",
+        sourceUrl: "",
+      }
+
+    case "citation":
+      return {
+        title,
+        creator: "Author or institution",
+        year: "2026",
+        sourceUrl: "",
+        sourceType: "web",
+        license: "Review required",
+        attribution: "",
+      }
+
+    case "bibliography":
+      return {
+        title,
+        style: "short",
+        entries: [
+          { title: "Primary source record", creator: "Institution", year: "2026", url: "", license: "Review required" },
+          { title: "Supporting source", creator: "Author", year: "2026", url: "", license: "Review required" },
+        ],
+        notes: "Add the strongest classroom-ready sources first.",
+      }
+
+    case "gis-layer":
+      return {
+        title,
+        layerType: "boundary",
+        geometryType: "GeoJSON",
+        featureCount: 1,
+        dateRange: "Review required",
+        geometryPrecision: "Unknown",
+        sourceUrl: "",
+        warnings: ["Geometry requires source review before classroom use."],
+      }
+
     case "rich-sim":
       return {
         title,
@@ -348,6 +399,16 @@ export function getSampleCardContent(
         prompt: "Sketch a concept map, diagram a process, or collect quick visual notes.",
       }
 
+    case "slides":
+      return {
+        title,
+        slides: [
+          { title: "Opening", body: "Introduce the topic and orient the audience.", notes: "Set context before showing evidence." },
+          { title: "Evidence", body: "Place a source, map, chart, image, or example here.", notes: "Ask students what they notice." },
+          { title: "Synthesis", body: "Summarise the key claim or next action.", notes: "Close with a short check for understanding." },
+        ],
+      }
+
     case "timeline":
       return {
         title,
@@ -392,7 +453,7 @@ export function getSampleCardContent(
     case "layout-spotlight":
     case "layout-flipcard":
     case "layout-resizable-grid":
-      return { slots: {} }
+      return { title, slots: {} }
 
     default:
       return { title }

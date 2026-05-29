@@ -8,18 +8,27 @@ import {
   rowsForResizableGridSlotHeight,
 } from "@/components/coursebuilder/create/cards/card-types/LayoutCard"
 import { CATEGORIES, LIBRARY_ITEMS } from "@/components/coursebuilder/create/sidebar/files-browser-data"
+import { buildCompositionPresetContent, getCompositionPreset } from "@/components/coursebuilder/create/sidebar/composition-presets"
+import { getDefaultCardDimensions } from "@/components/coursebuilder/create/utils/cardDefaults"
 
 describe("layout card placement surfaces", () => {
-  it("keeps built-in layout selection out of Curate", () => {
-    expect(CATEGORIES.some((category) => category.id === "layout")).toBe(false)
-    expect(LIBRARY_ITEMS.some((item) => item.cardType.startsWith("layout-"))).toBe(false)
+  it("weaves built-in layout selection into the composition category", () => {
+    expect(CATEGORIES.map((category) => String(category.id))).not.toContain("layout")
+    expect(CATEGORIES.find((category) => category.id === "compositions")?.types).toContain("layout-split")
+    expect(LIBRARY_ITEMS.every((item) => item.group === "compositions")).toBe(true)
+    expect(LIBRARY_ITEMS.find((item) => item.id === "composition-preset-cartographic-simulation")).toMatchObject({
+      cardType: "layout-feature",
+      group: "compositions",
+      subgroup: "simulation",
+      title: "Cartographic simulation",
+    })
   })
 
   it("exposes every layout definition in Make", () => {
-    expect(GROUPS.find((group) => group.id === "layout")?.label).toBe("Compositions")
+    expect(GROUPS.find((group) => group.id === "compositions")?.label).toBe("Compositions")
 
     const makeLayoutTypes = CARD_SPECS
-      .filter((spec) => spec.group === "layout")
+      .filter((spec) => spec.cardType.startsWith("layout-"))
       .map((spec) => spec.cardType)
       .sort()
 
@@ -28,6 +37,32 @@ describe("layout card placement surfaces", () => {
       .sort()
 
     expect(makeLayoutTypes).toEqual(layoutDefTypes)
+  })
+
+  it("builds cartographic simulation with legend, map, and timeline child cards", () => {
+    const preset = getCompositionPreset("cartographic-simulation")
+    expect(preset).toBeDefined()
+
+    const content = buildCompositionPresetContent(preset!, "layout-feature")
+    expect(content).toMatchObject({
+      compositionPresetId: "cartographic-simulation",
+      pagePlacement: "full-body",
+    })
+    expect(content.slots).toMatchObject({
+      0: [expect.objectContaining({ cardType: "legend", content: expect.objectContaining({ title: "Map legend" }) })],
+      1: [expect.objectContaining({ cardType: "map", content: expect.objectContaining({ title: "Scenario map" }) })],
+      2: [expect.objectContaining({ cardType: "timeline", content: expect.objectContaining({ title: "Change over time" }) })],
+    })
+  })
+
+  it("uses a portrait default surface for cartographic compositions", () => {
+    expect(getDefaultCardDimensions("layout-feature")).toMatchObject({
+      width: 642,
+      height: 680,
+    })
+    const map = getDefaultCardDimensions("map")
+    expect(map.width).toBeLessThanOrEqual(642)
+    expect(map.height).toBeGreaterThan(360)
   })
 
   it("normalizes the experimental resizable grid layout", () => {

@@ -32,7 +32,7 @@ describe("CardRenderer drag handle", () => {
     )
 
     expect(screen.getByRole("button", { name: "Move card" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Remove block" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Remove card" })).toBeInTheDocument()
     expect(screen.getByText("Students should be able to select this text without moving the card.")).toBeInTheDocument()
   })
 
@@ -44,6 +44,6 @@ describe("CardRenderer drag handle", () => {
     )
 
     expect(screen.queryByRole("button", { name: "Move card" })).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Remove block" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Remove card" })).not.toBeInTheDocument()
   })
 })

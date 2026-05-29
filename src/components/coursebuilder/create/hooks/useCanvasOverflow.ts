@@ -326,7 +326,6 @@ export function useCanvasOverflow({
   const setCanvasObjectiveRange = useCourseStore((s) => s.setCanvasObjectiveRange)
   const setCanvasTaskRange      = useCourseStore((s) => s.setCanvasTaskRange)
   const setCanvasCardRange      = useCourseStore((s) => s.setCanvasCardRange)
-  const setCanvasLayoutSlotRange = useCourseStore((s) => s.setCanvasLayoutSlotRange)
   const appendCanvasPage        = useCourseStore((s) => s.appendCanvasPage)
 
   // Read the current contentTopicRange for this canvas from the store snapshot.
@@ -607,64 +606,11 @@ export function useCanvasOverflow({
         }
       }
 
-      // e) layout-slot split for a single oversized composition card
-      const layoutSlotSplit = findLayoutSlotSplitPoint(body, content, available)
-      if (layoutSlotSplit !== null) {
-        const currentCardStart = getCardRangeStart()
-        if (layoutSlotSplit.cardIdx >= currentCardStart) {
-          const sessionSnap = useCourseStore.getState().sessions.find((s) => s.id === sessionId)
-          if (!sessionSnap) return false
-          const canvasSnap  = sessionSnap.canvases.find((c) => c.id === canvasId)
-          const continuationBlockKeys = deriveContinuationBlockKeys(sessionSnap, canvasId)
-          const currentTopicStart = canvasSnap?.contentTopicRange?.start ?? 0
-          const currentTopicEnd = canvasSnap?.contentTopicRange?.end
-          const currentObjStart = canvasSnap?.contentObjectiveRange?.start ?? 0
-          const currentObjEnd = canvasSnap?.contentObjectiveRange?.end
-          const currentTaskStart = canvasSnap?.contentTaskRange?.start ?? 0
-          const currentTaskEnd = canvasSnap?.contentTaskRange?.end
-          const currentLayoutSlotStart = canvasSnap?.contentLayoutSlotRange?.start ?? 0
-          const cardEnd = layoutSlotSplit.cardIdx + 1
+      // Composition cards stay atomic. If one does not fit, its declared size
+      // needs correction; splitting internal slots makes products disappear
+      // from the page where teachers expect to see the whole composition.
 
-          if (layoutSlotSplit.splitAt <= currentLayoutSlotStart) return false
-
-          const continuationExists = sessionSnap.canvases.some(
-            (c) =>
-              c.id !== canvasId &&
-              c.contentLayoutSlotRange?.cardId === layoutSlotSplit.cardId &&
-              c.contentLayoutSlotRange?.start === layoutSlotSplit.splitAt &&
-              c.contentCardRange?.start === layoutSlotSplit.cardIdx,
-          )
-
-          if (!continuationExists) {
-            splitGuard.current = true
-            setCanvasCardRange(canvasId, { start: layoutSlotSplit.cardIdx, end: cardEnd })
-            setCanvasLayoutSlotRange(canvasId, {
-              cardId: layoutSlotSplit.cardId,
-              start: currentLayoutSlotStart,
-              end: layoutSlotSplit.splitAt,
-            })
-            appendCanvasPage(sessionId, currentTopicStart, {
-              afterCanvasId: canvasId,
-              topicEnd: currentTopicEnd,
-              objectiveStart: currentObjStart,
-              objectiveEnd: currentObjEnd,
-              taskStart: currentTaskStart,
-              taskEnd: currentTaskEnd,
-              cardStart: layoutSlotSplit.cardIdx,
-              cardEnd,
-              layoutSlotRange: {
-                cardId: layoutSlotSplit.cardId,
-                start: layoutSlotSplit.splitAt,
-              },
-              blockKeys: continuationBlockKeys,
-            })
-            releaseSplitGuard()
-            return true
-          }
-        }
-      }
-
-      // f) card-level split (always allowed)
+      // e) card-level split (always allowed)
       const splitAtCardIdx = findCardSplitPoint(body, content, available)
       if (splitAtCardIdx !== null) {
         const currentCardStart = getCardRangeStart()
@@ -738,7 +684,6 @@ export function useCanvasOverflow({
     setCanvasObjectiveRange,
     setCanvasTaskRange,
     setCanvasCardRange,
-    setCanvasLayoutSlotRange,
     appendCanvasPage,
     getTopicRangeStart,
     getObjectiveRangeStart,

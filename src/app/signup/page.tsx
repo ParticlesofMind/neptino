@@ -2,31 +2,52 @@
 
 import { createClient, getSupabaseClientConfigError } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { BookOpen, Building2, GraduationCap, type LucideIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PublicShell } from '@/components/layout/public-shell'
-import { AuthErrorBanner, AuthInput, AuthSubmitButton } from '@/components/ui/auth-primitives'
+import { AuthErrorBanner, AuthInput, AuthSelect, AuthSubmitButton } from '@/components/ui/auth-primitives'
 import { buttonVariants } from '@/components/ui/button'
+import {
+  getSignupProvisioning,
+  INSTITUTION_TYPE_OPTIONS,
+  isSignupIntent,
+  type SignupIntent,
+} from '@/lib/institutions/core'
+import { resolvePostAuthDestination } from '@/lib/institutions/client'
 
-type Role = 'student' | 'teacher' | 'administrator'
+type PublicSignupIntent = Exclude<SignupIntent, 'join_course'>
 
-const ROLES: { value: Role; label: string; description: string }[] = [
+const SIGNUP_INTENTS: {
+  value: PublicSignupIntent
+  label: string
+  description: string
+  icon: LucideIcon
+}[] = [
   {
-    value: 'student',
+    value: 'learn_independently',
     label: 'Student',
-    description: 'Enroll in courses and track your progress',
+    description: 'Learn independently, then join teacher-led courses with a link, code, or invite.',
+    icon: GraduationCap,
   },
   {
-    value: 'teacher',
+    value: 'create_courses',
     label: 'Teacher',
-    description: 'Build courses and manage your students',
+    description: 'Build courses now. Your workspace can be named or changed later.',
+    icon: BookOpen,
   },
   {
-    value: 'administrator',
+    value: 'setup_institution',
     label: 'Admin',
-    description: 'Oversee users and institution settings',
+    description: 'Set up a school or organization, then manage courses, access, and teams.',
+    icon: Building2,
   },
 ]
+
+const JOIN_INTENT_COPY = {
+  label: 'Continue with an invitation',
+  description: 'Use the email address your school, teacher, or organization provided for this access.',
+}
 
 const PersonIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2"
@@ -53,6 +74,15 @@ const LockIcon = (
   </svg>
 )
 
+const BuildingIcon = (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="2"
+    stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4" y="2" width="16" height="20" rx="2" />
+    <path d="M9 22v-4h6v4" />
+    <path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01" />
+  </svg>
+)
+
 const EyeIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" strokeWidth="2"
     stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
@@ -74,7 +104,11 @@ export default function SignupPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<Role>('student')
+  const [intent, setIntent] = useState<SignupIntent | null>(null)
+  const [institutionName, setInstitutionName] = useState('')
+  const [institutionType, setInstitutionType] = useState('private_school')
+  const [inviteToken, setInviteToken] = useState<string | null>(null)
+  const [hasJoinContext, setHasJoinContext] = useState(false)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -87,8 +121,21 @@ export default function SignupPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const next = new URLSearchParams(window.location.search).get('next')
-      setNextPath(next?.startsWith('/') ? next : null)
+      const params = new URLSearchParams(window.location.search)
+      const next = params.get('next')
+      const requestedIntent = params.get('intent')
+      const token = params.get('invite_token') ?? params.get('token')
+      const safeNext = next?.startsWith('/') ? next : null
+      const joinContext = requestedIntent === 'join_course' || safeNext?.startsWith('/join/') === true || Boolean(token?.trim())
+
+      setNextPath(safeNext)
+      setHasJoinContext(joinContext)
+      if (joinContext) {
+        setIntent('join_course')
+      } else if (isSignupIntent(requestedIntent) && requestedIntent !== 'join_course') {
+        setIntent(requestedIntent)
+      }
+      if (token?.trim()) setInviteToken(token.trim())
     }, 0)
     return () => window.clearTimeout(timer)
   }, [])
@@ -107,6 +154,24 @@ export default function SignupPage() {
       return
     }
 
+    if (!intent) {
+      setError('Choose Student, Teacher, or Admin to continue.')
+      return
+    }
+
+    const provisioning = getSignupProvisioning({
+      intent,
+      firstName,
+      lastName,
+      institutionName,
+      institutionType,
+    })
+
+    if (intent === 'setup_institution' && !provisioning.institutionName) {
+      setError('Enter a school or organization name.')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -115,10 +180,15 @@ export default function SignupPage() {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath ?? '/')}`,
           data: {
             first_name: firstName,
             last_name: lastName,
-            user_role: role,
+            signup_intent: intent,
+            user_role: provisioning.legacyRole,
+            institution_name: provisioning.institutionName,
+            institution_type: provisioning.institutionType,
+            invite_token: inviteToken,
           },
         },
       })
@@ -127,13 +197,12 @@ export default function SignupPage() {
         setError(error.message)
         setLoading(false)
       } else if (data.session) {
-        // Email confirmation is disabled — user is immediately signed in, redirect to their dashboard
-        const roleRoutes: Record<Role, string> = {
-          student: '/student',
-          teacher: '/teacher',
-          administrator: '/admin',
-        }
-        router.push(nextPath ?? roleRoutes[role])
+        const destination = await resolvePostAuthDestination({
+          supabase,
+          userId: data.session.user.id,
+          nextPath,
+        })
+        router.push(!nextPath && intent === 'create_courses' ? '/teacher' : destination)
       } else {
         setSuccess(true)
         setLoading(false)
@@ -162,7 +231,7 @@ export default function SignupPage() {
               <h1 className="text-lg font-bold text-foreground mb-1.5">Check your email</h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 A confirmation link has been sent to{' '}
-                <span className="font-semibold text-foreground/80">{email}</span>. Click it to activate your <span className="font-semibold">{role}</span> account.
+                <span className="font-semibold text-foreground/80">{email}</span>. Click it to finish setting up your account.
               </p>
             </div>
             <Link href={loginHref} className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}>
@@ -185,37 +254,97 @@ export default function SignupPage() {
           <div className="rounded-2xl border border-border bg-background shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden">
             {/* Header */}
             <div className="px-8 pt-8 pb-6 border-b border-muted">
-              <h1 className="text-xl font-bold text-foreground mb-1">Join Neptino</h1>
-              <p className="text-sm text-muted-foreground">Create your account to get started</p>
+              <h1 className="text-xl font-bold text-foreground mb-1">
+                {hasJoinContext ? 'Accept your Neptino access' : 'Create your Neptino account'}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {hasJoinContext
+                  ? 'Finish setup from the link or invitation you received.'
+                  : 'Choose how you want to use Neptino.'}
+              </p>
             </div>
 
             <form onSubmit={handleSignup} className="px-8 py-6 space-y-3.5">
               {(error || configError) && <AuthErrorBanner message={error ?? configError!} />}
 
-              {/* Role picker */}
-              <div>
-                <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">I am a</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {ROLES.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setRole(value)}
-                      disabled={loading}
-                      className={`rounded-xl border px-3 py-2 text-center text-sm font-medium transition-all duration-150 disabled:opacity-50 ${
-                        role === value
-                          ? 'border-primary bg-accent text-primary ring-2 ring-primary/15'
-                          : 'border-border bg-muted text-foreground hover:border-muted-foreground/40 hover:bg-background'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+              {hasJoinContext ? (
+                <div className="rounded-xl border border-primary/30 bg-accent px-3 py-3">
+                  <p className="text-sm font-semibold text-primary">{JOIN_INTENT_COPY.label}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{JOIN_INTENT_COPY.description}</p>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground leading-snug min-h-[1rem]">
-                  {ROLES.find(r => r.value === role)?.description}
-                </p>
-              </div>
+              ) : (
+                <div>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Choose your profile</p>
+                  <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Profile type">
+                    {SIGNUP_INTENTS.map(({ value, label, icon: Icon }) => {
+                      const selected = intent === value
+
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => setIntent(value)}
+                          disabled={loading}
+                          className={`flex h-[4.25rem] flex-col items-center justify-center gap-1.5 rounded-xl border px-2 text-center text-xs font-semibold transition-all duration-150 disabled:opacity-50 sm:text-sm ${
+                            selected
+                              ? 'border-primary bg-accent text-primary ring-2 ring-primary/15'
+                              : 'border-border bg-muted text-foreground hover:border-muted-foreground/40 hover:bg-background'
+                          }`}
+                        >
+                          <Icon aria-hidden="true" className="h-4 w-4" strokeWidth={2.1} />
+                          <span>{label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="mt-3 flex min-h-[4rem] items-center rounded-lg border border-border bg-muted/40 px-3 py-2">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      {SIGNUP_INTENTS.find((option) => option.value === intent)?.description
+                        ?? 'Select a profile to see how Neptino will set up your account.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {intent === 'create_courses' && (
+                <AuthInput
+                  type="text"
+                  icon={BuildingIcon}
+                  value={institutionName}
+                  onChange={(e) => setInstitutionName(e.target.value)}
+                  placeholder="Workspace name (optional)"
+                  disabled={loading}
+                  autoComplete="organization"
+                />
+              )}
+
+              {intent === 'setup_institution' && (
+                <div className="grid gap-3.5">
+                  <AuthInput
+                    type="text"
+                    icon={BuildingIcon}
+                    value={institutionName}
+                    onChange={(e) => setInstitutionName(e.target.value)}
+                    placeholder="School or organization name"
+                    required
+                    disabled={loading}
+                    autoComplete="organization"
+                  />
+                  <AuthSelect
+                    icon={BuildingIcon}
+                    value={institutionType}
+                    onChange={(e) => setInstitutionType(e.target.value)}
+                    disabled={loading}
+                    required
+                  >
+                    {INSTITUTION_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </AuthSelect>
+                </div>
+              )}
 
               <AuthInput
                 type="text"
@@ -279,8 +408,16 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <AuthSubmitButton loading={loading} loadingLabel="Creating account…">
-                Create Account
+              <AuthSubmitButton loading={loading} loadingLabel="Creating account…" disabled={!intent}>
+                {hasJoinContext
+                  ? 'Create Account'
+                  : intent === 'setup_institution'
+                    ? 'Create Organization'
+                    : intent === 'create_courses'
+                      ? 'Create Workspace'
+                      : intent === 'learn_independently'
+                        ? 'Create Learner Account'
+                        : 'Choose a Profile'}
               </AuthSubmitButton>
 
               <p className="text-xs text-muted-foreground/60 leading-relaxed text-center">

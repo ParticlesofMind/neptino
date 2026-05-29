@@ -9,8 +9,11 @@ import {
   generateDemoPoints,
   generateDemoChoropleth,
   normalizeOverlayLayers,
+  type DemoCell,
+  type DemoPoint,
   type MapStyleName,
   type OverlayLayer,
+  type TerritoryLayer,
 } from "./map-editor-config"
 import { EditorSplitLayout } from "./editor-split-layout"
 import { EditorPreviewFrame } from "./editor-preview-frame"
@@ -38,11 +41,24 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
     typeof content.mapLayer === "string" ? content.mapLayer : "Standard"
   ) as MapStyleName
   const layers = useMemo(() => normalizeOverlayLayers(content.layers), [content.layers])
+  const atlasPoints: DemoPoint[] = Array.isArray(content.points)
+    ? (content.points as DemoPoint[])
+    : []
+  const atlasCells: DemoCell[] = Array.isArray(content.cells)
+    ? (content.cells as DemoCell[])
+    : []
+  const territories: TerritoryLayer[] = Array.isArray(content.territories)
+    ? (content.territories as TerritoryLayer[])
+    : Array.isArray(content.geojsonLayers)
+      ? (content.geojsonLayers as TerritoryLayer[])
+      : []
 
   const tile = TILE_LAYERS[mapLayer]
 
   const demoPoints = useMemo(() => generateDemoPoints(lat, lng), [lat, lng])
   const demoCells = useMemo(() => generateDemoChoropleth(lat, lng), [lat, lng])
+  const points = atlasPoints.length > 0 ? atlasPoints : demoPoints
+  const cells = atlasCells.length > 0 ? atlasCells : demoCells
 
   const normalizeViewport = () => {
     onChange("lat", clamp(lat, -85, 85))
@@ -94,8 +110,10 @@ export function MapEditorInner({ content, onChange }: MapEditorProps) {
                 tileUrl={tile.url}
                 tileAttribution={tile.attribution}
                 layers={layers}
-                points={demoPoints}
-                cells={demoCells}
+                points={points}
+                cells={cells}
+                territories={territories}
+                fitToTerritories={territories.length > 0}
                 interactive
                 choroplethColor={scoreToColor}
                 onViewportChange={(nextLat, nextLng, nextZoom) => {

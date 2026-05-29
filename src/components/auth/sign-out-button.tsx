@@ -15,6 +15,7 @@ export function SignOutButton() {
 
     const supabase = createClient()
     await supabase.auth.signOut()
+    document.cookie = "active_institution_id=; Max-Age=0; path=/; SameSite=Lax"
     router.refresh()
     router.push('/login')
   }
@@ -25,7 +26,7 @@ export function SignOutButton() {
       className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/30 hover:bg-muted/50 hover:text-foreground transition-all cursor-pointer"
     >
       <LogOut className="h-3.5 w-3.5" />
-      Sign out
+      <span className="hidden sm:inline">Sign out</span>
     </button>
   )
 }

@@ -10,6 +10,8 @@ The next major resource milestone should be a **Source Registry**: each resource
 
 ## Ranking Scale
 
+These ranks are starting priors, not permanent truth. The system should treat provider rank as an initial routing signal and improve it through teacher evaluation, source correction history, classroom usefulness, visual accuracy, license clarity, and dispute rates. AI may extract metadata and flag caveats, but it should not be the final judge of source quality.
+
 | Rank | Meaning | Use in Neptino |
 |---|---|---|
 | S | Authoritative, open, machine-readable, strong provenance, stable enough for product integration. | Default source for generated/imported resources. |
@@ -126,6 +128,21 @@ For historical boundaries, the UI should distinguish **territory directly contro
 | `revision_id` | Source revision if available, e.g. Wikidata revision, OSM/OHM version. |
 | `source_claims` | Links to supporting claims/references for factual statements. |
 | `warnings` | License caveat, NC restriction, historical uncertainty, incomplete coverage. |
+
+## Teacher Evaluation Loop
+
+Provider rank should become empirical over time.
+
+| Signal | Meaning | Product use |
+|---|---|---|
+| Teacher rating | Quick classroom-quality score for a source record or generated card. | Raise or lower source priority by subject, level, and resource type. |
+| Accuracy correction | Teacher flags a factual, temporal, geographic, or visual issue. | Mark derived cards as disputed and queue review. |
+| Visual quality rating | Teacher judges whether map geometry, charts, media, or diagrams were classroom-ready. | Improve retrieval ranking for visual resources and phase out weak providers. |
+| License/rights issue | Teacher or reviewer flags unclear or unsafe reuse. | Suppress automatic import until rights are reviewed. |
+| Corroboration count | Multiple independent sources support the same claim or geometry. | Increase confidence and show stronger trust badges. |
+| Rejection reason | Teacher rejects a source because it is irrelevant, misleading, too shallow, outdated, or unusable. | Train source selection heuristics without treating AI output as truth. |
+
+Implementation rule: every injected material or composition should carry source records, citations, confidence, warnings, review state, and teacher feedback hooks. The first version can store that payload on card content; mature Atlas should aggregate feedback against `atlas_source_records` and source-specific candidates.
 
 ## Implementation Recommendation
 

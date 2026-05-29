@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getAtlasSourceHierarchy, type AtlasSourceStatus } from "@/lib/atlas/source-registry"
 import { ISCED_DOMAINS } from "@/types/atlas"
 import {
   getSingleParam, normalizeFilter, parsePositiveInt, uniqueSorted,
@@ -24,6 +25,14 @@ export type AtlasPageData = {
   selectedMediaType: string | null; selectedEra: string | null; selectedOrder: string | null
   // Options
   domainOptions: string[]; eraOptions: string[]
+  // Overview
+  overview: {
+    localItems: number
+    mediaResources: number
+    repositoryCandidates: number
+    sourceRecords: number
+  }
+  sourceStatuses: AtlasSourceStatus[]
   // Items
   items: EncyclopediaItemRow[]; rangeStart: number; rangeEnd: number
   visiblePages: number[]; isLarge: boolean
@@ -64,8 +73,18 @@ export async function fetchAtlasPageData(rawParams: SearchParams): Promise<Atlas
   const domainOptions = ISCED_DOMAINS
 
   const eraOrder = ["ancient", "early-modern", "modern", "contemporary"]
-  const [eraOptionsRes] = await Promise.all([
+  const [
+    eraOptionsRes,
+    itemCountRes,
+    mediaCountRes,
+    sourceRecordsCountRes,
+    repositoryCandidatesCountRes,
+  ] = await Promise.all([
     supabase.from("encyclopedia_items").select("era_group").not("era_group", "is", null),
+    supabase.from("encyclopedia_items").select("id", { count: "exact", head: true }),
+    supabase.from("encyclopedia_media").select("id", { count: "exact", head: true }),
+    supabase.from("atlas_source_records").select("id", { count: "exact", head: true }),
+    supabase.from("atlas_entity_candidates").select("id", { count: "exact", head: true }),
   ])
   const rawEraOptions = uniqueSorted((eraOptionsRes.data ?? []).map(r => r.era_group))
   const eraOptions = [
@@ -116,6 +135,13 @@ export async function fetchAtlasPageData(rawParams: SearchParams): Promise<Atlas
   }
 
   const availableCount = totalCount ?? 0
+  const sourceStatuses = getAtlasSourceHierarchy("composition")
+  const overview = {
+    localItems: itemCountRes.count ?? 0,
+    mediaResources: mediaCountRes.count ?? 0,
+    repositoryCandidates: repositoryCandidatesCountRes.count ?? 0,
+    sourceRecords: sourceRecordsCountRes.count ?? 0,
+  }
   const rangeStart = availableCount > 0 ? (activePage - 1) * PAGE_SIZE + 1 : 0
   const rangeEnd   = availableCount > 0 ? Math.min(activePage * PAGE_SIZE, availableCount) : 0
   const visiblePages = getVisiblePages(activePage, totalPages)
@@ -200,7 +226,7 @@ export async function fetchAtlasPageData(rawParams: SearchParams): Promise<Atlas
     selectedDomain, selectedDomainNarrow, selectedDomainDetail,
     selectedType, selectedSubtype, selectedLayer,
     selectedMediaType, selectedEra, selectedOrder,
-    domainOptions, eraOptions,
+    domainOptions, eraOptions, overview, sourceStatuses,
     items, rangeStart, rangeEnd, visiblePages, isLarge,
     mediaCountByItem, mediaTypesByItem, mediaPreviewByItem, hasCompendiumByItem,
     wikidataCardByItem, wikimediaPreviewByItem,

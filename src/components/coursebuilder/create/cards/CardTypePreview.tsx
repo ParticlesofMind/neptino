@@ -222,6 +222,129 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
       )
     }
 
+    case "source-excerpt": {
+      const excerpt = typeof content["excerpt"] === "string" ? content["excerpt"] : ""
+      const context = typeof content["context"] === "string" ? content["context"] : ""
+      const locator = typeof content["locator"] === "string" ? content["locator"] : ""
+      const citationTitle = typeof content["citationTitle"] === "string" ? content["citationTitle"] : typeof content["sourceTitle"] === "string" ? content["sourceTitle"] : ""
+      return (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+            <p className="text-[13px] leading-relaxed text-foreground line-clamp-6">
+              {excerpt || "Add a quoted or paraphrased source passage."}
+            </p>
+          </div>
+          {(context || locator || citationTitle) && (
+            <div className="space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
+              {citationTitle && <p className="font-semibold text-foreground/80">{citationTitle}</p>}
+              {locator && <p>{locator}</p>}
+              {context && <p className="line-clamp-3">{context}</p>}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    case "citation": {
+      const creator = typeof content["creator"] === "string" ? content["creator"] : ""
+      const year = typeof content["year"] === "string" ? content["year"] : ""
+      const sourceType = typeof content["sourceType"] === "string" ? content["sourceType"] : ""
+      const sourceUrl = typeof content["sourceUrl"] === "string" ? content["sourceUrl"] : typeof content["url"] === "string" ? content["url"] : ""
+      const license = typeof content["license"] === "string" ? content["license"] : ""
+      const attribution = typeof content["attribution"] === "string" ? content["attribution"] : ""
+      return (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-background px-4 py-3">
+            <p className="text-[13px] font-semibold leading-snug text-foreground">{title || "Untitled source"}</p>
+            {(creator || year) && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {[creator, year].filter(Boolean).join(", ")}
+              </p>
+            )}
+            {(sourceType || license) && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {sourceType && <span className="rounded border border-border bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground">{sourceType}</span>}
+                {license && <span className="rounded border border-border bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground">{license}</span>}
+              </div>
+            )}
+          </div>
+          {sourceUrl && <p className="truncate text-[10px] text-muted-foreground">{sourceUrl}</p>}
+          {attribution && <p className="text-[10px] italic text-muted-foreground/70">{attribution}</p>}
+        </div>
+      )
+    }
+
+    case "bibliography": {
+      const entries = Array.isArray(content["entries"])
+        ? (content["entries"] as Array<Record<string, unknown>>)
+        : []
+      const notes = typeof content["notes"] === "string" ? content["notes"] : ""
+      const style = typeof content["style"] === "string" ? content["style"] : ""
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4 text-muted-foreground/60" />
+            <span className="text-[12px] font-semibold text-foreground">{entries.length} source{entries.length === 1 ? "" : "s"}</span>
+            {style && <span className="ml-auto rounded border border-border bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground">{style}</span>}
+          </div>
+          <div className="space-y-2">
+            {(entries.length > 0 ? entries : [{ title: "Add a citation", creator: "", year: "" }]).slice(0, 5).map((entry, index) => {
+              const entryTitle = typeof entry.title === "string" ? entry.title : `Source ${index + 1}`
+              const creator = typeof entry.creator === "string" ? entry.creator : ""
+              const year = typeof entry.year === "string" ? entry.year : ""
+              const license = typeof entry.license === "string" ? entry.license : ""
+              return (
+                <div key={`${entryTitle}-${index}`} className="rounded-lg border border-border bg-background px-3 py-2">
+                  <p className="text-[11px] font-semibold text-foreground line-clamp-1">{entryTitle}</p>
+                  {(creator || year || license) && (
+                    <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
+                      {[creator, year, license].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          {notes && <p className="text-[11px] leading-relaxed text-muted-foreground line-clamp-3">{notes}</p>}
+        </div>
+      )
+    }
+
+    case "gis-layer": {
+      const layerType = typeof content["layerType"] === "string" ? content["layerType"] : "layer"
+      const geometryType = typeof content["geometryType"] === "string" ? content["geometryType"] : "GeoJSON"
+      const featureCount = typeof content["featureCount"] === "number" ? content["featureCount"] : 0
+      const dateRange = typeof content["dateRange"] === "string" ? content["dateRange"] : ""
+      const precision = typeof content["geometryPrecision"] === "string" ? content["geometryPrecision"] : ""
+      const warnings = Array.isArray(content["warnings"]) ? content["warnings"].map(String).filter(Boolean) : []
+      return (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[13px] font-semibold text-foreground">{title || "GIS layer"}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{layerType} · {geometryType}</p>
+              </div>
+              <span className="rounded border border-border bg-background px-2 py-1 text-[10px] font-semibold text-muted-foreground">{featureCount} feature{featureCount === 1 ? "" : "s"}</span>
+            </div>
+            {(dateRange || precision) && (
+              <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+                <div className="rounded border border-border bg-background px-2 py-1.5">{dateRange || "No date range"}</div>
+                <div className="rounded border border-border bg-background px-2 py-1.5">{precision || "Unknown precision"}</div>
+              </div>
+            )}
+          </div>
+          {warnings.length > 0 && (
+            <div className="space-y-1">
+              {warnings.slice(0, 2).map((warning, index) => (
+                <p key={`${warning}-${index}`} className="rounded border border-[#f1dfb8] bg-[#fff7e6] px-2 py-1 text-[10px] leading-relaxed text-[#8a5b16]">{warning}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )
+    }
+
     case "document": {
       const fileType = typeof content["documentType"] === "string"
         ? content["documentType"].toUpperCase()
@@ -785,6 +908,41 @@ export function CardTypePreview({ cardType, content, hideTitle, onTitleChange }:
             <div className="absolute left-6 top-6 rounded-lg border border-[#dbe8f6] bg-[#dbe8f6]/80 px-3 py-2 text-[11px] text-[#3a6ea0] shadow-sm">Main idea</div>
             <div className="absolute right-8 top-10 rounded-full border border-[#d6ede3] bg-[#d6ede3]/80 px-3 py-2 text-[11px] text-[#2e6b4a] shadow-sm">Sketch</div>
             <div className="absolute bottom-6 left-1/3 rounded-lg border border-[#f0e8cc] bg-[#f0e8cc]/80 px-3 py-2 text-[11px] text-[#7a6010] shadow-sm">Notes</div>
+          </div>
+        </div>
+      )
+    }
+
+    case "slides": {
+      const rawSlides = Array.isArray(content["slides"])
+        ? (content["slides"] as Array<{ title?: string; body?: string; notes?: string }>)
+        : []
+      const slides = rawSlides.length > 0
+        ? rawSlides
+        : [{ title: title || "Slide deck", body: "Add slides, notes, and embedded lesson materials." }]
+      return (
+        <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-border bg-neutral-50 px-3 py-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Slides</span>
+            <span className="text-[10px] text-muted-foreground">{slides.length} slides</span>
+          </div>
+          <div className="grid grid-cols-[4.5rem_1fr] gap-0">
+            <div className="space-y-1 border-r border-border bg-neutral-50 p-2">
+              {slides.slice(0, 4).map((slide, index) => (
+                <div key={`${slide.title ?? "slide"}-${index}`} className="rounded border border-border bg-white px-2 py-1.5">
+                  <p className="truncate text-[9px] font-semibold text-foreground">{index + 1}. {slide.title || "Untitled"}</p>
+                </div>
+              ))}
+            </div>
+            <div className="min-h-40 p-4">
+              <p className="text-[15px] font-bold text-foreground">{slides[0]?.title || title || "Slide deck"}</p>
+              <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">{slides[0]?.body || "Add slide content."}</p>
+              {slides[0]?.notes && (
+                <p className="mt-4 rounded-lg bg-muted/50 px-3 py-2 text-[10px] leading-relaxed text-muted-foreground">
+                  {slides[0].notes}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )

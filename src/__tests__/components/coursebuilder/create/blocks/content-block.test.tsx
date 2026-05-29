@@ -36,6 +36,28 @@ function card(
   }
 }
 
+function pageCompositionCard(
+  id: string,
+  taskId: TaskId,
+): DroppedCard {
+  return {
+    id: id as DroppedCardId,
+    cardId: `${id}-source` as DroppedCard["cardId"],
+    taskId,
+    areaKind: "instruction",
+    blockKey: "content",
+    cardType: "layout-feature",
+    position: { x: 0, y: 0 },
+    dimensions: { width: 642, height: 680 },
+    content: {
+      title: "Cartographic simulation",
+      pagePlacement: "full-body",
+      slots: {},
+    },
+    order: 1,
+  }
+}
+
 function buildSession({
   assignmentStartsAfterContent,
   earlierAssignmentCard,
@@ -127,6 +149,7 @@ describe("ContentBlock", () => {
           sessionId={session.id}
           canvasId={canvasId}
           blockKey="assignment"
+          fieldValues={{}}
           renderMode="preview"
         />
       </DndContext>,
@@ -149,6 +172,7 @@ describe("ContentBlock", () => {
           sessionId={session.id}
           canvasId={canvasId}
           blockKey="assignment"
+          fieldValues={{}}
           renderMode="preview"
         />
       </DndContext>,
@@ -156,5 +180,72 @@ describe("ContentBlock", () => {
 
     expect(screen.queryByRole("heading", { name: "Assignment" })).not.toBeInTheDocument()
     expect(screen.getAllByText("assignment-in-range").length).toBeGreaterThan(0)
+  })
+
+  it("renders a marked composition as page-body content instead of task chrome", () => {
+    const sessionId = "session-page-composition" as SessionId
+    const canvasId = "canvas-page-composition" as CanvasId
+    const topicId = "topic-page-composition" as TopicId
+    const objectiveId = "objective-page-composition" as ObjectiveId
+    const taskId = "task-page-composition" as TaskId
+    const session: CourseSession = {
+      id: sessionId,
+      courseId: "course-1" as CourseId,
+      order: 0,
+      title: "Session 1",
+      canvases: [
+        {
+          id: canvasId,
+          sessionId,
+          pageNumber: 1,
+          blockKeys: ["content"],
+          contentCardRange: { start: 0, end: 1 },
+        },
+      ],
+      topics: [
+        {
+          id: topicId,
+          sessionId,
+          label: "Topic shell",
+          order: 0,
+          objectives: [
+            {
+              id: objectiveId,
+              topicId,
+              label: "Objective shell",
+              order: 0,
+              tasks: [
+                {
+                  id: taskId,
+                  objectiveId,
+                  label: "Task shell",
+                  order: 0,
+                  droppedCards: [pageCompositionCard("cartographic-composition", taskId)],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+    useCourseStore.setState({ sessions: [session], activeSessionId: session.id })
+
+    render(
+      <DndContext>
+        <ContentBlock
+          sessionId={session.id}
+          canvasId={canvasId}
+          blockKey="content"
+          fieldValues={{}}
+          renderMode="preview"
+        />
+      </DndContext>,
+    )
+
+    expect(screen.getByTestId("page-composition-card")).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Content" })).not.toBeInTheDocument()
+    expect(screen.queryByText("Topic shell")).not.toBeInTheDocument()
+    expect(screen.queryByText("Objective shell")).not.toBeInTheDocument()
+    expect(screen.queryByText("Task shell")).not.toBeInTheDocument()
   })
 })

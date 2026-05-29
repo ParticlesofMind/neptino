@@ -1,17 +1,49 @@
+"use client"
+
+import { useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import type { View } from "@/components/coursebuilder/builder-types"
-import { VIEW_LABELS, getPrevView, getNextView } from "./page-section-registry"
+import { VIEW_LABELS, VIEW_SEQUENCE, getPrevView, getNextView } from "./page-section-registry"
 
 interface CourseBuilderTopBarProps {
   view: View
   setView: (v: View) => void
 }
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return Boolean(target.closest("input, textarea, select, [contenteditable='true']"))
+}
+
 export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps) {
   const prevView = getPrevView(view)
   const nextView = getNextView(view)
+
+  const stepNumber = (targetView: View) => VIEW_SEQUENCE.indexOf(targetView) + 1
+  const shortcutHint = (targetView: View) => (
+    <span className="inline-flex items-center whitespace-nowrap text-[10px] font-semibold text-muted-foreground/75">
+      Cmd/Ctrl + {stepNumber(targetView)}
+    </span>
+  )
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return
+      if (isEditableTarget(event.target)) return
+
+      const nextIndex = Number(event.key) - 1
+      const nextViewByNumber = VIEW_SEQUENCE[nextIndex]
+      if (!nextViewByNumber) return
+
+      event.preventDefault()
+      setView(nextViewByNumber)
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [setView])
 
   const previousControl = prevView === null ? (
     <Link
@@ -25,10 +57,12 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
     <button
       type="button"
       onClick={() => setView(prevView)}
+      title={`Go to ${VIEW_LABELS[prevView]} (Cmd/Ctrl + ${stepNumber(prevView)})`}
       className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60"
     >
       <ArrowLeft className="h-3.5 w-3.5" />
       {VIEW_LABELS[prevView]}
+      {shortcutHint(prevView)}
     </button>
   )
 
@@ -36,8 +70,10 @@ export function CourseBuilderTopBar({ view, setView }: CourseBuilderTopBarProps)
     <button
       type="button"
       onClick={() => setView(nextView)}
-      className="inline-flex h-8 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60"
+      title={`Go to ${VIEW_LABELS[nextView]} (Cmd/Ctrl + ${stepNumber(nextView)})`}
+      className="inline-flex h-8 items-center gap-1.5 rounded-md bg-background px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60"
     >
+      {shortcutHint(nextView)}
       {VIEW_LABELS[nextView]}
       <ArrowRight className="h-3.5 w-3.5" />
     </button>

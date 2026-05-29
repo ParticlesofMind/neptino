@@ -25,6 +25,10 @@ const PREVIEW_WIDTH_BY_TYPE: Partial<Record<CardType, string>> = {
   document: "max-w-[56rem]",
   timeline: "max-w-[54rem]",
   table: "max-w-[52rem]",
+  "source-excerpt": "max-w-[44rem]",
+  citation: "max-w-[36rem]",
+  bibliography: "max-w-[44rem]",
+  "gis-layer": "max-w-[42rem]",
   media: "max-w-[56rem]",
   "rich-sim": "max-w-[58rem]",
   "village-3d": "max-w-[58rem]",
@@ -73,7 +77,7 @@ export function EditorPreviewFrame({
           value={title}
           onChange={(event) => onTitleChange(event.target.value)}
           placeholder={`${meta.label} name`}
-          aria-label="Block name"
+          aria-label="Card name"
           className="min-w-0 flex-1 rounded-md bg-transparent px-1 py-1 text-[13px] font-semibold text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:bg-neutral-50 focus:ring-[3px] focus:ring-primary/10"
         />
       </div>

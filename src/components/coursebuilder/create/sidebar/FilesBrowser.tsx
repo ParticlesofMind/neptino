@@ -5,51 +5,59 @@
  *
  * Single-column layout:
  *   - Search and category filters at the top
- *   - Draggable block list below
+ *   - Draggable card list below
  *
- * Categories follow the 3+1 taxonomy:
- *   All         — every block
- *   Resources   — passive reference and display blocks
- *   Activities  — learner-input blocks and response widgets
- *   Experiences — composed learning units
+ * Categories follow the reductive taxonomy:
+ *   Materials    — atomic media, references, data, and representations
+ *   Compositions — assembled cards, learner surfaces, simulations, games, and layouts
  *
- * Layout blocks are authored in Make. Curate only places authored blocks.
+ * Layout cards are authored in Add Card. Canvas places authored cards.
  */
 
-import { Search } from "lucide-react"
+import { Search, SlidersHorizontal } from "lucide-react"
 import { useState } from "react"
 import { MAKE_BLUE_TEXT } from "./make-theme"
 
 import { useMakeLibraryStore } from "../store/makeLibraryStore"
-import type { CardType } from "../types"
-import { CategoryButton } from "./files-browser-filters"
 import { DraggableItem, DraggableUserCard } from "./files-browser-draggables"
-import { CATEGORIES, LIBRARY_ITEMS } from "./files-browser-data"
+import { LIBRARY_ITEMS, PURPOSE_FILTERS } from "./files-browser-data"
+import { CARD_SPECS, SUBGROUPS, type CardSubgroup } from "./make-panel-data"
 
 // ─── Files Browser ────────────────────────────────────────────────────────────
 
 export function FilesBrowser() {
-  const [activeCategory, setActiveCategory] = useState<string>("all")
+  const [activePurpose, setActivePurpose] = useState<"all" | CardSubgroup>("all")
   const [search, setSearch] = useState("")
 
   const studioCards  = useMakeLibraryStore((s) => s.cards)
   const removeCard   = useMakeLibraryStore((s) => s.removeCard)
 
-  const cat = CATEGORIES.find((c) => c.id === activeCategory)!
+  const purposeOptions = PURPOSE_FILTERS.compositions
+  const cardSpecByType = new Map(CARD_SPECS.map((spec) => [spec.cardType, spec]))
+  const query = search.trim().toLowerCase()
+
+  const matchesSearch = (values: Array<string | undefined>) => {
+    if (!query) return true
+    return values.some((value) => value?.toLowerCase().includes(query))
+  }
 
   const visibleStudio = studioCards.filter((card) => {
-    const matchesType   = cat.types === "all" || (cat.types as CardType[]).includes(card.cardType)
-    const matchesSearch = card.title.toLowerCase().includes(search.toLowerCase())
-    return matchesType && matchesSearch
+    const spec = cardSpecByType.get(card.cardType)
+    const matchesText = matchesSearch([card.title, spec?.label, spec?.description])
+    return matchesText
   })
 
   const visible = LIBRARY_ITEMS.filter((item) => {
-    const matchesType   = cat.types === "all" || (cat.types as CardType[]).includes(item.cardType)
-    const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase())
-    return matchesType && matchesSearch
+    const matchesText = matchesSearch([item.title, item.description])
+    return (activePurpose === "all" || item.subgroup === activePurpose) && matchesText
   })
 
-  const totalVisible = visibleStudio.length + visible.length
+  const visibleBySubgroup = SUBGROUPS.compositions
+    .map((subgroup) => ({
+      ...subgroup,
+      items: visible.filter((item) => item.subgroup === subgroup.id),
+    }))
+    .filter((group) => group.items.length > 0)
 
   return (
     <div className="flex h-full w-full overflow-hidden border-r border-neutral-200 bg-white">
@@ -59,24 +67,26 @@ export function FilesBrowser() {
             <Search size={14} className="shrink-0 text-neutral-400" />
             <input
               type="search"
-              placeholder="Search blocks"
+              placeholder="Search ready compositions"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent text-[11px] text-neutral-700 outline-none placeholder:text-neutral-400"
+              className="w-full min-w-0 bg-transparent text-[12px] text-neutral-700 outline-none placeholder:text-neutral-400"
             />
-            <span className="shrink-0 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-500">
-              {totalVisible}
-            </span>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {CATEGORIES.map((c) => (
-              <CategoryButton
-                key={c.id}
-                cat={c}
-                isActive={activeCategory === c.id}
-                onClick={() => setActiveCategory(c.id)}
-              />
-            ))}
+            <div className="flex max-w-[12rem] shrink-0 items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1 text-neutral-600 transition-colors focus-within:border-[#9eb9da] focus-within:bg-white">
+              <SlidersHorizontal size={12} className="shrink-0 text-neutral-400" />
+              <select
+                aria-label="Filter card purpose"
+                value={activePurpose}
+                onChange={(event) => setActivePurpose(event.target.value as "all" | CardSubgroup)}
+                className="min-w-0 max-w-[9rem] appearance-none bg-transparent pr-1 text-[10px] font-semibold text-neutral-600 outline-none"
+              >
+                {purposeOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -89,8 +99,8 @@ export function FilesBrowser() {
             {/* Studio cards (user-created) */}
             {visibleStudio.length > 0 && (
               <>
-                <p className={["px-0.5 pt-1 pb-0.5 text-[8px] font-bold uppercase tracking-widest", MAKE_BLUE_TEXT].join(" ")}>
-                  My blocks
+                <p className={["px-0.5 pb-0.5 pt-1 text-[11px] font-bold uppercase tracking-[0.14em]", MAKE_BLUE_TEXT].join(" ")}>
+                  My cards
                 </p>
                 {visibleStudio.map((card) => (
                   <DraggableUserCard
@@ -103,12 +113,27 @@ export function FilesBrowser() {
               </>
             )}
 
-            {/* Library items */}
-            {visible.map((item) => (
-              <DraggableItem key={item.id} item={item} />
+            {/* Ready-to-go composition presets */}
+            {visibleBySubgroup.length > 0 && (
+              <p className="px-0.5 pb-0.5 pt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+                Ready compositions
+              </p>
+            )}
+            {visibleBySubgroup.map((subgroup) => (
+              <section key={subgroup.id} className="pb-1">
+                <div className="px-0.5 pb-1 pt-1.5">
+                  <p className="text-[13px] font-bold leading-tight text-foreground/85">{subgroup.label}</p>
+                  <p className="mt-1 line-clamp-1 text-[11px] leading-snug text-muted-foreground/70">{subgroup.description}</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {subgroup.items.map((item) => (
+                    <DraggableItem key={item.id} item={item} />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
-          {visibleStudio.length === 0 && visible.length === 0 && (
+          {visibleStudio.length === 0 && visibleBySubgroup.length === 0 && (
             <p className="px-3 py-4 text-xs text-neutral-400 italic">
               {search ? "No results." : "Nothing in this category yet."}
             </p>

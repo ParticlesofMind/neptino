@@ -34,9 +34,14 @@ describe("estimateDroppedCardHeight", () => {
 
   it("uses more conservative estimates for tall media cards", () => {
     expect(estimateDroppedCardHeight(makeCard("video", 270))).toBeGreaterThanOrEqual(270)
-    expect(estimateDroppedCardHeight(makeCard("image", 300))).toBeGreaterThanOrEqual(260)
-    expect(estimateDroppedCardHeight(makeCard("audio", 180))).toBeGreaterThanOrEqual(150)
-    expect(estimateDroppedCardHeight(makeCard("model-3d", 280))).toBeGreaterThanOrEqual(250)
+    expect(estimateDroppedCardHeight(makeCard("image", 300))).toBeGreaterThanOrEqual(300)
+    expect(estimateDroppedCardHeight(makeCard("audio", 180))).toBeGreaterThanOrEqual(180)
+    expect(estimateDroppedCardHeight(makeCard("model-3d", 280))).toBeGreaterThanOrEqual(280)
+  })
+
+  it("treats declared dimensions as the pagination height for resizable cards", () => {
+    expect(estimateDroppedCardHeight(makeCard("text", 220))).toBe(220)
+    expect(estimateDroppedCardHeight(makeCard("games", 360))).toBe(360)
   })
 
   it("expands layout card estimates to include tall slot content", () => {

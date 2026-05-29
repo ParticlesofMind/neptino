@@ -29,6 +29,7 @@ import type { CardRenderProps } from "../CardRegistry"
 import type { DragSourceData, LayoutSlotDropTargetData } from "../../hooks/useCardDrop"
 import { useCourseStore } from "../../store/courseStore"
 import { CardRenderer } from "../CardRenderer"
+import { SimulationTimeProvider, type SimulationTimelinePhase } from "./simulation-time-context"
 
 // ─── Layout definitions ───────────────────────────────────────────────────────
 
@@ -92,17 +93,17 @@ const ANY_CONTENT: CardType[] = [
   "text", "image", "audio", "video", "animation", "dataset", "embed", "flashcards", "code-snippet",
   "model-3d", "map", "chart", "diagram", "media", "document", "table", "rich-sim", "village-3d",
   "interactive", "form", "voice-recorder", "sorter", "games", "chat", "text-editor", "code-editor",
-  "whiteboard", "timeline", "legend",
+  "whiteboard", "slides", "timeline", "legend", "source-excerpt", "citation", "bibliography", "gis-layer",
 ]
 
 // Symmetric content types suitable for split/equal comparisons
 const SPLIT_ACCEPTS: CardType[] = ANY_CONTENT
 // Supporting content types for secondary slots
 const SUPPORT_CONTENT: CardType[] = [
-  "text", "audio", "chart", "table", "dataset", "document",
+  "text", "audio", "chart", "table", "dataset", "document", "source-excerpt", "citation", "bibliography", "gis-layer",
 ]
 // Compact types for small cells (quad, sidebar)
-const COMPACT: CardType[] = ["text", "image", "audio", "chart", "diagram"]
+const COMPACT: CardType[] = ["text", "image", "audio", "chart", "diagram", "citation", "source-excerpt", "legend"]
 
 export const LAYOUT_DEFS: Record<LayoutKind, LayoutDef> = {
   split: {
@@ -147,27 +148,27 @@ export const LAYOUT_DEFS: Record<LayoutKind, LayoutDef> = {
     },
     slots: [
       {
-        role: "hero",
+        role: "legend",
         gridArea: "1 / 1 / 3 / 2",
         minHeight: 220,
-        label: "Hero",
-        accepts: ["image", "video", "animation"],
+        label: "Legend / controls",
+        accepts: ["legend", "text", "form", "citation", "bibliography"],
         maxCards: 1,
       },
       {
-        role: "headline",
+        role: "primary",
         gridArea: "1 / 2 / 2 / 3",
         minHeight: 84,
-        label: "Headline",
-        accepts: ["text"],
+        label: "Primary map / visual",
+        accepts: ["map", "rich-sim", "image", "video", "animation"],
         maxCards: 1,
       },
       {
-        role: "body",
+        role: "context",
         gridArea: "2 / 2 / 3 / 3",
         minHeight: 120,
-        label: "Body",
-        accepts: ["text", "document", "chart", "dataset", "diagram"],
+        label: "Timeline / context",
+        accepts: ["timeline", "text", "document", "chart", "dataset", "diagram", "source-excerpt", "citation", "gis-layer"],
       },
     ],
   },
@@ -187,7 +188,7 @@ export const LAYOUT_DEFS: Record<LayoutKind, LayoutDef> = {
         role: "main",
         minHeight: 120,
         label: "Main (70%)",
-        accepts: ["text", "image", "video", "animation", "document", "table", "dataset", "chart", "diagram", "map", "interactive", "rich-sim", "audio"],
+        accepts: ["text", "image", "video", "animation", "document", "table", "dataset", "chart", "diagram", "map", "interactive", "rich-sim", "audio", "text-editor", "source-excerpt", "citation", "bibliography", "gis-layer"],
       },
     ],
   },
@@ -269,7 +270,7 @@ export const LAYOUT_DEFS: Record<LayoutKind, LayoutDef> = {
         gridArea: "1 / 1 / 2 / 3",
         minHeight: 72,
         label: "Header banner",
-        accepts: ["text", "image", "audio", "video"] as CardType[],
+        accepts: ["text", "image", "audio", "video", "citation", "bibliography"] as CardType[],
         maxCards: 1,
       },
       { role: "left", gridArea: "2 / 1 / 3 / 2", minHeight: 140, label: "Left column",  accepts: SPLIT_ACCEPTS },
@@ -293,12 +294,12 @@ export const LAYOUT_DEFS: Record<LayoutKind, LayoutDef> = {
         gridArea: "1 / 1 / 2 / 4",
         minHeight: 64,
         label: "Header banner",
-        accepts: ["text", "image", "audio", "video"] as CardType[],
+        accepts: ["text", "image", "audio", "video", "citation", "bibliography"] as CardType[],
         maxCards: 1,
       },
-      { role: "left", gridArea: "2 / 1 / 3 / 2", minHeight: 120, label: "Left column",   accepts: COMPACT },
-      { role: "centre", gridArea: "2 / 2 / 3 / 3", minHeight: 120, label: "Centre column", accepts: COMPACT },
-      { role: "right", gridArea: "2 / 3 / 3 / 4", minHeight: 120, label: "Right column",  accepts: COMPACT },
+      { role: "left", gridArea: "2 / 1 / 3 / 2", minHeight: 120, label: "Left column",   accepts: ANY_CONTENT },
+      { role: "centre", gridArea: "2 / 2 / 3 / 3", minHeight: 120, label: "Centre column", accepts: ANY_CONTENT },
+      { role: "right", gridArea: "2 / 3 / 3 / 4", minHeight: 120, label: "Right column",  accepts: ANY_CONTENT },
     ],
   },
 
@@ -345,10 +346,10 @@ export const LAYOUT_DEFS: Record<LayoutKind, LayoutDef> = {
         accepts: ["text", "audio"] as CardType[],
         maxCards: 1,
       },
-      { role: "card", gridArea: "2 / 1 / 3 / 2", minHeight: 100, label: "Top-left",     accepts: COMPACT, maxCards: 1 },
-      { role: "card", gridArea: "2 / 2 / 3 / 3", minHeight: 100, label: "Top-right",    accepts: COMPACT, maxCards: 1 },
-      { role: "card", gridArea: "3 / 1 / 4 / 2", minHeight: 100, label: "Bottom-left",  accepts: COMPACT, maxCards: 1 },
-      { role: "card", gridArea: "3 / 2 / 4 / 3", minHeight: 100, label: "Bottom-right", accepts: COMPACT, maxCards: 1 },
+      { role: "card", gridArea: "2 / 1 / 3 / 2", minHeight: 100, label: "Top-left",     accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "card", gridArea: "2 / 2 / 3 / 3", minHeight: 100, label: "Top-right",    accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "card", gridArea: "3 / 1 / 4 / 2", minHeight: 100, label: "Bottom-left",  accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "card", gridArea: "3 / 2 / 4 / 3", minHeight: 100, label: "Bottom-right", accepts: ANY_CONTENT, maxCards: 1 },
     ],
   },
 
@@ -368,12 +369,12 @@ export const LAYOUT_DEFS: Record<LayoutKind, LayoutDef> = {
         gridArea: "1 / 1 / 3 / 2",
         minHeight: 200,
         label: "Annotation column",
-        accepts: ["text", "audio", "document"] as CardType[],
+        accepts: ["text", "audio", "document", "legend", "citation", "bibliography", "source-excerpt"] as CardType[],
       },
-      { role: "content", gridArea: "1 / 2 / 2 / 3", minHeight: 100, label: "Top-centre",  accepts: COMPACT, maxCards: 1 },
-      { role: "content", gridArea: "1 / 3 / 2 / 4", minHeight: 100, label: "Top-right",   accepts: COMPACT, maxCards: 1 },
-      { role: "content", gridArea: "2 / 2 / 3 / 3", minHeight: 100, label: "Bottom-centre", accepts: COMPACT, maxCards: 1 },
-      { role: "content", gridArea: "2 / 3 / 3 / 4", minHeight: 100, label: "Bottom-right", accepts: COMPACT, maxCards: 1 },
+      { role: "content", gridArea: "1 / 2 / 2 / 3", minHeight: 100, label: "Top-centre",  accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "content", gridArea: "1 / 3 / 2 / 4", minHeight: 100, label: "Top-right",   accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "content", gridArea: "2 / 2 / 3 / 3", minHeight: 100, label: "Bottom-centre", accepts: ANY_CONTENT, maxCards: 1 },
+      { role: "content", gridArea: "2 / 3 / 3 / 4", minHeight: 100, label: "Bottom-right", accepts: ANY_CONTENT, maxCards: 1 },
     ],
   },
 
@@ -684,6 +685,55 @@ function visibleSlotIndexesFromOrder(order: number[], range: { start: number; en
   return new Set(order.slice(start, end))
 }
 
+function readSimulationTimeline(content: DroppedCard["content"]): {
+  initialYear: number
+  minYear: number
+  maxYear: number
+  phases: SimulationTimelinePhase[]
+} | null {
+  const raw = content.simulationTimeline
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null
+  const record = raw as Record<string, unknown>
+  const phases = Array.isArray(record.phases)
+    ? record.phases.flatMap((entry) => {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) return []
+        const phase = entry as Record<string, unknown>
+        const id = typeof phase.id === "string" ? phase.id : null
+        const label = typeof phase.label === "string" ? phase.label : id
+        const startYear = typeof phase.startYear === "number" ? phase.startYear : null
+        const endYear = typeof phase.endYear === "number" ? phase.endYear : startYear
+        if (!id || !label || startYear == null || endYear == null) return []
+        return [{
+          id,
+          label,
+          startYear,
+          endYear,
+          color: typeof phase.color === "string" ? phase.color : undefined,
+          description: typeof phase.description === "string" ? phase.description : undefined,
+        }]
+      })
+    : []
+
+  if (phases.length === 0) return null
+
+  const minYear = typeof record.minYear === "number"
+    ? record.minYear
+    : Math.min(...phases.map((phase) => phase.startYear))
+  const maxYear = typeof record.maxYear === "number"
+    ? record.maxYear
+    : Math.max(...phases.map((phase) => phase.endYear))
+  const initialYear = typeof record.initialYear === "number"
+    ? record.initialYear
+    : minYear
+
+  return {
+    initialYear: Math.min(maxYear, Math.max(minYear, initialYear)),
+    minYear,
+    maxYear,
+    phases,
+  }
+}
+
 function shiftVisibleLayoutToTop(layout: ReactGridLayoutItems): ReactGridLayoutItems {
   if (layout.length === 0) return layout
   const minY = Math.min(...layout.map((item) => item.y))
@@ -789,7 +839,7 @@ function LayoutSlot({
         minHeight: spec.minHeight,
       }}
       className={[
-        "relative rounded border border-dashed transition-colors overflow-visible",
+        "relative h-full min-w-0 rounded border border-dashed transition-colors overflow-visible",
         borderClass,
       ].join(" ")}
     >
@@ -805,12 +855,14 @@ function LayoutSlot({
           <span className="text-[8px] normal-case tracking-normal opacity-80">{spec.role} • {acceptsText} • {sizeText}</span>
         </div>
       ) : (
-        <div className="space-y-0.5">
+        <div className="flex h-full min-h-[inherit] min-w-0 flex-col gap-0.5">
           {slotCards.map((slotCard) => (
             <CardRenderer
               key={slotCard.id}
-              card={slotCard}
+              card={{ ...slotCard, taskId: layoutCard.taskId, areaKind: layoutCard.areaKind }}
               mode={mode}
+              className={slotCards.length === 1 ? "h-full min-h-0 w-full" : "min-h-0 w-full"}
+              fillAvailable={slotCards.length === 1}
               sourceLayoutCardId={layoutCard.id}
               sourceSlotIndex={slotIndex}
               onRemove={isEditor
@@ -999,11 +1051,28 @@ function ResizableGridLayoutCard({
 
 // ─── Layout Card ──────────────────────────────────────────────────────────────
 
-export function LayoutCard({ card, mode = "editor", isEditable }: CardRenderProps) {
+export function LayoutCard({ card, mode = "editor", isEditable, fillAvailable }: CardRenderProps) {
   const kind    = extractLayoutKind(card.cardType)
   const def     = LAYOUT_DEFS[kind]
   const activeSessionId = useCourseStore((s) => s.activeSessionId) as SessionId
   const editable = isEditable ?? mode === "editor"
+  const declaredHeight = card.dimensions.height > 0 ? Math.round(card.dimensions.height) : undefined
+  const simulationTimeline = useMemo(
+    () => readSimulationTimeline(card.content),
+    [card.content],
+  )
+  const [simulationYear, setSimulationYear] = useState(simulationTimeline?.initialYear ?? 0)
+  const visibleSimulationYear = simulationTimeline
+    ? Math.min(
+        simulationTimeline.maxYear,
+        Math.max(
+          simulationTimeline.minYear,
+          simulationYear >= simulationTimeline.minYear && simulationYear <= simulationTimeline.maxYear
+            ? simulationYear
+            : simulationTimeline.initialYear,
+        ),
+      )
+    : simulationYear
 
   const slots = (card.content.slots ?? {}) as Record<string, DroppedCard[]>
   const slotRange = readLayoutSlotRange(card.content)
@@ -1012,8 +1081,21 @@ export function LayoutCard({ card, mode = "editor", isEditable }: CardRenderProp
     slotRange,
   )
 
-  return (
-    <div className="group relative rounded-lg border border-neutral-200 bg-white overflow-visible shadow-sm">
+  const layoutStyle: CSSProperties | undefined = fillAvailable || declaredHeight === undefined
+    ? undefined
+    : { minHeight: declaredHeight }
+  const gridStyle: CSSProperties = {
+    ...def.gridStyle,
+    ...(fillAvailable || declaredHeight === undefined
+      ? {}
+      : { minHeight: Math.max(0, declaredHeight - 2) }),
+  }
+
+  const layout = (
+    <div
+      className={["group relative rounded-lg border border-neutral-200 bg-white overflow-visible shadow-sm", fillAvailable ? "h-full min-h-0" : undefined].filter(Boolean).join(" ")}
+      style={layoutStyle}
+    >
       {kind === "resizable-grid" ? (
         <ResizableGridLayoutCard
           card={card}
@@ -1024,7 +1106,10 @@ export function LayoutCard({ card, mode = "editor", isEditable }: CardRenderProp
           editable={editable}
         />
       ) : (
-        <div style={def.gridStyle}>
+        <div
+          className={fillAvailable ? "h-full min-h-0" : undefined}
+          style={gridStyle}
+        >
           {def.slots.map((spec, i) => visibleSlotIndexes.has(i) && (
             <LayoutSlot
               key={i}
@@ -1039,5 +1124,21 @@ export function LayoutCard({ card, mode = "editor", isEditable }: CardRenderProp
         </div>
       )}
     </div>
+  )
+
+  if (!simulationTimeline) return layout
+
+  return (
+    <SimulationTimeProvider
+      value={{
+        year: visibleSimulationYear,
+        setYear: (year) => setSimulationYear(Math.min(simulationTimeline.maxYear, Math.max(simulationTimeline.minYear, year))),
+        minYear: simulationTimeline.minYear,
+        maxYear: simulationTimeline.maxYear,
+        phases: simulationTimeline.phases,
+      }}
+    >
+      {layout}
+    </SimulationTimeProvider>
   )
 }

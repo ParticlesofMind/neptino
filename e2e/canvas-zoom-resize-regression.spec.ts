@@ -98,7 +98,8 @@ async function getPanelMidpoint(page: Page) {
   const viewportWidth = await page.evaluate(() => window.innerWidth)
   const filesWidth = await getPanelWidth(page, "curate-files-panel")
   const atlasWidth = await getPanelWidth(page, "curate-atlas-panel")
-  return (filesWidth + (viewportWidth - atlasWidth)) / 2
+  const navRailWidth = await getPanelWidth(page, "canvas-page-nav-rail")
+  return (filesWidth + (viewportWidth - atlasWidth - navRailWidth)) / 2
 }
 
 async function getCanvasMetrics(page: Page) {
@@ -173,15 +174,12 @@ test.describe("Canvas zoom and resize regression", () => {
       const expectedPanelMidpoint = await getPanelMidpoint(page)
       expect(Math.abs(relaxed.centerX - expectedPanelMidpoint)).toBeLessThan(20)
 
-      const zoomInButton = page.locator('button[title="Zoom in (+10%)"]')
-      const zoomOutButton = page.locator('button[title="Zoom out (−10%)"]')
-
-      await zoomInButton.click()
+      await page.keyboard.press("Control+=")
       const zoomedIn = await getCanvasMetrics(page)
       expect(zoomedIn.width).toBeGreaterThan(relaxed.width)
       expect(Math.abs(zoomedIn.centerX - relaxed.centerX)).toBeLessThan(16)
 
-      await zoomOutButton.click()
+      await page.keyboard.press("Control+-")
       const zoomedBack = await getCanvasMetrics(page)
       expect(zoomedBack.width).toBeLessThan(zoomedIn.width)
       expect(Math.abs(zoomedBack.centerX - relaxed.centerX)).toBeLessThan(16)

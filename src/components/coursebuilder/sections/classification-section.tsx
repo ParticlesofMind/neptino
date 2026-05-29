@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import {
   buildClassificationUpdatePayload,
   CourseImagePreview,
@@ -12,7 +12,6 @@ import {
   SetupColumn,
   SetupPanelLayout,
   SetupSection,
-  TextInput,
   updateCourseById,
   useCourseRowLoader,
   useCourseSectionSave,
@@ -23,12 +22,16 @@ import {
 } from "@/components/coursebuilder"
 import iscedData from "@/data/isced2011.json"
 import { OverlineLabel } from "@/components/ui/overline-label"
-import { CLASS_YEARS, CURRICULAR_FRAMEWORKS } from "./classification-section-data"
+import { buildClassificationGuidance, formatSuggestedPathLabel } from "@/lib/curriculum/classification-guidance"
+import { CLASS_YEARS } from "./classification-section-data"
 import { ClassificationContextFields } from "./classification-context-fields"
+import { ProgramPlacementSection } from "./program-placement-section"
 import type { CourseCreatedData } from "@/components/coursebuilder/builder-types"
 
 type ClassificationRow = {
   classification_data: Record<string, string> | null
+  institution_id: string | null
+  teacher_id: string | null
 }
 
 function Divider({ label }: { label: string }) {
@@ -39,6 +42,21 @@ function Divider({ label }: { label: string }) {
   )
 }
 
+function mergeUniqueItems(current: string[], additions: string[], maxItems: number): string[] {
+  const seen = new Set(current.map((item) => item.trim().toLowerCase()).filter(Boolean))
+  const merged = [...current]
+
+  additions.forEach((item) => {
+    const clean = item.trim()
+    const key = clean.toLowerCase()
+    if (!clean || seen.has(key) || merged.length >= maxItems) return
+    seen.add(key)
+    merged.push(clean)
+  })
+
+  return merged
+}
+
 export function ClassificationSection({
   courseCreatedData,
   courseId,
@@ -47,13 +65,12 @@ export function ClassificationSection({
   courseId: string | null
 }) {
   const [classYear, setClassYear] = useState("")
-  const [framework, setFramework] = useState("")
   const [domain, setDomain] = useState("")
   const [subject, setSubject] = useState("")
   const [topic, setTopic] = useState("")
   const [subtopic, setSubtopic] = useState("")
-  const [prevCourse, setPrevCourse] = useState("")
-  const [nextCourse, setNextCourse] = useState("")
+  const [institutionId, setInstitutionId] = useState<string | null>(null)
+  const [teacherId, setTeacherId] = useState<string | null>(null)
   const [priorKnowledge, setPriorKnowledge] = useState("")
   const keyTerms = useStringListInput({ maxItems: 30, maxDraftLength: 60 })
   const mandatoryTopics = useStringListInput({ maxItems: 20, maxDraftLength: 100 })
@@ -65,19 +82,18 @@ export function ClassificationSection({
 
   const { loading } = useCourseRowLoader<ClassificationRow>({
     courseId,
-    select: "classification_data",
+    select: "classification_data, institution_id, teacher_id",
     onLoaded: (row) => {
+      setInstitutionId(row.institution_id)
+      setTeacherId(row.teacher_id)
       const hydrated = mapClassificationDataToState(row.classification_data, domains)
       if (!hydrated) return
 
       setClassYear(hydrated.classYear)
-      setFramework(hydrated.framework)
       setDomain(hydrated.domain)
       setSubject(hydrated.subject)
       setTopic(hydrated.topic)
       setSubtopic(hydrated.subtopic)
-      setPrevCourse(hydrated.prevCourse)
-      setNextCourse(hydrated.nextCourse)
       setPriorKnowledge(hydrated.priorKnowledge)
       if (hydrated.keyTerms) keyTerms.setItems(hydrated.keyTerms)
       if (hydrated.mandatoryTopics) mandatoryTopics.setItems(hydrated.mandatoryTopics)
@@ -92,13 +108,10 @@ export function ClassificationSection({
       const updatedAt = new Date().toISOString()
       const payload = buildClassificationUpdatePayload({
         classYear,
-        framework,
         domain,
         subject,
         topic,
         subtopic,
-        prevCourse,
-        nextCourse,
         priorKnowledge,
         keyTerms: keyTerms.items,
         mandatoryTopics: mandatoryTopics.items,
@@ -112,12 +125,11 @@ export function ClassificationSection({
 
       return !error
     })
-  }, [runWithSaveState, courseId, classYear, framework, domain, subject, topic, subtopic, prevCourse, nextCourse, courseCreatedData?.title, domains, priorKnowledge, keyTerms.items, mandatoryTopics.items, applicationContext])
+  }, [runWithSaveState, courseId, classYear, domain, subject, topic, subtopic, courseCreatedData?.title, domains, priorKnowledge, keyTerms.items, mandatoryTopics.items, applicationContext])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId) && !loading)
 
   const classYears = CLASS_YEARS
-  const curricularFrameworks = CURRICULAR_FRAMEWORKS
 
     // Helper to match display string "01 — Education" or legacy value "education"
   const selectedDomain = domains.find((d) => `${d.code} — ${d.label}` === domain || d.value === domain)
@@ -133,6 +145,43 @@ export function ClassificationSection({
     selectedTopic?.label,
     subtopics.find((s) => s.label === subtopic || s.value === subtopic)?.label,
   ].filter(Boolean) as string[]
+
+  const guidance = useMemo(() => buildClassificationGuidance({
+    courseTitle: courseCreatedData?.title ?? null,
+    courseSubtitle: courseCreatedData?.subtitle ?? null,
+    courseDescription: courseCreatedData?.description ?? null,
+    classYear,
+    currentDomain: domain,
+    currentSubject: subject,
+    currentTopic: topic,
+    currentSubtopic: subtopic,
+    domains,
+  }), [classYear, courseCreatedData?.description, courseCreatedData?.subtitle, courseCreatedData?.title, domain, domains, subject, subtopic, topic])
+
+  const applySuggestedPath = useCallback(() => {
+    if (!guidance.suggestedPath) return
+
+    setDomain(`${guidance.suggestedPath.domain.code} — ${guidance.suggestedPath.domain.label}`)
+    setSubject(`${guidance.suggestedPath.subject.code} — ${guidance.suggestedPath.subject.label}`)
+    setTopic(`${guidance.suggestedPath.topic.code} — ${guidance.suggestedPath.topic.label}`)
+    setSubtopic(guidance.suggestedPath.subtopic?.label ?? "")
+  }, [guidance.suggestedPath])
+
+  const addSuggestedKeyTerms = useCallback(() => {
+    keyTerms.setItems(mergeUniqueItems(keyTerms.items, guidance.keyTerms, 30))
+  }, [guidance.keyTerms, keyTerms])
+
+  const addSuggestedMandatoryTopics = useCallback(() => {
+    mandatoryTopics.setItems(mergeUniqueItems(mandatoryTopics.items, guidance.mandatoryTopics, 20))
+  }, [guidance.mandatoryTopics, mandatoryTopics])
+
+  const suggestedPathApplied = Boolean(
+    guidance.suggestedPath
+      && selectedDomain?.value === guidance.suggestedPath.domain.value
+      && selectedSubject?.value === guidance.suggestedPath.subject.value
+      && selectedTopic?.value === guidance.suggestedPath.topic.value
+      && (!guidance.suggestedPath.subtopic || subtopic === guidance.suggestedPath.subtopic.label),
+  )
 
   if (showLoading) {
     return (
@@ -164,7 +213,11 @@ export function ClassificationSection({
     <SetupSection title="Classification" description="Subject matter hierarchy and course positioning.">
       <SetupPanelLayout>
         <SetupColumn className="space-y-5">
-          <div>
+          <div className="rounded-lg border border-border bg-background p-5">
+            <OverlineLabel className="mb-3">Course Positioning</OverlineLabel>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Start with the information teachers usually know immediately. Program alignment can be handled by the institution later through concrete requirements.
+            </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel>Class Year</FieldLabel>
@@ -176,22 +229,33 @@ export function ClassificationSection({
                   searchThreshold={15}
                 />
               </div>
-              <div>
-                <FieldLabel>Curricular Framework</FieldLabel>
-                <SearchableSelect
-                  value={framework}
-                  onChange={setFramework}
-                  options={curricularFrameworks}
-                  placeholder="Select framework..."
-                  searchThreshold={8}
-                />
-              </div>
             </div>
           </div>
 
-          <Divider label="ISCED Classification" />
-          <p className="text-sm text-muted-foreground -mt-4 mb-3">
-            Based on <span className="font-medium text-foreground">ISCED 2011</span> — International Standard Classification of Education
+          <Divider label="Assisted Subject Classification" />
+          {guidance.suggestedPath && (
+            <div className="rounded-lg border border-primary/20 bg-accent/50 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <OverlineLabel className="mb-1">Suggested ISCED Path</OverlineLabel>
+                  <p className="text-sm font-medium text-foreground">{formatSuggestedPathLabel(guidance.suggestedPath)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Confidence: {guidance.suggestedPath.confidence}. Review and adjust the fields below if the path is too broad.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={applySuggestedPath}
+                  disabled={suggestedPathApplied}
+                  className="shrink-0 rounded-md border border-primary/30 bg-background px-3 py-2 text-sm font-medium text-primary transition hover:border-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {suggestedPathApplied ? "Applied" : "Apply"}
+                </button>
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground mb-3">
+            Based on <span className="font-medium text-foreground">ISCED 2011</span> — International Standard Classification of Education. Use the suggestion as a starting point, then refine only when needed.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -251,21 +315,10 @@ export function ClassificationSection({
             </div>
           </div>
 
-          <Divider label="Course Sequence" />
-          <p className="text-sm text-muted-foreground -mt-4 mb-3">Position within the learning pathway</p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <FieldLabel hint="Comes before">Previous Course</FieldLabel>
-              <TextInput value={prevCourse} placeholder="e.g., Algebra I" onChange={(e) => setPrevCourse(e.target.value)} />
-            </div>
-            <div>
-              <FieldLabel hint="Comes after">Next Course</FieldLabel>
-              <TextInput value={nextCourse} placeholder="e.g., Calculus" onChange={(e) => setNextCourse(e.target.value)} />
-            </div>
-          </div>
-
           <Divider label="Generation Context" />
-          <p className="text-sm text-muted-foreground -mt-4 mb-3">Metadata that enriches AI curriculum generation</p>
+          <p className="text-sm text-muted-foreground -mt-4 mb-3">
+            Curriculum generation uses these fields to decide vocabulary, prerequisites, required coverage, and examples. Suggested defaults are available for first-time setup.
+          </p>
           <ClassificationContextFields
             priorKnowledge={priorKnowledge}
             setPriorKnowledge={setPriorKnowledge}
@@ -273,6 +326,22 @@ export function ClassificationSection({
             mandatoryTopics={mandatoryTopics}
             applicationContext={applicationContext}
             setApplicationContext={setApplicationContext}
+            suggestedPriorKnowledge={guidance.priorKnowledge}
+            suggestedApplicationContext={guidance.applicationContext}
+            suggestedKeyTerms={guidance.keyTerms.filter((term) => !keyTerms.items.some((item) => item.toLowerCase() === term.toLowerCase()))}
+            suggestedMandatoryTopics={guidance.mandatoryTopics.filter((item) => !mandatoryTopics.items.some((topic) => topic.toLowerCase() === item.toLowerCase()))}
+            onUseSuggestedPriorKnowledge={() => setPriorKnowledge(guidance.priorKnowledge)}
+            onUseSuggestedApplicationContext={() => setApplicationContext(guidance.applicationContext)}
+            onAddSuggestedKeyTerms={addSuggestedKeyTerms}
+            onAddSuggestedMandatoryTopics={addSuggestedMandatoryTopics}
+          />
+
+          <Divider label="Program Placement" />
+          <ProgramPlacementSection
+            courseId={courseId}
+            institutionId={institutionId}
+            teacherId={teacherId}
+            currentCourseTitle={courseCreatedData?.title ?? null}
           />
         </SetupColumn>
 
@@ -322,48 +391,15 @@ export function ClassificationSection({
             </div>
           </div>
 
-          {(classYear || framework) && (
+          {classYear && (
             <div className="rounded-lg border border-border bg-background p-5 space-y-2.5">
-              {classYear && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Year</span>
-                  <span className="font-medium text-foreground">{classYear}</span>
-                </div>
-              )}
-              {framework && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Framework</span>
-                  <span className="font-medium text-foreground text-right max-w-[60%]">{framework}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {(prevCourse || nextCourse) && (
-            <div className="rounded-lg border border-border bg-background p-5">
-              <div className="flex items-center gap-2 text-sm">
-                {prevCourse ? (
-                  <span className="rounded border border-border px-2 py-1 text-muted-foreground">
-                    {prevCourse}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground/30 italic">Start</span>
-                )}
-                <span className="text-muted-foreground/40">→</span>
-                <span className="rounded border border-primary/50 bg-accent px-2 py-1 font-semibold text-primary">
-                  This course
-                </span>
-                <span className="text-muted-foreground/40">→</span>
-                {nextCourse ? (
-                  <span className="rounded border border-border px-2 py-1 text-muted-foreground">
-                    {nextCourse}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground/30 italic">End</span>
-                )}
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Year</span>
+                <span className="font-medium text-foreground">{classYear}</span>
               </div>
             </div>
           )}
+
         </SetupColumn>
       </SetupPanelLayout>
     </SetupSection>

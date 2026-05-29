@@ -116,7 +116,7 @@ function FieldHint({ children, tone = "neutral" }: { children: ReactNode; tone?:
   )
 }
 
-export function AssessmentCard({ card, onRemove }: CardRenderProps) {
+export function AssessmentCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const prompt = readString(card.content.prompt, "Answer the prompt.")
   const interactionType = readString(card.content.interactionType, "multiple-choice")
   const options = parseOptions(card.content.options)
@@ -138,7 +138,7 @@ export function AssessmentCard({ card, onRemove }: CardRenderProps) {
   const isTrueFalse = interactionType === "true-false"
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove}>
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
         <p className="text-[13px] font-semibold leading-snug text-neutral-900">{prompt}</p>
 
@@ -257,7 +257,7 @@ export function AssessmentCard({ card, onRemove }: CardRenderProps) {
   )
 }
 
-export function FormActivityCard({ card, onRemove }: CardRenderProps) {
+export function FormActivityCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const fields = useMemo(() => parseFields(card.content.fields), [card.content.fields])
   const prompt = readString(card.content.prompt)
   const submitLabel = readString(card.content.submitLabel, "Submit")
@@ -267,7 +267,7 @@ export function FormActivityCard({ card, onRemove }: CardRenderProps) {
   const missingRequired = fields.some((field) => field.required && !values[field.id]?.trim())
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove}>
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <form
         className="space-y-3"
         onSubmit={(event) => {
@@ -322,7 +322,7 @@ export function FormActivityCard({ card, onRemove }: CardRenderProps) {
   )
 }
 
-export function VoiceRecorderActivityCard({ card, onRemove }: CardRenderProps) {
+export function VoiceRecorderActivityCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const prompt = readString(card.content.prompt, "Record a spoken response.")
   const maxDuration = readNumber(card.content.maxDurationSeconds, 60)
   const [status, setStatus] = useState<"idle" | "recording" | "done" | "error">("idle")
@@ -401,7 +401,7 @@ export function VoiceRecorderActivityCard({ card, onRemove }: CardRenderProps) {
   }
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove}>
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
         <p className="text-[12px] leading-relaxed text-neutral-600">{prompt}</p>
         <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-4">
@@ -527,13 +527,13 @@ function FillBlankActivity({ text }: { text: string }) {
   )
 }
 
-export function SorterActivityCard({ card, onRemove }: CardRenderProps) {
+export function SorterActivityCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const pairs = parsePairs(card.content.pairs)
   const items = parseItems(card.content.items)
   const mode = readString(card.content.mode, pairs.length > 0 ? "match" : "order")
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove}>
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
         {readString(card.content.instructions) && <p className="text-[12px] leading-relaxed text-neutral-600">{readString(card.content.instructions)}</p>}
         {mode === "match" && pairs.length > 0 ? <MatchActivity pairs={pairs} /> : <OrderActivity items={items.length > 0 ? items : pairs.map((pair) => pair.term)} />}
@@ -542,14 +542,14 @@ export function SorterActivityCard({ card, onRemove }: CardRenderProps) {
   )
 }
 
-export function GamesActivityCard({ card, onRemove }: CardRenderProps) {
+export function GamesActivityCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const gameType = readString(card.content.gameType, "word-match")
   const pairs = parsePairs(card.content.pairs)
   const items = parseItems(card.content.items)
   const fillText = readString(card.content.fillText)
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove}>
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
         {readString(card.content.instructions) && <p className="text-[12px] leading-relaxed text-neutral-600">{readString(card.content.instructions)}</p>}
         {(gameType === "word-match" || gameType === "memory") && <MatchActivity pairs={pairs} />}
@@ -560,14 +560,14 @@ export function GamesActivityCard({ card, onRemove }: CardRenderProps) {
   )
 }
 
-export function FlashcardActivityCard({ card, onRemove }: CardRenderProps) {
+export function FlashcardActivityCard({ card, onRemove, fillAvailable }: CardRenderProps) {
   const pairs = parsePairs(card.content.pairs)
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const current = pairs[index] ?? { term: "Prompt", match: "Answer" }
 
   return (
-    <ResourceCardFrame card={card} onRemove={onRemove}>
+    <ResourceCardFrame card={card} onRemove={onRemove} fillAvailable={fillAvailable}>
       <div className="space-y-3">
         <button
           type="button"

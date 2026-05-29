@@ -17,9 +17,11 @@ export interface CanvasPageConfig {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const REFERENCE_PAGE_WIDTH_PX = 794
+
 /** A4 portrait at 96 dpi — the default canvas page dimensions. */
 export const DEFAULT_PAGE_CONFIG: CanvasPageConfig = {
-  widthPx:   794,
+  widthPx:   REFERENCE_PAGE_WIDTH_PX,
   heightPx:  1123,
   pageCount: 1,
   margins:   { top: 96, right: 76, bottom: 96, left: 76 },
@@ -36,7 +38,7 @@ export const PAGE_DIMS: Record<"a4" | "us-letter", { w: number; h: number }> = {
 
 /**
  * Derive pixel dimensions from physical size / orientation.
- * Reference canvas width is always 794 px (≈ A4 at 96 dpi).
+ * Reference canvas width stays fixed while height follows the selected paper ratio.
  */
 export function computePageConfig(
   size:        "a4" | "us-letter",
@@ -47,10 +49,10 @@ export function computePageConfig(
   const { w: rawW, h: rawH } = PAGE_DIMS[size] ?? PAGE_DIMS["a4"]
   const wmm      = orientation === "landscape" ? rawH : rawW
   const hmm      = orientation === "landscape" ? rawW : rawH
-  const pxPerMm  = 794 / wmm
+  const pxPerMm  = REFERENCE_PAGE_WIDTH_PX / wmm
 
   return {
-    widthPx:   794,
+    widthPx:   REFERENCE_PAGE_WIDTH_PX,
     heightPx:  Math.round(hmm * pxPerMm),
     pageCount: Math.max(1, pageCount),
     margins: {

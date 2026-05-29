@@ -103,6 +103,20 @@ export const CHAT_PROFILE: StudioProfile = {
   sections: [] as StudioSection[],
 }
 
+export const SLIDES_PROFILE: StudioProfile = {
+  mediaType: "Presentation",
+  productType: "Slide Deck",
+  defaults: {
+    title: "",
+    slides: [
+      { title: "Opening", body: "Introduce the topic and orient the audience.", notes: "" },
+      { title: "Evidence", body: "Place a source, map, chart, image, or example here.", notes: "" },
+      { title: "Synthesis", body: "Summarise the key claim or next action.", notes: "" },
+    ],
+  },
+  sections: [] as StudioSection[],
+}
+
 export const DEFAULT_PROFILE: StudioProfile = {
   mediaType: "Custom",
   productType: "Card",

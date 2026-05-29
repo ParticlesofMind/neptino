@@ -39,10 +39,10 @@ const SPEED_OPTIONS = [
 
 function getAudioSourceErrorMessage(url: string): string {
   if (/youtube\.com|youtu\.be/i.test(url)) {
-    return "YouTube links are not supported in the audio block. Use the video block for YouTube URLs, or provide a direct MP3, WAV, or OGG file URL here."
+    return "YouTube links are not supported in the audio card. Use the video card for YouTube URLs, or provide a direct MP3, WAV, or OGG file URL here."
   }
   if (/vimeo\.com/i.test(url)) {
-    return "Vimeo links are not supported in the audio block. Use the video block for Vimeo URLs, or provide a direct MP3, WAV, or OGG file URL here."
+    return "Vimeo links are not supported in the audio card. Use the video card for Vimeo URLs, or provide a direct MP3, WAV, or OGG file URL here."
   }
   return "This audio URL could not be loaded. Check that it points directly to an MP3, WAV, or OGG file with browser access."
 }
@@ -274,7 +274,7 @@ export function AudioEditor({ content, onChange }: AudioEditorProps) {
               <StudioUrlInput
                 value={url}
                 placeholder="https://example.com/audio.mp3"
-                hint="Direct audio files only. Use the video block for YouTube or Vimeo links."
+                hint="Direct audio files only. Use the video card for YouTube or Vimeo links."
                 onCommit={(u) => onChange("url", u)}
               />
             ) : (

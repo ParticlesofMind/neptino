@@ -2,13 +2,10 @@ import type { IscedDomain } from "@/components/coursebuilder/section-row-mappers
 
 type ClassificationSerializeArgs = {
   classYear: string
-  framework: string
   domain: string
   subject: string
   topic: string
   subtopic: string
-  prevCourse: string
-  nextCourse: string
   priorKnowledge: string
   keyTerms: string[]
   mandatoryTopics: string[]
@@ -33,15 +30,19 @@ function mapDisplayToIscedValue(items: Array<{ code: string; label: string; valu
   return found?.value ?? ""
 }
 
+function mapDisplayToIscedItem(
+  items: Array<{ code: string; label: string; value: string }>,
+  input: string,
+): { code: string; label: string; value: string } | null {
+  return items.find((item) => `${item.code} — ${item.label}` === input || item.value === input || item.label === input) ?? null
+}
+
 export function buildClassificationUpdatePayload({
   classYear,
-  framework,
   domain,
   subject,
   topic,
   subtopic,
-  prevCourse,
-  nextCourse,
   priorKnowledge,
   keyTerms,
   mandatoryTopics,
@@ -54,24 +55,34 @@ export function buildClassificationUpdatePayload({
   const allTopics = allSubjects.flatMap((entry) => entry.topics)
   const allSubtopics = allTopics.flatMap((entry) => entry.subtopics)
 
-  const domainValue = mapDisplayToIscedValue(domains, domain)
-  const subjectValue = mapDisplayToIscedValue(allSubjects, subject)
-  const topicValue = mapDisplayToIscedValue(allTopics, topic)
-  const subtopicValue = subtopic
-    ? allSubtopics.find((entry) => entry.label === subtopic || entry.value === subtopic)?.value ?? ""
-    : ""
+  const domainItem = mapDisplayToIscedItem(domains, domain)
+  const subjectItem = mapDisplayToIscedItem(allSubjects, subject)
+  const topicItem = mapDisplayToIscedItem(allTopics, topic)
+  const subtopicItem = subtopic
+    ? allSubtopics.find((entry) => entry.label === subtopic || entry.value === subtopic) ?? null
+    : null
+  const domainValue = domainItem?.value ?? mapDisplayToIscedValue(domains, domain)
+  const subjectValue = subjectItem?.value ?? mapDisplayToIscedValue(allSubjects, subject)
+  const topicValue = topicItem?.value ?? mapDisplayToIscedValue(allTopics, topic)
+  const subtopicValue = subtopicItem?.value ?? ""
 
   return {
     classification_data: {
       class_year: classYear,
-      curricular_framework: framework,
+      classification_source: "isced_2011",
       domain: domainValue,
+      domain_label: domainItem?.label ?? null,
+      domain_code: domainItem?.code ?? null,
       subject: subjectValue,
+      subject_label: subjectItem?.label ?? null,
+      subject_code: subjectItem?.code ?? null,
       topic: topicValue,
+      topic_label: topicItem?.label ?? null,
+      topic_code: topicItem?.code ?? null,
       subtopic: subtopicValue || null,
-      previous_course: prevCourse || null,
+      subtopic_label: subtopicItem?.label ?? null,
+      subtopic_code: subtopicItem?.code ?? null,
       current_course: currentCourseTitle,
-      next_course: nextCourse || null,
       prior_knowledge: priorKnowledge || null,
       key_terms: toNonEmptyStrings(keyTerms),
       mandatory_topics: toNonEmptyStrings(mandatoryTopics),

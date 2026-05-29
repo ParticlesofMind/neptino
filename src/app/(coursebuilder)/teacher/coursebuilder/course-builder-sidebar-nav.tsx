@@ -42,29 +42,29 @@ export function CourseBuilderSidebarNav({
                       disabled={isLocked}
                       aria-disabled={isLocked}
                       title={isLocked ? "Create your course in Essentials to unlock this section." : undefined}
-                      className={`flex min-h-9 w-full items-center gap-2 rounded-md border px-2.5 py-2 text-left font-sans text-xs font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 ${
+                      className={`flex min-h-9 w-full items-center gap-2 rounded-md px-2.5 py-2 text-left font-sans text-xs font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/60 ${
                         isLocked
-                          ? "cursor-not-allowed border-border bg-muted/30 text-muted-foreground/70"
+                          ? "cursor-not-allowed text-muted-foreground/60"
                           :
                         isActive
-                          ? "border-primary/30 bg-primary/10 text-primary"
-                          : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-muted/30 hover:text-foreground"
+                          ? "bg-muted text-foreground"
+                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                       }`}
                     >
-                      <Icon className={`h-3.5 w-3.5 shrink-0 transition-colors ${isActive && !isLocked ? "text-primary" : "text-muted-foreground"}`} />
+                      <Icon className={`h-3.5 w-3.5 shrink-0 transition-colors ${isActive && !isLocked ? "text-foreground" : "text-muted-foreground"}`} />
                       <span className="min-w-0 flex-1 truncate">{label}</span>
                       {isSetupItem && (
                         <span
                           className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-all ${
                             isLocked
-                              ? "border-border bg-transparent"
+                              ? "border-border/70 bg-transparent"
                               :
                             isCompleted
                               ? isActive
-                                ? "border-primary/50 bg-primary/15 text-primary"
-                                : "border-primary bg-primary/10 text-primary"
+                                ? "border-foreground/30 bg-background text-foreground"
+                                : "border-muted-foreground/40 bg-background text-muted-foreground"
                               : isActive
-                                ? "border-primary/30 bg-transparent"
+                                ? "border-foreground/20 bg-transparent"
                                 : "border-border bg-transparent"
                           } ${flashSectionId === id ? "animate-pulse" : ""}`}
                           aria-hidden

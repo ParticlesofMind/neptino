@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { parseRawTemplateConfigs } from "@/lib/curriculum/template-source-of-truth"
+import {
+  createBuiltInTemplateConfigs,
+  getBuiltInTemplateId,
+  isBuiltInTemplateId,
+  parseRawTemplateConfigs,
+} from "@/lib/curriculum/template-source-of-truth"
 import { createPartitionState } from "@/lib/curriculum/template-partitions"
 
 describe("template source of truth", () => {
@@ -32,5 +37,13 @@ describe("template source of truth", () => {
     ])
 
     expect(template?.type).toBe("lesson")
+  })
+
+  it("provides non-course-specific built-in templates for every type", () => {
+    const builtIns = createBuiltInTemplateConfigs()
+
+    expect(builtIns.map((template) => template.type)).toEqual(["lesson", "certificate", "quiz", "assessment", "exam"])
+    expect(builtIns.every((template) => template.builtIn)).toBe(true)
+    expect(isBuiltInTemplateId(getBuiltInTemplateId("lesson"))).toBe(true)
   })
 })

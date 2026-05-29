@@ -106,10 +106,20 @@ export function hasActualContent(cardType: CardType, content: Record<string, unk
       return readTrimmedString(content.code).length > 0
     case "whiteboard":
       return readTrimmedString(content.boardKey).length > 0 || readTrimmedString(content.prompt).length > 0
+    case "slides":
+      return hasNamedEntries(content.slides)
     case "timeline":
       return hasNamedEntries(content.events)
     case "legend":
       return hasEntriesWithRequiredText(content.items, ["label"])
+    case "source-excerpt":
+      return readTrimmedString(content.excerpt).length > 0
+    case "citation":
+      return readTrimmedString(content.creator).length > 0 || readTrimmedString(content.sourceUrl).length > 0 || readTrimmedString(content.url).length > 0
+    case "bibliography":
+      return hasNamedEntries(content.entries)
+    case "gis-layer":
+      return readTrimmedString(content.layerType).length > 0 || readTrimmedString(content.geometryType).length > 0 || readTrimmedString(content.sourceUrl).length > 0
     default:
       return Object.entries(content).some(
         ([key, value]) => key !== "title" && typeof value === "string" && value.trim().length > 0,

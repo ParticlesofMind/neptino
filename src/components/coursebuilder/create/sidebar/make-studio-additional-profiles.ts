@@ -223,6 +223,154 @@ export const TABLE_PROFILE: StudioProfile = {
   ],
 }
 
+export const SOURCE_EXCERPT_PROFILE: StudioProfile = {
+  mediaType: "Source Excerpt",
+  productType: "Evidence Material",
+  defaults: {
+    title: "",
+    excerpt: "",
+    context: "",
+    locator: "",
+    citationTitle: "",
+    sourceUrl: "",
+    license: "",
+  },
+  sections: [
+    {
+      title: "Passage",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        { key: "excerpt", label: "Excerpt", kind: "textarea", rows: 6, placeholder: "Quoted or paraphrased passage" },
+        { key: "context", label: "Context", kind: "textarea", rows: 4, placeholder: "Authorship, audience, purpose, uncertainty" },
+        { key: "locator", label: "Locator", kind: "text", placeholder: "Page, paragraph, timestamp, map sheet" },
+      ],
+    },
+  ],
+}
+
+export const CITATION_PROFILE: StudioProfile = {
+  mediaType: "Citation",
+  productType: "Source Reference",
+  defaults: {
+    title: "",
+    creator: "",
+    year: "",
+    sourceType: "web",
+    sourceUrl: "",
+    license: "",
+    attribution: "",
+  },
+  sections: [
+    {
+      title: "Reference",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        { key: "creator", label: "Creator", kind: "text" },
+        { key: "year", label: "Year", kind: "text" },
+        { key: "sourceType", label: "Type", kind: "text", placeholder: "book, map, dataset, web" },
+      ],
+    },
+  ],
+}
+
+export const BIBLIOGRAPHY_PROFILE: StudioProfile = {
+  mediaType: "Bibliography",
+  productType: "Source List",
+  defaults: {
+    title: "",
+    style: "short",
+    entries: [],
+    notes: "",
+  },
+  sections: [
+    {
+      title: "Sources",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        {
+          key: "style",
+          label: "Style",
+          kind: "select",
+          options: [
+            { label: "Short", value: "short" },
+            { label: "MLA", value: "mla" },
+            { label: "APA", value: "apa" },
+            { label: "Chicago", value: "chicago" },
+          ],
+        },
+        { key: "notes", label: "Notes", kind: "textarea", rows: 4 },
+      ],
+    },
+  ],
+}
+
+export const GIS_LAYER_PROFILE: StudioProfile = {
+  mediaType: "GIS Layer",
+  productType: "Map Data",
+  defaults: {
+    title: "",
+    layerType: "boundary",
+    geometryType: "GeoJSON",
+    featureCount: 0,
+    dateRange: "",
+    geometryPrecision: "",
+    sourceUrl: "",
+    warnings: [],
+  },
+  sections: [
+    {
+      title: "Layer",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        {
+          key: "layerType",
+          label: "Layer type",
+          kind: "select",
+          options: [
+            { label: "Boundary", value: "boundary" },
+            { label: "Route", value: "route" },
+            { label: "Point set", value: "point" },
+            { label: "Raster reference", value: "raster" },
+            { label: "Choropleth", value: "choropleth" },
+          ],
+        },
+        { key: "geometryType", label: "Geometry type", kind: "text" },
+        { key: "dateRange", label: "Date range", kind: "text" },
+      ],
+    },
+  ],
+}
+
+export const LEGEND_PROFILE: StudioProfile = {
+  mediaType: "Legend",
+  productType: "Visual Key",
+  defaults: {
+    title: "",
+    layout: "list",
+    items: [
+      { color: "#2563eb", label: "Layer", description: "Layer description" },
+    ],
+  },
+  sections: [
+    {
+      title: "Legend",
+      fields: [
+        { key: "title", label: "Title", kind: "text" },
+        {
+          key: "layout",
+          label: "Layout",
+          kind: "select",
+          options: [
+            { label: "List", value: "list" },
+            { label: "Chips", value: "chips" },
+            { label: "Grid", value: "grid" },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 export const INTERACTIVE_PROFILE: StudioProfile = {
   mediaType: "Interactive",
   productType: "Assessment",

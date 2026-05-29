@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 type ImportRequestBody = {
   query?: unknown
+  sourceId?: unknown
+  externalId?: unknown
   limit?: unknown
   includeAssets?: unknown
   promote?: unknown
@@ -25,7 +27,10 @@ export async function POST(request: NextRequest) {
   }
 
   const query = typeof body.query === "string" ? body.query.trim() : ""
-  if (query.length < 2) {
+  const sourceId = typeof body.sourceId === "string" ? body.sourceId.trim() : undefined
+  const externalId = typeof body.externalId === "string" ? body.externalId.trim() : undefined
+
+  if (!externalId && query.length < 2) {
     return NextResponse.json({ error: "A query with at least 2 characters is required." }, { status: 400 })
   }
 
@@ -40,6 +45,8 @@ export async function POST(request: NextRequest) {
   try {
     const result = await importWikidataAtlasQuery(admin, {
       query,
+      sourceId,
+      externalId,
       limit: typeof body.limit === "number" ? body.limit : 1,
       includeAssets: typeof body.includeAssets === "boolean" ? body.includeAssets : true,
       promote: typeof body.promote === "boolean" ? body.promote : false,

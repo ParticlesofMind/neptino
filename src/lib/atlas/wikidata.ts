@@ -181,6 +181,22 @@ function coordinateClaim(entity: WikidataEntity): JsonRecord {
   }
 }
 
+export function wikidataEntityLabel(entity: WikidataEntity): string {
+  return entityLabel(entity)
+}
+
+export function wikidataEntityDescription(entity: WikidataEntity): string | null {
+  return entityDescription(entity)
+}
+
+export function wikidataEntityAliases(entity: WikidataEntity): string[] {
+  return entityAliases(entity)
+}
+
+export function buildWikidataSpatialProfile(entity: WikidataEntity): JsonRecord {
+  return coordinateClaim(entity)
+}
+
 function hasAny(values: string[], qids: string[]): boolean {
   return qids.some((qid) => values.includes(qid))
 }

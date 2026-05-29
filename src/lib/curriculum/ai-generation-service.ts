@@ -34,13 +34,10 @@ export interface ScheduleEntry {
 
 export interface ClassificationContext {
   classYear: string
-  framework: string
   domain: string
   subject: string
   topic: string
   subtopic: string
-  previousCourse: string
-  nextCourse: string
 }
 
 export interface PedagogyContext {

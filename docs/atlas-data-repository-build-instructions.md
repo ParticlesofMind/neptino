@@ -46,6 +46,7 @@ Do not treat card types as the taxonomy. Cards are UI implementations of deeper 
 | Source-ranked | Prefer authoritative, open, machine-readable, revision-aware sources. |
 | Demand-driven | Ingest around educational use cases and teacher searches, not abstract completeness. |
 | Reviewable | Records should have review status, warnings, confidence, and promotion history. |
+| Teacher-improving | Source quality should improve through teacher ratings, corrections, dispute history, and classroom-use feedback. |
 | Reusable | The main product output is Atlas packs and reusable task/display patterns, not isolated facts. |
 | Reversible | Imports and promotions must be traceable and undoable. |
 
@@ -124,6 +125,33 @@ Recommended fields:
 Unique constraint:
 
 `(source_id, external_id)`
+
+### `atlas_source_feedback`
+
+Aggregates teacher and reviewer judgment against source records and generated products.
+
+Recommended fields:
+
+| Field | Purpose |
+|---|---|
+| `id` | Internal UUID. |
+| `source_record_id` | Source record being evaluated. |
+| `candidate_kind` | Optional generated surface kind, e.g. entity, asset, product, task, pack, card, composition. |
+| `candidate_id` | Optional entity/asset/product/task candidate being evaluated. |
+| `teacher_id` | Reviewer/teacher user id when available. |
+| `rating` | Overall source usefulness, e.g. 1-5. |
+| `accuracy_rating` | Factual or geometric accuracy signal. |
+| `visual_quality_rating` | Map/chart/image/diagram classroom-readiness signal. |
+| `classroom_fit_rating` | Whether the source helped a real lesson. |
+| `review_status` | `teacher-reviewed`, `disputed`, `approved`, `rejected`. |
+| `rejection_reason` | Irrelevant, misleading, outdated, rights issue, low quality, duplicate, other. |
+| `note` | Human review note. |
+| `correction_payload` | JSONB correction or suggested replacement. |
+| `metadata` | Additional classroom, curriculum, or retrieval context. |
+| `created_at` | Audit timestamp. |
+| `updated_at` | Audit timestamp for edits. |
+
+This should not replace source provenance. It is the feedback layer that gradually changes source ranking and retrieval priority.
 
 ### `atlas_entity_candidates`
 

@@ -61,6 +61,7 @@ interface SavedTemplate {
   type: SetupTemplateType
   label: string
   description?: string
+  builtIn?: boolean
 }
 
 export function TemplateHeaderActions({
@@ -246,7 +247,7 @@ export function TemplateHeaderActions({
             {/* Header */}
             <div className="border-b border-border px-5 py-4">
               <p className="text-sm font-semibold text-foreground">Load template</p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">Select a saved template to apply to this course.</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Select a built-in or saved template to apply to this course.</p>
             </div>
 
             <div className="max-h-72 overflow-y-auto p-3 space-y-1.5">
@@ -287,6 +288,11 @@ export function TemplateHeaderActions({
                             active
                           </span>
                         )}
+                        {template.builtIn && (
+                          <span className="shrink-0 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                            built-in
+                          </span>
+                        )}
                       </div>
                       {template.description && (
                         <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{template.description}</p>
@@ -304,13 +310,15 @@ export function TemplateHeaderActions({
                           Apply
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onDeleteTemplate(template.id) }}
-                        className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
-                      >
-                        Remove
-                      </button>
+                      {!template.builtIn && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onDeleteTemplate(template.id) }}
+                          className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition hover:border-destructive/40 hover:text-destructive"
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

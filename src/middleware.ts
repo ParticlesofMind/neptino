@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 function isProtectedPath(pathname: string) {
-  return pathname.startsWith('/teacher') || pathname.startsWith('/student') || pathname.startsWith('/admin')
+  return pathname.startsWith('/teacher') || pathname.startsWith('/student') || pathname.startsWith('/admin') || pathname.startsWith('/select-institution')
 }
 
 export async function middleware(request: NextRequest) {
@@ -47,5 +47,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/teacher/:path*', '/student/:path*', '/admin/:path*'],
+  matcher: ['/teacher/:path*', '/student/:path*', '/admin/:path*', '/select-institution'],
 }
